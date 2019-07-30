@@ -1,0 +1,89 @@
+/* copied styling from https://www.free-css.com/free-css-templates/page238/box */
+
+/* Google fonts & font family
+==================================================*/
+
+@import url(https://fonts.googleapis.com/css?family=Poppins:400, 500, 600, 700);
+
+/* General
+==================================================*/
+
+html,
+body {
+	height: 100%;
+	font-family: 'Poppins', sans-serif;
+	line-height: 1.8;
+	color: #999;
+}
+
+.no-padding {
+	padding-left: 0;
+	padding-right: 0;
+}
+
+.main-container {
+	padding: 100px 0;
+}
+
+.center {
+	text-align: center;
+}
+
+a {
+	-webkit-transition: all 0.3s;
+	transition: all 0.3s;
+}
+
+.uppercase {
+	text-transform: uppercase;
+}
+
+.h-30 {
+	height: 30px;
+}
+
+.h-10 {
+	height: 10px;
+}
+
+.color {
+	color: #ffbf00;
+	font-size: 11px;
+}
+
+.dark-dark-blue {
+	color: #04191c;
+}
+
+.grey-blue {
+	color: #a5cacf;
+}
+
+.light-light-blue {
+	color: #c7f8ff;
+}
+
+.vibrant-blue {
+	color: #3ed2e5;
+}
+
+.subdued-blue {
+	color: #32a8b8;
+}
+
+/* typography
+==================================================*/
+
+h1 {
+	color: #393939;
+	font-size: 60px;
+	text-transform: uppercase;
+}
+
+h3 {
+	color: #393939;
+}
+
+h5 {
+	color: #ffbf00;
+}
