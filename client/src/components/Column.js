@@ -9,7 +9,6 @@ class Column extends Component {
 		});
 	}
 	render() {
-		//contenteditable="true" was inside column-container originally
 		return (
 			<div className="column-container">
 				<div className="columnm-header" />
