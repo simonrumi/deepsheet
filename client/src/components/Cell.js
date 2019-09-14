@@ -1,29 +1,57 @@
 import React, { Component } from 'react';
-import ReactQuill from 'react-quill';
+import { connect } from 'react-redux';
+import { updateEditor } from '../actions';
 
 class Cell extends Component {
-	constructor(props) {
-		super(props);
-		this.state = { text: this.props.content };
-		this.handleChange = this.handleChange.bind(this);
+	render() {
+		// top level div used to have this: contentEditable="true"
+		return <div className={this.createClassNames()}>{this.createCellContent()}</div>; /*dark-dark-blue text*/
 	}
 
-	handleChange(value) {
-		this.setState({ text: value });
+	createClassNames() {
+		// the class names come from grid.css. Perhaps this string should be put into a const somewhere
+		let classes = 'grid-item dark-dark-blue text top left';
+		if (this.props.isLastColumn) {
+			classes += ' right';
+		}
+		if (this.props.isLastRow) {
+			classes += ' bottom';
+		}
+		classes += ' border';
+		return classes;
 	}
 
 	createCellContent() {
 		return (
-			<div>
-				<ReactQuill theme="snow" value={this.state.text} onChange={this.handleChange} />
+			<div onClick={event => this.onCellClick(event)} id={`${this.props.column}-${this.props.row}`}>
+				{this.props.sheet.content[this.props.row].content[this.props.column].content}
 			</div>
 		);
 	}
 
-	render() {
-		// top level div used to have this: contentEditable="true"
-		return <div className="cell dark-dark-blue">{this.createCellContent()}</div>;
+	onCellClick(event) {
+		const cellData = {
+			row: this.props.row,
+			column: this.props.column,
+			content: event.target.innerHTML,
+		};
+		this.props.updateEditor(cellData);
+		this.props.editorRef.focus();
 	}
 }
 
-export default Cell;
+function mapStateToProps(state, ownProps) {
+	return {
+		sheet: state.sheet,
+		row: ownProps.row,
+		column: ownProps.column,
+		editorRef: state.editorRef,
+		isLastColumn: ownProps.isLastColumn,
+		isLastRow: ownProps.isLastRow,
+	};
+}
+
+export default connect(
+	mapStateToProps,
+	{ updateEditor }
+)(Cell);

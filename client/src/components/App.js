@@ -1,47 +1,53 @@
-import React, { Component } from 'react';
-import Column from './Column';
-import mockSheet from './mockSheet';
 import _ from 'lodash';
+import React, { Component } from 'react';
+import { connect } from 'react-redux';
+import Editor from './Editor';
+import Row from './Row';
+import { fetchSheet } from '../actions';
 
 class App extends Component {
-	state = {
-		columns: {},
-	};
-
 	componentDidMount() {
-		this.setState({ columns: this.getColumns(this.getSheet()) });
+		this.props.fetchSheet();
 	}
 
-	getSheet() {
-		// call the database and return some json with sheet data
-		//mocking this for now
-		return mockSheet;
-	}
-
-	getColumns(data) {
-		if (data.metadata.type === 'sheet') {
-			return data.content;
-		}
-		throw new Error('getColumns() expected a sheet as a json object, but got something else');
-	}
-
-	renderColumns() {
-		return _.map(this.state.columns, column => {
-			return <Column cells={column.content} key={column.metadata.column} />;
+	renderRows() {
+		return _.map(this.props.sheet.content, row => {
+			return <Row cells={row.content} key={row.metadata.row} />;
 		});
 	}
 
-	getCells() {}
+	renderGridSizingSyle() {
+		if (this.props.sheet.metadata) {
+			const columnsStyle = 'repeat(' + this.props.sheet.metadata.totalColumns + ', [col-start] 1fr)';
+			const rowsStyle = 'repeat(' + this.props.sheet.metadata.totalRows + ', [row-start] 1fr)';
+			return {
+				gridTemplateColumns: columnsStyle,
+				gridTemplateRows: rowsStyle,
+			};
+		}
+	}
 
 	render() {
 		return (
 			<div>
-				<h2 className="vibrant-blue">Deep Sheet</h2>
-				{this.renderColumns()}
+				<h2 className="vibrant-blue text">Deep Sheet</h2>
+				<div className="editor-container">
+					<Editor />
+				</div>
+				<div className="grid-container" style={this.renderGridSizingSyle()}>
+					{this.renderRows()}
+				</div>
 				<div className="clear" />
 			</div>
 		);
 	}
 }
 
-export default App;
+function mapStateToProps(state) {
+	return { rows: state.rows, sheet: state.sheet };
+}
+
+export default connect(
+	mapStateToProps,
+	{ fetchSheet }
+)(App);

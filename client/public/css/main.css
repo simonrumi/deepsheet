@@ -46,31 +46,6 @@ a {
 	height: 10px;
 }
 
-.color {
-	color: #ffbf00;
-	font-size: 11px;
-}
-
-.dark-dark-blue {
-	color: #04191c;
-}
-
-.grey-blue {
-	color: #a5cacf;
-}
-
-.light-light-blue {
-	color: #c7f8ff;
-}
-
-.vibrant-blue {
-	color: #3ed2e5;
-}
-
-.subdued-blue {
-	color: #32a8b8;
-}
-
 /* typography
 ==================================================*/
 
@@ -80,10 +55,57 @@ h1 {
 	text-transform: uppercase;
 }
 
+h2 {
+	font-size: 1.5em;
+	margin-block-start: 1vh;
+	margin-block-end: 1vh;
+}
+
 h3 {
 	color: #393939;
 }
 
 h5 {
 	color: #ffbf00;
+}
+
+.color {
+	color: #ffbf00;
+	font-size: 11px;
+}
+
+.dark-dark-blue.text {
+	color: #04191c;
+}
+
+.grey-blue.text {
+	color: #a5cacf;
+}
+
+.light-light-blue.text {
+	color: #c7f8ff;
+}
+
+.vibrant-blue.text {
+	color: #3ed2e5;
+}
+
+.subdued-blue.text {
+	color: #32a8b8;
+}
+
+/* editor
+==================================================*/
+.editor-container {
+	margin-bottom: 1vh;
+}
+
+/* footer
+==================================================*/
+.footer {
+	font-size: 0.5em;
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	height: 1em;
 }
