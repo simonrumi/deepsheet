@@ -4,8 +4,9 @@ import { Provider } from 'react-redux';
 import { act } from 'react-dom/test-utils';
 import thunk from 'redux-thunk';
 import configureMockStore from 'redux-mock-store';
-import App from '../../components/App';
+import Cell from '../../components/Cell';
 import mockSheet from '../../actions/mockSheet';
+//import { create } from 'react-test-renderer';
 
 const middleware = [thunk];
 const mockStore = configureMockStore(middleware);
@@ -24,18 +25,17 @@ afterEach(() => {
 	testContainer = null;
 });
 
-// skipping testing this as first need to test everything under it
-describe('App component', () => {
-	it.skip('renders the whole thing', () => {
+describe('Cell component', () => {
+	it('shows the expected content', () => {
 		act(() => {
 			ReactDOM.render(
 				<Provider store={testStore}>
-					<App />
+					<Cell row={1} column={1} isLastColumn={false} isLastRow={false} />
 				</Provider>,
 				testContainer
 			);
 		});
-		const app = document.querySelector('body div');
-		expect(app.innerHTML).toContain('<h2 className="vibrant-blue text">Deep Sheet</h2>');
+		const cell = document.querySelector('#B2');
+		expect(cell.innerHTML).toEqual(mockSheet.content[1].content[1].content);
 	});
 });

@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { updateEditor } from '../actions';
+import { indexToColumnLetter, indexToRowNumber } from '../helpers';
 
 class Cell extends Component {
 	render() {
@@ -22,8 +23,10 @@ class Cell extends Component {
 	}
 
 	createCellContent() {
+		const columnName = indexToColumnLetter(this.props.column);
+		const rowName = indexToRowNumber(this.props.row);
 		return (
-			<div onClick={event => this.onCellClick(event)} id={`${this.props.column}-${this.props.row}`}>
+			<div onClick={event => this.onCellClick(event)} id={`${columnName}${rowName}`}>
 				{this.props.sheet.content[this.props.row].content[this.props.column].content}
 			</div>
 		);

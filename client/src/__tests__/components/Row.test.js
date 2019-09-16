@@ -4,8 +4,9 @@ import { Provider } from 'react-redux';
 import { act } from 'react-dom/test-utils';
 import thunk from 'redux-thunk';
 import configureMockStore from 'redux-mock-store';
-import App from '../../components/App';
+import Row from '../../components/Row';
 import mockSheet from '../../actions/mockSheet';
+//import { create } from 'react-test-renderer';
 
 const middleware = [thunk];
 const mockStore = configureMockStore(middleware);
@@ -24,18 +25,23 @@ afterEach(() => {
 	testContainer = null;
 });
 
-// skipping testing this as first need to test everything under it
-describe('App component', () => {
-	it.skip('renders the whole thing', () => {
+describe('Row component', () => {
+	it('shows the expected content', () => {
+		console.log('trying to display row:', mockSheet.content[1].content);
 		act(() => {
 			ReactDOM.render(
 				<Provider store={testStore}>
-					<App />
+					<Row cells={mockSheet.content[1].content} key={mockSheet.content[1].metadata.row} />
 				</Provider>,
 				testContainer
 			);
 		});
-		const app = document.querySelector('body div');
-		expect(app.innerHTML).toContain('<h2 className="vibrant-blue text">Deep Sheet</h2>');
+		// TODO make this a loop
+		let row = document.querySelector('#B1');
+		expect(row.innerHTML).toEqual(mockSheet.content[1].content[0].content);
+		row = document.querySelector('#B2');
+		expect(row.innerHTML).toEqual(mockSheet.content[1].content[1].content);
+		row = document.querySelector('#B3');
+		expect(row.innerHTML).toEqual(mockSheet.content[1].content[2].content);
 	});
 });
