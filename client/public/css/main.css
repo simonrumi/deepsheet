@@ -10,102 +10,108 @@
 
 html,
 body {
-	height: 100%;
-	font-family: 'Poppins', sans-serif;
-	line-height: 1.8;
-	color: #999;
+   height: 100%;
+   font-family: 'Poppins', sans-serif;
+   line-height: 1.8;
+   color: #999;
 }
 
 .no-padding {
-	padding-left: 0;
-	padding-right: 0;
+   padding-left: 0;
+   padding-right: 0;
 }
 
 .main-container {
-	padding: 100px 0;
+   padding: 100px 0;
 }
 
 .center {
-	text-align: center;
+   text-align: center;
 }
 
 a {
-	-webkit-transition: all 0.3s;
-	transition: all 0.3s;
+   -webkit-transition: all 0.3s;
+   transition: all 0.3s;
 }
 
 .uppercase {
-	text-transform: uppercase;
+   text-transform: uppercase;
 }
 
 .h-30 {
-	height: 30px;
+   height: 30px;
 }
 
 .h-10 {
-	height: 10px;
+   height: 10px;
 }
 
 /* typography
 ==================================================*/
 
 h1 {
-	color: #393939;
-	font-size: 60px;
-	text-transform: uppercase;
+   color: #393939;
+   font-size: 60px;
+   text-transform: uppercase;
 }
 
 h2 {
-	font-size: 1.5em;
-	margin-block-start: 1vh;
-	margin-block-end: 1vh;
+   font-size: 1.5em;
+   margin-block-start: 1vh;
+   margin-block-end: 1vh;
 }
 
 h3 {
-	color: #393939;
+   color: #393939;
 }
 
 h5 {
-	color: #ffbf00;
+   color: #ffbf00;
 }
 
 .color {
-	color: #ffbf00;
-	font-size: 11px;
+   color: #ffbf00;
+   font-size: 11px;
 }
 
 .dark-dark-blue.text {
-	color: #04191c;
+   color: #04191c;
 }
 
 .grey-blue.text {
-	color: #a5cacf;
+   color: #a5cacf;
 }
 
 .light-light-blue.text {
-	color: #c7f8ff;
+   color: #c7f8ff;
 }
 
 .vibrant-blue.text {
-	color: #3ed2e5;
+   color: #3ed2e5;
 }
 
 .subdued-blue.text {
-	color: #32a8b8;
+   color: #32a8b8;
+}
+
+/* header
+==================================================*/
+.edit-title-container {
+   margin-top: 1em;
 }
 
 /* editor
 ==================================================*/
 .editor-container {
-	margin-bottom: 1vh;
+   margin-bottom: 1vh;
 }
 
 /* footer
 ==================================================*/
 .footer {
-	font-size: 0.5em;
-	position: absolute;
-	bottom: 0;
-	width: 100%;
-	height: 1em;
+   font-size: 0.5em;
+   position: absolute;
+   bottom: 0;
+   width: 100%;
+   height: 1em;
 }
