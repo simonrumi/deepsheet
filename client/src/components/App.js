@@ -5,11 +5,18 @@ import Header from './Header';
 import Editor from './Editor';
 import Row from './Row';
 import { fetchSheet } from '../actions';
+import { generateCellReducers } from '../reducers/reducerManager';
+import { populateCellsInStore } from '../helpers';
 
 class App extends Component {
-   componentDidMount() {
+   async componentDidMount() {
       //call the reducer to populate the store with the sheet data
-      this.props.fetchSheet();
+      const sheet = await this.props.fetchSheet();
+      // TODO: the end goal is not to put the whole sheet in the store,
+      // but to have the collection of individual cell reducers instead
+      debugger;
+      generateCellReducers(this.props.sheet.metadata);
+      populateCellsInStore(sheet);
    }
 
    renderRows() {
@@ -60,5 +67,5 @@ function mapStateToProps(state) {
 
 export default connect(
    mapStateToProps,
-   { fetchSheet }
+   { fetchSheet, generateCellReducers }
 )(App);
