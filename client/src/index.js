@@ -1,12 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
-import store from './store';
+import managedStore from './store';
 import App from './components/App';
 
+managedStore.init();
+
 ReactDOM.render(
-   <Provider store={store}>
-      <App />
-   </Provider>,
-   document.querySelector('#root')
+	<Provider store={managedStore.store}>
+		<App />
+	</Provider>,
+	document.querySelector('#root')
 );

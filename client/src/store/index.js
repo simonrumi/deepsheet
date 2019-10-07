@@ -3,21 +3,37 @@
 import reduxThunk from 'redux-thunk';
 
 import { createStore, applyMiddleware, compose } from 'redux';
-import createReducerManager from '../reducers/reducerManager';
+import { createReducerManager } from '../reducers/reducerManager';
 import { staticReducers } from '../reducers';
 
-// this makes use of Redux Dev Tools extension for Chrome
-// https://github.com/zalmoxisus/redux-devtools-extension
-const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+class ManagedStore {
+	constructor() {
+		this._store = {};
+		this._timestamp = new Date();
+	}
 
-const reducerManager = createReducerManager(staticReducers);
-const store = createStore(
-   reducerManager.reduce,
-   composeEnhancers(applyMiddleware(reduxThunk))
-);
-store.reducerManager = reducerManager;
+	get store() {
+		return this._store;
+	}
 
-export default store;
+	get timestame() {
+		return this._timestamp;
+	}
+
+	init() {
+		// this makes use of Redux Dev Tools extension for Chrome
+		// https://github.com/zalmoxisus/redux-devtools-extension
+		const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+
+		const reducerManager = createReducerManager(staticReducers);
+		this._store = createStore(reducerManager.reduce, composeEnhancers(applyMiddleware(reduxThunk)));
+		this._store.reducerManager = reducerManager;
+	}
+}
+
+const managedStore = new ManagedStore();
+
+export default managedStore;
 
 // FYI: original version, without using redux dev tools or reducerManager:
 // const store = createStore(reducers, {}, applyMiddleware(reduxThunk));

@@ -6,7 +6,7 @@ import reduxThunk from 'redux-thunk'; // will need this when making async calls 
 import { Provider } from 'react-redux';
 import TitleForm from '../../components/TitleForm';
 import { updateTitle, setEditingTitle } from '../../actions';
-import { titleReducer, reduxFormReducer } from '../../reducers';
+import { sheetReducer, titleReducer, reduxFormReducer } from '../../reducers';
 import { UPDATE_TITLE, SET_EDITING_TITLE } from '../../actions/types.js';
 import mockSheet from '../../mockSheet';
 
