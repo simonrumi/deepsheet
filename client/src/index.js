@@ -5,7 +5,6 @@ import managedStore from './store';
 import App from './components/App';
 
 managedStore.init();
-console.log('just initialized managedStore');
 
 ReactDOM.render(
    <Provider store={managedStore.store}>
