@@ -7,32 +7,27 @@ import { createReducerManager } from '../reducers/reducerManager';
 import { staticReducers } from '../reducers';
 
 class ManagedStore {
-   constructor() {
-      this._store = {};
-      this._timestamp = new Date();
-   }
+	constructor() {
+		this._store = {};
+	}
 
-   get store() {
-      return this._store;
-   }
+	get store() {
+		return this._store;
+	}
 
-   get timestamp() {
-      return this._timestamp;
-   }
+	get state() {
+		return this._store.getState();
+	}
 
-   init() {
-      // this makes use of Redux Dev Tools extension for Chrome
-      // https://github.com/zalmoxisus/redux-devtools-extension
-      const composeEnhancers =
-         window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+	init() {
+		// this makes use of Redux Dev Tools extension for Chrome
+		// https://github.com/zalmoxisus/redux-devtools-extension
+		const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 
-      const reducerManager = createReducerManager(staticReducers);
-      this._store = createStore(
-         reducerManager.reduce,
-         composeEnhancers(applyMiddleware(reduxThunk))
-      );
-      this._store.reducerManager = reducerManager;
-   }
+		const reducerManager = createReducerManager(staticReducers);
+		this._store = createStore(reducerManager.reduce, composeEnhancers(applyMiddleware(reduxThunk)));
+		this._store.reducerManager = reducerManager;
+	}
 }
 
 const managedStore = new ManagedStore();

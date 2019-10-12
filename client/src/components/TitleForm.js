@@ -10,26 +10,23 @@ export class TitleForm extends React.Component {
 	}
 
 	render() {
-		console.log('props from reduxForm:', this.props);
 		return (
 			<div className="edit-title-container">
 				<form className="ui form error" onSubmit={this.props.handleSubmit(this.editTitle)}>
 					<div className="ui grid">
-						<div className="twelve wide column">
+						<div className="thirteen wide column">
 							<Field name="title" component={this.renderInput} />
 						</div>
-						<div className="right aligned two wide column">
+						<div className="right aligned three wide column">
 							<button
-								className="ui button primary"
+								className="ui mini button primary"
 								type="submit"
 								disabled={this.props.pristine || this.props.submitting}
 							>
 								update
 							</button>
-						</div>
-						<div className="right aligned two wide column">
-							<button className="ui red button" type="cancel">
-								should cancel
+							<button className="ui mini red button" type="cancel" onClick={this.props.reset}>
+								cancel
 							</button>
 						</div>
 					</div>
@@ -39,9 +36,7 @@ export class TitleForm extends React.Component {
 	}
 
 	renderInput = formProps => {
-		console.log('formProps.input.value:', formProps.input.value);
 		const className = `field ${formProps.meta.error && formProps.meta.touched ? 'error' : ''}`;
-
 		return (
 			<div className={className}>
 				<input {...formProps.input} autoComplete="off" type="text" />
@@ -57,10 +52,7 @@ export class TitleForm extends React.Component {
 	}
 
 	editTitle = formValues => {
-		const sheetWithNewTitle = { ...this.props.sheet };
-		sheetWithNewTitle.metadata.title = formValues.title;
-		this.props.updateTitle(sheetWithNewTitle);
-		this.props.setEditingTitle(false);
+		this.props.updateTitle({ text: formValues.title, isEditingTitle: false });
 	};
 }
 
@@ -79,7 +71,7 @@ const reduxTitleForm = reduxForm({
 
 const mapStateToProps = (state, ownProps) => {
 	return {
-		sheet: state.sheet,
+		title: state.title,
 		initialValues: { title: ownProps.title },
 	};
 };

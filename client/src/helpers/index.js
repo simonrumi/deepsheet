@@ -39,3 +39,16 @@ export const indexToRowNumber = index => {
 export const fetchSheet = () => {
 	return mockSheet;
 };
+
+export const extractRowColFromString = str => {
+	// expecting a string like some_prefix_2_3
+	//where 2 & 3 are the row and column numbers respectively
+	const regex = new RegExp(/.*_(\d+)_(\d+)$/);
+	const matchArr = regex.exec(str);
+	if (!matchArr || matchArr.length < 3) {
+		return;
+	}
+	const row = parseInt(matchArr[1]);
+	const col = parseInt(matchArr[2]);
+	return { row, col };
+};
