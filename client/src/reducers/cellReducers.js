@@ -16,8 +16,8 @@ export const createCellReducers = sheetMetadata => {
 		console.log('ERROR: generateCellReducers failed as there was no store.reducerManager');
 		return;
 	}
-	const newCombinedReducer = store.reducerManager.addMany(cellReducers);
-	return newCombinedReducer;
+	const newCombinedReducers = store.reducerManager.addMany(cellReducers);
+	store.replaceReducer(newCombinedReducers);
 };
 
 export const cellReducerFactory = (rowNum, colNum) => {
@@ -31,6 +31,11 @@ export const cellReducerFactory = (rowNum, colNum) => {
 		}
 		return state;
 	};
+};
+
+export const removeCellReducers = () => {
+	const store = managedStore.store;
+	store.reducerManager.removeMany(store.state.cellKeys);
 };
 
 export const cellKeyReducer = (state = {}, action) => {

@@ -1,4 +1,6 @@
-import mockSheet from '../mockSheet2'; // temp fake data
+// temp fake data
+import mockSheet from '../mockSheet2';
+import mockSubSheet from '../mockSubSheet';
 
 export const removePTags = str => {
 	return str.replace(/<p>|<\/p>/gi, '');
@@ -36,8 +38,24 @@ export const indexToRowNumber = index => {
 	return index + 1;
 };
 
-export const fetchSheet = () => {
-	return mockSheet;
+export const fetchSheet = id => {
+	// very temporary - returning fake data
+	if (id === 1) {
+		return mockSheet;
+	}
+	if (id === 2) {
+		return mockSubSheet;
+	}
+};
+
+export const fetchSummaryCellFromSheet = sheetId => {
+	// the idea here is to use the database to look up the sheet with the given sheetId and return the content of the
+	// cell designated as the summaryCell
+	// however for the moment we'll just return some fake data
+	if (sheetId === 2) {
+		return 'summary of sheet with id 2';
+	}
+	return null;
 };
 
 export const extractRowColFromString = str => {

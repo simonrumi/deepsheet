@@ -5,6 +5,7 @@ import reduxThunk from 'redux-thunk';
 import { createStore, applyMiddleware, compose } from 'redux';
 import { createReducerManager } from '../reducers/reducerManager';
 import { staticReducers } from '../reducers';
+import initializeSheet from '../helpers/initializeSheet';
 
 class ManagedStore {
 	constructor() {
@@ -25,7 +26,10 @@ class ManagedStore {
 		const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 
 		const reducerManager = createReducerManager(staticReducers);
-		this._store = createStore(reducerManager.reduce, composeEnhancers(applyMiddleware(reduxThunk)));
+		this._store = createStore(
+			reducerManager.reduce,
+			composeEnhancers(applyMiddleware(reduxThunk, initializeSheet))
+		);
 		this._store.reducerManager = reducerManager;
 	}
 }

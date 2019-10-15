@@ -1,6 +1,23 @@
 import { reducer as reduxFormReducer } from 'redux-form';
 import { cellKeyReducer } from './cellReducers';
-import { FETCHED_SHEET, UPDATE_EDITOR, SET_EDITOR_REF, UPDATED_TITLE, SET_EDITING_TITLE } from '../actions/types';
+import {
+	DEFAULT_SHEET_ID,
+	UPDATED_SHEET_ID,
+	FETCHED_SHEET,
+	UPDATE_EDITOR,
+	SET_EDITOR_REF,
+	UPDATED_TITLE,
+	SET_EDITING_TITLE,
+} from '../actions/types';
+
+const sheetIdReducer = (state = DEFAULT_SHEET_ID, action) => {
+	switch (action.type) {
+		case UPDATED_SHEET_ID:
+			return action.payload;
+		default:
+			return state;
+	}
+};
 
 const sheetReducer = (state = [], action) => {
 	switch (action.type) {
@@ -46,6 +63,7 @@ export const titleReducer = (state = {}, action) => {
 };
 
 export const staticReducers = {
+	sheetId: sheetIdReducer,
 	sheet: sheetReducer,
 	editorRef: editorRefReducer,
 	editor: updateEditorReducer,

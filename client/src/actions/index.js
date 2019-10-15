@@ -8,10 +8,15 @@ import {
 	SET_EDITOR_REF,
 	UPDATED_TITLE,
 	SET_EDITING_TITLE,
+	UPDATED_SHEET_ID,
 } from './types';
 
 export const fetchedSheet = sheet => {
 	return { type: FETCHED_SHEET, payload: sheet };
+};
+
+export const updatedSheetId = sheetId => {
+	return { type: UPDATED_SHEET_ID, payload: sheetId };
 };
 
 export const updateEditor = cellBeingEdited => dispatch => {
