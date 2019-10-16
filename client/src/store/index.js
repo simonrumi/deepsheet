@@ -5,33 +5,34 @@ import reduxThunk from 'redux-thunk';
 import { createStore, applyMiddleware, compose } from 'redux';
 import { createReducerManager } from '../reducers/reducerManager';
 import { staticReducers } from '../reducers';
-import initializeSheet from '../helpers/initializeSheet';
+import initializeSheet from '../middleware/initializeSheet';
 
 class ManagedStore {
-	constructor() {
-		this._store = {};
-	}
+   constructor() {
+      this._store = {};
+   }
 
-	get store() {
-		return this._store;
-	}
+   get store() {
+      return this._store;
+   }
 
-	get state() {
-		return this._store.getState();
-	}
+   get state() {
+      return this._store.getState();
+   }
 
-	init() {
-		// this makes use of Redux Dev Tools extension for Chrome
-		// https://github.com/zalmoxisus/redux-devtools-extension
-		const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+   init() {
+      // this makes use of Redux Dev Tools extension for Chrome
+      // https://github.com/zalmoxisus/redux-devtools-extension
+      const composeEnhancers =
+         window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 
-		const reducerManager = createReducerManager(staticReducers);
-		this._store = createStore(
-			reducerManager.reduce,
-			composeEnhancers(applyMiddleware(reduxThunk, initializeSheet))
-		);
-		this._store.reducerManager = reducerManager;
-	}
+      const reducerManager = createReducerManager(staticReducers);
+      this._store = createStore(
+         reducerManager.reduce,
+         composeEnhancers(applyMiddleware(reduxThunk, initializeSheet))
+      );
+      this._store.reducerManager = reducerManager;
+   }
 }
 
 const managedStore = new ManagedStore();
