@@ -1,48 +1,66 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { setEditingTitle } from '../actions';
+import { loadSheet } from '../helpers';
 import TitleForm from './TitleForm';
 
 export class Header extends Component {
-	// constructor(props) {
-	// 	super(props);
-	// 	this.renderTitleOrTitleForm = this.renderTitleOrTitleForm.bind(this);
-	// 	this.renderTitle = this.renderTitle.bind(this);
-	// }
+   render() {
+      return <div>{this.renderTitleOrTitleForm()}</div>;
+   }
 
-	render() {
-		return <div>{this.renderTitleOrTitleForm()}</div>;
-	}
+   renderTitleOrTitleForm() {
+      if (this.props.title.isEditingTitle) {
+         return (
+            <TitleForm
+               onSubmit={this.editTitle}
+               title={this.props.title.text}
+            />
+         );
+      }
+      return this.renderTitle();
+   }
 
-	renderTitleOrTitleForm() {
-		if (this.props.title.isEditingTitle) {
-			return <TitleForm onSubmit={this.editTitle} title={this.props.title.text} />;
-		}
-		return this.renderTitle();
-	}
+   renderTitle() {
+      return (
+         <div className="ui grid">
+            <div className="twelve wide column">
+               <h2 className="subdued-blue">{this.props.title.text}</h2>
+            </div>
+            <div className="right aligned four wide column">
+               <span className="right floated two wide column">
+                  <i
+                     className="subdued-blue edit icon pointer"
+                     onClick={() => this.props.setEditingTitle(true)}
+                  />
+               </span>
+               <span>{this.renderUpArrow()}</span>
+            </div>
+         </div>
+      );
+   }
 
-	renderTitle() {
-		return (
-			<div className="ui grid">
-				<div className="eight wide column">
-					<h2 className="vibrant-blue text">{this.props.title.text}</h2>
-				</div>
-				<div className="right aligned eight wide column">
-					<i className="edit icon" onClick={() => this.props.setEditingTitle(true)} />
-				</div>
-			</div>
-		);
-	}
+   renderUpArrow() {
+      if (this.props.sheet.parentSheetId) {
+         return (
+            <i
+               className="subdued-blue external alternate icon pointer"
+               onClick={() => loadSheet(this.props.sheet.parentSheetId)}
+            />
+         );
+      }
+      return null;
+   }
 }
 
 function mapStateToProps(state) {
-	return {
-		sheet: state.sheet,
-		title: state.title,
-	};
+   return {
+      sheet: state.sheet,
+      title: state.title,
+   };
 }
 
 export default connect(
-	mapStateToProps,
-	{ setEditingTitle }
+   mapStateToProps,
+   { setEditingTitle }
 )(Header);

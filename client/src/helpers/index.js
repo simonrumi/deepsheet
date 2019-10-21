@@ -40,7 +40,7 @@ export const indexToColumnLetter = index => {
 };
 
 export const indexToRowNumber = index => {
-   return index + 1;
+   return parseInt(index, 10) + 1;
 };
 
 export const fetchSheet = id => {

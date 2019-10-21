@@ -1,9 +1,7 @@
 .grid-container {
    display: grid;
-   grid-template-columns: repeat(26, [col-start] 1fr);
-   grid-template-rows: repeat(100, [row-start] 1fr);
-   grid-column-gap: 1px;
-   grid-row-gap: 1px;
+   grid-column-gap: 0;
+   grid-row-gap: 0;
    justify-items: start;
    align-items: start;
 }
@@ -14,6 +12,20 @@
    width: 100%;
    height: 100%;
    padding: 1%;
+}
+
+/* for some reason leaving the height off this makes the column headers show up at the correct height */
+.grid-header-item {
+   grid-column: span 1;
+   grid-row: span 1;
+   width: 100%;
+   padding: 1%;
+   vertical-align: middle;
+   text-align: center;
+}
+
+.row-header-item {
+   height: 100%;
 }
 
 .top.border {

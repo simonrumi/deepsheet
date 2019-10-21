@@ -59,6 +59,7 @@ h2 {
    font-size: 1.5em;
    margin-block-start: 1vh;
    margin-block-end: 1vh;
+   margin-top: 0.1em;
 }
 
 h3 {
@@ -74,23 +75,23 @@ h5 {
    font-size: 11px;
 }
 
-.dark-dark-blue.text {
+.dark-dark-blue {
    color: #04191c;
 }
 
-.grey-blue.text {
+.grey-blue {
    color: #a5cacf;
 }
 
-.light-light-blue.text {
+.light-light-blue {
    color: #c7f8ff;
 }
 
-.vibrant-blue.text {
+.vibrant-blue {
    color: #3ed2e5;
 }
 
-.subdued-blue.text {
+.subdued-blue {
    color: #32a8b8;
 }
 

@@ -42,7 +42,7 @@ class Cell extends Component {
 
    createClassNames() {
       // the class names come from grid.css. Perhaps this string should be put into a const somewhere
-      let classes = 'grid-item dark-dark-blue text top left';
+      let classes = 'grid-item dark-dark-blue top left';
       if (this._isLastColumn) {
          classes += ' right';
       }

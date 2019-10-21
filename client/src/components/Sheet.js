@@ -1,8 +1,10 @@
-import { map } from 'ramda';
+import { map, ifElse } from 'ramda';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import Header from './Header';
 import Editor from './Editor';
+import ColumnHeaders from './ColumnHeaders';
+import RowHeader from './RowHeader';
 import Cell from './Cell';
 import { fetchedSheet, updatedSheetId, updatedCellKeys } from '../actions';
 import managedStore from '../store';
@@ -19,7 +21,21 @@ class Sheet extends Component {
             <div className="editor-container">
                <Editor />
             </div>
-            <div className="grid-container" style={this.renderGridSizingSyle()}>
+            <div
+               className="grid-container"
+               style={this.renderGridSizingStyle(
+                  this.props.sheet.totalRows,
+                  this.props.sheet.totalColumns
+               )}
+            >
+               <div
+                  className="grid-item"
+                  style={this.renderGridColHeaderStyle(
+                     this.props.sheet.totalColumns
+                  )}
+               >
+                  <ColumnHeaders />
+               </div>
                {this.renderCells()}
             </div>
             <div className="clear" />
@@ -35,27 +51,45 @@ class Sheet extends Component {
          this.props.cellKeys.length > 0 &&
          this.props.sheetId === this.props.sheet._id
       ) {
-         return map(
-            cellKey => <Cell cellKey={cellKey} key={cellKey} />,
-            this.props.cellKeys
-         );
+         return map(cellKey => {
+            return [this.maybeRowHeader(cellKey), this.renderCell(cellKey)];
+         }, this.props.cellKeys);
       }
-      return <div>No row data yet</div>;
+      return <div>loading...</div>;
    }
 
-   renderGridSizingSyle() {
-      if (this.props.sheet) {
-         // note we're creating eg "repeat(4, [col-start] 1fr)"  to repeat 4 times, columns that take up 1fr
-         // (1 out of the free space) which makes them equal size; and where 'col-start' is just a name.
-         const columnsStyle =
-            'repeat(' + this.props.sheet.totalColumns + ', [col-start] 1fr)';
-         const rowsStyle =
-            'repeat(' + this.props.sheet.totalRows + ', [row-start] 1fr)';
-         return {
-            gridTemplateColumns: columnsStyle,
-            gridTemplateRows: rowsStyle,
-         };
-      }
+   isFirstColumn = cellKey => /.*_0$/.test(cellKey);
+   renderRowHeader = cellKey => (
+      <RowHeader cellKey={cellKey} key={'row_header_' + cellKey} />
+   );
+   renderCell = cellKey => <Cell cellKey={cellKey} key={cellKey} />;
+   noHeader = () => null;
+   maybeRowHeader = ifElse(
+      this.isFirstColumn,
+      this.renderRowHeader,
+      this.noHeader
+   );
+
+   renderGridSizingStyle(numRows, numCols) {
+      const headerRowHeight = '2em';
+      const headerColHeight = '2em';
+      const rowsStyle = headerRowHeight + ' repeat(' + numRows + ', 1fr)';
+      const columnsStyle = headerColHeight + ' repeat(' + numCols + ', 1fr)';
+      return {
+         gridTemplateRows: rowsStyle,
+         gridTemplateColumns: columnsStyle,
+      };
+   }
+
+   renderGridColHeaderStyle(colNum) {
+      const colSpan = 'span ' + (colNum + 1); //need an extra column for the row headers on the left
+      return {
+         gridColumn: colSpan,
+         gridRow: 'span 1',
+         width: '100%',
+         height: '100%',
+         padding: 0,
+      };
    }
 }
 
