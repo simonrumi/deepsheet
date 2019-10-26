@@ -5,7 +5,7 @@ import { act } from 'react-dom/test-utils';
 import thunk from 'redux-thunk';
 import configureMockStore from 'redux-mock-store';
 import Cell from '../../components/Cell';
-import mockSheet from '../../mockSheet';
+import mockSheet from '../../mockSheet2';
 //import { create } from 'react-test-renderer';
 
 const middleware = [thunk];

@@ -33,24 +33,7 @@ class Cell extends Component {
    }
 
    render() {
-      return (
-         <div className={this.createClassNames()}>
-            {this.createCellContent()}
-         </div>
-      );
-   }
-
-   createClassNames() {
-      // the class names come from grid.css. Perhaps this string should be put into a const somewhere
-      let classes = 'grid-item dark-dark-blue top left';
-      if (this._isLastColumn) {
-         classes += ' right';
-      }
-      if (this._isLastRow) {
-         classes += ' bottom';
-      }
-      classes += ' border';
-      return classes;
+      return this.createCellContent();
    }
 
    createCellContent() {
@@ -61,10 +44,29 @@ class Cell extends Component {
       }
       const cellId = columnName + rowName; // e.g. "B2"
       return (
-         <div onClick={event => this.onCellClick(event)} id={cellId}>
+         <div
+            className={this.createClassNames()}
+            onClick={event => this.onCellClick(event)}
+            id={cellId}
+         >
             {this.props.cell}
          </div>
       );
+   }
+
+   createClassNames(textColor) {
+      // the class names come from grid.css. Perhaps this string should be put into a const somewhere
+      let classes = 'grid-item ';
+      textColor ? (classes += textColor) : (classes += 'dark-dark-blue');
+      classes += ' top left';
+      if (this._isLastColumn) {
+         classes += ' right';
+      }
+      if (this._isLastRow) {
+         classes += ' bottom';
+      }
+      classes += ' border';
+      return classes;
    }
 
    onCellClick(event) {
@@ -79,9 +81,11 @@ class Cell extends Component {
 
    renderSubSheetCell(sheetId) {
       const summaryCell = fetchSummaryCellFromSheet(sheetId);
+      let classNames = this.createClassNames(); //'burnt-orange'
+      classNames += ' pointer';
       return (
-         <div className="pointer" onClick={() => loadSheet(sheetId)}>
-            {summaryCell}
+         <div className={classNames} onClick={() => loadSheet(sheetId)}>
+            <div className="summary-cell-container">{summaryCell}</div>
          </div>
       );
    }

@@ -1,9 +1,14 @@
+import managedStore from '../../store';
+import * as Actions from '../../actions';
+import mockSheet from '../../mockSheet2.js';
 import {
    removePTags,
    indexToColumnLetter,
    indexToRowNumber,
-   cellReducerFactory,
-   createCellReducers,
+   fetchSheet,
+   fetchSummaryCellFromSheet,
+   extractRowColFromString,
+   loadSheet,
 } from '../../helpers';
 
 describe('removePTags', () => {
@@ -53,37 +58,64 @@ describe('indexToRowNumber', () => {
    });
 });
 
-describe('cellReducers', () => {
-   const row = 1;
-   const col = 2;
-   const state = {
-      metadata: {
-         row: row,
-         column: col,
-      },
-      content: 'original cell content',
-   };
-   const actionType = 'update_cell_' + row + '_' + col;
-   const newContent = 'some new cell content';
-   let action;
+describe('fectchSheet', () => {
+   it('returns the mockSheet given the id of 1', () => {
+      expect(fetchSheet(1)).toEqual(mockSheet);
+   });
+});
 
-   beforeEach(() => {
-      action = {
-         type: actionType,
-         payload: { ...state, content: newContent },
-      };
+describe('fetchSummaryCellFromSheet', () => {
+   it('fetches the content of a summary cell given the id of a sheet', () => {
+      expect(fetchSummaryCellFromSheet(2)).toEqual(
+         'summary of sheet with id 2'
+      );
+   });
+});
+
+describe('extractRowColFromString', () => {
+   it('extracts the row and column numbers from a cellKey string like cell_2_3', () => {
+      expect(extractRowColFromString('cell_2_3').row).toEqual(2);
+      expect(extractRowColFromString('cell_2_3').col).toEqual(3);
    });
 
-   it('cellReducerFactory should return a function to update a specific cell, given the row & col numbers', () => {
-      const cellFn = cellReducerFactory(row, col);
-      expect(cellFn(state, action).content).toEqual(newContent);
+   it('extracts the row and column numbers from any string ending like _2_3', () => {
+      expect(extractRowColFromString('anyprefixhere_2_3').row).toEqual(2);
+      expect(extractRowColFromString('any_preFix_HERE_2_3').col).toEqual(3);
+   });
+});
+
+describe('loadSheet', () => {
+   beforeAll(() => {
+      managedStore.init();
    });
 
-   it('createCellReducers should return an object of cell reducer functions', () => {
-      const totalRows = 4;
-      const totalCols = 5;
-      const cellReducers = createCellReducers(totalRows, totalCols);
-      expect(cellReducers.cell_3_4 instanceof Function).toBe(true);
-      expect(cellReducers.cell_1_2(state, action).content).toEqual(newContent);
+   it('calls updatedSheetId', () => {
+      const updatedSheetIdSpy = jest.spyOn(Actions, 'updatedSheetId');
+      loadSheet(1);
+      expect(updatedSheetIdSpy).toHaveBeenCalled();
+   });
+
+   it('calls replaceReducer', () => {
+      const replaceReducerSpy = jest.spyOn(
+         managedStore.store,
+         'replaceReducer'
+      );
+      loadSheet(1); // 1 is the sheetId of the mock sheet
+      expect(replaceReducerSpy).toHaveBeenCalled();
+   });
+
+   it('loads the sheet into the store', () => {
+      loadSheet(mockSheet.metadata._id); // 1 is the sheetId of the mock sheet with 3 rows and 4 cols
+      expect(managedStore.state.sheet.totalRows).toEqual(
+         mockSheet.metadata.totalRows
+      );
+      expect(managedStore.state.sheet.totalColumns).toEqual(
+         mockSheet.metadata.totalColumns
+      );
+   });
+
+   it.skip('returns a default, blank sheet if the sheetId is invalid', () => {
+      loadSheet();
+      expect(managedStore.state.sheet.totalRows).toEqual(20); // need to make default sheet for this to work
    });
 });

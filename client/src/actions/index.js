@@ -19,8 +19,11 @@ export const updatedSheetId = sheetId => {
    managedStore.store.dispatch({ type: UPDATED_SHEET_ID, payload: sheetId });
 };
 
-export const updateEditor = cellBeingEdited => dispatch => {
-   dispatch({ type: UPDATE_EDITOR, payload: cellBeingEdited });
+export const updateEditor = cellBeingEdited => {
+   managedStore.store.dispatch({
+      type: UPDATE_EDITOR,
+      payload: cellBeingEdited,
+   });
 };
 
 export const updatedCellBeingEdited = cell => {

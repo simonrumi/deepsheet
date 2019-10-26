@@ -44,6 +44,11 @@
    border-bottom: 1px solid #a5cacf;
 }
 
+.summary-cell-container {
+   border: 1px solid #d17e19;
+   padding: 1%;
+}
+
 .pointer {
    cursor: pointer;
 }

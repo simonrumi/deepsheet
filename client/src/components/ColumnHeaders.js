@@ -57,7 +57,11 @@ class ColumnHeaders extends Component {
             'grid-header-item grey-blue top left ' + rightBorder + ' border';
          headers.push(
             <div key={name} className={classes}>
-               {name}
+               {name}{' '}
+               <i
+                  className="grey-blue small filter icon pointer"
+                  onClick={() => alert('need to handle filtering')}
+               />
             </div>
          );
          return generateHeaders(

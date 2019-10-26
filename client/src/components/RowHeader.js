@@ -21,7 +21,15 @@ class RowHeader extends Component {
          classNames += 'bottom ';
       }
       classNames += 'border';
-      return <div className={classNames}>{rowNum}</div>;
+      return (
+         <div className={classNames}>
+            {rowNum}
+            <i
+               className="grey-blue small filter icon pointer"
+               onClick={() => alert('need to handle filtering')}
+            />
+         </div>
+      );
    }
 }
 

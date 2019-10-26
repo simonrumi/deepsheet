@@ -78,9 +78,11 @@ export const extractRowColFromString = str => {
 };
 
 export const loadSheet = async sheetId => {
+   // first clear out the cell reducers from any previosly loaded sheet
    const newCombinedReducers = managedStore.store.reducerManager.removeMany(
       managedStore.state.cellKeys
    );
    managedStore.store.replaceReducer(newCombinedReducers);
+   // then get the new sheet
    updatedSheetId(sheetId);
 };
