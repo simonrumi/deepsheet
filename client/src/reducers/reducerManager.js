@@ -3,88 +3,98 @@ import { filter, concat, includes, pick } from 'ramda';
 import { combineReducers } from 'redux';
 
 export function createReducerManager(initialReducers) {
-   const reducers = { ...initialReducers };
-   let combinedReducer = combineReducers(reducers);
-   let keysToRemove = []; // a list of keys for reducers that have been removed
+	console.log('createReducerManager started');
+	let _reducers = { ...initialReducers };
 
-   // note that the functions below were taken out of the return{} block because removeMany was not able to access
-   // keysToRemove[]
+	// Note that a reducer expects arguments state & action [state ~= accumulator, action ~= value]
+	// and returns an updated state.
+	// combineReducers takes all the reducers and returns a function that also expects state & action
+	// and that function gives all the reducers a chance to update the state
+	// so here the _reducerCombiner function returned from combineReducers acts like a reducer itself
+	let _reducerCombiner = combineReducers(_reducers);
+	let keysToRemove = []; // a list of keys for reducers that have been removed
 
-   // the root reducer
-   const reduce = (state, action) => {
-      const cleanedState = { ...state };
-      if (keysToRemove.length > 0) {
-         for (let key of keysToRemove) {
-            delete cleanedState[key];
-         }
-         keysToRemove = [];
-      }
-      // this delegates the store.reduce() function to the
-      // combinedReducer. Presumably the store calls reduce() for all actions
-      return combinedReducer(cleanedState, action);
-   };
+	// note that the functions below were taken out of the return{} block because removeMany was not able to access
+	// keysToRemove[]
 
-   const add = (key, newReducer) => {
-      if (!key || reducers[key]) {
-         return;
-      }
-      reducers[key] = newReducer;
-      combinedReducer = combineReducers(reducers);
-      return combinedReducer;
-   };
+	// the root reducer
+	const reduce = (state, action) => {
+		// make sure there are no reducers to be removed first
+		let cleanedState = { ...state };
+		if (keysToRemove.length > 0) {
+			for (let key of keysToRemove) {
+				delete cleanedState[key];
+			}
+			keysToRemove = [];
+		}
+		// this delegates the store.reduce() function to the
+		// _reducerCombiner. Presumably the store calls reduce() for all actions
+		return _reducerCombiner(cleanedState, action);
+	};
 
-   const addMany = newReducers => {
-      if (!(newReducers instanceof Object)) {
-         console.log('WARNING: addMany() did not receive any new reducers');
-         return combineReducers(reducers);
-      }
-      const allReducers = {
-         ...reducers,
-         ...newReducers,
-      };
-      combinedReducer = combineReducers(allReducers);
-      // note that the original didn't do this, but looks like we do
-      // because the calling function will then call store.replaceReducer()
-      return combinedReducer;
-   };
+	const add = (key, newReducer) => {
+		if (!key || _reducers[key]) {
+			return;
+		}
+		_reducers[key] = newReducer;
+		_reducerCombiner = combineReducers(_reducers);
+		return _reducerCombiner;
+	};
 
-   const remove = key => {
-      if (!key || !reducers[key]) {
-         return;
-      }
-      delete reducers[key];
-      keysToRemove.push(key); // side effect! should do this some other way
+	const addMany = newReducers => {
+		if (!(newReducers instanceof Object)) {
+			console.log('WARNING: addMany() did not receive any new reducers');
+			return combineReducers(_reducers);
+		}
+		const allReducers = {
+			..._reducers,
+			...newReducers,
+		};
+		// const combineGivenReducers = combineReducers(allReducers);
+		// // note that the original didn't do this, but looks like we do
+		// // because the calling function will then call store.replaceReducer()
+		// return combineGivenReducers;
+		_reducerCombiner = combineReducers(allReducers);
+		_reducers = allReducers;
+		return combineReducers(allReducers);
+	};
 
-      combinedReducer = combineReducers(reducers);
-      return combinedReducer;
-   };
+	const remove = key => {
+		if (!key || !_reducers[key]) {
+			return;
+		}
+		delete _reducers[key];
+		keysToRemove.push(key);
 
-   const removeMany = keys => {
-      if (!keys || !(keys instanceof Array)) {
-         console.log(
-            'WARNING: invalid keys array supplied to reducerManager.removeMany(), so no reducers removed'
-         );
-         return combineReducers(reducers);
-      }
-      keysToRemove = concat(keysToRemove, keys);
+		_reducerCombiner = combineReducers(_reducers);
+		return _reducerCombiner;
+	};
 
-      const filteredReducerKeys = filter(reducerKey => {
-         if (includes(reducerKey, keys)) {
-            return false;
-         }
-         return true;
-      }, Object.keys(reducers));
-      const remainingReducers = pick(filteredReducerKeys, reducers);
-      combinedReducer = combineReducers(remainingReducers);
-      return combinedReducer; // see note in addMany
-   };
+	const removeMany = keys => {
+		if (!keys || !(keys instanceof Array)) {
+			console.log('WARNING: invalid keys array supplied to reducerManager.removeMany(), so no reducers removed');
+			return combineReducers(_reducers);
+		}
+		keysToRemove = concat(keysToRemove, keys);
 
-   return {
-      getReducerMap: () => reducers,
-      reduce,
-      add,
-      addMany,
-      remove,
-      removeMany,
-   };
+		const filteredReducerKeys = filter(reducerKey => {
+			if (includes(reducerKey, keys)) {
+				return false;
+			}
+			return true;
+		}, Object.keys(_reducers));
+		const remainingReducers = pick(filteredReducerKeys, _reducers);
+		_reducerCombiner = combineReducers(remainingReducers);
+		_reducers = remainingReducers;
+		return _reducerCombiner; // see note in addMany
+	};
+
+	return {
+		getReducerMap: () => _reducers,
+		reduce,
+		add,
+		addMany,
+		remove,
+		removeMany,
+	};
 }
