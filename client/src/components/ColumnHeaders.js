@@ -23,6 +23,7 @@ class ColumnHeaders extends Component {
       );
    }
 
+   // recursive function to render a row of spreadeheet column headers A, B, C... etc
    renderColumnHeaders() {
       if (!this.props.sheet.totalColumns) {
          return null;
@@ -38,7 +39,7 @@ class ColumnHeaders extends Component {
             return headers;
          }
 
-         // before the very first column we need a spacer that will go above the row headers
+         // before the very first column we need a spacer column that will go above the row headers
          if (currentIndex === 0) {
             headers.push(
                <div
@@ -56,7 +57,11 @@ class ColumnHeaders extends Component {
          const classes =
             'grid-header-item grey-blue top left ' + rightBorder + ' border';
          headers.push(
-            <div key={name} className={classes}>
+            <div
+               key={name}
+               className={classes}
+               data-testid={'col' + currentIndex}
+            >
                {name}{' '}
                <i
                   className="grey-blue small filter icon pointer"

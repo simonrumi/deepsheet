@@ -6,7 +6,7 @@ import Editor from './Editor';
 import ColumnHeaders from './ColumnHeaders';
 import RowHeader from './RowHeader';
 import Cell from './Cell';
-import { fetchedSheet, updatedSheetId, updatedCellKeys } from '../actions';
+import { fetchedSheet, updatedSheetId } from '../actions';
 import managedStore from '../store';
 
 class Sheet extends Component {
@@ -107,6 +107,5 @@ export default connect(
    {
       fetchedSheet,
       updatedSheetId,
-      updatedCellKeys,
    }
 )(Sheet);

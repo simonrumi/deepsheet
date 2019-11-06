@@ -25,8 +25,9 @@ class RowHeader extends Component {
          <div className={classNames}>
             {rowNum}
             <i
+               data-testid={'row' + rowNum}
                className="grey-blue small filter icon pointer"
-               onClick={() => alert('need to handle filtering')}
+               onClick={event => (event.target.innerHTML = 'todo')}
             />
          </div>
       );

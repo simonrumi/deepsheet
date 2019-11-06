@@ -32,6 +32,7 @@ export class Header extends Component {
                   <i
                      className="subdued-blue edit icon pointer"
                      onClick={() => this.props.setEditingTitle(true)}
+                     data-testid="titleEditIcon"
                   />
                </span>
                <span>{this.renderUpArrow()}</span>
@@ -46,6 +47,7 @@ export class Header extends Component {
             <i
                className="subdued-blue external alternate icon pointer"
                onClick={() => loadSheet(this.props.sheet.parentSheetId)}
+               data-testid="titleUpArrow"
             />
          );
       }

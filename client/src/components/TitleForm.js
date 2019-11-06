@@ -11,7 +11,7 @@ export class TitleForm extends React.Component {
 
    render() {
       return (
-         <div className="edit-title-container">
+         <div className="edit-title-container" data-testid="titleForm">
             <form
                className="ui form error"
                onSubmit={this.props.handleSubmit(this.editTitle)}
@@ -54,7 +54,12 @@ export class TitleForm extends React.Component {
       }`;
       return (
          <div className={className}>
-            <input {...formProps.input} autoComplete="off" type="text" />
+            <input
+               {...formProps.input}
+               autoComplete="off"
+               type="text"
+               data-testid="titleInput"
+            />
             {this.renderError(formProps.meta)}
          </div>
       );

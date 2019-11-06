@@ -26,7 +26,7 @@ afterEach(() => {
 
 // skipping testing this as first need to test everything under it
 describe('App component', () => {
-   it.skip('renders the whole thing', () => {
+   it('renders the whole thing', () => {
       act(() => {
          ReactDOM.render(
             <Provider store={testStore}>
