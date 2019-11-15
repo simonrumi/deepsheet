@@ -1,46 +1,26 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
-import { Provider } from 'react-redux';
-import { act } from 'react-dom/test-utils';
-import thunk from 'redux-thunk';
-import configureMockStore from 'redux-mock-store';
+import { fireEvent } from '@testing-library/react';
 import Cell from '../../components/Cell';
-import mockSheet from '../../mockSheet2';
-//import { create } from 'react-test-renderer';
+import mockSheet from '../../mockSubSheet';
+import renderWithRedux from '../renderWithRedux';
 
-const middleware = [thunk];
-const mockStore = configureMockStore(middleware);
-let testContainer;
-let testStore;
+describe('Cell', () => {
+   const rowIndex = 1;
+   const colIndex = 2;
+   const cellKey = 'cell_' + rowIndex + '_' + colIndex;
+   let queries;
 
-beforeEach(() => {
-   testContainer = document.createElement('div');
-   document.body.appendChild(testContainer);
-   testStore = mockStore({ sheet: mockSheet });
-});
+   beforeEach(() => {
+      //QQQQ cell content is not rendering - debug to see what happens when Cell is created by the test
 
-afterEach(() => {
-   ReactDOM.unmountComponentAtNode(testContainer);
-   testContainer.remove();
-   testContainer = null;
-});
+      queries = renderWithRedux(
+         <Cell cellKey={cellKey} key={cellKey} />,
+         mockSheet
+      );
+   });
 
-describe('Cell component', () => {
-   it('shows the expected content', () => {
-      act(() => {
-         ReactDOM.render(
-            <Provider store={testStore}>
-               <Cell
-                  row={1}
-                  column={1}
-                  isLastColumn={false}
-                  isLastRow={false}
-               />
-            </Provider>,
-            testContainer
-         );
-      });
-      const cell = document.querySelector('#B2');
-      expect(cell.innerHTML).toEqual(mockSheet.content[1].content[1].content);
+   it('should render a cell with the correct id and content', () => {
+      const cellContent = mockSheet.rows[rowIndex].columns[colIndex].content;
+      expect(queries.getByText(cellContent)).not.toBe(null);
    });
 });

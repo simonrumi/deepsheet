@@ -3,7 +3,7 @@ import { filter, concat, includes, pick } from 'ramda';
 import { combineReducers } from 'redux';
 
 export function createReducerManager(initialReducers) {
-   console.log('createReducerManager started');
+   //console.log('createReducerManager started');
    let _reducers = { ...initialReducers };
 
    // Note that a reducer expects arguments state & action [state ~= accumulator, action ~= value]

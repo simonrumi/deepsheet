@@ -1,10 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import {
-   updateEditor,
-   updatedCellBeingEdited,
-   updatedSheetId,
-} from '../actions';
+import { updateEditor } from '../actions';
 import {
    indexToColumnLetter,
    indexToRowNumber,
@@ -104,5 +100,5 @@ function mapStateToProps(state, ownProps) {
 
 export default connect(
    mapStateToProps,
-   { updateEditor, updatedCellBeingEdited, updatedSheetId }
+   { updateEditor }
 )(Cell);

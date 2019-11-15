@@ -9,7 +9,7 @@ import {
 
 export default store => next => async action => {
    if (!action) {
-      console.log('WARNING: initializeSheet received action', action);
+      //console.log('WARNING: initializeSheet received action', action);
       return;
    }
    switch (action.type) {

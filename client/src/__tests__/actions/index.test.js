@@ -8,7 +8,7 @@ import {
    updatedCell,
    updatedCellKeys,
    setEditorRef,
-   updateTitle,
+   updatedTitle,
    setEditingTitle,
 } from '../../actions';
 
@@ -48,7 +48,7 @@ describe('actions', () => {
          type: UPDATED_TITLE,
          payload: inputData,
       };
-      expect(updateTitle(inputData)).toEqual(expectedAction);
+      expect(updatedTitle(inputData)).toEqual(expectedAction);
    });
 
    it('should create the SET_EDITING_TITLE action', () => {

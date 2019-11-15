@@ -51,7 +51,7 @@ export const setEditorRef = editorRef => {
    return { type: SET_EDITOR_REF, payload: editorRef };
 };
 
-export const updateTitle = titleData => {
+export const updatedTitle = titleData => {
    return { type: UPDATED_TITLE, payload: titleData };
 };
 

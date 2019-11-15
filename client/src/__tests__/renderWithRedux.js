@@ -5,7 +5,6 @@ import React from 'react';
 import { Provider } from 'react-redux';
 import managedStore from '../store';
 import { fetchedSheet } from '../actions';
-//import mockSheet from '../mockSubSheet';
 
 export default (uiElement, mockSheet) => {
    managedStore.init();

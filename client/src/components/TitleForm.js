@@ -1,7 +1,7 @@
 import React from 'react';
 import { Field, reduxForm } from 'redux-form';
 import { connect } from 'react-redux';
-import { updateTitle, setEditingTitle } from '../actions';
+import { updatedTitle, setEditingTitle } from '../actions';
 
 export class TitleForm extends React.Component {
    constructor(props) {
@@ -10,6 +10,7 @@ export class TitleForm extends React.Component {
    }
 
    render() {
+      //console.log('TitleForm props, most from reduxForm:', this.props);
       return (
          <div className="edit-title-container" data-testid="titleForm">
             <form
@@ -28,6 +29,7 @@ export class TitleForm extends React.Component {
                            disabled={
                               this.props.pristine || this.props.submitting
                            }
+                           data-testid="titleSubmit"
                         >
                            update
                         </button>
@@ -37,6 +39,7 @@ export class TitleForm extends React.Component {
                            className="ui mini red basic button"
                            type="cancel"
                            onClick={this.props.reset}
+                           data-testid="titleCancel"
                         >
                            cancel
                         </button>
@@ -48,6 +51,10 @@ export class TitleForm extends React.Component {
       );
    }
 
+   // reminder: the formProps come from reduxForm....specifically the component={}
+   // argument in the <Field /> above.
+   // Also, this structure {...formProps.input} is equivalent to
+   // <input onChange={formProps.input.onChange} value={formProps.input.value} etc={formProps.input.etc} />
    renderInput = formProps => {
       const className = `field ${
          formProps.meta.error && formProps.meta.touched ? 'error' : ''
@@ -72,7 +79,10 @@ export class TitleForm extends React.Component {
    }
 
    editTitle = formValues => {
-      this.props.updateTitle({ text: formValues.title, isEditingTitle: false });
+      this.props.updatedTitle({
+         text: formValues.title,
+         isEditingTitle: false,
+      });
    };
 }
 
@@ -84,6 +94,9 @@ const validateForm = formValues => {
    return errors;
 };
 
+// reminder: reduxForm() is similar to connect()
+// once we do reduxForm()(TitleForm), we get a ton of props provided by reduxForm
+// including this.props.reset .handleSubmit, .pristine, .submitting, and others used above
 const reduxTitleForm = reduxForm({
    form: 'titleForm', //a name for this form that shows up in the redux store
    validate: validateForm,
@@ -98,5 +111,5 @@ const mapStateToProps = (state, ownProps) => {
 
 export default connect(
    mapStateToProps,
-   { updateTitle, setEditingTitle }
+   { updatedTitle, setEditingTitle }
 )(reduxTitleForm);

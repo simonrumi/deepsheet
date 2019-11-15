@@ -1,5 +1,5 @@
 import React from 'react';
-import { /*render,*/ fireEvent } from '@testing-library/react';
+import { fireEvent } from '@testing-library/react';
 //import '@testing-library/jest-dom/extend-expect'; // custom jest matchers from jest-dom
 import RowHeader from '../../components/RowHeader';
 import mockSheet from '../../mockSubSheet';
