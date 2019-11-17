@@ -12,7 +12,6 @@ describe('Cell', () => {
 
    beforeEach(() => {
       //QQQQ cell content is not rendering - debug to see what happens when Cell is created by the test
-
       queries = renderWithRedux(
          <Cell cellKey={cellKey} key={cellKey} />,
          mockSheet
@@ -20,6 +19,7 @@ describe('Cell', () => {
    });
 
    it('should render a cell with the correct id and content', () => {
+      debugger;
       const cellContent = mockSheet.rows[rowIndex].columns[colIndex].content;
       expect(queries.getByText(cellContent)).not.toBe(null);
    });

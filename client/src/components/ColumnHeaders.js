@@ -3,12 +3,14 @@ import { when } from 'ramda';
 import { connect } from 'react-redux';
 import managedStore from '../store';
 import { indexToColumnLetter } from '../helpers';
+import FilterModal from './FilterModal';
 import { COLUMN_HEADER_HEIGHT } from '../helpers/constants';
 
 class ColumnHeaders extends Component {
    constructor(props) {
       super(props);
       this.indexToColumnLetter = indexToColumnLetter.bind(this);
+      this.showFilterModal = this.showFilterModal.bind(this);
    }
 
    render() {
@@ -65,7 +67,7 @@ class ColumnHeaders extends Component {
                {name}{' '}
                <i
                   className="grey-blue small filter icon pointer"
-                  onClick={() => alert('need to handle filtering')}
+                  onClick={this.showFilterModal}
                />
             </div>
          );
@@ -86,6 +88,11 @@ class ColumnHeaders extends Component {
       headers instanceof Array && headers.length > 0 ? true : false;
    identity = value => value;
    outputHeaders = arr => when(this.checkHeaders, this.identity, arr);
+
+   showFilterModal() {
+      console.log('showing filter modal');
+      return <FilterModal />;
+   }
 
    renderGridSizingStyle(numRows, numCols) {
       const rowsStyle = 'repeat(' + numRows + ', 1.5em)';

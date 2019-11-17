@@ -49,6 +49,6 @@
    padding: 1%;
 }
 
-.pointer {
-   cursor: pointer;
+.filter-modal {
+   z-index: 100;
 }
