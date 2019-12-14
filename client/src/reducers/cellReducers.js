@@ -1,6 +1,6 @@
 import { forEach } from 'ramda';
 import managedStore from '../store';
-import { extractRowColFromString } from '../helpers';
+import { extractRowColFromCellKey } from '../helpers';
 import { updatedCell } from '../actions';
 import { UPDATED_CELL_KEYS, UPDATED_CELL_ } from '../actions/types';
 
@@ -31,7 +31,7 @@ export const cellReducerFactory = (rowNum, colNum) => {
          return state;
       }
 
-      const numsFromType = extractRowColFromString(action.type);
+      const numsFromType = extractRowColFromCellKey(action.type);
       if (
          numsFromType &&
          numsFromType.row === rowNum &&

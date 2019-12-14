@@ -16,11 +16,11 @@ class RowHeader extends Component {
       const rowRegex = /cell_(\d+)_\d+$/;
       const rowIndex = rowRegex.exec(cellKey)[1]; // [1] returns the first group captured in the regex
       const rowNum = this.indexToRowNumber(rowIndex);
-      let classNames = 'grid-header-item row-header-item grey-blue top left ';
+      let classNames =
+         'grid-header-item h-full text-grey-blue border-t border-l ';
       if (rowNum === this.props.totalRows) {
-         classNames += 'bottom ';
+         classNames += 'border-b ';
       }
-      classNames += 'border';
       return (
          <div className={classNames}>
             {rowNum}

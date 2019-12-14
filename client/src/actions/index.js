@@ -9,6 +9,7 @@ import {
    UPDATED_TITLE,
    SET_EDITING_TITLE,
    UPDATED_SHEET_ID,
+   TOGGLED_SHOW_FILTER_MODAL,
 } from './types';
 
 export const fetchedSheet = sheet => {
@@ -57,4 +58,8 @@ export const updatedTitle = titleData => {
 
 export const setEditingTitle = isEditingTitle => {
    return { type: SET_EDITING_TITLE, payload: isEditingTitle };
+};
+
+export const toggledShowFilterModal = showModal => {
+   return { type: TOGGLED_SHOW_FILTER_MODAL, payload: showModal };
 };

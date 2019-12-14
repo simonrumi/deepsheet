@@ -3,24 +3,27 @@ import { when } from 'ramda';
 import { connect } from 'react-redux';
 import managedStore from '../store';
 import { indexToColumnLetter } from '../helpers';
+import { toggledShowFilterModal } from '../actions';
+import ColumnHeader from './molecules/ColumnHeader';
 import FilterModal from './FilterModal';
-import { COLUMN_HEADER_HEIGHT } from '../helpers/constants';
+
+const COLUMN_HEADER_HEIGHT = '2em';
 
 class ColumnHeaders extends Component {
    constructor(props) {
       super(props);
       this.indexToColumnLetter = indexToColumnLetter.bind(this);
-      this.showFilterModal = this.showFilterModal.bind(this);
    }
 
    render() {
       const headers = this.renderColumnHeaders();
       return (
          <div
-            className="grid-container"
+            className="grid-container mt-2"
             style={this.renderGridSizingStyle(1, this.props.sheet.totalColumns)}
          >
             {this.outputHeaders(headers)}
+            <FilterModal />
          </div>
       );
    }
@@ -45,31 +48,20 @@ class ColumnHeaders extends Component {
          if (currentIndex === 0) {
             headers.push(
                <div
-                  className="grid-header-item grey-blue top left border"
+                  className="grid-header-item text-grey-blue border-t border-l"
                   style={{ height: COLUMN_HEADER_HEIGHT }}
                   key="topCorner"
                ></div>
             );
          }
 
-         // add the column header with the letter of that column in it
-         const name = indexToNameFn(currentIndex);
-         const rightBorder =
-            currentIndex === this.props.sheet.totalColumns - 1 ? 'right' : '';
-         const classes =
-            'grid-header-item grey-blue top left ' + rightBorder + ' border';
          headers.push(
-            <div
-               key={name}
-               className={classes}
-               data-testid={'col' + currentIndex}
-            >
-               {name}{' '}
-               <i
-                  className="grey-blue small filter icon pointer"
-                  onClick={this.showFilterModal}
-               />
-            </div>
+            <ColumnHeader
+               index={currentIndex}
+               key={'col' + currentIndex}
+               totalColumns={this.props.sheet.totalColumns}
+               onFilterClick={() => this.props.toggledShowFilterModal(true)}
+            />
          );
          return generateHeaders(
             totalHeaders,
@@ -89,11 +81,6 @@ class ColumnHeaders extends Component {
    identity = value => value;
    outputHeaders = arr => when(this.checkHeaders, this.identity, arr);
 
-   showFilterModal() {
-      console.log('showing filter modal');
-      return <FilterModal />;
-   }
-
    renderGridSizingStyle(numRows, numCols) {
       const rowsStyle = 'repeat(' + numRows + ', 1.5em)';
       const columnsStyle = '2em repeat(' + numCols + ', 1fr)';
@@ -107,11 +94,12 @@ class ColumnHeaders extends Component {
 function mapStateToProps(state) {
    return {
       sheet: state.sheet,
+      showFilterModal: state.showFilterModal,
       managedStore,
    };
 }
 
 export default connect(
    mapStateToProps,
-   {}
+   { toggledShowFilterModal }
 )(ColumnHeaders);

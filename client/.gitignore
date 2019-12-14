@@ -22,5 +22,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+#original downloads of svgs which have been incorporated into components
+edit.svg
+upload.svg
+filter.svg
+
 #temp/old stuff
 /oldTests

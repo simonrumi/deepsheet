@@ -8,6 +8,7 @@ import {
    SET_EDITOR_REF,
    UPDATED_TITLE,
    SET_EDITING_TITLE,
+   TOGGLED_SHOW_FILTER_MODAL,
 } from '../actions/types';
 
 const sheetIdReducer = (state = DEFAULT_SHEET_ID, action) => {
@@ -62,6 +63,18 @@ export const titleReducer = (state = {}, action) => {
    }
 };
 
+export const filterModalReducer = (
+   state = { showFilterModal: false },
+   action
+) => {
+   switch (action.type) {
+      case TOGGLED_SHOW_FILTER_MODAL:
+         return { ...state, showFilterModal: action.payload };
+      default:
+         return state;
+   }
+};
+
 export const staticReducers = {
    sheetId: sheetIdReducer,
    sheet: sheetReducer,
@@ -70,4 +83,5 @@ export const staticReducers = {
    title: titleReducer,
    form: reduxFormReducer,
    cellKeys: cellKeyReducer,
+   filterModal: filterModalReducer,
 };

@@ -13,11 +13,13 @@
       "redux": "^4.0.4",
       "redux-form": "^8.1.0",
       "redux-thunk": "^2.3.0",
+      "tailwindcss": "^1.1.4",
       "typescript": "^3.5.3"
    },
    "scripts": {
-      "start": "react-scripts start",
-      "build": "react-scripts build",
+      "tailwind:css": "tailwind build src/css/tailwind.src.css -c  tailwind.config.js -o src/css/tailwind.css",
+      "start": "npm run tailwind:css && react-scripts start",
+      "build": "npm run tailwind:css && react-scripts build",
       "test": "react-scripts test",
       "test:coverage": "react-scripts test --coverage",
       "test:debug": "react-scripts --inspect-brk test --runInBand --no-cache",

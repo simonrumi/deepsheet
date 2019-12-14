@@ -1,4 +1,4 @@
-.grid-container {
+/*.grid-container {
    display: grid;
    grid-column-gap: 0;
    grid-row-gap: 0;
@@ -13,9 +13,9 @@
    height: 100%;
    padding: 1%;
 }
-
+*/
 /* for some reason leaving the height off this makes the column headers show up at the correct height */
-.grid-header-item {
+/*.grid-header-item {
    grid-column: span 1;
    grid-row: span 1;
    width: 100%;
@@ -27,8 +27,8 @@
 .row-header-item {
    height: 100%;
 }
-
-.top.border {
+*/
+/*.top.border {
    border-top: 1px solid #a5cacf;
 }
 
@@ -43,7 +43,7 @@
 .bottom.border {
    border-bottom: 1px solid #a5cacf;
 }
-
+*/
 .summary-cell-container {
    border: 1px solid #d17e19;
    padding: 1%;

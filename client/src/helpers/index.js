@@ -1,3 +1,5 @@
+import * as R from 'ramda';
+import ReactDOM from 'react-dom';
 import managedStore from '../store';
 import { updatedSheetId } from '../actions';
 
@@ -64,7 +66,7 @@ export const fetchSummaryCellFromSheet = sheetId => {
    return null;
 };
 
-export const extractRowColFromString = str => {
+export const extractRowColFromCellKey = str => {
    // expecting a string like some_prefix_2_3
    //where 2 & 3 are the row and column numbers respectively
    const regex = new RegExp(/.*_(\d+)_(\d+)$/);
@@ -86,3 +88,17 @@ export const loadSheet = async sheetId => {
    // then get the new sheet
    updatedSheetId(sheetId);
 };
+
+export const unmountAllCells = cellKeys => {
+   R.map(
+      cellKey =>
+         ReactDOM.unmountComponentAtNode(document.getElementById(cellKey)),
+      cellKeys
+   );
+};
+
+// impure function to help with debugging
+export const trace = R.curry((tag, x) => {
+   console.log(tag, x);
+   return x;
+});

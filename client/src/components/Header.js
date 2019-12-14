@@ -1,8 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { setEditingTitle } from '../actions';
-import { loadSheet } from '../helpers';
-import TitleForm from './TitleForm';
+import HeaderTitle from './molecules/HeaderTitle';
+import TitleForm from './molecules/TitleForm';
 
 export class Header extends Component {
    render() {
@@ -18,40 +17,7 @@ export class Header extends Component {
             />
          );
       }
-      return this.renderTitle();
-   }
-
-   renderTitle() {
-      return (
-         <div className="ui grid">
-            <div className="twelve wide column">
-               <h2 className="subdued-blue">{this.props.title.text}</h2>
-            </div>
-            <div className="right aligned four wide column">
-               <span className="right floated two wide column">
-                  <i
-                     className="subdued-blue edit icon pointer"
-                     onClick={() => this.props.setEditingTitle(true)}
-                     data-testid="titleEditIcon"
-                  />
-               </span>
-               <span>{this.renderUpArrow()}</span>
-            </div>
-         </div>
-      );
-   }
-
-   renderUpArrow() {
-      if (this.props.sheet.parentSheetId) {
-         return (
-            <i
-               className="subdued-blue external alternate icon pointer"
-               onClick={() => loadSheet(this.props.sheet.parentSheetId)}
-               data-testid="titleUpArrow"
-            />
-         );
-      }
-      return null;
+      return <HeaderTitle />;
    }
 }
 
@@ -62,7 +28,4 @@ function mapStateToProps(state) {
    };
 }
 
-export default connect(
-   mapStateToProps,
-   { setEditingTitle }
-)(Header);
+export default connect(mapStateToProps)(Header);

@@ -5,7 +5,7 @@ import Header from './Header';
 import Editor from './Editor';
 import ColumnHeaders from './ColumnHeaders';
 import RowHeader from './RowHeader';
-import Cell from './Cell';
+import Cell from './molecules/Cell';
 import { fetchedSheet, updatedSheetId } from '../actions';
 import managedStore from '../store';
 
