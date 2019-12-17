@@ -1,9 +1,7 @@
 import React, { Component } from 'react';
 import * as R from 'ramda';
 import { connect } from 'react-redux';
-import managedStore from '../../store';
 import { indexToColumnLetter } from '../../helpers';
-import { toggledShowFilterModal } from '../../actions';
 import ColumnHeader from '../molecules/ColumnHeader';
 import TopLeftHeader from '../atoms/TopLeftHeader';
 import FilterModal from './FilterModal';
@@ -40,7 +38,7 @@ class ColumnHeaders extends Component {
 
 			// before the very first column we need to add a spacer column that will go above the row headers
 			if (currentIndex === 0) {
-				headers.push(<TopLeftHeader classes={COLUMN_HEADER_CLASSES} key="topCorner" />);
+				headers.push(<TopLeftHeader classes={COLUMN_HEADER_CLASSES} key="topLeftCorner" />);
 			}
 
 			headers.push(
@@ -49,7 +47,6 @@ class ColumnHeaders extends Component {
 					key={'col' + currentIndex}
 					totalColumns={this.props.sheet.totalColumns}
 					classes={COLUMN_HEADER_CLASSES}
-					onFilterClick={() => this.props.toggledShowFilterModal(true)}
 				/>
 			);
 			return generateHeaders(totalHeaders, indexToNameFn, ++currentIndex, headers);
@@ -73,12 +70,7 @@ class ColumnHeaders extends Component {
 function mapStateToProps(state) {
 	return {
 		sheet: state.sheet,
-		showFilterModal: state.showFilterModal,
-		managedStore,
 	};
 }
 
-export default connect(
-	mapStateToProps,
-	{ toggledShowFilterModal }
-)(ColumnHeaders);
+export default connect(mapStateToProps)(ColumnHeaders);

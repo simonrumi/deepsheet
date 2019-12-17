@@ -1,20 +1,35 @@
-import React from 'react';
+import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import { indexToColumnLetter } from '../../helpers';
+import { toggledShowFilterModal } from '../../actions';
 import IconFilter from '../atoms/IconFilter';
 
-const ColumnHeader = ({ index, totalColumns, classes, onFilterClick }) => {
-	const columnLetter = indexToColumnLetter(index);
-	const rightBorder = index === totalColumns - 1 ? ' border-r' : '';
-	const allClasses = classes + rightBorder;
-
-	return (
-		<div className={allClasses} data-testid={'col' + index}>
-			<div className="flex items-center justify-between px-1">
-				<div className="flex-2">{columnLetter}</div>
-				<IconFilter classes={'flex-1 h-3 w-3'} onClick={onFilterClick} />
+class ColumnHeader extends Component {
+	render() {
+		const columnLetter = indexToColumnLetter(this.props.index);
+		const rightBorder = this.props.index === this.props.totalColumns - 1 ? ' border-r' : '';
+		const allClasses = this.props.classes + rightBorder;
+		return (
+			<div className={allClasses} data-testid={'col' + this.props.index}>
+				<div className="flex items-center justify-between px-1">
+					<div className="flex-2">{columnLetter}</div>
+					<IconFilter classes={'flex-1 h-3 w-3'} onClick={this.props.toggledShowFilterModal} />
+				</div>
 			</div>
-		</div>
-	);
-};
+		);
+	}
+}
 
-export default ColumnHeader;
+function mapStateToProps(state, ownProps) {
+	return {
+		showFilterModal: state.showFilterModal,
+		totalColumns: state.sheet.totalColumns,
+		index: ownProps.index,
+		classes: ownProps.classes,
+	};
+}
+
+export default connect(
+	mapStateToProps,
+	{ toggledShowFilterModal }
+)(ColumnHeader);
