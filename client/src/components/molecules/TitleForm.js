@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { Component } from 'react';
 import { Field, reduxForm } from 'redux-form';
 import { connect } from 'react-redux';
 import { updatedTitle } from '../../actions';
 import Button from '../atoms/Button';
-import TextInput from '../atoms/TextInput';
+import TextInput from './TextInput';
 
-export class TitleForm extends React.Component {
+export class TitleForm extends Component {
    constructor(props) {
       super(props);
       this.editTitle = this.editTitle.bind(this);
@@ -39,24 +39,8 @@ export class TitleForm extends React.Component {
       );
    }
 
-   // reminder: the formProps come from reduxForm....specifically the component={}
-   // argument in the <Field /> above.
-   // Also, this structure {...formProps.input} is equivalent to
-   // <input onChange={formProps.input.onChange} value={formProps.input.value} etc={formProps.input.etc} />
    renderInput = formProps => {
-      const error =
-         formProps.meta.error && formProps.meta.touched
-            ? formProps.meta.error
-            : '';
-      return (
-         <TextInput
-            inputProps={formProps.input}
-            autoComplete="off"
-            inputType="text"
-            error={error}
-            testId="titleInput"
-         />
-      );
+      return <TextInput formProps={formProps} testId="titleInput" />;
    };
 
    editTitle = formValues => {

@@ -6,90 +6,106 @@ import Editor from './Editor';
 import ColumnHeaders from './organisms/ColumnHeaders';
 import RowHeader from './molecules/RowHeader';
 import Cell from './molecules/Cell';
+import FilterModal from './organisms/FilterModal';
 import { fetchedSheet, updatedSheetId } from '../actions';
 import managedStore from '../store';
 
 class Sheet extends Component {
-	async componentDidMount() {
-		this.props.updatedSheetId(this.props.sheetId);
-	}
+   async componentDidMount() {
+      this.props.updatedSheetId(this.props.sheetId);
+   }
 
-	render() {
-		return (
-			<div className="px-1">
-				<Header />
-				<Editor />
-				<div
-					className="grid-container"
-					style={this.renderGridSizingStyle(this.props.sheet.totalRows, this.props.sheet.totalColumns)}
-				>
-					<div className="grid-item" style={this.renderGridColHeaderStyle(this.props.sheet.totalColumns)}>
-						<ColumnHeaders />
-					</div>
-					{this.renderCells()}
-				</div>
-				<div className="clear" />
-			</div>
-		);
-	}
+   render() {
+      return (
+         <div className="px-1">
+            <Header />
+            <Editor />
+            <FilterModal />
+            <div
+               className="grid-container"
+               style={this.renderGridSizingStyle(
+                  this.props.sheet.totalRows,
+                  this.props.sheet.totalColumns
+               )}
+            >
+               <div
+                  className="grid-item"
+                  style={this.renderGridColHeaderStyle(
+                     this.props.sheet.totalColumns
+                  )}
+               >
+                  <ColumnHeaders />
+               </div>
+               {this.renderCells()}
+            </div>
+            <div className="clear" />
+         </div>
+      );
+   }
 
-	renderCells() {
-		if (
-			this.props.sheet &&
-			this.props.sheet.totalRows &&
-			this.props.cellKeys &&
-			this.props.cellKeys.length > 0 &&
-			this.props.sheetId === this.props.sheet._id
-		) {
-			return map(cellKey => {
-				return [this.maybeRowHeader(cellKey), this.renderCell(cellKey)];
-			}, this.props.cellKeys);
-		}
-		return <div>loading...</div>;
-	}
+   renderCells() {
+      if (
+         this.props.sheet &&
+         this.props.sheet.totalRows &&
+         this.props.cellKeys &&
+         this.props.cellKeys.length > 0 &&
+         this.props.sheetId === this.props.sheet._id
+      ) {
+         return map(cellKey => {
+            return [this.maybeRowHeader(cellKey), this.renderCell(cellKey)];
+         }, this.props.cellKeys);
+      }
+      return <div>loading...</div>;
+   }
 
-	isFirstColumn = cellKey => /.*_0$/.test(cellKey);
-	renderRowHeader = cellKey => <RowHeader cellKey={cellKey} key={'row_header_' + cellKey} />;
-	renderCell = cellKey => <Cell cellKey={cellKey} key={cellKey} />;
-	noHeader = () => null;
-	maybeRowHeader = ifElse(this.isFirstColumn, this.renderRowHeader, this.noHeader);
+   isFirstColumn = cellKey => /.*_0$/.test(cellKey);
+   renderRowHeader = cellKey => (
+      <RowHeader cellKey={cellKey} key={'row_header_' + cellKey} />
+   );
+   renderCell = cellKey => <Cell cellKey={cellKey} key={cellKey} />;
+   noHeader = () => null;
+   maybeRowHeader = ifElse(
+      this.isFirstColumn,
+      this.renderRowHeader,
+      this.noHeader
+   );
 
-	renderGridSizingStyle(numRows, numCols) {
-		const headerRowHeight = '2em';
-		const headerColHeight = '2em';
-		const rowsStyle = headerRowHeight + ' repeat(' + numRows + ', 1fr)';
-		const columnsStyle = headerColHeight + ' repeat(' + numCols + ', 1fr)';
-		return {
-			gridTemplateRows: rowsStyle,
-			gridTemplateColumns: columnsStyle,
-		};
-	}
+   renderGridSizingStyle(numRows, numCols) {
+      const headerRowHeight = '2em';
+      const headerColHeight = '2em';
+      const rowsStyle = headerRowHeight + ' repeat(' + numRows + ', 1fr)';
+      const columnsStyle = headerColHeight + ' repeat(' + numCols + ', 1fr)';
+      return {
+         gridTemplateRows: rowsStyle,
+         gridTemplateColumns: columnsStyle,
+      };
+   }
 
-	renderGridColHeaderStyle(colNum) {
-		const colSpan = 'span ' + (colNum + 1); //need an extra column for the row headers on the left
-		return {
-			gridColumn: colSpan,
-			gridRow: 'span 1',
-			width: '100%',
-			height: '100%',
-			padding: 0,
-		};
-	}
+   renderGridColHeaderStyle(colNum) {
+      const colSpan = 'span ' + (colNum + 1); //need an extra column for the row headers on the left
+      return {
+         gridColumn: colSpan,
+         gridRow: 'span 1',
+         width: '100%',
+         height: '100%',
+         padding: 0,
+      };
+   }
 }
 
 function mapStateToProps(state) {
-	return {
-		sheet: state.sheet,
-		managedStore,
-		cellKeys: state.cellKeys,
-		sheetId: state.sheetId,
-	};
+   return {
+      sheet: state.sheet,
+      managedStore,
+      cellKeys: state.cellKeys,
+      sheetId: state.sheetId,
+   };
 }
 
 export default connect(
-	mapStateToProps,
-	{
-		fetchedSheet,
-		updatedSheetId,
-	}
+   mapStateToProps,
+   {
+      fetchedSheet,
+      updatedSheetId,
+   }
 )(Sheet);

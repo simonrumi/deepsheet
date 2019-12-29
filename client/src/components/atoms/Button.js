@@ -1,7 +1,8 @@
 import React from 'react';
 import * as R from 'ramda';
 
-const BASE_CLASSES = 'px-2 py-1 border border-solid border-2 rounded';
+const BASE_CLASSES =
+   'px-2 py-1 border border-solid border-2 rounded focus:outline-none focus:shadow-md';
 const SUBMIT_CLASSES = ' border-subdued-blue hover:border-vibrant-blue';
 const CANCEL_CLASSES = ' border-burnt-orange hover:border-vibrant-burnt-orange';
 const BUTTON_CLASSES = ' border-dark-dark-blue hover:border-vibrant-blue';

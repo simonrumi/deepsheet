@@ -89,6 +89,7 @@ export const loadSheet = async sheetId => {
    updatedSheetId(sheetId);
 };
 
+// TODO: dont; think this is used...check and delete if so
 export const unmountAllCells = cellKeys => {
    R.map(
       cellKey =>

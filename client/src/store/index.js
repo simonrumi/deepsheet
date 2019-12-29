@@ -2,10 +2,11 @@
 // immediately. with thunk you can do the dispatch when you're ready
 import reduxThunk from 'redux-thunk';
 
-import { createStore, applyMiddleware, compose } from 'redux';
+import { createStore, applyMiddleware } from 'redux';
 import { createReducerManager } from '../reducers/reducerManager';
 import { staticReducers } from '../reducers';
 import initializeSheet from '../middleware/initializeSheet';
+import filterSheet from '../middleware/filterSheet';
 
 class ManagedStore {
    constructor() {
@@ -21,16 +22,10 @@ class ManagedStore {
    }
 
    init() {
-      // this makes use of Redux Dev Tools extension for Chrome
-      // https://github.com/zalmoxisus/redux-devtools-extension
-      //console.log('ManagedStore.init() started');
-      const composeEnhancers =
-         window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
-
       const reducerManager = createReducerManager(staticReducers);
       this._store = createStore(
          reducerManager.reduce,
-         composeEnhancers(applyMiddleware(reduxThunk, initializeSheet))
+         applyMiddleware(reduxThunk, initializeSheet, filterSheet)
       );
       this._store.reducerManager = reducerManager;
    }

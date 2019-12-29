@@ -15,16 +15,19 @@ module.exports = {
                row: 0,
                column: 0,
                content: 'summary of sheet with id 2',
+               visible: true,
             },
             {
                row: 0,
                column: 1,
                content: 'the rest',
+               visible: true,
             },
             {
                row: 0,
                column: 2,
                content: 'of this sheet',
+               visible: true,
             },
          ],
       }, // end  row
@@ -35,16 +38,19 @@ module.exports = {
                row: 1,
                column: 0,
                content: 'is other info',
+               visible: true,
             },
             {
                row: 1,
                column: 1,
                content: 'we cannot see',
+               visible: true,
             },
             {
                row: 1,
                column: 2,
                content: 'from the parent',
+               visible: true,
             },
          ],
       }, // end  row
