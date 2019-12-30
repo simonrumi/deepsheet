@@ -1,4 +1,4 @@
-import { map, ifElse } from 'ramda';
+import * as R from 'ramda';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import Header from './Header';
@@ -9,6 +9,7 @@ import Cell from './molecules/Cell';
 import FilterModal from './organisms/FilterModal';
 import { fetchedSheet, updatedSheetId } from '../actions';
 import managedStore from '../store';
+import { extractRowColFromCellKey } from '../helpers';
 
 class Sheet extends Component {
    async componentDidMount() {
@@ -51,23 +52,42 @@ class Sheet extends Component {
          this.props.cellKeys.length > 0 &&
          this.props.sheetId === this.props.sheet._id
       ) {
-         return map(cellKey => {
-            return [this.maybeRowHeader(cellKey), this.renderCell(cellKey)];
-         }, this.props.cellKeys);
+         return R.map(this.maybeRow, this.props.cellKeys);
       }
       return <div>loading...</div>;
    }
 
    isFirstColumn = cellKey => /.*_0$/.test(cellKey);
+
+   rowIsVisible = R.pipe(
+      extractRowColFromCellKey,
+      R.both(
+         rowColObj =>
+            R.hasPath(['rowVisibility', rowColObj.row], this.props.sheet),
+         rowColObj => this.props.sheet.rowVisibility[rowColObj.row]
+      )
+   );
+
+   // TODO: **** bug is here *****
+   // somehow this is causing a problem, although it seems to work in ramda REPL
+   maybeRow = R.ifElse(
+      this.rowIsVisible,
+      cellKey => [this.maybeRowHeader(cellKey), this.renderCell(cellKey)],
+      this.nothing
+   );
+
    renderRowHeader = cellKey => (
       <RowHeader cellKey={cellKey} key={'row_header_' + cellKey} />
    );
+
    renderCell = cellKey => <Cell cellKey={cellKey} key={cellKey} />;
-   noHeader = () => null;
-   maybeRowHeader = ifElse(
+
+   nothing = () => null;
+
+   maybeRowHeader = R.ifElse(
       this.isFirstColumn,
       this.renderRowHeader,
-      this.noHeader
+      this.nothing
    );
 
    renderGridSizingStyle(numRows, numCols) {
