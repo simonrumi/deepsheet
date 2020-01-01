@@ -10,7 +10,7 @@ import FilterModal from './organisms/FilterModal';
 import { fetchedSheet, updatedSheetId } from '../actions';
 import managedStore from '../store';
 import { shouldShowRow, nothing, isFirstColumn } from '../helpers/sheetHelpers';
-import * as RWrap from '../helpers/ramdaWrappers';
+// import * as RWrap from '../helpers/ramdaWrappers'; // use this for debugging only
 
 class Sheet extends Component {
 	componentDidMount() {
@@ -21,11 +21,11 @@ class Sheet extends Component {
 
 	renderCell = cellKey => <Cell cellKey={cellKey} key={cellKey} />;
 
-	maybeRowHeader = RWrap.ifElse(isFirstColumn, this.renderRowHeader, nothing, null, false);
+	maybeRowHeader = R.ifElse(isFirstColumn, this.renderRowHeader, nothing);
 
 	renderRow = cellKey => [this.maybeRowHeader(cellKey), this.renderCell(cellKey)];
 
-	maybeRow = RWrap.ifElse(shouldShowRow(this.props.sheet), this.renderRow, nothing, 'maybeRow');
+	maybeRow = sheet => R.ifElse(shouldShowRow(sheet), this.renderRow, nothing);
 
 	renderCells() {
 		if (
@@ -34,8 +34,10 @@ class Sheet extends Component {
 			this.props.cellKeys.length > 0 &&
 			this.props.sheetId === this.props.sheet._id
 		) {
-			console.log('Sheet.renderCells(), this.props.cellKeys = ', this.props.cellKeys);
-			return RWrap.map(this.maybeRow, this.props.cellKeys, 'renderCells');
+			// note that this is the only place where we are passing data from this.props into a function
+			// this is because we have first checked that the props exist.
+			// after this call, all the subsequent functions are not made with actual data in them.
+			return R.map(this.maybeRow(this.props.sheet), this.props.cellKeys);
 		}
 		return <div>loading...</div>;
 	}
