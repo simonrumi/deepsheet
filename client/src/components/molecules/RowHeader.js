@@ -1,22 +1,20 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { indexToRowNumber } from '../../helpers';
+import { indexToRowNumber, extractRowColFromCellKey } from '../../helpers';
+import { toggledShowFilterModal } from '../../actions';
 import IconFilter from '../atoms/IconFilter';
 
 class RowHeader extends Component {
 	constructor(props) {
 		super(props);
-		this.indexToRowNumber = indexToRowNumber.bind(this);
+		this.showFilterModalForRow = this.showFilterModalForRow.bind(this);
 	}
 
-	render() {
-		return this.renderRowHeader(this.props.cellKey);
-	}
+	showFilterModalForRow = rowIndex => this.props.toggledShowFilterModal(rowIndex, null);
 
 	renderRowHeader(cellKey) {
-		const rowRegex = /cell_(\d+)_\d+$/;
-		const rowIndex = rowRegex.exec(cellKey)[1]; // [1] returns the first group captured in the regex
-		const rowNum = this.indexToRowNumber(rowIndex);
+		const { row } = extractRowColFromCellKey(cellKey);
+		const rowNum = indexToRowNumber(row);
 		let classNames = 'grid-header-item h-full text-grey-blue border-t border-l ';
 		if (rowNum === this.props.totalRows) {
 			classNames += 'border-b ';
@@ -26,16 +24,21 @@ class RowHeader extends Component {
 				{rowNum}
 				<IconFilter
 					classes={'flex-1 h-3 w-3'}
-					onClick={event => (event.target.innerHTML = 'todo')}
+					onClickFn={() => this.showFilterModalForRow(row)}
 					testId={'row' + rowNum}
 				/>
 			</div>
 		);
 	}
+
+	render() {
+		return this.renderRowHeader(this.props.cellKey);
+	}
 }
 
 function mapStateToProps(state, ownProps) {
 	return {
+		showFilterModal: state.showFilterModal,
 		cellKey: ownProps.cellKey,
 		totalRows: state.sheet.totalRows,
 	};
@@ -43,5 +46,5 @@ function mapStateToProps(state, ownProps) {
 
 export default connect(
 	mapStateToProps,
-	{}
+	{ toggledShowFilterModal }
 )(RowHeader);

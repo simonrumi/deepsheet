@@ -9,14 +9,11 @@ const getRowVisibilityFromSheet = R.curry((sheet, rowColObj) => sheet.rowVisibil
 const rowIsVisible = sheet =>
 	R.pipe(
 		extractRowColFromCellKey,
-		R.both(isRowVisibilityInSheet(sheet), getRowVisibilityFromSheet(sheet)),
-		R.tap(console.log)
+		R.both(isRowVisibilityInSheet(sheet), getRowVisibilityFromSheet(sheet))
 	);
 
 export const shouldShowRow = R.curry((sheet, cellKey) =>
 	R.or(R.isEmpty(sheet.rowVisibility), rowIsVisible(sheet)(cellKey))
 );
-
-export const nothing = () => null;
 
 export const isFirstColumn = cellKey => /.*_0$/.test(cellKey); //the cellKey should end with _0 indicating the first column

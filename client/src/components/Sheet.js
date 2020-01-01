@@ -9,7 +9,8 @@ import Cell from './molecules/Cell';
 import FilterModal from './organisms/FilterModal';
 import { fetchedSheet, updatedSheetId } from '../actions';
 import managedStore from '../store';
-import { shouldShowRow, nothing, isFirstColumn } from '../helpers/sheetHelpers';
+import { nothing } from '../helpers';
+import { shouldShowRow, isFirstColumn } from '../helpers/sheetHelpers';
 // import * as RWrap from '../helpers/ramdaWrappers'; // use this for debugging only
 
 class Sheet extends Component {
