@@ -2,96 +2,78 @@ import React, { Component } from 'react';
 import * as R from 'ramda';
 import { connect } from 'react-redux';
 import { indexToColumnLetter } from '../../helpers';
+import { shouldShowColumn } from '../../helpers/visibilityHelpers';
 import ColumnHeader from '../molecules/ColumnHeader';
 import TopLeftHeader from '../atoms/TopLeftHeader';
 
-const COLUMN_HEADER_CLASSES =
-   'grid-header-item text-grey-blue border-t border-l h-12';
+const COLUMN_HEADER_CLASSES = 'grid-header-item text-grey-blue border-t border-l h-12';
 
 class ColumnHeaders extends Component {
-   constructor(props) {
-      super(props);
-      this.indexToColumnLetter = indexToColumnLetter.bind(this);
-   }
+	constructor(props) {
+		super(props);
+		this.indexToColumnLetter = indexToColumnLetter.bind(this);
+	}
 
-   render() {
-      const headers = this.renderColumnHeaders();
-      return (
-         <div
-            className="grid-container mt-2"
-            style={this.renderGridSizingStyle(1, this.props.sheet.totalColumns)}
-         >
-            {this.outputHeaders(headers)}
-         </div>
-      );
-   }
+	checkHeaders = headers => (headers instanceof Array && headers.length > 0 ? true : false);
+	outputHeaders = arr => R.when(this.checkHeaders, R.identity, arr);
 
-   renderColumnHeaders() {
-      if (!this.props.sheet.totalColumns) {
-         return null;
-      }
+	renderGridSizingStyle(numRows, numCols) {
+		const rowsStyle = 'repeat(' + numRows + ', 1.5em)';
+		const columnsStyle = '2em repeat(' + numCols + ', 1fr)';
+		return {
+			gridTemplateRows: rowsStyle,
+			gridTemplateColumns: columnsStyle,
+		};
+	}
 
-      // recursive function to render a row of spreadeheet column headers A, B, C... etc
-      const generateHeaders = (
-         totalHeaders,
-         indexToNameFn,
-         currentIndex = 0,
-         headers = []
-      ) => {
-         //return the headers when we've finished creating all of them
-         if (totalHeaders === currentIndex) {
-            return headers;
-         }
+	renderColumnHeaders() {
+		if (!this.props.totalColumns) {
+			return null;
+		}
 
-         // before the very first column we need to add a spacer column that will go above the row headers
-         if (currentIndex === 0) {
-            headers.push(
-               <TopLeftHeader
-                  classes={COLUMN_HEADER_CLASSES}
-                  key="topLeftCorner"
-               />
-            );
-         }
+		// recursive function to render a row of spreadeheet column headers A, B, C... etc
+		const generateHeaders = (totalHeaders, indexToNameFn, currentIndex = 0, headers = []) => {
+			//return the headers when we've finished creating all of them
+			if (totalHeaders === currentIndex) {
+				return headers;
+			}
 
-         headers.push(
-            <ColumnHeader
-               index={currentIndex}
-               key={'col' + currentIndex}
-               totalColumns={this.props.sheet.totalColumns}
-               classes={COLUMN_HEADER_CLASSES}
-            />
-         );
-         return generateHeaders(
-            totalHeaders,
-            indexToNameFn,
-            ++currentIndex,
-            headers
-         );
-      };
-      return generateHeaders(
-         this.props.sheet.totalColumns,
-         this.indexToColumnLetter
-      );
-   }
+			// before the very first column we need to add a spacer column that will go above the row headers
+			if (currentIndex === 0) {
+				headers.push(<TopLeftHeader classes={COLUMN_HEADER_CLASSES} key="topLeftCorner" />);
+			}
 
-   checkHeaders = headers =>
-      headers instanceof Array && headers.length > 0 ? true : false;
-   outputHeaders = arr => R.when(this.checkHeaders, R.identity, arr);
+			if (shouldShowColumn(this.props.columnVisibility, currentIndex)) {
+				headers.push(
+					<ColumnHeader
+						index={currentIndex}
+						key={'col' + currentIndex}
+						totalColumns={this.props.totalColumns}
+						classes={COLUMN_HEADER_CLASSES}
+					/>
+				);
+			}
 
-   renderGridSizingStyle(numRows, numCols) {
-      const rowsStyle = 'repeat(' + numRows + ', 1.5em)';
-      const columnsStyle = '2em repeat(' + numCols + ', 1fr)';
-      return {
-         gridTemplateRows: rowsStyle,
-         gridTemplateColumns: columnsStyle,
-      };
-   }
+			return generateHeaders(totalHeaders, indexToNameFn, ++currentIndex, headers);
+		};
+		return generateHeaders(this.props.totalColumns, this.indexToColumnLetter);
+	}
+
+	render() {
+		const headers = this.renderColumnHeaders();
+		return (
+			<div className="grid-container mt-2" style={this.renderGridSizingStyle(1, this.props.totalColumns)}>
+				{this.outputHeaders(headers)}
+			</div>
+		);
+	}
 }
 
 function mapStateToProps(state) {
-   return {
-      sheet: state.sheet,
-   };
+	return {
+		totalColumns: state.sheet.totalColumns,
+		columnVisibility: state.sheet.columnVisibility,
+	};
 }
 
 export default connect(mapStateToProps)(ColumnHeaders);

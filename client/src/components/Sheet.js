@@ -10,7 +10,7 @@ import FilterModal from './organisms/FilterModal';
 import { fetchedSheet, updatedSheetId } from '../actions';
 import managedStore from '../store';
 import { nothing } from '../helpers';
-import { shouldShowRow, isFirstColumn } from '../helpers/sheetHelpers';
+import { shouldShowRow, isFirstColumn } from '../helpers/visibilityHelpers';
 // import * as RWrap from '../helpers/ramdaWrappers'; // use this for debugging only
 
 class Sheet extends Component {
