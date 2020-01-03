@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import * as R from 'ramda';
 import { connect } from 'react-redux';
-import { indexToColumnLetter } from '../../helpers';
-import { shouldShowColumn } from '../../helpers/visibilityHelpers';
+import { indexToColumnLetter, ROW_AXIS, COLUMN_AXIS } from '../../helpers';
+import { shouldShowColumn, getRequiredNumItemsForAxis } from '../../helpers/visibilityHelpers';
 import ColumnHeader from '../molecules/ColumnHeader';
 import TopLeftHeader from '../atoms/TopLeftHeader';
 
@@ -62,7 +62,10 @@ class ColumnHeaders extends Component {
 	render() {
 		const headers = this.renderColumnHeaders();
 		return (
-			<div className="grid-container mt-2" style={this.renderGridSizingStyle(1, this.props.totalColumns)}>
+			<div
+				className="grid-container mt-2"
+				style={this.renderGridSizingStyle(1, getRequiredNumItemsForAxis(COLUMN_AXIS, this.props.sheet))}
+			>
 				{this.outputHeaders(headers)}
 			</div>
 		);
@@ -71,6 +74,7 @@ class ColumnHeaders extends Component {
 
 function mapStateToProps(state) {
 	return {
+		sheet: state.sheet,
 		totalColumns: state.sheet.totalColumns,
 		columnVisibility: state.sheet.columnVisibility,
 	};
