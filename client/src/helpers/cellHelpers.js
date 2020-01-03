@@ -34,7 +34,7 @@ export const getRowNumFromObj = obj =>
    R.isNil(obj) ? null : R.has('row') ? obj.row : null;
 
 export const getColNumFromObj = obj =>
-   R.isNil(obj) ? null : R.has('col') ? obj.col : null;
+   R.isNil(obj) ? null : R.has('column') ? obj.column : null;
 
 const isLast = R.curry((total, currentIndex) => total - 1 === currentIndex);
 
