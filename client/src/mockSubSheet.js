@@ -7,6 +7,8 @@ module.exports = {
 		summaryCell: { row: 0, column: 0 },
 		columnVisibility: {},
 		rowVisibility: {},
+		rowFilters: {},
+		columnFilters: {},
 	},
 	title: 'A sub sheet',
 	rows: [

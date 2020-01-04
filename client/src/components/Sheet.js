@@ -43,8 +43,7 @@ class Sheet extends Component {
 		return <div>loading...</div>;
 	}
 
-	renderGridColHeaderStyle(colNum) {
-		const colSpan = 'span ' + (colNum + 1); //need an extra column for the row headers on the left
+	columnHeaderStyle = colSpan => {
 		return {
 			gridColumn: colSpan,
 			gridRow: 'span 1',
@@ -52,10 +51,17 @@ class Sheet extends Component {
 			height: '100%',
 			padding: 0,
 		};
-	}
+	};
 
-	renderGridSizingStyle(numRows, numCols) {
-		console.log('renderGridSizingStyle,  numRows = ' + numRows + ', numCols = ' + numCols);
+	createColSpan = colNum => 'span ' + (colNum + 1); //need an extra column for the row headers on the left
+
+	renderColHeaderStyle = R.pipe(
+		getRequiredNumItemsForAxis,
+		this.createColSpan,
+		this.columnHeaderStyle
+	);
+
+	getGridSizingStyle([numRows, numCols]) {
 		const headerRowHeight = '2em';
 		const headerColHeight = '2em';
 		const rowsStyle = headerRowHeight + ' repeat(' + numRows + ', 1fr)';
@@ -66,7 +72,8 @@ class Sheet extends Component {
 		};
 	}
 
-	// TODO: need to calculate totalColumns - hiddenColumns and totalRows - hiddenRows
+	renderGridSizingStyle = sheet =>
+		this.getGridSizingStyle(R.map(getRequiredNumItemsForAxis(R.__, sheet), [ROW_AXIS, COLUMN_AXIS]));
 
 	render() {
 		return (
@@ -74,17 +81,8 @@ class Sheet extends Component {
 				<Header />
 				<Editor />
 				<FilterModal />
-				<div
-					className="grid-container"
-					style={this.renderGridSizingStyle(
-						getRequiredNumItemsForAxis(ROW_AXIS, this.props.sheet),
-						getRequiredNumItemsForAxis(COLUMN_AXIS, this.props.sheet)
-					)}
-				>
-					<div
-						className="grid-item"
-						style={this.renderGridColHeaderStyle(getRequiredNumItemsForAxis(COLUMN_AXIS, this.props.sheet))}
-					>
+				<div className="grid-container" style={this.renderGridSizingStyle(this.props.sheet)}>
+					<div className="grid-item" style={this.renderColHeaderStyle(COLUMN_AXIS, this.props.sheet)}>
 						<ColumnHeaders />
 					</div>
 					{this.renderCells()}

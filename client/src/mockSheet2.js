@@ -6,6 +6,8 @@ module.exports = {
 		parentSheetId: null,
 		columnVisibility: {},
 		rowVisibility: {},
+		columnFilters: {},
+		rowFilters: {},
 	},
 	title: 'My Deep Deep Sheet',
 	rows: [

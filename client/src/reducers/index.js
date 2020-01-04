@@ -1,5 +1,6 @@
 import { reducer as reduxFormReducer } from 'redux-form';
 import { cellKeyReducer } from './cellReducers';
+import { replaceFilterEntry } from '../helpers/visibilityHelpers';
 import {
 	DEFAULT_SHEET_ID,
 	UPDATED_SHEET_ID,
@@ -28,11 +29,11 @@ const sheetReducer = (state = [], action) => {
 		case FETCHED_SHEET:
 			return action.payload.metadata;
 		case UPDATED_COLUMN_VISIBILITY:
-			console.log('sheetReducer, UPDATED_COLUMN_VISIBILITY got action.payload', action.payload);
 			return { ...state, columnVisibility: action.payload };
 		case UPDATED_ROW_VISIBILITY:
-			console.log('sheetReducer, UPDATED_ROW_VISIBILITY got action.payload', action.payload);
 			return { ...state, rowVisibility: action.payload };
+		case UPDATED_FILTER:
+			return replaceFilterEntry(action.payload, state);
 		default:
 			return state;
 	}

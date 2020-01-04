@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import * as R from 'ramda';
 import { connect } from 'react-redux';
-import { indexToColumnLetter, ROW_AXIS, COLUMN_AXIS } from '../../helpers';
+import { indexToColumnLetter, COLUMN_AXIS } from '../../helpers';
 import { shouldShowColumn, getRequiredNumItemsForAxis } from '../../helpers/visibilityHelpers';
 import ColumnHeader from '../molecules/ColumnHeader';
 import TopLeftHeader from '../atoms/TopLeftHeader';
