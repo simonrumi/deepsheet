@@ -1,5 +1,5 @@
 import * as R from 'ramda';
-import { extractRowColFromCellKey, ROW_AXIS, COLUMN_AXIS } from './index';
+import { extractRowColFromCellKey, capitalizeFirst, ROW_AXIS, COLUMN_AXIS } from './index';
 //import * as RWrap from './ramdaWrappers'; // use this for debugging only
 
 /****
@@ -39,11 +39,6 @@ const getNumHiddenItemsForAxis = R.pipe(
 	getVisibilityForAxis,
 	R.values,
 	numHiddenItems
-);
-
-const capitalizeFirst = R.pipe(
-	R.head,
-	R.toUpper
 );
 
 const pluralizeTail = R.pipe(

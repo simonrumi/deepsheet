@@ -5,6 +5,7 @@ import { updatedFilter } from '../../actions';
 import Button from '../atoms/Button';
 import SortOptions from '../molecules/SortOptions';
 import FilterOptions from '../molecules/FilterOptions';
+import FilterModalHeading from '../molecules/FilterModalHeading';
 
 class FilterModal extends Component {
 	constructor(props) {
@@ -19,6 +20,7 @@ class FilterModal extends Component {
 					className="fixed top-1/3 left-1/3 w-1/2 md:w-1/3 border border-solid border-grey-blue bg-white shadow-lg px-2 py-2"
 					onSubmit={this.props.handleSubmit(this.editFilter)}
 				>
+					<FilterModalHeading />
 					<SortOptions
 						classes=""
 						onClickAtoZ={() => alert('onClickAtoZ button clicked')}
