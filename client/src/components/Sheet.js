@@ -75,12 +75,14 @@ class Sheet extends Component {
 	renderGridSizingStyle = sheet =>
 		this.getGridSizingStyle(R.map(getRequiredNumItemsForAxis(R.__, sheet), [ROW_AXIS, COLUMN_AXIS]));
 
+	maybeRenderFilterModal = showFilterModal => (showFilterModal ? <FilterModal /> : null);
+
 	render() {
 		return (
 			<div className="px-1">
 				<Header />
 				<Editor />
-				<FilterModal />
+				{this.maybeRenderFilterModal(this.props.showFilterModal)}
 				<div className="grid-container" style={this.renderGridSizingStyle(this.props.sheet)}>
 					<div className="grid-item" style={this.renderColHeaderStyle(COLUMN_AXIS, this.props.sheet)}>
 						<ColumnHeaders />
@@ -96,6 +98,7 @@ class Sheet extends Component {
 function mapStateToProps(state) {
 	return {
 		sheet: state.sheet,
+		showFilterModal: state.filterModal.showFilterModal,
 		managedStore,
 		cellKeys: state.cellKeys,
 		sheetId: state.sheetId,

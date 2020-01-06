@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import * as R from 'ramda';
 import { connect } from 'react-redux';
 import { reduxForm } from 'redux-form';
 import { updatedFilter } from '../../actions';
@@ -17,7 +18,7 @@ class FilterModal extends Component {
 		if (this.props.showFilterModal) {
 			return (
 				<form
-					className="fixed top-1/3 left-1/3 w-1/2 md:w-1/3 border border-solid border-grey-blue bg-white shadow-lg px-2 py-2"
+					className="fixed z-10 top-1/3 left-1/3 w-1/2 md:w-1/3 border border-solid border-grey-blue bg-white shadow-lg px-2 py-2"
 					onSubmit={this.props.handleSubmit(this.editFilter)}
 				>
 					<FilterModalHeading />
@@ -66,11 +67,19 @@ const filterForm = reduxForm({
 })(FilterModal);
 
 function mapStateToProps(state, ownProps) {
+	let initialFilterValues = {};
+	if (R.hasPath(['columnFilters', R.toString(state.filterModal.colIndex)], state.sheet)) {
+		initialFilterValues = state.sheet.columnFilters[state.filterModal.colIndex];
+	} else if (R.hasPath(['rowFilters', R.toString(state.filterModal.rowIndex)], state.sheet)) {
+		initialFilterValues = state.sheet.rowFilters[state.filterModal.rowIndex];
+	}
+	console.log('initialFilterValues', initialFilterValues);
 	return {
 		sheet: state.sheet, // might not really need this
 		showFilterModal: state.filterModal.showFilterModal,
 		rowIndex: state.filterModal.rowIndex,
 		colIndex: state.filterModal.colIndex,
+		initialValues: initialFilterValues,
 	};
 }
 
