@@ -12,3 +12,6 @@ export const DEFAULT_SHEET_ID = 1; // this is just a constant, not an action, bu
 export const UPDATED_SHEET_ID = 'updated_sheet_id';
 export const TOGGLED_SHOW_FILTER_MODAL = 'toggled_show_filter_modal';
 export const UPDATED_FILTER = 'updated_filter';
+export const UPDATED_COLUMN_FILTERS = 'updated_column_filters';
+export const UPDATED_ROW_FILTERS = 'updated_row_filters';
+export const HIDE_FILTERED = 'hide_filtered';

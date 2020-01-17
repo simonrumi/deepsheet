@@ -23,7 +23,7 @@ const checkFilterData = R.converge(R.and, [
 
 const checkedFilterObj = R.ifElse(checkFilterData, createFilterObj, () => null);
 
-const getFilterName = filterData =>
+export const getFilterName = filterData =>
    R.prop('rowIndex', filterData) ? 'rowFilters' : 'columnFilters';
 
 const updateFilterValue = (filterData, sheet) =>
@@ -85,8 +85,9 @@ const createTotalsKey = axis =>
         )(axis)
       : null;
 
-export const getTotalForAxis = (axis, sheet) =>
-   sheet[createTotalsKey(axis)] || 0; //returning 0 if the totalsKey is bogus
+export const getTotalForAxis = R.curry(
+   (axis, sheet) => sheet[createTotalsKey(axis)] || 0
+); //returning 0 if the totalsKey is bogus)
 
 export const getRequiredNumItemsForAxis = (axis, sheet) =>
    R.converge(R.subtract, [getTotalForAxis, getNumHiddenItemsForAxis])(
