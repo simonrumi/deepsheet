@@ -5,73 +5,61 @@ import Label from '../atoms/Label';
 import TextInput from './TextInput';
 import Checkbox from './Checkbox';
 import Button from '../atoms/Button';
+import { clearedAllFilters } from '../../actions';
 
 class FilterOptions extends Component {
-   render() {
-      const allClasses =
-         'border-t-0 border-r border-b border-l border-solid border-grey-blue flex items-start justify-between px-2 py-2 ' +
-         this.props.classes;
+	renderRegexCheckbox = formProps => <Checkbox formProps={formProps} testId="regexCheckbox" />;
 
-      // TODO: the clear all filtering button should dispatch an action to update column & row visibility to be empty objects
+	renderFilterInput = formProps => (
+		<TextInput formProps={formProps} testId="filterInput" placeholder="placeholder value here" />
+	);
 
-      return (
-         <div className={allClasses}>
-            <Label label="Filter" />
-            <div>
-               <Field
-                  name="filterExpression"
-                  component={this.renderFilterInput}
-               />
-               <div className="flex items-center px-2 py-2">
-                  <Field
-                     name="caseSensitiveCheckbox"
-                     component={this.renderCaseSensitiveCheckbox}
-                     classes="pl-0"
-                  />
-                  <Label label="Case sensitive" classes="pl-2" />
-               </div>
-               <div className="flex items-center px-2 py-2">
-                  <Field
-                     name="regexCheckbox"
-                     component={this.renderRegexCheckbox}
-                  />
-                  <Label label="Regular expression" classes="pl-2" />
-               </div>
-               <Button
-                  buttonType="button"
-                  classes=""
-                  onClickFn={() => alert('TODO: clear filtering')}
-                  label="Clear All Filtering"
-               />
-            </div>
-         </div>
-      );
-   }
+	renderCaseSensitiveCheckbox = formProps => <Checkbox formProps={formProps} testId="caseSensitiveCheckbox" />;
 
-   renderFilterInput = formProps => {
-      return (
-         <TextInput
-            formProps={formProps}
-            testId="filterInput"
-            placeholder="placeholder value here"
-         />
-      );
-   };
+	render() {
+		const allClasses =
+			'border-t-0 border-r border-b border-l border-solid border-grey-blue flex items-start justify-between px-2 py-2 ' +
+			this.props.classes;
 
-   renderCaseSensitiveCheckbox = formProps => {
-      return <Checkbox formProps={formProps} testId="caseSensitiveCheckbox" />;
-   };
+		// TODO: the clear all filtering button should dispatch an action to update column & row visibility to be empty objects
 
-   renderRegexCheckbox = formProps => {
-      return <Checkbox formProps={formProps} testId="regexCheckbox" />;
-   };
+		return (
+			<div className={allClasses}>
+				<Label label="Filter" />
+				<div>
+					<Field name="filterExpression" component={this.renderFilterInput} />
+					<div className="flex items-center px-2 py-2">
+						<Field
+							name="caseSensitiveCheckbox"
+							component={this.renderCaseSensitiveCheckbox}
+							classes="pl-0"
+						/>
+						<Label label="Case sensitive" classes="pl-2" />
+					</div>
+					<div className="flex items-center px-2 py-2">
+						<Field name="regexCheckbox" component={this.renderRegexCheckbox} />
+						<Label label="Regular expression" classes="pl-2" />
+					</div>
+					<Button
+						buttonType="button"
+						classes=""
+						onClickFn={this.props.clearedAllFilters}
+						label="Clear All Filtering"
+					/>
+				</div>
+			</div>
+		);
+	}
 }
 
 const mapStateToProps = (state, ownProps) => {
-   return {
-      sheet: state.sheet, // probably don't need this
-      classes: ownProps.classes || '',
-   };
+	return {
+		sheet: state.sheet, // probably don't need this
+		classes: ownProps.classes || '',
+	};
 };
 
-export default connect(mapStateToProps)(FilterOptions);
+export default connect(
+	mapStateToProps,
+	{ clearedAllFilters }
+)(FilterOptions);

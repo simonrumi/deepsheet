@@ -15,6 +15,7 @@ import {
 	UPDATED_FILTER,
 	UPDATED_COLUMN_FILTERS,
 	UPDATED_ROW_FILTERS,
+	RESET_VISIBLITY,
 } from '../actions/types';
 
 const sheetIdReducer = (state = DEFAULT_SHEET_ID, action) => {
@@ -39,6 +40,9 @@ const sheetReducer = (state = {}, action) => {
 		case UPDATED_ROW_VISIBILITY:
 			const newRowVisibility = R.mergeAll([state.rowVisibility, action.payload]);
 			return { ...state, rowVisibility: newRowVisibility };
+
+		case RESET_VISIBLITY:
+			return { ...state, columnVisibility: {}, rowVisibility: {}, columnFilters: {}, rowFilters: {} };
 
 		case UPDATED_COLUMN_FILTERS:
 			const newColumnFilters = R.mergeAll([state.columnFilters, action.payload]);

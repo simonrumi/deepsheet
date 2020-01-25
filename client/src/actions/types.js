@@ -15,3 +15,5 @@ export const UPDATED_FILTER = 'updated_filter';
 export const UPDATED_COLUMN_FILTERS = 'updated_column_filters';
 export const UPDATED_ROW_FILTERS = 'updated_row_filters';
 export const HIDE_FILTERED = 'hide_filtered';
+export const RESET_VISIBLITY = 'reset_visibility';
+export const CLEAR_ALL_FILTERS = 'clear_all_filters';

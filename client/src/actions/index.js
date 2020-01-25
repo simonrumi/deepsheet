@@ -15,8 +15,7 @@ import {
 	UPDATED_COLUMN_FILTERS,
 	UPDATED_ROW_FILTERS,
 	HIDE_FILTERED,
-	UPDATED_COLUMN_VISIBILITY,
-	UPDATED_ROW_VISIBILITY,
+	CLEAR_ALL_FILTERS,
 } from './types';
 
 export const fetchedSheet = sheet => {
@@ -25,20 +24,6 @@ export const fetchedSheet = sheet => {
 
 export const updatedSheetId = sheetId => {
 	managedStore.store.dispatch({ type: UPDATED_SHEET_ID, payload: sheetId });
-};
-
-export const updatedHiddenColumns = hiddenColumns => {
-	managedStore.store.dispatch({
-		type: UPDATED_COLUMN_VISIBILITY,
-		payload: hiddenColumns,
-	});
-};
-
-export const updatedHiddenRows = hiddenRows => {
-	managedStore.store.dispatch({
-		type: UPDATED_ROW_VISIBILITY,
-		payload: hiddenRows,
-	});
 };
 
 export const updatedColumnFilters = columnFilters => {
@@ -111,5 +96,11 @@ export const updatedFilter = filterOptions => {
 	managedStore.store.dispatch({
 		type: HIDE_FILTERED,
 		payload: filterOptions,
+	});
+};
+
+export const clearedAllFilters = () => {
+	managedStore.store.dispatch({
+		type: CLEAR_ALL_FILTERS,
 	});
 };
