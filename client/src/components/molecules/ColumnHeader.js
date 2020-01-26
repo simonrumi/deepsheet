@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import * as R from 'ramda';
 import { indexToColumnLetter } from '../../helpers';
 import { toggledShowFilterModal } from '../../actions';
 import IconFilter from '../atoms/IconFilter';
@@ -10,6 +11,13 @@ class ColumnHeader extends Component {
 		this.showFilterModalForColumn = this.showFilterModalForColumn.bind(this);
 	}
 
+	isFilterEngaged = () => {
+		if (R.hasPath([this.props.index, 'filterExpression'], this.props.columnFilters)) {
+			return R.not(R.isEmpty(this.props.columnFilters[this.props.index].filterExpression));
+		}
+		return false;
+	};
+
 	render() {
 		const columnLetter = indexToColumnLetter(this.props.index);
 		const rightBorder = this.props.index === this.props.totalColumns - 1 ? ' border-r' : '';
@@ -18,7 +26,11 @@ class ColumnHeader extends Component {
 			<div className={allClasses} data-testid={'col' + this.props.index}>
 				<div className="flex items-center justify-between px-1">
 					<div className="flex-2">{columnLetter}</div>
-					<IconFilter classes={'flex-1 h-3 w-3'} onClickFn={this.showFilterModalForColumn} />
+					<IconFilter
+						classes={'flex-1 h-3 w-3'}
+						fitlerEngaged={this.isFilterEngaged()}
+						onClickFn={this.showFilterModalForColumn}
+					/>
 				</div>
 			</div>
 		);
@@ -33,6 +45,7 @@ function mapStateToProps(state, ownProps) {
 		totalColumns: state.sheet.totalColumns,
 		index: ownProps.index,
 		classes: ownProps.classes,
+		columnFilters: state.sheet.columnFilters,
 	};
 }
 

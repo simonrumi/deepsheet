@@ -55,12 +55,6 @@ class Sheet extends Component {
 
 	createColSpan = colNum => 'span ' + (colNum + 1); //need an extra column for the row headers on the left
 
-	renderColHeaderStyle = R.pipe(
-		getRequiredNumItemsForAxis,
-		this.createColSpan,
-		this.columnHeaderStyle
-	);
-
 	getGridSizingStyle([numRows, numCols]) {
 		const headerRowHeight = '2em';
 		const headerColHeight = '2em';
@@ -71,6 +65,12 @@ class Sheet extends Component {
 			gridTemplateColumns: columnsStyle,
 		};
 	}
+
+	renderColHeaderStyle = R.pipe(
+		getRequiredNumItemsForAxis,
+		this.createColSpan,
+		this.columnHeaderStyle
+	);
 
 	renderGridSizingStyle = sheet =>
 		this.getGridSizingStyle(R.map(getRequiredNumItemsForAxis(R.__, sheet), [ROW_AXIS, COLUMN_AXIS]));

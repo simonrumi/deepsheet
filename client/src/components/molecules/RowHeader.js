@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import * as R from 'ramda';
 import { indexToRowNumber, extractRowColFromCellKey } from '../../helpers';
 import { toggledShowFilterModal } from '../../actions';
 import IconFilter from '../atoms/IconFilter';
@@ -9,6 +10,13 @@ class RowHeader extends Component {
 		super(props);
 		this.showFilterModalForRow = this.showFilterModalForRow.bind(this);
 	}
+
+	isFilterEngaged = rowIndex => {
+		if (R.hasPath([rowIndex, 'filterExpression'], this.props.rowFilters)) {
+			return R.not(R.isEmpty(this.props.rowFilters[rowIndex].filterExpression));
+		}
+		return false;
+	};
 
 	showFilterModalForRow = rowIndex => this.props.toggledShowFilterModal(rowIndex, null);
 
@@ -24,6 +32,7 @@ class RowHeader extends Component {
 				{rowNum}
 				<IconFilter
 					classes={'flex-1 h-3 w-3'}
+					fitlerEngaged={this.isFilterEngaged(row)}
 					onClickFn={() => this.showFilterModalForRow(row)}
 					testId={'row' + rowNum}
 				/>
@@ -41,6 +50,7 @@ function mapStateToProps(state, ownProps) {
 		showFilterModal: state.showFilterModal,
 		cellKey: ownProps.cellKey,
 		totalRows: state.sheet.totalRows,
+		rowFilters: state.sheet.rowFilters,
 	};
 }
 

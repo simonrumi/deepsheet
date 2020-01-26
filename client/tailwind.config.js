@@ -9,6 +9,7 @@ module.exports = {
 				'subdued-blue': '#32a8b8',
 				'burnt-orange': '#B87B32',
 				'vibrant-burnt-orange': '#E69A3E',
+				'light-light-orange-transparent': 'rgba(255, 230, 199, 0.5)',
 			},
 			inset: {
 				'1/4': '25%',
