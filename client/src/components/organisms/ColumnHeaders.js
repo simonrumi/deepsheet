@@ -5,6 +5,7 @@ import { indexToColumnLetter, COLUMN_AXIS } from '../../helpers';
 import { shouldShowColumn, getRequiredNumItemsForAxis } from '../../helpers/visibilityHelpers';
 import ColumnHeader from '../molecules/ColumnHeader';
 import TopLeftHeader from '../atoms/TopLeftHeader';
+import ColumnAdder from '../molecules/ColumnAdder';
 
 const COLUMN_HEADER_CLASSES = 'grid-header-item text-grey-blue border-t border-l h-12';
 
@@ -52,6 +53,11 @@ class ColumnHeaders extends Component {
 						classes={COLUMN_HEADER_CLASSES}
 					/>
 				);
+			}
+
+			//after the last column add a "+" to allow adding more columns
+			if (currentIndex === this.props.totalColumns - 1) {
+				headers.push(<ColumnAdder key="columnAdder" classes={COLUMN_HEADER_CLASSES} />);
 			}
 
 			return generateHeaders(totalHeaders, indexToNameFn, ++currentIndex, headers);

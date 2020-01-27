@@ -10,13 +10,34 @@ import FilterModal from './organisms/FilterModal';
 import { fetchedSheet, updatedSheetId } from '../actions';
 import managedStore from '../store';
 import { nothing, ROW_AXIS, COLUMN_AXIS } from '../helpers';
-import { shouldShowRow, isFirstColumn, getRequiredNumItemsForAxis } from '../helpers/visibilityHelpers';
+import { shouldShowRow, isFirstColumn, isLastColumn, getRequiredNumItemsForAxis } from '../helpers/visibilityHelpers';
 // import * as RWrap from '../helpers/ramdaWrappers'; // use this for debugging only
+
+// *** TODO: in this order
+// add additional columns
+// add additional rows
+// move columns
+// move rows
+// sort columns
+// sort rows
 
 class Sheet extends Component {
 	componentDidMount() {
 		this.props.updatedSheetId(this.props.sheetId);
 	}
+
+	renderEmptyEndCell = cellKey => {
+		console.log('renderEmptyEndCell for cellKey', cellKey);
+		return <Cell blankCell={true} cellKey={cellKey} key={cellKey + '_endCell'} />;
+	};
+
+	maybeEmptyEndCell = cellKey => {
+		console.log(
+			'maybeEmptyEndCell, isLastColumn(this.props.sheet.totalColumns)',
+			isLastColumn(this.props.sheet.totalColumns, cellKey)
+		);
+		return R.ifElse(isLastColumn(this.props.sheet.totalColumns), this.renderEmptyEndCell, nothing)(cellKey);
+	};
 
 	renderRowHeader = cellKey => <RowHeader cellKey={cellKey} key={'row_header_' + cellKey} />;
 
@@ -24,7 +45,7 @@ class Sheet extends Component {
 
 	maybeRowHeader = R.ifElse(isFirstColumn, this.renderRowHeader, nothing);
 
-	renderRow = cellKey => [this.maybeRowHeader(cellKey), this.renderCell(cellKey)];
+	renderRow = cellKey => [this.maybeRowHeader(cellKey), this.renderCell(cellKey), this.maybeEmptyEndCell(cellKey)];
 
 	maybeRow = sheet => R.ifElse(shouldShowRow(sheet), this.renderRow, nothing);
 
@@ -35,9 +56,6 @@ class Sheet extends Component {
 			this.props.cellKeys.length > 0 &&
 			this.props.sheetId === this.props.sheet._id
 		) {
-			// note that this is the only place where we are passing data from this.props into a function
-			// this is because we have first checked that the props exist.
-			// after this call, all the subsequent functions are not made with actual data in them.
 			return R.map(this.maybeRow(this.props.sheet), this.props.cellKeys);
 		}
 		return <div>loading...</div>;
@@ -58,8 +76,8 @@ class Sheet extends Component {
 	getGridSizingStyle([numRows, numCols]) {
 		const headerRowHeight = '2em';
 		const headerColHeight = '2em';
-		const rowsStyle = headerRowHeight + ' repeat(' + numRows + ', 1fr)';
-		const columnsStyle = headerColHeight + ' repeat(' + numCols + ', 1fr)';
+		const rowsStyle = headerRowHeight + ' repeat(' + (numRows + 1) + ', 1fr)';
+		const columnsStyle = headerColHeight + ' repeat(' + (numCols + 1) + ', 1fr)';
 		return {
 			gridTemplateRows: rowsStyle,
 			gridTemplateColumns: columnsStyle,
