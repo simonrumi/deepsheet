@@ -3,11 +3,12 @@ import {
    extractRowColFromCellKey,
    indexToColumnLetter,
    indexToRowNumber,
+   THIN_COLUMN,
 } from './index';
 
 export const createClassNames = (sheet, cellKey) =>
    R.pipe(
-      baseClasses,
+      cellBaseClasses,
       R.curry(addRightBorder)(
          getIsLast(getColNumFromObj, sheet.totalColumns, cellKey)
       ),
@@ -15,7 +16,8 @@ export const createClassNames = (sheet, cellKey) =>
          getIsLast(getRowNumFromObj, sheet.totalRows, cellKey)
       )
    )();
-const baseClasses = () => 'grid-item text-dark-dark-blue border-t border-l';
+export const cellBaseClasses = () =>
+   'grid-item text-dark-dark-blue border-t border-l';
 
 const addRightBorder = (isLastColumn, classes) =>
    isLastColumn ? classes + ' border-r' : classes;
@@ -47,3 +49,13 @@ export const createCellId = (colIndex, rowIndex) =>
          R.toString
       )(rowIndex)
    );
+
+export const renderWholeRowGridSizingStyle = numCols => {
+   const rowsStyle = 'repeat(1, 1.5em)';
+   const columnsStyle =
+      THIN_COLUMN + ' repeat(' + numCols + ', 1fr) ' + THIN_COLUMN;
+   return {
+      gridTemplateRows: rowsStyle,
+      gridTemplateColumns: columnsStyle,
+   };
+};
