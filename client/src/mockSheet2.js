@@ -17,7 +17,7 @@ module.exports = {
 				{
 					row: 0,
 					column: 0,
-					content: 'this',
+					content: 'this is some longer content to see what happens with it',
 					visible: true,
 				},
 				{

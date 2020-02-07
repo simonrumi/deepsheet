@@ -9,7 +9,7 @@ import IconUpArrow from '../atoms/IconUpArrow';
 class HeaderTitle extends React.Component {
 	render() {
 		return (
-			<div className="flex items-center justify-between px-2 py-1">
+			<div className="flex items-center justify-between px-2 py-1" key="headerTitle">
 				<Heading text={this.props.title.text} />
 				<div className="flex items-end justify-between">
 					<IconEdit height="1.5em" width="1.5em" onClickFn={() => this.props.setEditingTitle(true)} />

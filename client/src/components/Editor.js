@@ -33,6 +33,7 @@ class Editor extends Component {
 				value={this.props.editor && this.props.editor.content ? this.props.editor.content : ''}
 				onChange={this.handleChange}
 				ref={this.setupEditorFocuser}
+				key="editor"
 			/>
 		);
 	}

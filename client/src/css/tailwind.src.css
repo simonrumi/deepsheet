@@ -16,7 +16,8 @@
 	align-items: start;
 }
 
-.grid-item {
+.grid-item,
+.grid-header-item {
 	grid-column: span 1;
 	grid-row: span 1;
 	width: 100%;
@@ -25,10 +26,6 @@
 }
 
 .grid-header-item {
-	grid-column: span 1;
-	grid-row: span 1;
-	width: 100%;
-	padding: 1%;
 	vertical-align: middle;
 	text-align: center;
 }

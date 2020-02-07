@@ -24,9 +24,9 @@ class RowHeader extends Component {
 		const { row } = extractRowColFromCellKey(cellKey);
 		const rowNum = indexToRowNumber(row);
 		let classNames = 'grid-header-item h-full text-grey-blue border-t border-l ';
-		if (rowNum === this.props.totalRows) {
-			classNames += 'border-b ';
-		}
+		// if (rowNum === this.props.totalRows) {
+		// 	classNames += 'border-b ';
+		// }
 		return (
 			<div className={classNames}>
 				{rowNum}

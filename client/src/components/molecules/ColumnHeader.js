@@ -20,10 +20,8 @@ class ColumnHeader extends Component {
 
 	render() {
 		const columnLetter = indexToColumnLetter(this.props.index);
-		const rightBorder = this.props.index === this.props.totalColumns - 1 ? ' border-r' : '';
-		const allClasses = this.props.classes + rightBorder;
 		return (
-			<div className={allClasses} data-testid={'col' + this.props.index}>
+			<div className={this.props.classes} data-testid={'col' + this.props.index}>
 				<div className="flex items-center justify-between px-1">
 					<div className="flex-2">{columnLetter}</div>
 					<IconFilter
