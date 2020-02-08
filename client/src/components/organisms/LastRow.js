@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import * as R from 'ramda';
 import { connect } from 'react-redux';
+import { COLUMN_AXIS } from '../../helpers';
+import { getRequiredNumItemsForAxis } from '../../helpers/visibilityHelpers';
 import RowAdder from '../molecules/RowAdder';
 
 class LastRow extends Component {
@@ -24,7 +26,11 @@ class LastRow extends Component {
 	};
 
 	render() {
-		return this.makeLastRowArray(this.props.totalColumns + 2);
+		return R.pipe(
+			getRequiredNumItemsForAxis, // will get the number of non-hidden columns
+			R.add(2), // for the RowHeader and the last, empty cell
+			this.makeLastRowArray
+		)(COLUMN_AXIS, this.props.sheet);
 	}
 }
 

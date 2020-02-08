@@ -16,6 +16,8 @@ import {
 	UPDATED_ROW_FILTERS,
 	HIDE_FILTERED,
 	CLEAR_ALL_FILTERS,
+	UPDATED_TOTAL_COLUMNS,
+	UPDATED_TOTAL_ROWS,
 } from './types';
 
 export const fetchedSheet = sheet => {
@@ -102,5 +104,19 @@ export const updatedFilter = filterOptions => {
 export const clearedAllFilters = () => {
 	managedStore.store.dispatch({
 		type: CLEAR_ALL_FILTERS,
+	});
+};
+
+export const updatedTotalColumns = newTotalColumns => {
+	managedStore.store.dispatch({
+		type: UPDATED_TOTAL_COLUMNS,
+		payload: newTotalColumns,
+	});
+};
+
+export const updatedTotalRows = newTotalRows => {
+	managedStore.store.dispatch({
+		type: UPDATED_TOTAL_ROWS,
+		payload: newTotalRows,
 	});
 };
