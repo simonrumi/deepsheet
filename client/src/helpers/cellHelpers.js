@@ -11,14 +11,16 @@ export const getColNumFromObj = obj => (R.isNil(obj) ? null : R.has('column') ? 
 // const isLast = R.curry((total, currentIndex) => total - 1 === currentIndex);
 
 //cellId is e.g. "B2"
-export const createCellId = (colIndex, rowIndex) =>
+export const createCellId = (columnIndex, rowIndex) =>
 	R.concat(
-		indexToColumnLetter(colIndex),
+		indexToColumnLetter(columnIndex),
 		R.pipe(
 			indexToRowNumber,
 			R.toString
 		)(rowIndex)
 	);
+
+export const createCellKey = (rowIndex, columnIndex) => 'cell_' + rowIndex + '_' + columnIndex;
 
 export const renderWholeRowGridSizingStyle = numCols => {
 	const rowsStyle = 'repeat(1, 1.5em)';
