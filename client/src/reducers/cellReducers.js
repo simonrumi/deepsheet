@@ -30,13 +30,16 @@ export const cellReducerFactory = (rowNum, colNum) => {
       if (action.type.indexOf(UPDATED_CELL_) !== 0) {
          return state;
       }
-
       const numsFromType = extractRowColFromCellKey(action.type);
       if (
          numsFromType &&
          numsFromType[ROW_AXIS] === rowNum &&
          numsFromType[COLUMN_AXIS] === colNum
       ) {
+         console.log(
+            'cell reducer about to return action.payload',
+            action.payload
+         );
          return action.payload;
       }
       return state;

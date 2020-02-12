@@ -14,6 +14,9 @@ export default store => next => async action => {
    }
    switch (action.type) {
       case UPDATED_SHEET_ID:
+         console.log(
+            'TODO: UPDATED_SHEET_ID, so first will need to push changes to current sheet to server'
+         );
          const newSheetId = action.payload;
          const sheet = await fetchSheet(newSheetId);
          store.dispatch(fetchedSheet(sheet));
@@ -29,6 +32,9 @@ export default store => next => async action => {
 
 const initializeCells = sheet => {
    if (sheet.metadata) {
+      console.log(
+         'initializeCells, about to call createCellReducers & populateCellsInStore'
+      );
       createCellReducers(sheet.metadata);
       populateCellsInStore(sheet);
       updatedCellKeys(createCellKeys(sheet.rows));
