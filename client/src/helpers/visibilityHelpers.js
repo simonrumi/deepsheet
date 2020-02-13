@@ -91,14 +91,25 @@ export const shouldShowRow = R.curry((sheet, cellKey) =>
  * different structure of data available to ColumnHeaders.js compared with Sheet.js,
  * consequently it doesn't seem worthwhile trying to generalize any of these functions
  ****/
-const getColumnVisibility = (colVisibilityObj, colIndex) => colVisibilityObj[colIndex];
+const getColumnVisibility = (colVisibilityObj, colIndex) => {
+	console.log(
+		'getColumnVisibility, colVisibilityObj',
+		colVisibilityObj,
+		'colIndex',
+		colIndex,
+		'colVisibilityObj[colIndex]',
+		colVisibilityObj[colIndex]
+	);
+	return colVisibilityObj[colIndex];
+};
 
 const isColumnVisibilityInObject = (colVisibilityObj, colIndex) => R.has(colIndex, colVisibilityObj);
 
 const columnIsVisible = R.both(isColumnVisibilityInObject, getColumnVisibility);
 
-export const shouldShowColumn = (colVisibilityObj, colIndex) =>
-	R.or(R.isEmpty(colVisibilityObj), columnIsVisible(colVisibilityObj, colIndex));
+export const shouldShowColumn = R.curry((colVisibilityObj, colIndex) =>
+	R.or(R.isEmpty(colVisibilityObj), columnIsVisible(colVisibilityObj, colIndex))
+);
 
 /* isFirstColumn for use by Sheet.js */
 export const isFirstColumn = cellKey => /.*_0$/.test(cellKey); //the cellKey should end with _0 indicating the first column
