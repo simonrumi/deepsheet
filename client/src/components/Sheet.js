@@ -10,18 +10,12 @@ import Cell from './molecules/Cell';
 import FilterModal from './organisms/FilterModal';
 import { fetchedSheet, updatedSheetId } from '../actions';
 import managedStore from '../store';
+import { nothing, ROW_AXIS, COLUMN_AXIS, THIN_COLUMN, ROW_HEIGHT } from '../helpers';
 import {
-   nothing,
-   ROW_AXIS,
-   COLUMN_AXIS,
-   THIN_COLUMN,
-   ROW_HEIGHT,
-} from '../helpers';
-import {
-   shouldShowRow,
-   isFirstColumn,
-   isLastVisibleItemInAxis,
-   getRequiredNumItemsForAxis,
+	shouldShowRow,
+	isFirstColumn,
+	isLastVisibleItemInAxis,
+	getRequiredNumItemsForAxis,
 } from '../helpers/visibilityHelpers';
 // import * as RWrap from '../helpers/ramdaWrappers'; // use this for debugging only
 
@@ -34,149 +28,113 @@ import {
 // sort rows
 
 class Sheet extends Component {
-   componentDidMount() {
-      this.props.updatedSheetId(this.props.sheetId);
-   }
+	componentDidMount() {
+		this.props.updatedSheetId(this.props.sheetId);
+	}
 
-   renderEmptyEndCell = cellKey => (
-      <Cell
-         blankCell={true}
-         cellKey={cellKey}
-         classes={'border-r'}
-         key={cellKey + '_endCell'}
-      />
-   );
+	renderEmptyEndCell = cellKey => (
+		<Cell blankCell={true} cellKey={cellKey} classes={'border-r'} key={cellKey + '_endCell'} />
+	);
 
-   maybeEmptyEndCell = cellKey =>
-      R.ifElse(
-         isLastVisibleItemInAxis(
-            COLUMN_AXIS, // we are rendering a row, so need to check if this is the last visible column in the row
-            this.props.sheet.totalColumns,
-            this.props.sheet
-         ),
-         this.renderEmptyEndCell,
-         nothing
-      )(cellKey);
+	maybeEmptyEndCell = cellKey =>
+		R.ifElse(
+			isLastVisibleItemInAxis(
+				COLUMN_AXIS, // we are rendering a row, so need to check if this is the last visible column in the row
+				this.props.sheet.totalColumns,
+				this.props.sheet
+			),
+			this.renderEmptyEndCell,
+			nothing
+		)(cellKey);
 
-   renderRowHeader = cellKey => (
-      <RowHeader cellKey={cellKey} key={'row_header_' + cellKey} />
-   );
+	renderRowHeader = cellKey => <RowHeader cellKey={cellKey} key={'row_header_' + cellKey} />;
 
-   renderCell = cellKey => <Cell cellKey={cellKey} key={cellKey} />;
+	renderCell = cellKey => <Cell cellKey={cellKey} key={cellKey} />;
 
-   maybeRowHeader = R.ifElse(isFirstColumn, this.renderRowHeader, nothing);
+	maybeRowHeader = R.ifElse(isFirstColumn, this.renderRowHeader, nothing);
 
-   renderRow = cellKey => {
-      return [
-         this.maybeRowHeader(cellKey),
-         this.renderCell(cellKey),
-         this.maybeEmptyEndCell(cellKey),
-      ];
-   };
+	renderRow = cellKey => {
+		return [this.maybeRowHeader(cellKey), this.renderCell(cellKey), this.maybeEmptyEndCell(cellKey)];
+	};
 
-   maybeRow = sheet => R.ifElse(shouldShowRow(sheet), this.renderRow, nothing); // TODO BUG HERE: shouldShowRow must be returning false when row filtering on
+	maybeRow = sheet => R.ifElse(shouldShowRow(sheet), this.renderRow, nothing); // TODO BUG HERE: shouldShowRow must be returning false when row filtering on
 
-   renderCells() {
-      if (
-         R.has('totalRows', this.props.sheet) &&
-         this.props.cellKeys &&
-         this.props.cellKeys.length > 0 &&
-         this.props.sheetId === this.props.sheet._id
-      ) {
-         console.log('renderCells() starting');
-         const rows = R.map(
-            this.maybeRow(this.props.sheet),
-            this.props.cellKeys
-         );
-         console.log('renderCells got rows', rows);
-         // TODO BUG HERE: rows comes back with null entries for extra 4 cells, when filtering on
-         const rowsWithHeader = R.prepend(
-            <ColumnHeaders key="columnHeaders" />,
-            rows
-         );
-         console.log('renderCells got rowsWithHeader', rowsWithHeader);
-         // TODO BUG HERE: rows comes back with null entries for extra 1 cell, when filtering on
-         return R.append(<LastRow key="lastRow" />, rowsWithHeader);
-      }
-      return <div>loading...</div>;
-   }
+	renderCells() {
+		if (
+			R.has('totalRows', this.props.sheet) &&
+			this.props.cellKeys &&
+			this.props.cellKeys.length > 0 &&
+			this.props.sheetId === this.props.sheet._id
+		) {
+			const rows = R.map(this.maybeRow(this.props.sheet), this.props.cellKeys);
+			const rowsWithHeader = R.prepend(<ColumnHeaders key="columnHeaders" />, rows);
+			return R.append(<LastRow key="lastRow" />, rowsWithHeader);
+		}
+		return <div>loading...</div>;
+	}
 
-   columnHeaderStyle = colSpan => {
-      return {
-         gridColumn: colSpan,
-         gridRow: 'span 1',
-         width: '100%',
-         height: '100%',
-         padding: 0,
-      };
-   };
+	columnHeaderStyle = colSpan => {
+		return {
+			gridColumn: colSpan,
+			gridRow: 'span 1',
+			width: '100%',
+			height: '100%',
+			padding: 0,
+		};
+	};
 
-   createColSpan = colNum => 'span ' + (colNum + 2); //need 2 extra columns for the row headers on the left and the column adder on the right
+	createColSpan = colNum => 'span ' + (colNum + 2); //need 2 extra columns for the row headers on the left and the column adder on the right
 
-   // TODO this will need to be manipulated to create different sized columns and rows
-   // to see the reason for using minmax see https://css-tricks.com/preventing-a-grid-blowout/
-   getGridSizingStyle([numRows, numCols]) {
-      const rowsStyle =
-         ROW_HEIGHT + ' repeat(' + numRows + ', minmax(0, 1fr)) ' + ROW_HEIGHT;
-      const columnsStyle =
-         THIN_COLUMN +
-         ' repeat(' +
-         numCols +
-         ', minmax(0, 1fr)) ' +
-         THIN_COLUMN;
-      return {
-         gridTemplateRows: rowsStyle,
-         gridTemplateColumns: columnsStyle,
-      };
-   }
+	// TODO this will need to be manipulated to create different sized columns and rows
+	// to see the reason for using minmax see https://css-tricks.com/preventing-a-grid-blowout/
+	getGridSizingStyle([numRows, numCols]) {
+		const rowsStyle = ROW_HEIGHT + ' repeat(' + numRows + ', minmax(0, 1fr)) ' + ROW_HEIGHT;
+		const columnsStyle = THIN_COLUMN + ' repeat(' + numCols + ', minmax(0, 1fr)) ' + THIN_COLUMN;
+		return {
+			gridTemplateRows: rowsStyle,
+			gridTemplateColumns: columnsStyle,
+		};
+	}
 
-   renderColHeaderStyle = R.pipe(
-      getRequiredNumItemsForAxis,
-      this.createColSpan,
-      this.columnHeaderStyle
-   );
+	renderColHeaderStyle = R.pipe(
+		getRequiredNumItemsForAxis,
+		this.createColSpan,
+		this.columnHeaderStyle
+	);
 
-   renderGridSizingStyle = sheet => {
-      console.log('calling renderGridSizingStyle, got sheet', sheet);
-      return this.getGridSizingStyle(
-         R.map(getRequiredNumItemsForAxis(R.__, sheet), [ROW_AXIS, COLUMN_AXIS])
-      );
-   };
+	renderGridSizingStyle = sheet =>
+		this.getGridSizingStyle(R.map(getRequiredNumItemsForAxis(R.__, sheet), [ROW_AXIS, COLUMN_AXIS]));
 
-   maybeRenderFilterModal = showFilterModal =>
-      showFilterModal ? <FilterModal /> : null;
+	maybeRenderFilterModal = showFilterModal => (showFilterModal ? <FilterModal /> : null);
 
-   render() {
-      return (
-         <div className="px-1">
-            <Header />
-            <Editor />
-            {this.maybeRenderFilterModal(this.props.showFilterModal)}
-            <div
-               className="grid-container pt-1"
-               style={this.renderGridSizingStyle(this.props.sheet)}
-            >
-               {this.renderCells()}
-            </div>
-         </div>
-      );
-   }
+	render() {
+		return (
+			<div className="px-1">
+				<Header />
+				<Editor />
+				{this.maybeRenderFilterModal(this.props.showFilterModal)}
+				<div className="grid-container pt-1" style={this.renderGridSizingStyle(this.props.sheet)}>
+					{this.renderCells()}
+				</div>
+			</div>
+		);
+	}
 }
 
 function mapStateToProps(state) {
-   return {
-      sheet: state.sheet,
-      showFilterModal: state.filterModal.showFilterModal,
-      managedStore,
-      cellKeys: state.cellKeys,
-      sheetId: state.sheetId,
-   };
+	return {
+		sheet: state.sheet,
+		showFilterModal: state.filterModal.showFilterModal,
+		managedStore,
+		cellKeys: state.cellKeys,
+		sheetId: state.sheetId,
+	};
 }
 
 export default connect(
-   mapStateToProps,
-   {
-      fetchedSheet,
-      updatedSheetId,
-   }
+	mapStateToProps,
+	{
+		fetchedSheet,
+		updatedSheetId,
+	}
 )(Sheet);
