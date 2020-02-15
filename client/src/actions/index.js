@@ -18,6 +18,7 @@ import {
 	CLEAR_ALL_FILTERS,
 	UPDATED_TOTAL_COLUMNS,
 	UPDATED_TOTAL_ROWS,
+	UPDATED_COLUMN_VISIBILITY,
 	UPDATED_ROW_VISIBILITY,
 } from './types';
 
@@ -119,6 +120,13 @@ export const updatedTotalRows = newTotalRows => {
 	managedStore.store.dispatch({
 		type: UPDATED_TOTAL_ROWS,
 		payload: newTotalRows,
+	});
+};
+
+export const updatedColumnVisibility = newVisibility => {
+	managedStore.store.dispatch({
+		type: UPDATED_COLUMN_VISIBILITY,
+		payload: newVisibility,
 	});
 };
 

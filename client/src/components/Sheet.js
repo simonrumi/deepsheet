@@ -21,9 +21,8 @@ import {
 
 // *** TODO: in this order
 // add additional columns
-// add additional rows
-// move columns
 // move rows
+// move columns
 // sort columns
 // sort rows
 

@@ -1,51 +1,28 @@
+/**
+ * note that most functions here are very similar to functions in inserNewColumn.js
+ * common functions have been moved to insertNewAxis.js
+ * but these remaining ones are different enough from their Column counterparts that it doesn't
+ * seem worthwhile generalizing them further.
+ **/
 import * as R from 'ramda';
-import managedStore from '../store';
-import { updatedTotalRows, updatedCellKeys, updatedCell, updatedRowVisibility } from '../actions';
-import { cellReducerFactory } from '../reducers/cellReducers';
-import { COLUMN_AXIS } from '../helpers';
+import { updatedTotalRows, updatedCellKeys, updatedRowVisibility } from '../actions';
 import { createCellKey } from '../helpers/cellHelpers';
-import { shouldShowColumn, getAxisVisibilityName } from '../helpers/visibilityHelpers';
+import { shouldShowColumn } from '../helpers/visibilityHelpers';
+import {
+	addOneCellReducer,
+	addNewCellsToStore,
+	addManyCellReducersToStore,
+	maybeAddAxisVisibilityEntry,
+} from './insertNewAxis';
 
 const makeNewCell = (rowIndex, columnIndex, columnVisibility) => {
 	return {
 		row: rowIndex,
 		column: columnIndex,
 		content: '',
-		visible: shouldShowColumn(columnVisibility, columnIndex), // getVisibilityForColumn(columnIndex),
+		visible: shouldShowColumn(columnVisibility, columnIndex),
 	};
 };
-
-const maybeAddRowVisibilityEntry = (rowIndex, rowVisibilityObj) =>
-	R.when(
-		R.both(
-			// rowVisibilityObj is not empty and...
-			R.pipe(
-				R.isEmpty,
-				R.not
-			),
-			// rowVisibilityObj doesn't have an entry for the row we're adding
-			R.pipe(
-				R.has(rowIndex),
-				R.not
-			)
-		),
-		R.pipe(
-			R.thunkify(R.assoc)(rowIndex, true, {}), // make an object like {3: true} (where 3 is the value of totalRows)
-			updatedRowVisibility // add that object into the rowVisibility object
-		)
-	)(rowVisibilityObj);
-
-const addManyCellReducersToStore = cellReducers => {
-	const combineNewReducers = managedStore.store.reducerManager.addMany(cellReducers);
-	managedStore.store.replaceReducer(combineNewReducers);
-};
-
-// returns copy of cellReducers with and added cellReducer
-const addOneCellReducer = (cellKey, row, column, cellReducers = {}) =>
-	R.pipe(
-		cellReducerFactory,
-		R.assoc(cellKey, R.__, cellReducers)
-	)(row, column);
 
 const addOneCell = (rowIndex, columnIndex, columnVisibility, updates) => {
 	const cellKey = createCellKey(rowIndex, columnIndex);
@@ -55,8 +32,6 @@ const addOneCell = (rowIndex, columnIndex, columnVisibility, updates) => {
 	const cells = R.append(cell, updates.cells);
 	return { cellReducers, cellKeys, cells };
 };
-
-const addNewCellsToStore = cells => R.map(cell => updatedCell(cell), cells);
 
 const createUpdatesForNewCells = (
 	updates, //contains { cellReducers, cellKeys, cells }
@@ -77,16 +52,16 @@ const createUpdatesForNewCells = (
 	);
 };
 
-const insertNewRow = (cellKeys, totalRows, totalColumns, rowVisibility, columnVisibility) => {
+const insertNewRow = (cellKeys, totalRows, totalColumns, sheet) => {
 	const updates = createUpdatesForNewCells(
 		{ cellKeys: cellKeys, cellReducers: {}, cells: [] },
-		columnVisibility,
+		sheet.columnVisibility,
 		totalRows,
 		totalColumns
 	); // totalRows, being the count of existing rows, will give us the index of the next row
 	updatedCellKeys(updates.cellKeys);
 	addManyCellReducersToStore(updates.cellReducers);
-	maybeAddRowVisibilityEntry(totalRows, rowVisibility);
+	maybeAddAxisVisibilityEntry(totalRows, sheet.rowVisibility, updatedRowVisibility);
 	addNewCellsToStore(updates.cells);
 	updatedTotalRows(totalRows + 1);
 };
