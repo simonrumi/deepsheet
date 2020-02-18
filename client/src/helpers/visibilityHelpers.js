@@ -1,5 +1,6 @@
 import * as R from 'ramda';
-import { extractRowColFromCellKey, capitalizeFirst, ROW_AXIS, COLUMN_AXIS } from './index';
+import { extractRowColFromCellKey, capitalizeFirst } from './index';
+import { ROW_AXIS, COLUMN_AXIS } from '../constants';
 //import * as RWrap from './ramdaWrappers'; // use this for debugging only
 
 /****

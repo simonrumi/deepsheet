@@ -8,7 +8,6 @@ export const UPDATED_CELL_KEYS = 'updated_cell_keys';
 export const SET_EDITOR_REF = 'set_editor_ref';
 export const UPDATED_TITLE = 'updated_title';
 export const SET_EDITING_TITLE = 'set_editing_title';
-export const DEFAULT_SHEET_ID = 1; // this is just a constant, not an action, but will be used by UPDATED_SHEET_ID
 export const UPDATED_SHEET_ID = 'updated_sheet_id';
 export const TOGGLED_SHOW_FILTER_MODAL = 'toggled_show_filter_modal';
 export const UPDATED_FILTER = 'updated_filter';

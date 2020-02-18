@@ -1,7 +1,8 @@
 import React from 'react';
 import * as R from 'ramda';
 import { connect } from 'react-redux';
-import { ROW_AXIS, COLUMN_AXIS, indexToRowNumber, indexToColumnLetter, capitalCase } from '../../helpers';
+import { indexToRowNumber, indexToColumnLetter, capitalCase } from '../../helpers';
+import { ROW_AXIS, COLUMN_AXIS } from '../../constants';
 import Heading from '../atoms/Heading';
 
 class FilterModalHeading extends React.Component {

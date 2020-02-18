@@ -1,5 +1,6 @@
 import * as R from 'ramda';
-import { indexToColumnLetter, indexToRowNumber, THIN_COLUMN } from './index';
+import { indexToColumnLetter, indexToRowNumber } from './index';
+import { THIN_COLUMN } from '../constants';
 
 export const cellBaseClasses = () => 'grid-item text-dark-dark-blue border-t border-l ';
 export const createClassNames = classes => R.concat(cellBaseClasses(), classes ? classes : '');
@@ -7,8 +8,6 @@ export const createClassNames = classes => R.concat(cellBaseClasses(), classes ?
 export const getRowNumFromObj = obj => (R.isNil(obj) ? null : R.has('row') ? obj.row : null);
 
 export const getColNumFromObj = obj => (R.isNil(obj) ? null : R.has('column') ? obj.column : null);
-
-// const isLast = R.curry((total, currentIndex) => total - 1 === currentIndex);
 
 //cellId is e.g. "B2"
 export const createCellId = (columnIndex, rowIndex) =>

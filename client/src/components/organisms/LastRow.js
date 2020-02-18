@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import * as R from 'ramda';
 import { connect } from 'react-redux';
-import { COLUMN_AXIS } from '../../helpers';
+import { COLUMN_AXIS } from '../../constants';
 import { getRequiredNumItemsForAxis } from '../../helpers/visibilityHelpers';
 import RowAdder from '../molecules/RowAdder';
 

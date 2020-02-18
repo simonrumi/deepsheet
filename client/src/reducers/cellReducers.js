@@ -1,6 +1,7 @@
 import { forEach } from 'ramda';
 import managedStore from '../store';
-import { extractRowColFromCellKey, ROW_AXIS, COLUMN_AXIS } from '../helpers';
+import { extractRowColFromCellKey } from '../helpers';
+import { ROW_AXIS, COLUMN_AXIS } from '../constants';
 import { updatedCell } from '../actions';
 import { UPDATED_CELL_KEYS, UPDATED_CELL_ } from '../actions/types';
 

@@ -36,7 +36,7 @@ class IconFilter extends Component {
 	renderIcon = () => (this.props.fitlerEngaged ? this.renderSolid() : this.renderOutline());
 
 	render() {
-		const allClasses = 'inline-block text-grey-blue hover:text-vibrant-blue pointer ' + this.props.classes;
+		const allClasses = 'text-grey-blue hover:text-vibrant-blue cursor-pointer ' + this.props.classes;
 		return (
 			<div className={allClasses} onClick={this.props.onClickFn} data-testid={this.props.testId}>
 				{this.renderIcon()}

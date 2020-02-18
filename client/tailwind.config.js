@@ -18,9 +18,23 @@ module.exports = {
 				'2/3': '67%',
 				'3/4': '75%',
 			},
+			gridTemplateRows: {
+				'2-thin-bottom': '1fr 0.25em',
+			},
 		},
 		flex: {
 			'2': '2 2 0%',
+		},
+		cursor: {
+			auto: 'auto',
+			default: 'default',
+			pointer: 'pointer',
+			wait: 'wait',
+			text: 'text',
+			move: 'move',
+			'not-allowed': 'not-allowed',
+			'row-resize': 'row-resize',
+			'col-resize': 'col-resize',
 		},
 	},
 	variants: {},

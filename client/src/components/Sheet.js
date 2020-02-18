@@ -1,16 +1,19 @@
 import * as R from 'ramda';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { DndProvider } from 'react-dnd';
+import HTML5Backend from 'react-dnd-html5-backend';
 import Header from './Header';
 import Editor from './Editor';
 import ColumnHeaders from './organisms/ColumnHeaders';
-import RowHeader from './molecules/RowHeader';
+import RowHeader from './organisms/RowHeader';
 import LastRow from './organisms/LastRow';
 import Cell from './molecules/Cell';
 import FilterModal from './organisms/FilterModal';
 import { fetchedSheet, updatedSheetId } from '../actions';
 import managedStore from '../store';
-import { nothing, ROW_AXIS, COLUMN_AXIS, THIN_COLUMN, ROW_HEIGHT } from '../helpers';
+import { nothing } from '../helpers';
+import { ROW_AXIS, COLUMN_AXIS, THIN_COLUMN, ROW_HEIGHT } from '../constants';
 import {
 	shouldShowRow,
 	isFirstColumn,
@@ -20,9 +23,9 @@ import {
 // import * as RWrap from '../helpers/ramdaWrappers'; // use this for debugging only
 
 // *** TODO: in this order
-// add additional columns
 // move rows
 // move columns
+// implement hasChanged property of sheet
 // sort columns
 // sort rows
 
@@ -56,7 +59,7 @@ class Sheet extends Component {
 		return [this.maybeRowHeader(cellKey), this.renderCell(cellKey), this.maybeEmptyEndCell(cellKey)];
 	};
 
-	maybeRow = sheet => R.ifElse(shouldShowRow(sheet), this.renderRow, nothing); // TODO BUG HERE: shouldShowRow must be returning false when row filtering on
+	maybeRow = sheet => R.ifElse(shouldShowRow(sheet), this.renderRow, nothing);
 
 	renderCells() {
 		if (
@@ -66,8 +69,8 @@ class Sheet extends Component {
 			this.props.sheetId === this.props.sheet._id
 		) {
 			const rows = R.map(this.maybeRow(this.props.sheet), this.props.cellKeys);
-			const rowsWithHeader = R.prepend(<ColumnHeaders key="columnHeaders" />, rows);
-			return R.append(<LastRow key="lastRow" />, rowsWithHeader);
+			const rowsWithColumnHeaders = R.prepend(<ColumnHeaders key="columnHeaders" />, rows);
+			return R.append(<LastRow key="lastRow" />, rowsWithColumnHeaders);
 		}
 		return <div>loading...</div>;
 	}
@@ -82,7 +85,7 @@ class Sheet extends Component {
 		};
 	};
 
-	createColSpan = colNum => 'span ' + (colNum + 2); //need 2 extra columns for the row headers on the left and the column adder on the right
+	createColumnHeaderSpan = colNum => 'span ' + (colNum + 3); //need 3 extra columns for the 2 row header cols on the left and the column adder on the right
 
 	// TODO this will need to be manipulated to create different sized columns and rows
 	// to see the reason for using minmax see https://css-tricks.com/preventing-a-grid-blowout/
@@ -97,7 +100,7 @@ class Sheet extends Component {
 
 	renderColHeaderStyle = R.pipe(
 		getRequiredNumItemsForAxis,
-		this.createColSpan,
+		this.createColumnHeaderSpan,
 		this.columnHeaderStyle
 	);
 
@@ -112,9 +115,11 @@ class Sheet extends Component {
 				<Header />
 				<Editor />
 				{this.maybeRenderFilterModal(this.props.showFilterModal)}
-				<div className="grid-container pt-1" style={this.renderGridSizingStyle(this.props.sheet)}>
-					{this.renderCells()}
-				</div>
+				<DndProvider backend={HTML5Backend}>
+					<div className="grid-container pt-1" style={this.renderGridSizingStyle(this.props.sheet)}>
+						{this.renderCells()}
+					</div>
+				</DndProvider>
 			</div>
 		);
 	}

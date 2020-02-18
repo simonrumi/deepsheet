@@ -1,8 +1,8 @@
 import * as R from 'ramda';
 import { reducer as reduxFormReducer } from 'redux-form';
 import { cellKeyReducer } from './cellReducers';
+import { DEFAULT_SHEET_ID } from '../constants';
 import {
-	DEFAULT_SHEET_ID,
 	UPDATED_SHEET_ID,
 	FETCHED_SHEET,
 	UPDATE_EDITOR,
