@@ -18,3 +18,6 @@ export const RESET_VISIBLITY = 'reset_visibility';
 export const CLEAR_ALL_FILTERS = 'clear_all_filters';
 export const UPDATED_TOTAL_COLUMNS = 'updated_total_columns';
 export const UPDATED_TOTAL_ROWS = 'updated_total_rows';
+export const ROW_MOVED = 'row_moved';
+export const ROW_MOVED_TO = 'row_moved_to';
+export const UPDATED_ROW_ORDER = 'updated_row_order';
