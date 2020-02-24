@@ -10,6 +10,22 @@ import mockSubSheet from '../mockSubSheet';
 
 export const nothing = () => null;
 
+const makeArr = length => new Array(length);
+export const mapWithIndex = R.addIndex(R.map);
+
+// when you want to map, but you don't have an array, just a number of times to run the function supplied to map
+// the function gets the index as a param each time
+// returns an array
+export const forLoopMap = (fn, length) => mapWithIndex((val, index) => fn(index), makeArr(length));
+
+export const reduceWithIndex = R.addIndex(R.reduce);
+
+// when you want to reduce, but you don't have an array, just a number of times to run the function supplied to reduce
+// the function gets the params (accumulator, index)
+// returns the final result collected by the accumulator
+export const forLoopReduce = (fn, initialVal, length) =>
+	reduceWithIndex((accumulator, value, index) => fn(accumulator, index), initialVal, makeArr(length));
+
 export const capitalizeFirst = R.pipe(
 	R.head,
 	R.toUpper
