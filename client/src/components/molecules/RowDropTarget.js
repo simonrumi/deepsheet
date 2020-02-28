@@ -6,17 +6,7 @@ import { ItemTypes } from '../../constants';
 import { rowMovedTo } from '../../actions';
 
 const targetSpec = {
-   drop: (props, monitor, component) => {
-      console.log(
-         'targetSpec.drop: props=',
-         props,
-         'monitor',
-         monitor,
-         'component',
-         component
-      );
-      rowMovedTo(props.rowIndex);
-   },
+   drop: (props, monitor, component) => rowMovedTo(props.rowIndex),
 
    // hover: (props, monitor, component) =>
    //    console.log('targetSpec.hover: props=', props),

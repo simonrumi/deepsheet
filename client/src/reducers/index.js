@@ -12,9 +12,11 @@ import {
    TOGGLED_SHOW_FILTER_MODAL,
    UPDATED_COLUMN_VISIBILITY,
    UPDATED_ROW_VISIBILITY,
+   REPLACED_ROW_VISIBILITY,
    UPDATED_FILTER,
    UPDATED_COLUMN_FILTERS,
    UPDATED_ROW_FILTERS,
+   REPLACED_ROW_FILTERS,
    RESET_VISIBLITY,
    UPDATED_TOTAL_COLUMNS,
    UPDATED_TOTAL_ROWS,
@@ -31,7 +33,6 @@ const sheetIdReducer = (state = DEFAULT_SHEET_ID, action) => {
    }
 };
 
-// TODO remove console logs when working
 const sheetReducer = (state = {}, action) => {
    switch (action.type) {
       case FETCHED_SHEET:
@@ -50,6 +51,9 @@ const sheetReducer = (state = {}, action) => {
             action.payload,
          ]);
          return { ...state, rowVisibility: newRowVisibility };
+
+      case REPLACED_ROW_VISIBILITY:
+         return { ...state, rowVisibility: action.payload };
 
       case RESET_VISIBLITY:
          return {
@@ -70,6 +74,9 @@ const sheetReducer = (state = {}, action) => {
       case UPDATED_ROW_FILTERS:
          const newRowFilters = R.mergeAll([state.rowFilters, action.payload]);
          return { ...state, rowFilters: newRowFilters };
+
+      case REPLACED_ROW_FILTERS:
+         return { ...state, rowFilters: action.payload };
 
       case UPDATED_TOTAL_COLUMNS:
          return { ...state, totalColumns: action.payload };

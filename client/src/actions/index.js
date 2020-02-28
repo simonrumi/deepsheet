@@ -14,12 +14,14 @@ import {
    UPDATED_FILTER,
    UPDATED_COLUMN_FILTERS,
    UPDATED_ROW_FILTERS,
+   REPLACED_ROW_FILTERS,
    HIDE_FILTERED,
    CLEAR_ALL_FILTERS,
    UPDATED_TOTAL_COLUMNS,
    UPDATED_TOTAL_ROWS,
    UPDATED_COLUMN_VISIBILITY,
    UPDATED_ROW_VISIBILITY,
+   REPLACED_ROW_VISIBILITY,
    ROW_MOVED,
    ROW_MOVED_TO,
    UPDATED_ROW_ORDER,
@@ -43,6 +45,13 @@ export const updatedColumnFilters = columnFilters => {
 export const updatedRowFilters = rowFilters => {
    managedStore.store.dispatch({
       type: UPDATED_ROW_FILTERS,
+      payload: rowFilters,
+   });
+};
+
+export const replacedRowFilters = rowFilters => {
+   managedStore.store.dispatch({
+      type: REPLACED_ROW_FILTERS,
       payload: rowFilters,
    });
 };
@@ -139,6 +148,13 @@ export const updatedColumnVisibility = newVisibility => {
 export const updatedRowVisibility = newVisibility => {
    managedStore.store.dispatch({
       type: UPDATED_ROW_VISIBILITY,
+      payload: newVisibility,
+   });
+};
+
+export const replacedRowVisibility = newVisibility => {
+   managedStore.store.dispatch({
+      type: REPLACED_ROW_VISIBILITY,
       payload: newVisibility,
    });
 };
