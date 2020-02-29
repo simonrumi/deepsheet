@@ -3,6 +3,9 @@ import { extractRowColFromCellKey, capitalizeFirst } from './index';
 import { ROW_AXIS, COLUMN_AXIS } from '../constants';
 //import * as RWrap from './ramdaWrappers'; // use this for debugging only
 
+// not for use in by any functions here, just for export
+export const getAxisFilterName = axis => R.concat(axis, 'Filters');
+
 /****
  * create values to populate sheet.rowFilters and sheet.columnFilters, for use by reducers/index.js
  ****/
