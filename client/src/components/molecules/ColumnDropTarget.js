@@ -3,10 +3,10 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { DropTarget } from 'react-dnd';
 import { ItemTypes } from '../../constants';
-import { rowMovedTo } from '../../actions';
+import { columnMovedTo } from '../../actions';
 
 const targetSpec = {
-	drop: (props, monitor, component) => rowMovedTo(props.rowIndex),
+	drop: (props, monitor, component) => columnMovedTo(props.columnIndex),
 
 	// hover: (props, monitor, component) =>
 	//    console.log('targetSpec.hover: props=', props),
@@ -33,7 +33,7 @@ const renderClasses = (classes, isOver, canDrop) =>
 		[R.thunkify(R.and)(!isOver, !canDrop), () => classes + ' h-1 invisible'],
 	])();
 
-class RowDropTarget extends Component {
+class ColumnDropTarget extends Component {
 	render() {
 		const id = 'rowTarget_' + this.props.rowIndex;
 
@@ -47,15 +47,17 @@ class RowDropTarget extends Component {
 
 function mapStateToProps(state, ownProps) {
 	return {
-		rowIndex: ownProps.rowIndex,
+		columnIndex: ownProps.columnIndex,
 		classes: ownProps.classes,
 		sheet: state.sheet,
 	};
 }
 
-const RowDropTargetWrapped = DropTarget(ItemTypes.DRAGGABLE_ROW_HEADER, targetSpec, targetCollect)(RowDropTarget);
+const ColumnDropTargetWrapped = DropTarget(ItemTypes.DRAGGABLE_COLUMN_HEADER, targetSpec, targetCollect)(
+	ColumnDropTarget
+);
 
 export default connect(
 	mapStateToProps,
 	{}
-)(RowDropTargetWrapped);
+)(ColumnDropTargetWrapped);

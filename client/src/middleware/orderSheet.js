@@ -1,82 +1,118 @@
 import * as R from 'ramda';
 import {
-   UPDATED_ROW_ORDER,
-   UPDATED_CELL_,
-   ROW_MOVED,
-   ROW_MOVED_TO,
+	UPDATED_ROW_ORDER,
+	UPDATED_COLUMN_ORDER,
+	UPDATED_CELL_,
+	ROW_MOVED,
+	ROW_MOVED_TO,
+	COLUMN_MOVED,
+	COLUMN_MOVED_TO,
 } from '../actions/types';
-import { replacedRowFilters, replacedRowVisibility } from '../actions';
+import {
+	replacedRowFilters,
+	replacedColumnFilters,
+	replacedRowVisibility,
+	replacedColumnVisibility,
+	updatedHasChanged,
+} from '../actions';
 import moveRow from '../services/moveRow';
+import moveColumn from '../services/moveColumn';
 import { runIfSomething } from '../helpers';
 
 export default store => next => action => {
-   if (!action) {
-      return;
-   }
+	if (!action) {
+		return;
+	}
 
-   const runCellDispatches = R.map(async cell => {
-      try {
-         const promisedDispatch = await store.dispatch({
-            type: UPDATED_CELL_ + cell.row + '_' + cell.column,
-            payload: cell,
-         });
-         clearMoveData();
-         return await promisedDispatch;
-      } catch (err) {
-         console.log('Error in orderSheet.runCellDispatches', err);
-      }
-   });
+	const runCellDispatches = R.map(async cell => {
+		try {
+			const promisedDispatch = await store.dispatch({
+				type: UPDATED_CELL_ + cell.row + '_' + cell.column,
+				payload: cell,
+			});
+			clearMoveData();
+			return await promisedDispatch;
+		} catch (err) {
+			console.log('Error in orderSheet.runCellDispatches', err);
+		}
+	});
 
-   const clearMoveData = () => {
-      store.dispatch({
-         type: ROW_MOVED,
-         payload: null,
-      });
-      store.dispatch({
-         type: ROW_MOVED_TO,
-         payload: null,
-      });
-   };
+	const clearMoveData = () => {
+		store.dispatch({
+			type: ROW_MOVED,
+			payload: null,
+		});
+		store.dispatch({
+			type: ROW_MOVED_TO,
+			payload: null,
+		});
+		store.dispatch({
+			type: COLUMN_MOVED,
+			payload: null,
+		});
+		store.dispatch({
+			type: COLUMN_MOVED_TO,
+			payload: null,
+		});
+	};
 
-   switch (action.type) {
-      case UPDATED_ROW_ORDER:
-         const [newCells, newRowFilters, newRowVisibility] = R.ifElse(
-            R.allPass([
-               // rowMoved must be present
-               R.pipe(
-                  R.path(['sheet', 'rowMoved']),
-                  R.isNil,
-                  R.not
-               ),
-               // rowMovedTo must be present
-               R.pipe(
-                  R.path(['sheet', 'rowMovedTo']),
-                  R.isNil,
-                  R.not
-               ),
-               // rowMoved and rowMovedTo can't be equal
-               R.pipe(
-                  state =>
-                     R.equals(
-                        R.path(['sheet', 'rowMoved'], state),
-                        R.path(['sheet', 'rowMovedTo'], state)
-                     ),
-                  R.not
-               ),
-            ]),
-            moveRow, // if we pass all the conditions run moveRow
-            () => [null, null, null] // otherwise return null for all 3 values
-         )(store.getState());
+	const maybeMoveAxis = (axisMoved, axisMovedTo, axisMoveFn, store) =>
+		R.ifElse(
+			R.allPass([
+				// axisMoved must be present in sheet
+				R.pipe(
+					R.path(['sheet', axisMoved]),
+					R.isNil,
+					R.not
+				),
+				// axisMovedTo must be present in sheet
+				R.pipe(
+					R.path(['sheet', axisMovedTo]),
+					R.isNil,
+					R.not
+				),
+				// axisMoved and axisMovedTo values can't be equal
+				R.pipe(
+					state => R.equals(R.path(['sheet', axisMoved], state), R.path(['sheet', axisMovedTo], state)),
+					R.not
+				),
+			]),
+			axisMoveFn, // if we pass all the conditions run the fn
+			() => [null, null, null, false] // otherwise return null for all 3 values and false for hasChanged
+		)(store.getState());
 
-         // Note: if moveRow() returns an array then we get an error when trying to runCellDispatches() on it.
-         // Instead here moveRow() returns an object which we convert to an array with R.values() ...and it works fine
-         // Is this a Ramda bug?
-         runCellDispatches(R.values(newCells));
-         runIfSomething(replacedRowFilters, newRowFilters);
-         runIfSomething(replacedRowVisibility, newRowVisibility);
+	switch (action.type) {
+		case UPDATED_ROW_ORDER:
+			const [newRowCells, newRowFilters, newRowVisibility, rowsHaveChanged] = maybeMoveAxis(
+				'rowMoved',
+				'rowMovedTo',
+				moveRow,
+				store
+			);
 
-         break;
-      default:
-   }
-   return next(action);
+			// Note: if moveRow() returns an array then we get an error when trying to runCellDispatches() on it.
+			// Instead here moveRow() returns an object which we convert to an array with R.values() ...and it works fine
+			// Is this a Ramda bug?
+			runCellDispatches(R.values(newRowCells));
+			runIfSomething(replacedRowFilters, newRowFilters);
+			runIfSomething(replacedRowVisibility, newRowVisibility);
+			updatedHasChanged(rowsHaveChanged);
+			break;
+
+		case UPDATED_COLUMN_ORDER:
+			const [newColumnCells, newColumnFilters, newColumnVisibility, columnsHaveChanged] = maybeMoveAxis(
+				'columnMoved',
+				'columnMovedTo',
+				moveColumn,
+				store
+			);
+			runCellDispatches(R.values(newColumnCells));
+			runIfSomething(replacedColumnFilters, newColumnFilters);
+			runIfSomething(replacedColumnVisibility, newColumnVisibility);
+			updatedHasChanged(columnsHaveChanged);
+			break;
+
+		default:
+	}
+	return next(action);
 };

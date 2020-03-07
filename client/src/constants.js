@@ -9,4 +9,5 @@ export const ROW_HEIGHT = '2em';
 
 export const ItemTypes = {
 	DRAGGABLE_ROW_HEADER: 'draggable_row_header',
+	DRAGGABLE_COLUMN_HEADER: 'draggable_column_header',
 };

@@ -5,7 +5,7 @@
  * seem worthwhile generalizing them further.
  **/
 import * as R from 'ramda';
-import { updatedTotalRows, updatedCellKeys, updatedRowVisibility } from '../actions';
+import { updatedTotalRows, updatedCellKeys, updatedRowVisibility, updatedHasChanged } from '../actions';
 import { createCellKey } from '../helpers/cellHelpers';
 import { shouldShowColumn } from '../helpers/visibilityHelpers';
 import {
@@ -64,6 +64,7 @@ const insertNewRow = (cellKeys, totalRows, totalColumns, sheet) => {
 	maybeAddAxisVisibilityEntry(totalRows, sheet.rowVisibility, updatedRowVisibility);
 	addNewCellsToStore(updates.cells);
 	updatedTotalRows(totalRows + 1);
+	updatedHasChanged(true);
 };
 
 export default insertNewRow;

@@ -4,7 +4,7 @@ import { createCellKey } from '../helpers/cellHelpers';
 import { getAxisVisibilityName, getAxisFilterName } from '../helpers/visibilityHelpers';
 import { ROW_AXIS } from '../constants';
 
-const makeNewSheetObjectFromMap = (rowUpdateMapping, objectName, sheet) =>
+const makeNewSheetObjectFromMap = R.curry((rowUpdateMapping, sheet, objectName) =>
 	R.reduce(
 		(accumulator, rowMap) => {
 			const movedToIndex = rowMap[0];
@@ -16,7 +16,8 @@ const makeNewSheetObjectFromMap = (rowUpdateMapping, objectName, sheet) =>
 		},
 		{},
 		rowUpdateMapping
-	);
+	)
+);
 
 const createArray = (...args) => [...args];
 
@@ -82,23 +83,28 @@ const createOptimizedMappingFromArray = reduceWithIndex(
 
 const createMappingFromArray = mapWithIndex((value, index) => [index, value]);
 
-// TODO add 'hasChanged' to sheet
+export default state => {
+	const rowIndexToMove = state.sheet.rowMoved;
+	const insertBelowIndex = state.sheet.rowMovedTo;
+	const totalRows = state.sheet.totalRows;
 
-// TODO this has a lot of functions in it....can it be more declarative?
-const moveRowContent = (rowIndexToMove, insertBelowIndex, totalRows, state) => {
 	const reorderedIndicies = reorderIndicies(rowIndexToMove, insertBelowIndex, totalRows);
 
-	//TODO pipe these 2
-	const optimizedRowUpdateArr = createOptimizedMappingFromArray(reorderedIndicies);
-	const newCells = makeNewCellsFromMap(optimizedRowUpdateArr, state);
+	const newCells = R.pipe(
+		createOptimizedMappingFromArray,
+		makeNewCellsFromMap(R.__, state)
+	)(reorderedIndicies);
 
 	const rowUpdateArr = createMappingFromArray(reorderedIndicies);
 
-	// TODO pipe each of these
-	const newRowFilters = makeNewSheetObjectFromMap(rowUpdateArr, getAxisFilterName(ROW_AXIS), state.sheet);
-	const newRowVisibility = makeNewSheetObjectFromMap(rowUpdateArr, getAxisVisibilityName(ROW_AXIS), state.sheet);
+	const makeNewSheetObjFromNameFn = nameFn =>
+		R.pipe(
+			nameFn,
+			makeNewSheetObjectFromMap(rowUpdateArr, state.sheet)
+		)(ROW_AXIS);
 
-	return [newCells, newRowFilters, newRowVisibility];
+	const newRowFilters = makeNewSheetObjFromNameFn(getAxisFilterName);
+	const newRowVisibility = makeNewSheetObjFromNameFn(getAxisVisibilityName);
+	const hasChanged = true;
+	return [newCells, newRowFilters, newRowVisibility, hasChanged];
 };
-
-export default state => moveRowContent(state.sheet.rowMoved, state.sheet.rowMovedTo, state.sheet.totalRows, state);

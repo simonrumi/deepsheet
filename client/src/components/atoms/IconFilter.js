@@ -9,7 +9,7 @@ class IconFilter extends Component {
 				style={this.props.style}
 				height={this.props.height}
 				width={this.props.width}
-				viewBox="0 0 511 511.99982"
+				viewBox="0 0 511 511"
 				className="fill-current"
 				xmlns="http://www.w3.org/2000/svg"
 			>
@@ -24,7 +24,7 @@ class IconFilter extends Component {
 				style={this.props.style}
 				height={this.props.height}
 				width={this.props.width}
-				viewBox="-5 0 394 394.00003"
+				viewBox="0 0 394 394"
 				className="fill-current"
 				xmlns="http://www.w3.org/2000/svg"
 			>
