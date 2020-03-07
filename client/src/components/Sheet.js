@@ -23,9 +23,6 @@ import {
 // import * as RWrap from '../helpers/ramdaWrappers'; // use this for debugging only
 
 // *** TODO: in this order
-// move rows
-// move columns
-// implement hasChanged property of sheet
 // sort columns
 // sort rows
 

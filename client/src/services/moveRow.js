@@ -1,30 +1,15 @@
 import * as R from 'ramda';
-import { forLoopMap, forLoopReduce, mapWithIndex, reduceWithIndex } from '../helpers';
+import { forLoopReduce } from '../helpers';
 import { createCellKey } from '../helpers/cellHelpers';
 import { getAxisVisibilityName, getAxisFilterName } from '../helpers/visibilityHelpers';
+import {
+	makeNewSheetObjectFromMap,
+	buildObject,
+	reorderIndicies,
+	createOptimizedMappingFromArray,
+	createMappingFromArray,
+} from './moveAxis';
 import { ROW_AXIS } from '../constants';
-
-const makeNewSheetObjectFromMap = R.curry((rowUpdateMapping, sheet, objectName) =>
-	R.reduce(
-		(accumulator, rowMap) => {
-			const movedToIndex = rowMap[0];
-			const movedFromIndex = rowMap[1];
-			if (R.has(movedFromIndex, sheet[objectName])) {
-				return R.assoc(movedToIndex, sheet[objectName][movedFromIndex], accumulator);
-			}
-			return accumulator;
-		},
-		{},
-		rowUpdateMapping
-	)
-);
-
-const createArray = (...args) => [...args];
-
-const buildObject = R.pipe(
-	createArray,
-	R.mergeAll
-);
 
 const makeNewCellsFromMap = (rowUpdateMapping, state) => {
 	const getCellFromState = R.pipe(
@@ -48,40 +33,6 @@ const makeNewCellsFromMap = (rowUpdateMapping, state) => {
 	}, {});
 	return createCells(rowUpdateMapping);
 };
-
-const reorderIndicies = (rowIndexToMove, insertAfterIndex, totalRows) => {
-	const initialArray = forLoopMap(index => index, totalRows);
-	if (rowIndexToMove < insertAfterIndex) {
-		const newFirstPart = R.slice(0, rowIndexToMove, initialArray); // less than rowIndexToMove is untouched
-		const newSecondPart = R.slice(rowIndexToMove + 1, insertAfterIndex + 1, initialArray); // from rowIndexToMove to insertIndex will be moved 1 closer to start
-		// rowIndexToMove goes after the newSecondPart in the final array
-		const newEndPart = R.slice(insertAfterIndex + 1, totalRows, initialArray); // greater than insertIndex is untouched
-		return R.pipe(
-			R.concat,
-			R.concat(R.__, [rowIndexToMove]),
-			R.concat(R.__, newEndPart)
-		)(newFirstPart, newSecondPart);
-	}
-
-	if (rowIndexToMove > insertAfterIndex) {
-		const newFirstPart = R.slice(0, insertAfterIndex + 1, initialArray); // up to insertAfterIndex is untouched
-		// rowIndexToMove goes here
-		const newThirdPart = R.slice(insertAfterIndex + 1, rowIndexToMove, initialArray); // from insertAfterIndex + 1 to rowIndexToMove - 1 will be moved 1 closer to end
-		const newEndPart = R.slice(rowIndexToMove + 1, totalRows, initialArray); // greater than rowIndexToMove is untouched
-		return R.pipe(
-			R.concat,
-			R.concat(R.__, newThirdPart),
-			R.concat(R.__, newEndPart)
-		)(newFirstPart, [rowIndexToMove]);
-	}
-};
-
-const createOptimizedMappingFromArray = reduceWithIndex(
-	(accumulator, value, index) => (value === index ? accumulator : R.append([index, value], accumulator)),
-	[]
-);
-
-const createMappingFromArray = mapWithIndex((value, index) => [index, value]);
 
 export default state => {
 	const rowIndexToMove = state.sheet.rowMoved;
