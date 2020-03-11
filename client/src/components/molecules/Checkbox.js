@@ -28,8 +28,8 @@ const Checkbox = ({ formProps, testId, classes = '' }) => {
    );
 };
 
-const renderCheckmark = formProps =>
-   formProps.input.value ? (
+const renderCheckmark = formProps => {
+   return formProps.input.value ? (
       <IconCheckmark
          height="1em"
          width="1em"
@@ -38,5 +38,6 @@ const renderCheckmark = formProps =>
    ) : (
       ''
    );
+};
 
 export default Checkbox;
