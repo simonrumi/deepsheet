@@ -6,12 +6,12 @@ import {
    HIDE_FILTERED,
    CLEAR_ALL_FILTERS,
 } from '../actions/types';
+import { ROW_AXIS, COLUMN_AXIS } from '../constants';
 import {
    updatedColumnFilters,
    updatedRowFilters,
    updatedHasChanged,
 } from '../actions';
-import { ROW_AXIS, COLUMN_AXIS } from '../constants';
 import {
    getTotalForAxis,
    getAxisVisibilityName,
@@ -40,30 +40,28 @@ const getSheetFromData = R.pipe(
 const getFilters = (axisName, sheet) => sheet[R.concat(axisName, 'Filters')];
 
 /**** filterAxes and related functions *****/
-const escapeRegexChars = string =>
-   R.reduce(
-      (processedString, char) => {
-         const charNums = [91, 94, 36, 46, 124, 63, 42, 43, 40, 41, 92]; // nums for the chars [^$.|?*+()\
-         const charCode = char.charCodeAt(0);
-         const needsEscaping = R.includes(charCode, charNums);
-         const maybeEscapedChar = needsEscaping
-            ? String.fromCharCode(92, charCode)
-            : char;
-         return R.concat(processedString, maybeEscapedChar);
-      },
-      '',
-      string
-   );
+
+// note that the 3rd parameter to R.reduce is the string to operate on - it will be passed as a parameter to escapeRegexChars
+const escapeRegexChars = R.memoizeWith(
+   R.identity,
+   R.reduce((processedString, char) => {
+      const charNums = [91, 94, 36, 46, 124, 63, 42, 43, 40, 41, 92]; // nums for the chars [^$.|?*+()\
+      const charCode = char.charCodeAt(0);
+      const needsEscaping = R.includes(charCode, charNums);
+      const maybeEscapedChar = needsEscaping
+         ? String.fromCharCode(92, charCode)
+         : char;
+      console.log('calculated escapeRegexChars');
+      return R.concat(processedString, maybeEscapedChar);
+   }, '')
+);
 
 const isCellShownByFilter = R.curry((cell, filter) => {
    const flags = filter.caseSensitive ? 'g' : 'ig';
-   if (!filter.regex) {
-      // the filter string is not a regular expression so escape all the special regex characters [\^$.|?*+()\
-      const escapedFilterExpression = escapeRegexChars(filter.filterExpression);
-      const regex = new RegExp(escapedFilterExpression, flags);
-      return regex.test(cell.content);
-   }
-   const regex = new RegExp(filter.filterExpression, flags);
+   const filterExpression = filter.regex
+      ? filter.filterExpression || ''
+      : escapeRegexChars(filter.filterExpression || '');
+   const regex = new RegExp(filterExpression, flags);
    return regex.test(cell.content);
 });
 
@@ -160,7 +158,6 @@ const filterAllItemsInOtherAxis = R.curry((data, axis) => {
    );
 });
 
-// TODO this should really be a pipe. Functions above should output data to go to next function
 const filterAxes = data => {
    R.map(filterAllItemsInOtherAxis(data), [
       getAxis(data),
@@ -218,8 +215,6 @@ const filterCells = data => {
 /**** functions related to addNewFilter *****/
 const getFilterIndex = data =>
    R.isNil(data.rowIndex) ? data.colIndex : data.rowIndex;
-
-/// TODO somehow the action updatedColumnFilters isn't recording the caseSensitive and regex values
 
 const getNewFilters = R.converge(R.assoc, [
    getFilterIndex,
