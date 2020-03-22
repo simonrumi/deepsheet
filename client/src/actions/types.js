@@ -29,3 +29,6 @@ export const UPDATED_ROW_ORDER = 'updated_row_order';
 export const COLUMN_MOVED = 'column_moved';
 export const COLUMN_MOVED_TO = 'column_moved_to';
 export const UPDATED_COLUMN_ORDER = 'updated_column_order';
+export const UPDATED_SORT_OPTIONS = 'updated_sort_options';
+export const SORTED_AXIS = 'sorted_axis';
+export const CLEARED_SORT_OPTIONS = 'cleared_sort_options';

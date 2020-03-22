@@ -1,7 +1,7 @@
 import * as R from 'ramda';
-import ReactDOM from 'react-dom';
 import managedStore from '../store';
 import { updatedSheetId } from '../actions';
+import { clearMemoizedItems } from '../services/sheetServices';
 import { ROW_AXIS, COLUMN_AXIS } from '../constants';
 
 // temp fake data
@@ -9,6 +9,20 @@ import mockSheet from '../mockSheet2';
 import mockSubSheet from '../mockSubSheet';
 
 export const nothing = () => null;
+
+export const isString = R.pipe(
+   R.type,
+   R.equals('String')
+);
+
+export const isObject = R.pipe(
+   R.type,
+   R.equals('Object')
+);
+
+// like R.hasPath but returns either the thing at the given path or null
+export const maybeHasPath = (path, obj) =>
+   R.isNil(obj) ? null : R.hasPath(path, obj) ? R.path(path, obj) : null;
 
 const makeArr = length => new Array(length);
 export const mapWithIndex = R.addIndex(R.map);
@@ -112,16 +126,6 @@ export const fetchSheet = id => {
    }
 };
 
-export const fetchSummaryCellFromSheet = sheetId => {
-   // the idea here is to use the database to look up the sheet with the given sheetId and return the content of the
-   // cell designated as the summaryCell
-   // however for the moment we'll just return some fake data
-   if (sheetId === 2) {
-      return 'summary of sheet with id 2';
-   }
-   return null;
-};
-
 export const extractRowColFromCellKey = str => {
    // expecting a string like some_prefix_2_3
    //where 2 & 3 are the row and column numbers respectively
@@ -144,17 +148,9 @@ export const loadSheet = async sheetId => {
       managedStore.state.cellKeys
    );
    managedStore.store.replaceReducer(newCombinedReducers);
+   clearMemoizedItems();
    // then get the new sheet
    updatedSheetId(sheetId);
-};
-
-// TODO: dont; think this is used...check and delete if so
-export const unmountAllCells = cellKeys => {
-   R.map(
-      cellKey =>
-         ReactDOM.unmountComponentAtNode(document.getElementById(cellKey)),
-      cellKeys
-   );
 };
 
 // impure function to help with debugging
