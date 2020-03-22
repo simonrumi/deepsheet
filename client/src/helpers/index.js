@@ -46,8 +46,8 @@ export const forLoopReduce = (fn, initialVal, length) =>
    );
 
 // use like this:
-// runIfSomething(myFn, thingToTest, extraParameter)
-// if the thingToTest exists and is not empty, myFn will run, having the thingToTest and extraParameter passed to it
+// runIfSomething(myFn, thingToTest, extraParameters)
+// if the thingToTest exists and is not empty, myFn will run, having the thingToTest and extraParameters passed to it
 export const runIfSomething = (fn, thing, ...args) =>
    R.when(
       R.both(
