@@ -113,7 +113,7 @@ const sheetReducer = (state = {}, action) => {
          return { ...state, columnMovedTo: action.payload };
 
       case UPDATED_SORT_OPTIONS:
-         return action.payload.rowSortByIndex
+         return typeof action.payload.rowSortByIndex === 'number'
             ? {
                  ...state,
                  rowSortByIndex: action.payload.rowSortByIndex,

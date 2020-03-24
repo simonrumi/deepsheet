@@ -259,7 +259,6 @@ export const sortedAxis = () => {
 };
 
 export const updatedSortOptions = sortOptions => {
-   console.log('updatedSortOptions, sortOptions', sortOptions);
    managedStore.store.dispatch({
       type: UPDATED_SORT_OPTIONS,
       payload: sortOptions,

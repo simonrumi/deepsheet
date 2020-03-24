@@ -12,6 +12,7 @@ import {
    updatedRowFilters,
    updatedHasChanged,
 } from '../actions';
+import { isObject } from '../helpers';
 import {
    getTotalForAxis,
    getAxisVisibilityName,
@@ -62,6 +63,9 @@ const isCellShownByFilter = R.curry((cell, filter) => {
       ? filter.filterExpression || ''
       : escapeRegexChars(filter.filterExpression || '');
    const regex = new RegExp(filterExpression, flags);
+   if (isObject(cell.content)) {
+      return regex.test(cell.content.subContent);
+   }
    return regex.test(cell.content);
 });
 

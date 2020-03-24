@@ -19,7 +19,7 @@ import {
 } from '../actions';
 import moveRow from '../services/moveRow';
 import moveColumn from '../services/moveColumn';
-import sortColumns from '../services/sortColumns';
+import sortAxis from '../services/sortAxis';
 import { runIfSomething } from '../helpers';
 
 export default store => next => action => {
@@ -116,9 +116,7 @@ export default store => next => action => {
          break;
 
       case SORTED_AXIS:
-         console.log('SORTED_AXIS payload', action.payload);
-         const updatedCells = sortColumns(store.getState());
-         console.log('updatedCells', updatedCells);
+         const updatedCells = sortAxis(store.getState());
          runCellDispatches(updatedCells);
          clearedSortOptions();
          break;
