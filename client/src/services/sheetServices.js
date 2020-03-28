@@ -53,7 +53,6 @@ export const fetchSummaryCellFromSheet = maybeMemoize(sheetId => {
    // the idea here is to use the database to look up the sheet with the given sheetId and return the content of the
    // cell designated as the summaryCell
    // however for the moment we'll just return some fake data
-   console.log('called fetchSummaryCellFromSheet');
    if (sheetId === 2) {
       return 'summary of sheet with id 2';
    }

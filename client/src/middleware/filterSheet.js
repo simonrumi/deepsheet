@@ -52,7 +52,6 @@ const escapeRegexChars = R.memoizeWith(
       const maybeEscapedChar = needsEscaping
          ? String.fromCharCode(92, charCode)
          : char;
-      console.log('calculated escapeRegexChars');
       return R.concat(processedString, maybeEscapedChar);
    }, '')
 );

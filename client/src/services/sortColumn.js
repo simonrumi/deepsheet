@@ -4,10 +4,21 @@
 
 import * as R from 'ramda';
 import { extractRowColFromCellKey, forLoopReduce } from '../helpers';
-import { SORT_INCREASING } from '../constants';
+import { SORT_INCREASING, ROW_AXIS } from '../constants';
 import { compareCellContent, compareCellContentDecreasing } from './sortAxis';
 
-///// TODO BUG: sorting filtered columns is broken (not so for rows)
+const createNewRowVisibility = (state, mapOfChangedRows) =>
+   R.isEmpty(state.sheet.rowVisibility)
+      ? {}
+      : R.reduce(
+           (accumulator, rowMap) => {
+              // rowMap is a pair of [sourceRow, destinationRow], e.g. [0,2]
+              accumulator[rowMap[1]] = state.sheet.rowVisibility[rowMap[0]];
+              return accumulator;
+           },
+           { ...state.sheet.rowVisibility },
+           mapOfChangedRows
+        );
 
 const updateCellsPerRowMap = R.curry((state, mapOfChangedRows) =>
    R.reduce(
@@ -28,6 +39,19 @@ const updateCellsPerRowMap = R.curry((state, mapOfChangedRows) =>
       [],
       state.cellKeys
    )
+);
+
+const createNewCellArrayAndRowVisibility = R.curry(
+   (state, mapOfChangedRows) => {
+      return {
+         updatedCells: updateCellsPerRowMap(state, mapOfChangedRows),
+         updatedVisibility: R.assoc(
+            ROW_AXIS,
+            createNewRowVisibility(state, mapOfChangedRows),
+            {}
+         ),
+      };
+   }
 );
 
 const createMapOfChangedRows = newCellOrder =>
@@ -73,5 +97,5 @@ export default state =>
       R.sort(compareCellRow),
       R.sort(columnSortFunc(state)),
       createMapOfChangedRows,
-      updateCellsPerRowMap(state)
+      createNewCellArrayAndRowVisibility(state)
    )(state);

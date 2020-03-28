@@ -30,39 +30,31 @@ class FilterOptions extends Component {
       <Checkbox formProps={formProps} testId="regexCheckbox" />
    );
 
-   renderFilterInput = formProps => {
-      console.log('renderFilterInput, formProps', formProps);
-      return (
-         <TextInput
-            formProps={formProps}
-            testId="filterInput"
-            placeholder="placeholder value here"
-         />
-      );
-   };
+   renderFilterInput = formProps => (
+      <TextInput
+         formProps={formProps}
+         testId="filterInput"
+         placeholder="placeholder value here"
+      />
+   );
 
    renderCaseSensitiveCheckbox = formProps => (
       <Checkbox formProps={formProps} testId="caseSensitiveCheckbox" />
    );
 
-   renderClearFiltersButton = formProps => {
-      console.log('renderClearFiltersButton, formProps', formProps);
-      return (
-         <Button
-            buttonType="button"
-            classes=""
-            onClickFn={this.props.clearedAllFilters}
-            label="Clear All Filtering"
-         />
-      );
-   };
+   renderClearFiltersButton = formProps => (
+      <Button
+         buttonType="button"
+         classes=""
+         onClickFn={this.props.clearedAllFilters}
+         label="Clear All Filtering"
+      />
+   );
 
    render() {
       const allClasses =
          'border-t-0 border-r border-b border-l border-solid border-grey-blue flex items-start justify-between px-2 py-2 ' +
          this.props.classes;
-
-      console.log('FilterOptions2, this.props', this.props);
 
       return (
          <form onSubmit={this.props.handleSubmit(this.editFilter)}>

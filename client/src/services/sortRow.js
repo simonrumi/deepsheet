@@ -7,6 +7,20 @@ import { extractRowColFromCellKey, forLoopReduce } from '../helpers';
 import { SORT_INCREASING } from '../constants';
 import { compareCellContent, compareCellContentDecreasing } from './sortAxis';
 
+const createNewColumnVisibility = (state, mapOfChangedColumns) =>
+   R.isEmpty(state.sheet.columnVisibility)
+      ? {}
+      : R.reduce(
+           (accumulator, columnMap) => {
+              // columnMap is a pair of [sourceRow, destinationRow], e.g. [0,2]
+              accumulator[columnMap[1]] =
+                 state.sheet.columnVisibility[columnMap[0]];
+              return accumulator;
+           },
+           { ...state.sheet.columnVisibility },
+           mapOfChangedColumns
+        );
+
 const updateCellsPerColumnMap = R.curry((state, mapOfChangedColumns) =>
    R.reduce(
       (accumulator, cellKey) => {
@@ -29,6 +43,18 @@ const updateCellsPerColumnMap = R.curry((state, mapOfChangedColumns) =>
       [],
       state.cellKeys
    )
+);
+
+const createNewCellArrayAndColumnVisibility = R.curry(
+   (state, mapOfChangedColumns) => {
+      return {
+         updatedCells: updateCellsPerColumnMap(state, mapOfChangedColumns),
+         updatedColumnVisibility: createNewColumnVisibility(
+            state,
+            mapOfChangedColumns
+         ),
+      };
+   }
 );
 
 const createMapOfChangedColumns = newCellOrder =>
@@ -74,5 +100,5 @@ export default state =>
       R.sort(compareCellColumn),
       R.sort(rowSortFunc(state)),
       createMapOfChangedColumns,
-      updateCellsPerColumnMap(state)
+      createNewCellArrayAndColumnVisibility(state)
    )(state);

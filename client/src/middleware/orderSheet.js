@@ -9,6 +9,7 @@ import {
    COLUMN_MOVED_TO,
    SORTED_AXIS,
 } from '../actions/types';
+import { ROW_AXIS, COLUMN_AXIS } from '../constants';
 import {
    replacedRowFilters,
    replacedColumnFilters,
@@ -51,7 +52,6 @@ export default store => next => action => {
          type: UPDATED_CELL_ + cell.row + '_' + cell.column,
          payload: cell,
       });
-      clearMoveData();
       return promisedDispatch;
    });
 
@@ -97,6 +97,7 @@ export default store => next => action => {
          // Instead here moveRow() returns an object which we convert to an array with R.values() ...and it works fine
          // Is this a Ramda bug?
          runCellDispatches(R.values(newRowCells));
+         clearMoveData();
          runIfSomething(replacedRowFilters, newRowFilters);
          runIfSomething(replacedRowVisibility, newRowVisibility);
          updatedHasChanged(rowsHaveChanged);
@@ -116,7 +117,14 @@ export default store => next => action => {
          break;
 
       case SORTED_AXIS:
-         const updatedCells = sortAxis(store.getState());
+         const { updatedCells = [], updatedVisibility = {} } = sortAxis(
+            store.getState()
+         );
+         runIfSomething(replacedRowVisibility, updatedVisibility[ROW_AXIS]);
+         runIfSomething(
+            replacedColumnVisibility,
+            updatedVisibility[COLUMN_AXIS]
+         );
          runCellDispatches(updatedCells);
          clearedSortOptions();
          break;
