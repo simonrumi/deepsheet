@@ -3,7 +3,11 @@ import managedStore from '../store';
 import { extractRowColFromCellKey } from '../helpers';
 import { ROW_AXIS, COLUMN_AXIS } from '../constants';
 import { updatedCell } from '../actions';
-import { UPDATED_CELL_KEYS, UPDATED_CELL_ } from '../actions/types';
+import {
+   UPDATED_CELL_KEYS,
+   UPDATED_CELL_,
+   UPDATED_CONTENT_OF_CELL_,
+} from '../actions/types';
 
 export const createCellReducers = sheetMetadata => {
    const store = managedStore.store;
@@ -28,16 +32,23 @@ export const cellReducerFactory = (rowNum, colNum) => {
       if (!action || !action.type) {
          return state;
       }
-      if (action.type.indexOf(UPDATED_CELL_) !== 0) {
-         return state;
-      }
       const numsFromType = extractRowColFromCellKey(action.type);
       if (
          numsFromType &&
          numsFromType[ROW_AXIS] === rowNum &&
          numsFromType[COLUMN_AXIS] === colNum
       ) {
-         return action.payload;
+         const hasUpdatedCell = new RegExp(UPDATED_CELL_, 'ig');
+         const hasUpdatedContent = new RegExp(UPDATED_CONTENT_OF_CELL_, 'ig');
+         return hasUpdatedCell.test(action.type)
+            ? action.payload
+            : hasUpdatedContent.test(action.type)
+            ? {
+                 ...state,
+                 content: action.payload.content,
+                 hasChanged: action.payload.hasChanged,
+              }
+            : state;
       }
       return state;
    };

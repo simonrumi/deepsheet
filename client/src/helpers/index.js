@@ -77,9 +77,10 @@ export const capitalCase = R.converge(R.concat, [
    ),
 ]);
 
-export const removePTags = str => {
-   return str.replace(/<p>|<\/p>/gi, '');
-};
+// this was used byt the old Editor.js ...shouldn't be needed now
+// export const removePTags = str => {
+//    return str.replace(/<p>|<\/p>/gi, '');
+// };
 
 export const indexToColumnLetter = index => {
    let num = index + 1; // counting from 1, A = 1, Z = 26

@@ -6,7 +6,7 @@ import {
    UPDATED_SHEET_ID,
    FETCHED_SHEET,
    UPDATED_HAS_CHANGED,
-   UPDATE_EDITOR,
+   UPDATED_EDITOR,
    SET_EDITOR_REF,
    UPDATED_TITLE,
    SET_EDITING_TITLE,
@@ -139,9 +139,9 @@ const sheetReducer = (state = {}, action) => {
    }
 };
 
-const updateEditorReducer = (state = {}, action) => {
+const editorReducer = (state = {}, action) => {
    switch (action.type) {
-      case UPDATE_EDITOR:
+      case UPDATED_EDITOR:
          return action.payload;
       default:
          return state;
@@ -151,6 +151,7 @@ const updateEditorReducer = (state = {}, action) => {
 const editorRefReducer = (state = {}, action) => {
    switch (action.type) {
       case SET_EDITOR_REF:
+         console.log('editorRefReducer state', state, 'action', action);
          return action.payload;
       default:
          return state;
@@ -194,7 +195,7 @@ export const staticReducers = {
    sheetId: sheetIdReducer,
    sheet: sheetReducer,
    editorRef: editorRefReducer,
-   editor: updateEditorReducer,
+   editor: editorReducer,
    title: titleReducer,
    form: reduxFormReducer,
    filterModal: filterModalReducer,

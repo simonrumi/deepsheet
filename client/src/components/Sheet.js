@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { DndProvider } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 import Header from './Header';
-import Editor from './Editor';
+import Editor from './organisms/Editor';
 import ColumnHeaders from './organisms/ColumnHeaders';
 import RowHeader from './organisms/RowHeader';
 import LastRow from './organisms/LastRow';
@@ -72,15 +72,11 @@ class Sheet extends Component {
          this.props.cellKeys.length > 0 &&
          this.props.sheetId === this.props.sheet._id
       ) {
-         const rows = R.map(cellKey => {
-            const value = this.maybeRow(this.props.sheet)(cellKey);
-            return this.maybeRow(this.props.sheet)(cellKey);
-         }, this.props.cellKeys);
-         const rowsWithColumnHeaders = R.prepend(
-            <ColumnHeaders key="columnHeaders" />,
-            rows
-         );
-         return R.append(<LastRow key="lastRow" />, rowsWithColumnHeaders);
+         return R.pipe(
+            R.map(cellKey => this.maybeRow(this.props.sheet)(cellKey)),
+            R.prepend(<ColumnHeaders key="columnHeaders" />),
+            R.append(<LastRow key="lastRow" />)
+         )(this.props.cellKeys);
       }
       return <div>loading...</div>;
    }
@@ -132,7 +128,7 @@ class Sheet extends Component {
       return (
          <div className="px-1">
             <Header />
-            <Editor />
+            <Editor cellContent="" />
             {this.maybeRenderFilterModal(this.props.showFilterModal)}
             <DndProvider backend={HTML5Backend}>
                <div

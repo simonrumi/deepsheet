@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import * as R from 'ramda';
-import { updateEditor } from '../../actions';
+import { updatedEditor } from '../../actions';
 import { extractRowColFromCellKey, nothing } from '../../helpers';
 import {
    createClassNames,
@@ -91,8 +91,16 @@ class Cell extends Component {
          column: this._col,
          content: event.target.innerHTML,
       };
-      this.props.updateEditor(cellData);
-      this.props.editorRef.focus();
+      this.props.updatedEditor(cellData);
+
+      // need this setTimeout to ensure the code runs on the next tick,
+      // otherwise the EditorInput is disabled when given the focus
+      // bit of a hack but seemed to be an accepted workaround.
+      window.setTimeout(() => {
+         if (this.props.editorRef.current) {
+            this.props.editorRef.current.focus();
+         }
+      }, 0);
    }
 }
 
@@ -100,9 +108,9 @@ function mapStateToProps(state, ownProps) {
    const cell = managedStore.state[ownProps.cellKey];
    return {
       sheet: state.sheet,
-      editorRef: state.editorRef,
       cellKey: ownProps.cellKey,
       classes: ownProps.classes,
+      editorRef: state.editorRef,
       cell,
       managedStore,
       blankCell: ownProps.blankCell,
@@ -111,5 +119,5 @@ function mapStateToProps(state, ownProps) {
 
 export default connect(
    mapStateToProps,
-   { updateEditor }
+   { updatedEditor }
 )(Cell);

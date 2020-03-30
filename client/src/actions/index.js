@@ -7,10 +7,11 @@ import { isObject } from '../helpers';
 import {
    FETCHED_SHEET,
    UPDATED_HAS_CHANGED,
-   UPDATE_EDITOR,
-   UPDATED_CELL_,
-   UPDATED_CELL_KEYS,
+   UPDATED_EDITOR,
    SET_EDITOR_REF,
+   UPDATED_CELL_,
+   UPDATED_CONTENT_OF_CELL_,
+   UPDATED_CELL_KEYS,
    UPDATED_TITLE,
    SET_EDITING_TITLE,
    UPDATED_SHEET_ID,
@@ -82,16 +83,23 @@ export const replacedRowFilters = rowFilters => {
    });
 };
 
-export const updateEditor = cellBeingEdited => {
+export const updatedEditor = cellData => {
    managedStore.store.dispatch({
-      type: UPDATE_EDITOR,
-      payload: cellBeingEdited,
+      type: UPDATED_EDITOR,
+      payload: cellData,
    });
 };
 
+export const setEditorRef = editorRef => {
+   console.log('setEditorRef, editorRef', editorRef);
+   managedStore.store.dispatch({ type: SET_EDITOR_REF, payload: editorRef });
+};
+
 export const updatedCellBeingEdited = cell => {
-   const updateCellType = UPDATED_CELL_ + cell.row + '_' + cell.column;
-   managedStore.store.dispatch({ type: updateCellType, payload: cell.content });
+   console.log('updatedCellBeingEdited got cell', cell);
+   const updateCellType =
+      UPDATED_CONTENT_OF_CELL_ + cell.row + '_' + cell.column;
+   managedStore.store.dispatch({ type: updateCellType, payload: cell });
 };
 
 export const updatedCell = cell => {
@@ -123,10 +131,6 @@ export const updatedCell = cell => {
 
 export const updatedCellKeys = keys => {
    managedStore.store.dispatch({ type: UPDATED_CELL_KEYS, payload: keys });
-};
-
-export const setEditorRef = editorRef => {
-   managedStore.store.dispatch({ type: SET_EDITOR_REF, payload: editorRef });
 };
 
 export const updatedTitle = titleData => {
