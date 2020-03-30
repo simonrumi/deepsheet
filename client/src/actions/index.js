@@ -91,12 +91,10 @@ export const updatedEditor = cellData => {
 };
 
 export const setEditorRef = editorRef => {
-   console.log('setEditorRef, editorRef', editorRef);
    managedStore.store.dispatch({ type: SET_EDITOR_REF, payload: editorRef });
 };
 
 export const updatedCellBeingEdited = cell => {
-   console.log('updatedCellBeingEdited got cell', cell);
    const updateCellType =
       UPDATED_CONTENT_OF_CELL_ + cell.row + '_' + cell.column;
    managedStore.store.dispatch({ type: updateCellType, payload: cell });

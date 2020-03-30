@@ -151,7 +151,6 @@ const editorReducer = (state = {}, action) => {
 const editorRefReducer = (state = {}, action) => {
    switch (action.type) {
       case SET_EDITOR_REF:
-         console.log('editorRefReducer state', state, 'action', action);
          return action.payload;
       default:
          return state;

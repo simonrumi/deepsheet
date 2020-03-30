@@ -6,7 +6,6 @@ class EditorInput extends Component {
    constructor(props) {
       super(props);
       this.editorInputRef = React.createRef();
-      this.handleFocus = this.handleFocus.bind(this);
    }
 
    componentDidMount() {
@@ -15,11 +14,6 @@ class EditorInput extends Component {
       // when the cell is clicked
       this.props.setEditorRef(this.editorInputRef);
    }
-
-   handleFocus = () => {
-      console.log('EditorInput got focus; this =', this);
-      this.forceUpdate();
-   };
 
    render() {
       return (
@@ -30,7 +24,6 @@ class EditorInput extends Component {
             onChange={this.props.handleChange}
             onBlur={this.props.handleBlur}
             ref={this.editorInputRef}
-            onFocus={this.handleFocus}
             disabled={this.props.disabled}
          />
       );
