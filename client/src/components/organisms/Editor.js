@@ -8,8 +8,6 @@ import {
 } from '../../actions';
 import EditorInput from '../atoms/EditorInput';
 
-//TODO uninstall ReactQuill
-
 class Editor extends Component {
    constructor(props) {
       super(props);
