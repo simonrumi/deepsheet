@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { fetchSummaryCellFromSheet } from '../../services/sheetServices';
-import { loadSheet } from '../../helpers';
+import { loadSheet } from '../../services/sheetServices';
 
 class SubsheetCell extends Component {
    render() {

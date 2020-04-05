@@ -1,7 +1,4 @@
 import * as R from 'ramda';
-import managedStore from '../store';
-import { updatedSheetId } from '../actions';
-import { clearMemoizedItems } from '../services/sheetServices';
 import { ROW_AXIS, COLUMN_AXIS } from '../constants';
 
 export const nothing = () => null;
@@ -137,18 +134,6 @@ export const extractRowColFromCellKey = str => {
    rowColObj[ROW_AXIS] = row;
    rowColObj[COLUMN_AXIS] = column;
    return rowColObj;
-};
-
-export const loadSheet = async sheetId => {
-   console.log('TODO: loadSheet should be moved from helpers to services');
-   // first clear out the cell reducers from any previosly loaded sheet
-   const newCombinedReducers = managedStore.store.reducerManager.removeMany(
-      managedStore.state.cellKeys
-   );
-   managedStore.store.replaceReducer(newCombinedReducers);
-   clearMemoizedItems();
-   // then get the new sheet
-   updatedSheetId(sheetId);
 };
 
 // impure function to help with debugging

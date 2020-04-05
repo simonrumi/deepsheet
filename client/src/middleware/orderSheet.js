@@ -47,13 +47,18 @@ export default store => next => action => {
       });
    };
 
-   const runCellDispatches = R.map(cell => {
-      const promisedDispatch = store.dispatch({
-         type: UPDATED_CELL_ + cell.row + '_' + cell.column,
-         payload: cell,
-      });
-      return promisedDispatch;
-   });
+   const runCellDispatches = async updatedCells => {
+      const dispatches = await R.map(async cell => {
+         const promisedDispatch = await store.dispatch({
+            type: UPDATED_CELL_ + cell.row + '_' + cell.column,
+            payload: cell,
+         });
+         return promisedDispatch;
+      })(updatedCells);
+      // force clearMoveData to run on the next tick, otherwise move data is cleared before move is completed
+      //so move doesn't actually happen. async-awaits didn't work, but leaving in here anyway, just in case
+      setTimeout(clearMoveData, 0);
+   };
 
    const maybeMoveAxis = (axisMoved, axisMovedTo, axisMoveFn, store) =>
       R.ifElse(
@@ -95,9 +100,9 @@ export default store => next => action => {
 
          // Note: if moveRow() returns an array then we get an error when trying to runCellDispatches() on it.
          // Instead here moveRow() returns an object which we convert to an array with R.values() ...and it works fine
+         // same approached used with moveColumn()
          // Is this a Ramda bug?
          runCellDispatches(R.values(newRowCells));
-         clearMoveData();
          runIfSomething(replacedRowFilters, newRowFilters);
          runIfSomething(replacedRowVisibility, newRowVisibility);
          updatedHasChanged(rowsHaveChanged);

@@ -6,56 +6,68 @@ import { ItemTypes } from '../../constants';
 import { rowMovedTo } from '../../actions';
 
 const targetSpec = {
-	drop: (props, monitor, component) => rowMovedTo(props.rowIndex),
+   drop: (props, monitor, component) => rowMovedTo(props.rowIndex),
 
-	// hover: (props, monitor, component) =>
-	//    console.log('targetSpec.hover: props=', props),
-	// canDrop: (props, monitor) =>
-	//    console.log('targetSpec.canDrop: props=', props),
+   // hover: (props, monitor, component) =>
+   //    console.log('targetSpec.hover: props=', props),
+   // canDrop: (props, monitor) =>
+   //    console.log('targetSpec.canDrop: props=', props),
 };
 
 const targetCollect = (connect, monitor, props) => {
-	return {
-		// Call this function inside render() to let React DnD handle the drag events:
-		connectDropTarget: connect.dropTarget(),
+   return {
+      // Call this function inside render() to let React DnD handle the drag events:
+      connectDropTarget: connect.dropTarget(),
 
-		// You can ask the monitor about the current drag state:
-		isOver: monitor.isOver(),
-		canDrop: monitor.canDrop(),
-		itemType: monitor.getItemType(),
-	};
+      // You can ask the monitor about the current drag state:
+      isOver: monitor.isOver(),
+      canDrop: monitor.canDrop(),
+      itemType: monitor.getItemType(),
+   };
 };
 
 const renderClasses = (classes, isOver, canDrop) =>
-	R.cond([
-		[R.thunkify(R.and)(isOver, canDrop), () => classes + ' h-1 bg-vibrant-blue visible'],
-		[R.thunkify(R.and)(!isOver, canDrop), () => classes + ' h-1 bg-light-light-blue visible'],
-		[R.thunkify(R.and)(!isOver, !canDrop), () => classes + ' h-1 invisible'],
-	])();
+   R.cond([
+      [
+         R.thunkify(R.and)(isOver, canDrop),
+         () => classes + ' h-1 bg-vibrant-blue visible',
+      ],
+      [
+         R.thunkify(R.and)(!isOver, canDrop),
+         () => classes + ' h-1 bg-light-light-blue visible',
+      ],
+      [R.thunkify(R.and)(!isOver, !canDrop), () => classes + ' h-1 invisible'],
+   ])();
 
 class RowDropTarget extends Component {
-	render() {
-		const id = 'rowTarget_' + this.props.rowIndex;
+   render() {
+      const id = 'rowTarget_' + this.props.rowIndex;
 
-		// These props are injected by React DnD, as defined by targetCollect function above:
-		const { isOver, canDrop, connectDropTarget } = this.props;
+      // These props are injected by React DnD, as defined by targetCollect function above:
+      const { isOver, canDrop, connectDropTarget } = this.props;
 
-		const allClasses = renderClasses(this.props.classes, isOver, canDrop);
-		return connectDropTarget(<div id={id} className={allClasses} sheet={this.props.sheet} />);
-	}
+      const allClasses = renderClasses(this.props.classes, isOver, canDrop);
+      return connectDropTarget(
+         <div id={id} className={allClasses} sheet={this.props.sheet} />
+      );
+   }
 }
 
 function mapStateToProps(state, ownProps) {
-	return {
-		rowIndex: ownProps.rowIndex,
-		classes: ownProps.classes,
-		sheet: state.sheet,
-	};
+   return {
+      rowIndex: ownProps.rowIndex,
+      classes: ownProps.classes,
+      sheet: state.sheet,
+   };
 }
 
-const RowDropTargetWrapped = DropTarget(ItemTypes.DRAGGABLE_ROW_HEADER, targetSpec, targetCollect)(RowDropTarget);
+const RowDropTargetWrapped = DropTarget(
+   ItemTypes.DRAGGABLE_ROW_HEADER,
+   targetSpec,
+   targetCollect
+)(RowDropTarget);
 
 export default connect(
-	mapStateToProps,
-	{}
+   mapStateToProps,
+   {}
 )(RowDropTargetWrapped);

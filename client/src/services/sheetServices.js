@@ -1,5 +1,7 @@
 import * as R from 'ramda';
 import axios from 'axios';
+import managedStore from '../store';
+import { updatedSheetId } from '../actions';
 
 /***
 Need to have these impure functions for dealing with memoizedItems.
@@ -60,4 +62,15 @@ export const fetchSummaryCellFromSheet = maybeMemoize(async sheetId => {
 export const fetchSheet = async id => {
    const sheet = await axios.get('/api/sheets/' + id);
    return sheet.data;
+};
+
+export const loadSheet = async sheetId => {
+   // first clear out the cell reducers from any previosly loaded sheet
+   const newCombinedReducers = managedStore.store.reducerManager.removeMany(
+      managedStore.state.cellKeys
+   );
+   managedStore.store.replaceReducer(newCombinedReducers);
+   clearMemoizedItems();
+   // then get the new sheet
+   updatedSheetId(sheetId);
 };
