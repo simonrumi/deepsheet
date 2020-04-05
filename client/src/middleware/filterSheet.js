@@ -275,6 +275,9 @@ export default store => next => action => {
    }
    switch (action.type) {
       case HIDE_FILTERED:
+         console.log(
+            'TODO in filterSheet.js handle case where no sheet data returned from db'
+         );
          hideFiltered(action.payload, store);
          updatedHasChanged(true);
          break;
