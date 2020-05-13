@@ -29,21 +29,11 @@ const sheetSchema = new Schema(
 sheetSchema.statics.getSummaryCellContent = async function(id) {
    const data = await this.findById(id);
    const { row, column } = data.metadata.summaryCell;
-   // all the sheet data is in data.rows. Each row has an array, called rowItems here,
-   // each rowItem has an array called columnItems here.
-   // each columnItem has a content value
-   return R.pipe(
-      R.reduce(
-         (accumulator, rowItem) =>
-            rowItem && rowItem.row === row ? rowItem.columns : accumulator,
-         []
-      ),
-      R.reduce(
-         (accumulator, columnItem) =>
-            columnItem.column === column ? columnItem.content : accumulator,
-         null
-      )
-   )(data.rows);
+   const rowData = await this.findOne(
+      { _id: id },
+      { rows: { $elemMatch: { row: JSON.stringify(row) } } }
+   );
+   return rowData.rows[row].columns[column].content;
 };
 
 mongoose.model('sheet', sheetSchema);

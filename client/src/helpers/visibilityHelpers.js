@@ -1,5 +1,5 @@
 import * as R from 'ramda';
-import { extractRowColFromCellKey, capitalizeFirst } from './index';
+import { extractRowColFromCellKey, capitalizeFirst, isNothing } from './index';
 import { ROW_AXIS, COLUMN_AXIS } from '../constants';
 //import * as RWrap from './ramdaWrappers'; // use this for debugging only
 
@@ -102,6 +102,8 @@ export const getRequiredNumItemsForAxis = (axis, sheet) => {
 /****
  * row visibility, for use by Sheet.js
  *****/
+
+// TODO probably need to redo this section, see column visibility stuff below
 const isRowVisibilityInSheet = R.curry((sheet, rowColObj) =>
    R.hasPath(['rowVisibility', rowColObj.row], sheet)
 );
@@ -117,7 +119,7 @@ const rowIsVisible = sheet =>
    );
 
 export const shouldShowRow = R.curry((sheet, cellKey) =>
-   R.or(R.isEmpty(sheet.rowVisibility), rowIsVisible(sheet)(cellKey))
+   isNothing(sheet.rowVisibility) ? true : rowIsVisible(sheet)(cellKey)
 );
 
 /*****
@@ -126,19 +128,15 @@ export const shouldShowRow = R.curry((sheet, cellKey) =>
  * different structure of data available to ColumnHeaders.js compared with Sheet.js,
  * consequently it doesn't seem worthwhile trying to generalize any of these functions
  ****/
-const getColumnVisibility = (colVisibilityObj, colIndex) =>
-   colVisibilityObj[colIndex];
-
-const isColumnVisibilityInObject = (colVisibilityObj, colIndex) =>
-   R.has(colIndex, colVisibilityObj);
-
-const columnIsVisible = R.both(isColumnVisibilityInObject, getColumnVisibility);
+const getColumnVisibility = R.curry((colVisibilityObj, colIndex) =>
+   R.pipe(
+      R.find(R.propEq('index', colIndex)),
+      R.prop('isVisible')
+   )(colVisibilityObj)
+);
 
 export const shouldShowColumn = R.curry((colVisibilityObj, colIndex) =>
-   R.or(
-      R.isEmpty(colVisibilityObj),
-      columnIsVisible(colVisibilityObj, colIndex)
-   )
+   R.cond([[isNothing, R.T], [R.T, getColumnVisibility]])
 );
 
 /* isFirstColumn for use by Sheet.js */
@@ -177,7 +175,7 @@ export const isLastVisibleItemInAxis = R.curry(
          // if the visiblity object is empty
          R.pipe(
             getVisibilityObjFromSheet(axis), //receives sheet
-            R.isEmpty
+            isNothing //R.isEmpty
          ),
          // then compare the index of the last item to the current index
          R.pipe(

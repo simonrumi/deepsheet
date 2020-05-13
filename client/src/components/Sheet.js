@@ -3,6 +3,18 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { DndProvider } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
+import { updatedSheetId } from '../actions';
+import managedStore from '../store';
+import initializeSheet from '../middleware/initializeSheet';
+import { nothing } from '../helpers';
+import {
+   shouldShowRow,
+   isFirstColumn,
+   isLastVisibleItemInAxis,
+   getRequiredNumItemsForAxis,
+} from '../helpers/visibilityHelpers';
+import { ROW_AXIS, COLUMN_AXIS, THIN_COLUMN, ROW_HEIGHT } from '../constants';
+
 import Header from './Header';
 import Editor from './organisms/Editor';
 import ColumnHeaders from './organisms/ColumnHeaders';
@@ -10,24 +22,11 @@ import RowHeader from './organisms/RowHeader';
 import LastRow from './organisms/LastRow';
 import Cell from './molecules/Cell';
 import FilterModal from './organisms/FilterModal';
-import { updatedSheetId } from '../actions'; //fetchedSheet,
-import managedStore from '../store';
-import { nothing } from '../helpers';
-import { ROW_AXIS, COLUMN_AXIS, THIN_COLUMN, ROW_HEIGHT } from '../constants';
-import {
-   shouldShowRow,
-   isFirstColumn,
-   isLastVisibleItemInAxis,
-   getRequiredNumItemsForAxis,
-} from '../helpers/visibilityHelpers';
-// import * as RWrap from '../helpers/ramdaWrappers'; // use this for debugging only
 
 class Sheet extends Component {
    componentDidMount() {
       this.props.updatedSheetId(this.props.sheetId);
    }
-
-   // TODO BUG - somehow Cell.js is getting blankCell = undefined for blank cells
 
    renderEmptyEndCell = cellKey => (
       <Cell
@@ -75,6 +74,13 @@ class Sheet extends Component {
       R.ifElse(shouldShowRow(sheet), this.renderCellAndMaybeEdges, nothing);
 
    renderCells = () => {
+      if (
+         this.props.data &&
+         this.props.data.sheet &&
+         this.props.managedStore.store
+      ) {
+         initializeSheet(this.props.managedStore.store, this.props.data.sheet);
+      }
       if (
          R.has('totalRows', this.props.sheet) &&
          this.props.cellKeys &&
@@ -160,11 +166,7 @@ function mapStateToProps(state) {
       sheetId: state.sheetId, // if no existing sheetId in the store, this will be the DEFAULT_SHEET_ID
    };
 }
-
-//fetchedSheet,
 export default connect(
    mapStateToProps,
-   {
-      updatedSheetId,
-   }
+   { updatedSheetId }
 )(Sheet);

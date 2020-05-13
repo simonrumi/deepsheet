@@ -2,7 +2,12 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import * as R from 'ramda';
 import { updatedEditor } from '../../actions';
-import { extractRowColFromCellKey, nothing } from '../../helpers';
+import {
+   extractRowColFromCellKey,
+   nothing,
+   isSomething,
+   isNothing,
+} from '../../helpers';
 import { createClassNames, createCellId } from '../../helpers/cellHelpers';
 import managedStore from '../../store';
 import SubsheetCell from './SubsheetCell';
@@ -12,7 +17,7 @@ class Cell extends Component {
       super(props);
       this.renderCell = this.renderCell.bind(this);
       this.renderRegularCell = this.renderRegularCell.bind(this);
-      this.renderSubSheetCell = this.renderSubSheetCell.bind(this);
+      this.renderSubsheetCell = this.renderSubsheetCell.bind(this);
       this.renderBlankCell = this.renderBlankCell.bind(this);
    }
 
@@ -21,7 +26,7 @@ class Cell extends Component {
       const cellData = {
          row,
          column,
-         content: event.target.innerHTML,
+         content: { text: event.target.innerHTML },
       };
       this.props.updatedEditor(cellData);
 
@@ -42,7 +47,7 @@ class Cell extends Component {
             onClick={event => this.onCellClick(event)}
             id={createCellId(cell.column, cell.row)}
          >
-            {cell.content}
+            {cell.content.text}
          </div>
       );
    }
@@ -51,7 +56,7 @@ class Cell extends Component {
       <div className={createClassNames(this.props.classes)} />
    );
 
-   renderSubSheetCell = cell => <SubsheetCell cell={cell} />;
+   renderSubsheetCell = cell => <SubsheetCell cell={cell} />;
 
    renderCell = R.cond([
       [R.isNil, nothing],
@@ -63,11 +68,17 @@ class Cell extends Component {
          nothing,
       ],
       [R.thunkify(R.identity)(this.props.blankCell), this.renderBlankCell],
-      [R.hasPath(['content', 'subSheetId']), this.renderSubSheetCell],
       [
          R.pipe(
-            R.hasPath(['content', 'subSheetId']),
-            R.not
+            R.path(['content', 'subsheetId']),
+            isSomething
+         ),
+         this.renderSubsheetCell,
+      ],
+      [
+         R.pipe(
+            R.path(['content', 'subsheetId']),
+            isNothing
          ),
          this.renderRegularCell,
       ],

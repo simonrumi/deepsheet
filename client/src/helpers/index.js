@@ -38,15 +38,10 @@ export const forLoopReduce = (fn, initialVal, length) =>
       makeArr(length)
    );
 
-export const isSomething = R.both(
-   R.pipe(
-      R.isNil,
-      R.not
-   ),
-   R.pipe(
-      R.isEmpty,
-      R.not
-   )
+export const isNothing = R.either(R.isNil, R.isEmpty);
+export const isSomething = R.pipe(
+   isNothing,
+   R.not
 );
 
 // use like this:

@@ -40,6 +40,10 @@ const sheetIdReducer = (state = DEFAULT_SHEET_ID, action) => {
    }
 };
 
+// TODO MAYBE use these to connect react app to back end
+// import ApolloClient, { createNetworkInterface } from 'apollo-client';
+// import { ApolloProvider } from 'react-apollo';
+
 const sheetReducer = (state = {}, action) => {
    switch (action.type) {
       case FETCHED_SHEET:

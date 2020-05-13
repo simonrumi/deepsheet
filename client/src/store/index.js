@@ -10,26 +10,26 @@ import filterSheet from '../middleware/filterSheet';
 import orderSheet from '../middleware/orderSheet';
 
 class ManagedStore {
-	constructor() {
-		this._store = {};
-	}
+   constructor() {
+      this._store = {};
+   }
 
-	get store() {
-		return this._store;
-	}
+   get store() {
+      return this._store;
+   }
 
-	get state() {
-		return this._store.getState();
-	}
+   get state() {
+      return this._store.getState();
+   }
 
-	init() {
-		const reducerManager = createReducerManager(staticReducers);
-		this._store = createStore(
-			reducerManager.reduce,
-			applyMiddleware(reduxThunk, initializeSheet, orderSheet, filterSheet)
-		);
-		this._store.reducerManager = reducerManager;
-	}
+   init() {
+      const reducerManager = createReducerManager(staticReducers);
+      this._store = createStore(
+         reducerManager.reduce,
+         applyMiddleware(reduxThunk, initializeSheet, orderSheet, filterSheet)
+      );
+      this._store.reducerManager = reducerManager;
+   }
 }
 
 const managedStore = new ManagedStore();

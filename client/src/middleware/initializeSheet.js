@@ -7,9 +7,35 @@ import {
    populateCellsInStore,
 } from '../reducers/cellReducers';
 
+// generates a flat array of all the key names to identify cells in the sheet
+const createCellKeys = rows => {
+   return R.reduce(
+      (accumulator, row) => {
+         const rowOfCells = R.map(
+            cell => 'cell_' + cell.row + '_' + cell.column,
+            row.columns
+         );
+         return R.concat(accumulator, rowOfCells);
+      },
+      [], // starting value for accumulator
+      rows
+   );
+};
+
+const initializeCells = sheet => {
+   if (sheet.metadata) {
+      createCellReducers(sheet.metadata);
+      populateCellsInStore(sheet);
+      updatedCellKeys(createCellKeys(sheet.rows));
+   } else {
+      console.log(
+         'WARNING: App.render.initializeCells had no data to operate on'
+      );
+   }
+};
+
 export default store => next => async action => {
    if (!action) {
-      //console.log('WARNING: initializeSheet received action', action);
       return;
    }
    switch (action.type) {
@@ -40,31 +66,4 @@ export default store => next => async action => {
       default:
    }
    return next(action);
-};
-
-const initializeCells = sheet => {
-   if (sheet.metadata) {
-      createCellReducers(sheet.metadata);
-      populateCellsInStore(sheet);
-      updatedCellKeys(createCellKeys(sheet.rows));
-   } else {
-      console.log(
-         'WARNING: App.render.initializeCells had no data to operate on'
-      );
-   }
-};
-
-// generates a flat array of all the key names to identify cells in the sheet
-const createCellKeys = rows => {
-   return R.reduce(
-      (accumulator, row) => {
-         const rowOfCells = R.map(
-            cell => 'cell_' + cell.row + '_' + cell.column,
-            row.columns
-         );
-         return R.concat(accumulator, rowOfCells);
-      },
-      [], // starting value for accumulator
-      rows
-   );
 };

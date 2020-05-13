@@ -3,7 +3,12 @@ import { connect } from 'react-redux';
 import * as R from 'ramda';
 import { DragSource } from 'react-dnd';
 import { ItemTypes } from '../../constants';
-import { indexToRowNumber, extractRowColFromCellKey } from '../../helpers';
+import {
+   indexToRowNumber,
+   extractRowColFromCellKey,
+   isSomething,
+   isNothing,
+} from '../../helpers';
 import { toggledShowFilterModal, rowMoved } from '../../actions';
 import IconFilter from '../atoms/IconFilter';
 
@@ -38,13 +43,20 @@ class RowHeaderDetail extends Component {
    showFilterModalForRow = rowIndex =>
       this.props.toggledShowFilterModal(rowIndex, null);
 
-   isFilterEngaged = rowIndex => {
-      if (R.hasPath([rowIndex, 'filterExpression'], this.props.rowFilters)) {
-         return R.not(
-            R.isEmpty(this.props.rowFilters[rowIndex].filterExpression)
-         );
+   isFilterEngaged = (rowIndex, rowFilters) => {
+      if (isNothing(rowFilters)) {
+         return false;
       }
-      return false;
+      return R.pipe(
+         R.find(
+            R.pipe(
+               R.prop('index'),
+               R.equals(rowIndex)
+            )
+         ),
+         R.prop('filterExpression'),
+         isSomething
+      )(rowFilters);
    };
 
    render() {
@@ -67,7 +79,7 @@ class RowHeaderDetail extends Component {
                classes={'w-2/4 text-center'}
                height="100%"
                width="100%"
-               fitlerEngaged={this.isFilterEngaged(row)}
+               fitlerEngaged={this.isFilterEngaged(row, this.props.rowFilters)}
                onClickFn={() => this.showFilterModalForRow(row)}
                testId={'row' + rowNum}
             />

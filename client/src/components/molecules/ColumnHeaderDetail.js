@@ -38,6 +38,7 @@ class ColumnHeaderDetail extends Component {
 
    isFilterEngaged = () => {
       if (
+         this.props.columnFilters &&
          R.hasPath(
             [this.props.index, 'filterExpression'],
             this.props.columnFilters

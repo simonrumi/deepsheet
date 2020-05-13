@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const mongoose = require('mongoose');
 const expressGraphQL = require('express-graphql');
 const keys = require('./config/keys');
@@ -17,6 +18,19 @@ mongoose.connection
 
 const app = express();
 
+// Set up a whitelist and check against it:
+var corsOptions = {
+   origin: function(origin, callback) {
+      if (keys.whitelist.indexOf(origin) !== -1 || !origin) {
+         callback(null, true);
+      } else {
+         callback(new Error('Not allowed by CORS'));
+      }
+   },
+};
+// Then pass them to cors:
+app.use(cors(corsOptions));
+
 app.use(
    '/graphql',
    expressGraphQL({
@@ -25,8 +39,6 @@ app.use(
       graphiql: true,
    })
 );
-
-// require('./routes/sheetRoutes')(app); // dont think we need this as /graphql is middleware supplying routes now
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT);

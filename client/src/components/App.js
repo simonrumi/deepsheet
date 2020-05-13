@@ -8,6 +8,8 @@ import Footer from './molecules/Footer';
 
 import { DEFAULT_SHEET_ID } from '../constants';
 
+// import Temp from './Temp';
+
 const App = props => {
    logState(props.state);
    return (
@@ -15,6 +17,9 @@ const App = props => {
          <ModalBackground />
          <div className="min-h-screen pb-1">
             <Sheet sheetId={props.sheetId || DEFAULT_SHEET_ID} />
+            {/*
+               <Temp sheetId={props.sheetId || DEFAULT_SHEET_ID} />
+            */}
          </div>
          <div className="w-full h-1 object-none object-bottom absolute">
             <Footer />

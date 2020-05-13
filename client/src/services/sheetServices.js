@@ -2,12 +2,16 @@ import * as R from 'ramda';
 import axios from 'axios';
 import managedStore from '../store';
 import { updatedSheetId } from '../actions';
+import sheetQuery from '../queries/sheetQuery';
 
 /***
 Need to have these impure functions for dealing with memoizedItems.
 Can't put memoizedItems into the Redux store because then there's a circular dependancy
 where this file imports an update action, and actions imports fetchSummaryCellFromSheet
 ***/
+console.log(
+   'TODO might be able to put memoizedItems into the store, now that fetchSummaryCellFromSheet is not being used. See comment in sheetServices.js'
+);
 const memoizedItems = {};
 
 const updatedMemoizedItems = R.curry((groupName, item) => {
@@ -25,7 +29,11 @@ export const clearMemoizedItems = () =>
 // these args (arg1, ...args) are the args for the fn.
 // the first one is split out of the args array so that R.curry is forced to return a function,
 // if there is not at least 1 argument supplied to maybeMemoize, (after the 1st argument which is the fn).
-// See fetchSummaryCellFromSheet below for how this works
+//
+// make memoized items with functions like this
+// export const fetchSummaryCellFromSheet = maybeMemoize(async sheetId => {
+// ...then call that function like this
+// fetchSummaryCellFromSheet(sheetId)
 const maybeMemoize = R.curry((fn, groupName, arg1, ...args) => {
    const key = R.reduce(
       (accumulator, value) => R.concat(accumulator, JSON.stringify(value)),
@@ -50,18 +58,22 @@ const maybeMemoize = R.curry((fn, groupName, arg1, ...args) => {
    )(arg1, ...args);
 });
 
-// use like this:
-// fetchSummaryCellFromSheet(sheetId)
-export const fetchSummaryCellFromSheet = maybeMemoize(async sheetId => {
-   const subSheet = await axios.get('/api/sheets/' + sheetId);
-   const summaryCellRow = subSheet.data.metadata.summaryCell.row;
-   const summaryCellColumn = subSheet.data.metadata.summaryCell.column;
-   return subSheet.data.rows[summaryCellRow].columns[summaryCellColumn].content;
-}, 'summaryCells');
-
 export const fetchSheet = async id => {
-   const sheet = await axios.get('/api/sheets/' + id);
-   return sheet.data;
+   const sheet = await axios
+      .post(
+         'http://localhost:5000/graphql',
+         {
+            query: sheetQuery,
+            variables: { id },
+         },
+         {
+            headers: {
+               'Content-Type': 'application/json',
+            },
+         }
+      )
+      .then(res => res.data.data.sheet);
+   return sheet;
 };
 
 export const loadSheet = async sheetId => {

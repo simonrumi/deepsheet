@@ -1,7 +1,6 @@
 // import { map } from 'ramda';
 import * as R from 'ramda';
 import managedStore from '../store';
-import { fetchSummaryCellFromSheet } from '../services/sheetServices';
 import { isObject } from '../helpers';
 
 import {
@@ -39,6 +38,8 @@ import {
    SORTED_AXIS,
    CLEARED_SORT_OPTIONS,
 } from './types';
+
+console.log('TODO: split up the actions & types');
 
 export const fetchedSheet = sheet => {
    managedStore.store.dispatch({ type: FETCHED_SHEET, payload: sheet });
@@ -100,7 +101,7 @@ export const updatedCellBeingEdited = cell => {
    managedStore.store.dispatch({ type: updateCellType, payload: cell });
 };
 
-export const updatedCell = async cell => {
+export const updatedCell = cell => {
    if (R.isNil(cell) || R.not(R.has('content', cell))) {
       console.log(
          'WARNING: updatedCell could not create an action. It received',
@@ -108,28 +109,10 @@ export const updatedCell = async cell => {
       );
       return;
    }
-   const updateCellType = UPDATED_CELL_ + cell.row + '_' + cell.column;
-   // cells that are displaying subSheet content have an object as the content
-   if (isObject(cell.content)) {
-      if (
-         R.not(R.has('subSheetId', cell.content)) ||
-         R.isNil(cell.content.subSheetId)
-      ) {
-         console.log('WARNING: updatedCell could not get sub-cell content');
-      } else {
-         const contentText = await fetchSummaryCellFromSheet(
-            cell.content.subSheetId
-         );
-         const subCellContent = { ...cell.content, subContent: contentText };
-         const subCell = { ...cell, content: subCellContent };
-         managedStore.store.dispatch({
-            type: updateCellType,
-            payload: subCell,
-         });
-      }
-   } else {
-      managedStore.store.dispatch({ type: updateCellType, payload: cell });
-   }
+   managedStore.store.dispatch({
+      type: UPDATED_CELL_ + cell.row + '_' + cell.column,
+      payload: cell,
+   });
 };
 
 export const updatedCellKeys = keys => {
