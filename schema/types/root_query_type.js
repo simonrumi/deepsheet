@@ -16,7 +16,6 @@ const RootQueryType = new GraphQLObjectType({
                if (err) {
                   return err;
                }
-               // console.log('RootQueryType got sheet', sheet);
                return sheet;
             });
          },

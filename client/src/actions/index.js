@@ -1,7 +1,6 @@
 // import { map } from 'ramda';
 import * as R from 'ramda';
 import managedStore from '../store';
-import { isObject } from '../helpers';
 
 import {
    FETCHED_SHEET,
@@ -41,67 +40,67 @@ import {
 
 console.log('TODO: split up the actions & types');
 
-export const fetchedSheet = sheet => {
+export const fetchedSheet = (sheet) => {
    managedStore.store.dispatch({ type: FETCHED_SHEET, payload: sheet });
 };
 
-export const updatedSheetId = sheetId => {
+export const updatedSheetId = (sheetId) => {
    managedStore.store.dispatch({ type: UPDATED_SHEET_ID, payload: sheetId });
 };
 
-export const updatedHasChanged = hasChanged => {
+export const updatedHasChanged = (hasChanged) => {
    managedStore.store.dispatch({
       type: UPDATED_HAS_CHANGED,
       payload: hasChanged,
    });
 };
 
-export const updatedColumnFilters = columnFilters => {
+export const updatedColumnFilters = (newColumnFilter) => {
    managedStore.store.dispatch({
       type: UPDATED_COLUMN_FILTERS,
-      payload: columnFilters,
+      payload: newColumnFilter,
    });
 };
 
-export const replacedColumnFilters = columnFilters => {
+export const replacedColumnFilters = (columnFilters) => {
    managedStore.store.dispatch({
       type: REPLACED_COLUMN_FILTERS,
       payload: columnFilters,
    });
 };
 
-export const updatedRowFilters = rowFilters => {
+export const updatedRowFilters = (newRowFilter) => {
    managedStore.store.dispatch({
       type: UPDATED_ROW_FILTERS,
-      payload: rowFilters,
+      payload: newRowFilter,
    });
 };
 
-export const replacedRowFilters = rowFilters => {
+export const replacedRowFilters = (rowFilters) => {
    managedStore.store.dispatch({
       type: REPLACED_ROW_FILTERS,
       payload: rowFilters,
    });
 };
 
-export const updatedEditor = cellData => {
+export const updatedEditor = (cellData) => {
    managedStore.store.dispatch({
       type: UPDATED_EDITOR,
       payload: cellData,
    });
 };
 
-export const setEditorRef = editorRef => {
+export const setEditorRef = (editorRef) => {
    managedStore.store.dispatch({ type: SET_EDITOR_REF, payload: editorRef });
 };
 
-export const updatedCellBeingEdited = cell => {
+export const updatedCellBeingEdited = (cell) => {
    const updateCellType =
       UPDATED_CONTENT_OF_CELL_ + cell.row + '_' + cell.column;
    managedStore.store.dispatch({ type: updateCellType, payload: cell });
 };
 
-export const updatedCell = cell => {
+export const updatedCell = (cell) => {
    if (R.isNil(cell) || R.not(R.has('content', cell))) {
       console.log(
          'WARNING: updatedCell could not create an action. It received',
@@ -115,15 +114,15 @@ export const updatedCell = cell => {
    });
 };
 
-export const updatedCellKeys = keys => {
+export const updatedCellKeys = (keys) => {
    managedStore.store.dispatch({ type: UPDATED_CELL_KEYS, payload: keys });
 };
 
-export const updatedTitle = titleData => {
+export const updatedTitle = (titleData) => {
    managedStore.store.dispatch({ type: UPDATED_TITLE, payload: titleData });
 };
 
-export const setEditingTitle = isEditingTitle => {
+export const setEditingTitle = (isEditingTitle) => {
    managedStore.store.dispatch({
       type: SET_EDITING_TITLE,
       payload: isEditingTitle,
@@ -138,7 +137,7 @@ export const toggledShowFilterModal = (rowIndex, colIndex) => {
    });
 };
 
-export const updatedFilter = filterOptions => {
+export const updatedFilter = (filterOptions) => {
    managedStore.store.dispatch({
       type: UPDATED_FILTER,
       payload: filterOptions,
@@ -155,49 +154,49 @@ export const clearedAllFilters = () => {
    });
 };
 
-export const updatedTotalColumns = newTotalColumns => {
+export const updatedTotalColumns = (newTotalColumns) => {
    managedStore.store.dispatch({
       type: UPDATED_TOTAL_COLUMNS,
       payload: newTotalColumns,
    });
 };
 
-export const updatedTotalRows = newTotalRows => {
+export const updatedTotalRows = (newTotalRows) => {
    managedStore.store.dispatch({
       type: UPDATED_TOTAL_ROWS,
       payload: newTotalRows,
    });
 };
 
-export const updatedColumnVisibility = newVisibility => {
+export const updatedColumnVisibility = (newVisibility) => {
    managedStore.store.dispatch({
       type: UPDATED_COLUMN_VISIBILITY,
       payload: newVisibility,
    });
 };
 
-export const replacedColumnVisibility = newVisibility => {
+export const replacedColumnVisibility = (newVisibility) => {
    managedStore.store.dispatch({
       type: REPLACED_COLUMN_VISIBILITY,
       payload: newVisibility,
    });
 };
 
-export const updatedRowVisibility = newVisibility => {
+export const updatedRowVisibility = (newVisibility) => {
    managedStore.store.dispatch({
       type: UPDATED_ROW_VISIBILITY,
       payload: newVisibility,
    });
 };
 
-export const replacedRowVisibility = newVisibility => {
+export const replacedRowVisibility = (newVisibility) => {
    managedStore.store.dispatch({
       type: REPLACED_ROW_VISIBILITY,
       payload: newVisibility,
    });
 };
 
-export const rowMoved = row => {
+export const rowMoved = (row) => {
    managedStore.store.dispatch({
       type: ROW_MOVED,
       payload: row,
@@ -208,7 +207,7 @@ export const rowMoved = row => {
    });
 };
 
-export const rowMovedTo = row => {
+export const rowMovedTo = (row) => {
    managedStore.store.dispatch({
       type: ROW_MOVED_TO,
       payload: row,
@@ -219,7 +218,7 @@ export const rowMovedTo = row => {
    });
 };
 
-export const columnMoved = column => {
+export const columnMoved = (column) => {
    managedStore.store.dispatch({
       type: COLUMN_MOVED,
       payload: column,
@@ -230,7 +229,7 @@ export const columnMoved = column => {
    });
 };
 
-export const columnMovedTo = column => {
+export const columnMovedTo = (column) => {
    managedStore.store.dispatch({
       type: COLUMN_MOVED_TO,
       payload: column,
@@ -248,7 +247,7 @@ export const sortedAxis = () => {
    });
 };
 
-export const updatedSortOptions = sortOptions => {
+export const updatedSortOptions = (sortOptions) => {
    managedStore.store.dispatch({
       type: UPDATED_SORT_OPTIONS,
       payload: sortOptions,

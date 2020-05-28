@@ -3,21 +3,15 @@ import { ROW_AXIS, COLUMN_AXIS } from '../constants';
 
 export const nothing = () => null;
 
-export const isString = R.pipe(
-   R.type,
-   R.equals('String')
-);
+export const isString = R.pipe(R.type, R.equals('String'));
 
-export const isObject = R.pipe(
-   R.type,
-   R.equals('Object')
-);
+export const isObject = R.pipe(R.type, R.equals('Object'));
 
 // like R.hasPath but returns either the thing at the given path or null
 export const maybeHasPath = (path, obj) =>
    R.isNil(obj) ? null : R.hasPath(path, obj) ? R.path(path, obj) : null;
 
-const makeArr = length => new Array(length);
+const makeArr = (length) => new Array(length);
 export const mapWithIndex = R.addIndex(R.map);
 
 // when you want to map, but you don't have an array, just a number of times to run the function supplied to map
@@ -39,9 +33,10 @@ export const forLoopReduce = (fn, initialVal, length) =>
    );
 
 export const isNothing = R.either(R.isNil, R.isEmpty);
-export const isSomething = R.pipe(
-   isNothing,
-   R.not
+export const isSomething = R.pipe(isNothing, R.not);
+export const arrayContainsSomething = R.reduce(
+   (accumulator, arrItem) => accumulator && isSomething(arrItem),
+   true
 );
 
 // use like this:
@@ -49,39 +44,36 @@ export const isSomething = R.pipe(
 // if the thingToTest exists and is not empty, myFn will run, having the thingToTest and extraParameters passed to it
 export const runIfSomething = (fn, thing, ...args) =>
    R.when(
-      R.both(
-         R.pipe(
-            R.isNil,
-            R.not
-         ),
-         R.pipe(
-            R.isEmpty,
-            R.not
-         )
-      ),
+      R.both(R.pipe(R.isNil, R.not), R.pipe(R.isEmpty, R.not)),
       R.thunkify(fn)(thing, ...args),
       thing
    );
 
-export const capitalizeFirst = R.pipe(
-   R.head,
-   R.toUpper
-);
+export const capitalizeFirst = R.pipe(R.head, R.toUpper);
 
 export const capitalCase = R.converge(R.concat, [
    capitalizeFirst,
-   R.pipe(
-      R.tail,
-      R.toLower
-   ),
+   R.pipe(R.tail, R.toLower),
 ]);
 
-// this was used byt the old Editor.js ...shouldn't be needed now
-// export const removePTags = str => {
-//    return str.replace(/<p>|<\/p>/gi, '');
-// };
+export const getObjectFromArrayByKeyValue = R.curry((key, value, arr) =>
+   isSomething(arr) ? R.find(R.propEq(key, value), arr) || null : null
+);
 
-export const indexToColumnLetter = index => {
+export const removeObjectFromArrayByKeyValue = R.curry((key, value, arr) =>
+   isNothing(arr)
+      ? arr
+      : R.reduce(
+           (accumulator, currObj) =>
+              isSomething(currObj[key]) && currObj[key] === value
+                 ? accumulator
+                 : R.append(currObj, accumulator),
+           [],
+           arr
+        )
+);
+
+export const indexToColumnLetter = (index) => {
    let num = index + 1; // counting from 1, A = 1, Z = 26
    const getPlaceValue = (num, placeValues = []) => {
       const BASE = 26;
@@ -111,11 +103,11 @@ export const indexToColumnLetter = index => {
    return columnLetters;
 };
 
-export const indexToRowNumber = index => {
+export const indexToRowNumber = (index) => {
    return parseInt(index, 10) + 1;
 };
 
-export const extractRowColFromCellKey = str => {
+export const extractRowColFromCellKey = (str) => {
    // expecting a string like some_prefix_2_3
    //where 2 & 3 are the row and column numbers respectively
    const regex = new RegExp(/.*_(\d+)_(\d+)$/);

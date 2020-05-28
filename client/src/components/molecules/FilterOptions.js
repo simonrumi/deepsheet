@@ -115,22 +115,24 @@ const filterForm = reduxForm({
    validate: validateForm,
 })(FilterOptions);
 
-function mapStateToProps(state, ownProps) {
+const getInitialFilterValues = state => {
    const columnFilters = maybeHasPath(
       ['columnFilters', R.toString(state.filterModal.colIndex)],
-      state.sheet
+      state
    );
    const rowFilters = maybeHasPath(
       ['rowFilters', R.toString(state.filterModal.rowIndex)],
-      state.sheet
+      state
    );
-   const initialFilterValues = columnFilters || rowFilters;
+   return columnFilters || rowFilters;
+};
 
+function mapStateToProps(state, ownProps) {
    return {
       showFilterModal: state.filterModal.showFilterModal,
       rowIndex: state.filterModal.rowIndex,
       colIndex: state.filterModal.colIndex,
-      initialValues: initialFilterValues,
+      initialValues: getInitialFilterValues(state),
    };
 }
 

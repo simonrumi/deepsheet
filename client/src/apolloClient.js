@@ -9,12 +9,9 @@ const cache = new InMemoryCache();
 const link = new HttpLink({
    uri: 'http://localhost:5000/graphql',
 });
-console.log(
-   'TODO: apolloClient.js will have to set a different link for prod vs dev'
-);
 
 const client = new ApolloClient({
-   dataIdFromObject: object => object.id, // allows Apollo to be aware of dependencies between objects and thus to trigger refreshes appropriately
+   dataIdFromObject: (object) => object.id, // allows Apollo to be aware of dependencies between objects and thus to trigger refreshes appropriately
    // networkInterface // when doing user authentication, need this to set up sessions. see SG's auth-graphql-starter
    cache,
    link,

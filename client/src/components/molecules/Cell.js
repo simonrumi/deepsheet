@@ -21,8 +21,8 @@ class Cell extends Component {
       this.renderBlankCell = this.renderBlankCell.bind(this);
    }
 
-   onCellClick(event) {
-      const { row, column } = extractRowColFromCellKey(this.props.cellKey);
+   onCellClick(event, cellKey, editorRef) {
+      const { row, column } = extractRowColFromCellKey(cellKey);
       const cellData = {
          row,
          column,
@@ -34,8 +34,8 @@ class Cell extends Component {
       // otherwise the EditorInput is disabled when given the focus
       // bit of a hack but seemed to be an accepted workaround.
       window.setTimeout(() => {
-         if (this.props.editorRef.current) {
-            this.props.editorRef.current.focus();
+         if (editorRef.current) {
+            editorRef.current.focus();
          }
       }, 0);
    }
@@ -44,7 +44,9 @@ class Cell extends Component {
       return (
          <div
             className={createClassNames(this.props.classes)}
-            onClick={event => this.onCellClick(event)}
+            onClick={event =>
+               this.onCellClick(event, this.props.cellKey, this.props.editorRef)
+            }
             id={createCellId(cell.column, cell.row)}
          >
             {cell.content.text}

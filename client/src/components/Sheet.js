@@ -28,7 +28,7 @@ class Sheet extends Component {
       this.props.updatedSheetId(this.props.sheetId);
    }
 
-   renderEmptyEndCell = cellKey => (
+   renderEmptyEndCell = (cellKey) => (
       <Cell
          blankCell={true}
          cellKey={cellKey}
@@ -37,7 +37,7 @@ class Sheet extends Component {
       />
    );
 
-   maybeEmptyEndCell = cellKey =>
+   maybeEmptyEndCell = (cellKey) =>
       R.ifElse(
          isLastVisibleItemInAxis(
             COLUMN_AXIS, // we are rendering a row, so need to check if this is the last visible column in the row
@@ -48,7 +48,7 @@ class Sheet extends Component {
          nothing
       )(cellKey);
 
-   renderRowHeader = cellKey => (
+   renderRowHeader = (cellKey) => (
       <RowHeader
          cellKey={cellKey}
          blankCell={false}
@@ -56,13 +56,13 @@ class Sheet extends Component {
       />
    );
 
-   renderCell = cellKey => (
+   renderCell = (cellKey) => (
       <Cell cellKey={cellKey} blankCell={false} key={cellKey} />
    );
 
    maybeRowHeader = R.ifElse(isFirstColumn, this.renderRowHeader, nothing);
 
-   renderCellAndMaybeEdges = cellKey => {
+   renderCellAndMaybeEdges = (cellKey) => {
       return [
          this.maybeRowHeader(cellKey),
          this.renderCell(cellKey),
@@ -70,7 +70,7 @@ class Sheet extends Component {
       ];
    };
 
-   maybeCell = sheet =>
+   maybeCell = (sheet) =>
       R.ifElse(shouldShowRow(sheet), this.renderCellAndMaybeEdges, nothing);
 
    renderCells = () => {
@@ -87,7 +87,7 @@ class Sheet extends Component {
          this.props.cellKeys.length > 0
       ) {
          return R.pipe(
-            R.map(cellKey => this.maybeCell(this.props.sheet)(cellKey)),
+            R.map((cellKey) => this.maybeCell(this.props.sheet)(cellKey)),
             R.prepend(<ColumnHeaders key="columnHeaders" />),
             R.append(<LastRow key="lastRow" />)
          )(this.props.cellKeys);
@@ -95,7 +95,7 @@ class Sheet extends Component {
       return <div>loading...</div>;
    };
 
-   columnHeaderStyle = colSpan => {
+   columnHeaderStyle = (colSpan) => {
       return {
          gridColumn: colSpan,
          gridRow: 'span 1',
@@ -105,7 +105,7 @@ class Sheet extends Component {
       };
    };
 
-   createColumnHeaderSpan = colNum => 'span ' + (colNum + 3); //need 3 extra columns for the 2 row header cols on the left and the column adder on the right
+   createColumnHeaderSpan = (colNum) => 'span ' + (colNum + 3); //need 3 extra columns for the 2 row header cols on the left and the column adder on the right
 
    // TODO this will need to be manipulated to create different sized columns and rows
    // to see the reason for using minmax see https://css-tricks.com/preventing-a-grid-blowout/
@@ -124,18 +124,18 @@ class Sheet extends Component {
       };
    }
 
-   renderColHeaderStyle = R.pipe(
-      getRequiredNumItemsForAxis,
-      this.createColumnHeaderSpan,
-      this.columnHeaderStyle
-   );
+   // renderColHeaderStyle = R.pipe(
+   //    getRequiredNumItemsForAxis,
+   //    this.createColumnHeaderSpan,
+   //    this.columnHeaderStyle
+   // );
 
-   renderGridSizingStyle = sheet =>
+   renderGridSizingStyle = (sheet) =>
       this.getGridSizingStyle(
          R.map(getRequiredNumItemsForAxis(R.__, sheet), [ROW_AXIS, COLUMN_AXIS])
       );
 
-   maybeRenderFilterModal = showFilterModal =>
+   maybeRenderFilterModal = (showFilterModal) =>
       showFilterModal ? <FilterModal /> : null;
 
    render() {
@@ -166,7 +166,4 @@ function mapStateToProps(state) {
       sheetId: state.sheetId, // if no existing sheetId in the store, this will be the DEFAULT_SHEET_ID
    };
 }
-export default connect(
-   mapStateToProps,
-   { updatedSheetId }
-)(Sheet);
+export default connect(mapStateToProps, { updatedSheetId })(Sheet);

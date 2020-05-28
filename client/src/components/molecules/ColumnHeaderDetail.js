@@ -3,7 +3,12 @@ import { connect } from 'react-redux';
 import * as R from 'ramda';
 import { DragSource } from 'react-dnd';
 import { ItemTypes } from '../../constants';
-import { indexToColumnLetter } from '../../helpers';
+import {
+   indexToColumnLetter,
+   isSomething,
+   arrayContainsSomething,
+   getObjectFromArrayByKeyValue,
+} from '../../helpers';
 import { toggledShowFilterModal, columnMoved } from '../../actions';
 import IconFilter from '../atoms/IconFilter';
 
@@ -30,24 +35,21 @@ class ColumnHeaderDetail extends Component {
    constructor(props) {
       super(props);
       this.showFilterModalForColumn = this.showFilterModalForColumn.bind(this);
-      this.isFilterEngaged = this.isFilterEngaged.bind(this);
    }
 
    showFilterModalForColumn = () =>
       this.props.toggledShowFilterModal(null, this.props.index);
 
-   isFilterEngaged = () => {
-      if (
-         this.props.columnFilters &&
-         R.hasPath(
-            [this.props.index, 'filterExpression'],
-            this.props.columnFilters
-         )
-      ) {
-         return R.not(
-            R.isEmpty(
-               this.props.columnFilters[this.props.index].filterExpression
-            )
+   isFilterEngaged = (columnFilters, columnIndex) => {
+      if (isSomething(columnFilters) && arrayContainsSomething(columnFilters)) {
+         const filterAtColumnIndex = getObjectFromArrayByKeyValue(
+            'index',
+            columnIndex,
+            columnFilters
+         );
+         return (
+            isSomething(filterAtColumnIndex) &&
+            isSomething(filterAtColumnIndex.filterExpression)
          );
       }
       return false;
@@ -68,7 +70,10 @@ class ColumnHeaderDetail extends Component {
                classes="pt-1 w-1/4"
                height="65%"
                width="100%"
-               fitlerEngaged={this.isFilterEngaged()}
+               fitlerEngaged={this.isFilterEngaged(
+                  this.props.columnFilters,
+                  this.props.index
+               )}
                onClickFn={this.showFilterModalForColumn}
                testId={'col' + this.props.index}
             />
@@ -91,7 +96,6 @@ const DragableColumnHeader = DragSource(
    dragSourceSpec,
    dragCollect
 )(ColumnHeaderDetail);
-export default connect(
-   mapStateToProps,
-   { toggledShowFilterModal }
-)(DragableColumnHeader);
+export default connect(mapStateToProps, { toggledShowFilterModal })(
+   DragableColumnHeader
+);

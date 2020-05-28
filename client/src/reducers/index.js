@@ -1,6 +1,8 @@
 import * as R from 'ramda';
 import { reducer as reduxFormReducer } from 'redux-form';
 import { cellKeyReducer } from './cellReducers';
+import { removeObjectFromArrayByKeyValue } from '../helpers';
+import { updatedAxisFilters } from '../helpers/visibilityHelpers';
 import { DEFAULT_SHEET_ID } from '../constants';
 import {
    UPDATED_SHEET_ID,
@@ -40,10 +42,6 @@ const sheetIdReducer = (state = DEFAULT_SHEET_ID, action) => {
    }
 };
 
-// TODO MAYBE use these to connect react app to back end
-// import ApolloClient, { createNetworkInterface } from 'apollo-client';
-// import { ApolloProvider } from 'react-apollo';
-
 const sheetReducer = (state = {}, action) => {
    switch (action.type) {
       case FETCHED_SHEET:
@@ -56,20 +54,27 @@ const sheetReducer = (state = {}, action) => {
          return { ...state, hasChanged: action.payload };
 
       case UPDATED_COLUMN_VISIBILITY:
-         const newColumnVisibility = R.mergeAll([
-            state.columnVisibility,
+         const oldColumnValueRemoved = removeObjectFromArrayByKeyValue(
+            'index',
+            action.payload.index,
+            state.columnVisibility
+         );
+         const newColumnVisibility = R.append(
             action.payload,
-         ]);
+            oldColumnValueRemoved
+         );
          return { ...state, columnVisibility: newColumnVisibility };
 
       case REPLACED_COLUMN_VISIBILITY:
          return { ...state, columnVisibility: action.payload };
 
       case UPDATED_ROW_VISIBILITY:
-         const newRowVisibility = R.mergeAll([
-            state.rowVisibility,
-            action.payload,
-         ]);
+         const oldRowValueRemoved = removeObjectFromArrayByKeyValue(
+            'index',
+            action.payload.index,
+            state.rowVisibility
+         );
+         const newRowVisibility = R.append(action.payload, oldRowValueRemoved);
          return { ...state, rowVisibility: newRowVisibility };
 
       case REPLACED_ROW_VISIBILITY:
@@ -78,25 +83,30 @@ const sheetReducer = (state = {}, action) => {
       case RESET_VISIBLITY:
          return {
             ...state,
-            columnVisibility: {},
-            rowVisibility: {},
-            columnFilters: {},
-            rowFilters: {},
+            columnVisibility: [],
+            rowVisibility: [],
+            columnFilters: [],
+            rowFilters: [],
          };
 
       case UPDATED_COLUMN_FILTERS:
-         const newColumnFilters = R.mergeAll([
-            state.columnFilters,
+         return updatedAxisFilters(
             action.payload,
-         ]);
-         return { ...state, columnFilters: newColumnFilters };
+            'columnFilters',
+            state,
+            state.columnFilters
+         );
 
       case REPLACED_COLUMN_FILTERS:
          return { ...state, columnFilters: action.payload };
 
       case UPDATED_ROW_FILTERS:
-         const newRowFilters = R.mergeAll([state.rowFilters, action.payload]);
-         return { ...state, rowFilters: newRowFilters };
+         return updatedAxisFilters(
+            action.payload,
+            'rowFilters',
+            state,
+            state.rowFilters
+         );
 
       case REPLACED_ROW_FILTERS:
          return { ...state, rowFilters: action.payload };

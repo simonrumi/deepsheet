@@ -1,6 +1,5 @@
-import gql from 'graphql-tag';
+console.log('TODO not using graphql-tag so remove it');
 
-//const sheetQuery = gql`
 const sheetQuery = `query SheetQuery($id: ID!) {
       sheet(id: $id) {
          id
@@ -46,5 +45,4 @@ const sheetQuery = `query SheetQuery($id: ID!) {
    }
 `;
 
-console.log('sheetQuery', sheetQuery);
 export default sheetQuery;
