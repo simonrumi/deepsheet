@@ -54,6 +54,12 @@ const sheetReducer = (state = {}, action) => {
          return { ...state, hasChanged: action.payload };
 
       case UPDATED_COLUMN_VISIBILITY:
+         console.log(
+            'UPDATED_COLUMN_VISIBILITY reducer, action',
+            action,
+            'state.columnVisibility',
+            state.columnVisibility
+         );
          const oldColumnValueRemoved = removeObjectFromArrayByKeyValue(
             'index',
             action.payload.index,

@@ -1,4 +1,3 @@
-import * as R from 'ramda';
 import React, { Component } from 'react';
 import { reduxForm, Field } from 'redux-form';
 import { connect } from 'react-redux';
@@ -7,7 +6,7 @@ import TextInput from './TextInput';
 import Checkbox from './Checkbox';
 import Button from '../atoms/Button';
 import { clearedAllFilters, updatedFilter } from '../../actions';
-import { maybeHasPath } from '../../helpers';
+import { isSomething, getObjectFromArrayByKeyValue } from '../../helpers';
 
 class FilterOptions extends Component {
    constructor(props) {
@@ -15,7 +14,7 @@ class FilterOptions extends Component {
       this.editFilter = this.editFilter.bind(this);
    }
 
-   editFilter = formValues => {
+   editFilter = (formValues) => {
       this.props.updatedFilter({
          filterExpression: formValues.filterExpression,
          caseSensitive: formValues.caseSensitive,
@@ -26,11 +25,11 @@ class FilterOptions extends Component {
       });
    };
 
-   renderRegexCheckbox = formProps => (
+   renderRegexCheckbox = (formProps) => (
       <Checkbox formProps={formProps} testId="regexCheckbox" />
    );
 
-   renderFilterInput = formProps => (
+   renderFilterInput = (formProps) => (
       <TextInput
          formProps={formProps}
          testId="filterInput"
@@ -38,11 +37,11 @@ class FilterOptions extends Component {
       />
    );
 
-   renderCaseSensitiveCheckbox = formProps => (
+   renderCaseSensitiveCheckbox = (formProps) => (
       <Checkbox formProps={formProps} testId="caseSensitiveCheckbox" />
    );
 
-   renderClearFiltersButton = formProps => (
+   renderClearFiltersButton = (formProps) => (
       <Button
          buttonType="button"
          classes=""
@@ -104,7 +103,7 @@ class FilterOptions extends Component {
    }
 }
 
-const validateForm = formValues => {
+const validateForm = (formValues) => {
    const errors = {};
    // add error checking here, object keys should be the same as the Field names
    return errors;
@@ -115,16 +114,24 @@ const filterForm = reduxForm({
    validate: validateForm,
 })(FilterOptions);
 
-const getInitialFilterValues = state => {
-   const columnFilters = maybeHasPath(
-      ['columnFilters', R.toString(state.filterModal.colIndex)],
-      state
+const getInitialFilterValues = (state) => {
+   const existingColumnFilter = getObjectFromArrayByKeyValue(
+      'index',
+      state.filterModal.colIndex,
+      state.sheet.columnFilters
    );
-   const rowFilters = maybeHasPath(
-      ['rowFilters', R.toString(state.filterModal.rowIndex)],
-      state
+   if (isSomething(existingColumnFilter)) {
+      return existingColumnFilter;
+   }
+   const existingRowFilter = getObjectFromArrayByKeyValue(
+      'index',
+      state.filterModal.rowIndex,
+      state.sheet.rowFilters
    );
-   return columnFilters || rowFilters;
+   if (isSomething(existingRowFilter)) {
+      return existingRowFilter;
+   }
+   return null;
 };
 
 function mapStateToProps(state, ownProps) {
@@ -136,7 +143,6 @@ function mapStateToProps(state, ownProps) {
    };
 }
 
-export default connect(
-   mapStateToProps,
-   { updatedFilter, clearedAllFilters }
-)(filterForm);
+export default connect(mapStateToProps, { updatedFilter, clearedAllFilters })(
+   filterForm
+);

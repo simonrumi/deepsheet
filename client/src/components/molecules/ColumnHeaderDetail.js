@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import * as R from 'ramda';
 import { DragSource } from 'react-dnd';
 import { ItemTypes } from '../../constants';
 import {

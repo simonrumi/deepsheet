@@ -1,5 +1,3 @@
-console.log('TODO not using graphql-tag so remove it');
-
 const sheetQuery = `query SheetQuery($id: ID!) {
       sheet(id: $id) {
          id

@@ -23,7 +23,7 @@ import moveColumn from '../services/moveColumn';
 import sortAxis from '../services/sortAxis';
 import { runIfSomething } from '../helpers';
 
-export default store => next => action => {
+export default (store) => (next) => (action) => {
    if (!action) {
       return;
    }
@@ -47,8 +47,8 @@ export default store => next => action => {
       });
    };
 
-   const runCellDispatches = async updatedCells => {
-      const dispatches = await R.map(async cell => {
+   const runCellDispatches = async (updatedCells) => {
+      await R.map(async (cell) => {
          const promisedDispatch = await store.dispatch({
             type: UPDATED_CELL_ + cell.row + '_' + cell.column,
             payload: cell,
@@ -64,20 +64,12 @@ export default store => next => action => {
       R.ifElse(
          R.allPass([
             // axisMoved must be present in sheet
-            R.pipe(
-               R.path(['sheet', axisMoved]),
-               R.isNil,
-               R.not
-            ),
+            R.pipe(R.path(['sheet', axisMoved]), R.isNil, R.not),
             // axisMovedTo must be present in sheet
-            R.pipe(
-               R.path(['sheet', axisMovedTo]),
-               R.isNil,
-               R.not
-            ),
+            R.pipe(R.path(['sheet', axisMovedTo]), R.isNil, R.not),
             // axisMoved and axisMovedTo values can't be equal
             R.pipe(
-               state =>
+               (state) =>
                   R.equals(
                      R.path(['sheet', axisMoved], state),
                      R.path(['sheet', axisMovedTo], state)

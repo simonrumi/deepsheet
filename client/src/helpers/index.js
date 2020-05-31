@@ -57,7 +57,10 @@ export const capitalCase = R.converge(R.concat, [
 ]);
 
 export const getObjectFromArrayByKeyValue = R.curry((key, value, arr) =>
-   isSomething(arr) ? R.find(R.propEq(key, value), arr) || null : null
+   isSomething(arr)
+      ? R.find((item) => isObject(item) && R.propEq(key, value, item), arr) ||
+        null
+      : null
 );
 
 export const removeObjectFromArrayByKeyValue = R.curry((key, value, arr) =>
