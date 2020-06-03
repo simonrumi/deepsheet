@@ -2,24 +2,20 @@
  * would make the functions hard to understand, so leaving as is
  */
 
-import * as R from 'ramda';
-import { extractRowColFromCellKey, forLoopReduce } from '../helpers';
-import { SORT_INCREASING } from '../constants';
-import { compareCellContent, compareCellContentDecreasing } from './sortAxis';
+// TODO // BUG:
+// filter col C by 't' -> hides row '2', shows C as filtered ('sheet' is in col C)
+// sort row '3' A-Z -> in row '3', 'sheet' moves from col C to col B BUT filter indicator stays on col C
 
-const createNewColumnVisibility = (state, mapOfChangedColumns) =>
-   R.isEmpty(state.sheet.columnVisibility)
-      ? {}
-      : R.reduce(
-           (accumulator, columnMap) => {
-              // columnMap is a pair of [sourceRow, destinationRow], e.g. [0,2]
-              accumulator[columnMap[1]] =
-                 state.sheet.columnVisibility[columnMap[0]];
-              return accumulator;
-           },
-           { ...state.sheet.columnVisibility },
-           mapOfChangedColumns
-        );
+import * as R from 'ramda';
+import {
+   extractRowColFromCellKey,
+   forLoopReduce,
+   isNothing,
+   getObjectFromArrayByKeyValue,
+} from '../helpers';
+import { createNewAxisVisibility } from '../helpers/sortHelpers';
+import { SORT_INCREASING, COLUMN_AXIS } from '../constants';
+import { compareCellContent, compareCellContentDecreasing } from './sortAxis';
 
 const updateCellsPerColumnMap = R.curry((state, mapOfChangedColumns) =>
    R.reduce(
@@ -28,7 +24,7 @@ const updateCellsPerColumnMap = R.curry((state, mapOfChangedColumns) =>
          // the mapOfChangedColumns is an array of arrays. Each sub-array is like, e.g. [2,3]
          // where 2 is the original column index and 3 is the index it is moving to
          const currentColumnMapping = R.find(
-            mappingPair => mappingPair[0] === column
+            (mappingPair) => mappingPair[0] === column
          )(mapOfChangedColumns);
          if (currentColumnMapping) {
             // take the cell at the old column and give it the new column index
@@ -49,15 +45,19 @@ const createNewCellArrayAndColumnVisibility = R.curry(
    (state, mapOfChangedColumns) => {
       return {
          updatedCells: updateCellsPerColumnMap(state, mapOfChangedColumns),
-         updatedColumnVisibility: createNewColumnVisibility(
-            state,
-            mapOfChangedColumns
+         updatedVisibility: R.assoc(
+            COLUMN_AXIS,
+            createNewAxisVisibility(
+               state.sheet.columnVisibility,
+               mapOfChangedColumns
+            ),
+            {}
          ),
       };
    }
 );
 
-const createMapOfChangedColumns = newCellOrder =>
+const createMapOfChangedColumns = (newCellOrder) =>
    forLoopReduce(
       (accumulator, index) => {
          if (index !== newCellOrder[index].column) {
@@ -69,7 +69,7 @@ const createMapOfChangedColumns = newCellOrder =>
       newCellOrder.length
    );
 
-const rowSortFunc = state =>
+const rowSortFunc = (state) =>
    state.sheet.rowSortDirection === SORT_INCREASING
       ? compareCellContent
       : compareCellContentDecreasing;
@@ -82,7 +82,7 @@ const compareCellColumn = (cell1, cell2) => {
 };
 
 // TODO mabye move to cellHelpers
-const getCellsInRow = state =>
+const getCellsInRow = (state) =>
    R.reduce(
       (accumulator, cellKey) => {
          const { row } = extractRowColFromCellKey(cellKey);
@@ -94,7 +94,7 @@ const getCellsInRow = state =>
       state.cellKeys
    );
 
-export default state =>
+export default (state) =>
    R.pipe(
       getCellsInRow,
       R.sort(compareCellColumn),

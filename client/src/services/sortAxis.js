@@ -15,7 +15,7 @@ export const compareCellContent = (cell1, cell2) => {
 export const compareCellContentDecreasing = (cell1, cell2) =>
    compareCellContent(cell1, cell2) * -1;
 
-export default state => {
+export default (state) => {
    if (typeof state.sheet.columnSortByIndex === 'number') {
       return sortColumn(state);
    }

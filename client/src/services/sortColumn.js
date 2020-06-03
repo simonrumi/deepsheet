@@ -3,22 +3,15 @@
  */
 
 import * as R from 'ramda';
-import { extractRowColFromCellKey, forLoopReduce } from '../helpers';
+import {
+   extractRowColFromCellKey,
+   forLoopReduce,
+   isNothing,
+   getObjectFromArrayByKeyValue,
+} from '../helpers';
+import { createNewAxisVisibility } from '../helpers/sortHelpers';
 import { SORT_INCREASING, ROW_AXIS } from '../constants';
 import { compareCellContent, compareCellContentDecreasing } from './sortAxis';
-
-const createNewRowVisibility = (state, mapOfChangedRows) =>
-   R.isEmpty(state.sheet.rowVisibility)
-      ? {}
-      : R.reduce(
-           (accumulator, rowMap) => {
-              // rowMap is a pair of [sourceRow, destinationRow], e.g. [0,2]
-              accumulator[rowMap[1]] = state.sheet.rowVisibility[rowMap[0]];
-              return accumulator;
-           },
-           { ...state.sheet.rowVisibility },
-           mapOfChangedRows
-        );
 
 const updateCellsPerRowMap = R.curry((state, mapOfChangedRows) =>
    R.reduce(
@@ -27,7 +20,7 @@ const updateCellsPerRowMap = R.curry((state, mapOfChangedRows) =>
          // the mapOfChangedRows is an array of arrays. Each sub-array is like, e.g. [2,3]
          // where 2 is the original row index and 3 is the index it is moving to
          const currentRowMapping = R.find(
-            mappingPair => mappingPair[0] === row
+            (mappingPair) => mappingPair[0] === row
          )(mapOfChangedRows);
          if (currentRowMapping) {
             // take the cell at the old row and give it the new row index
@@ -47,14 +40,17 @@ const createNewCellArrayAndRowVisibility = R.curry(
          updatedCells: updateCellsPerRowMap(state, mapOfChangedRows),
          updatedVisibility: R.assoc(
             ROW_AXIS,
-            createNewRowVisibility(state, mapOfChangedRows),
+            createNewAxisVisibility(
+               state.sheet.rowVisibility,
+               mapOfChangedRows
+            ),
             {}
          ),
       };
    }
 );
 
-const createMapOfChangedRows = newCellOrder =>
+const createMapOfChangedRows = (newCellOrder) =>
    forLoopReduce(
       (accumulator, index) => {
          if (index !== newCellOrder[index].row) {
@@ -66,7 +62,7 @@ const createMapOfChangedRows = newCellOrder =>
       newCellOrder.length
    );
 
-const columnSortFunc = state =>
+const columnSortFunc = (state) =>
    state.sheet.columnSortDirection === SORT_INCREASING
       ? compareCellContent
       : compareCellContentDecreasing;
@@ -79,7 +75,7 @@ const compareCellRow = (cell1, cell2) => {
 };
 
 // TODO mabye move to cellHelpers
-const getCellsInColumn = state =>
+const getCellsInColumn = (state) =>
    R.reduce(
       (accumulator, cellKey) => {
          const { column } = extractRowColFromCellKey(cellKey);
@@ -91,11 +87,12 @@ const getCellsInColumn = state =>
       state.cellKeys
    );
 
-export default state =>
+export default (state) =>
    R.pipe(
       getCellsInColumn,
       R.sort(compareCellRow),
       R.sort(columnSortFunc(state)),
       createMapOfChangedRows,
+      R.tap((data) => console.log('createMapOfChangedRows returned', data)),
       createNewCellArrayAndRowVisibility(state)
    )(state);

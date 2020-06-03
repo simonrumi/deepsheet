@@ -199,6 +199,9 @@ const getAxisIndex = R.curry((axis, cellKey) =>
    R.prop(axis, extractRowColFromCellKey(cellKey))
 );
 
+const arrayIsNothing = (array) =>
+   isNothing(array) || !arrayContainsSomething(array);
+
 const getVisibilityArrFromSheet = R.curry((axis, sheet) =>
    R.pipe(getAxisVisibilityName, R.prop(R.__, sheet))(axis)
 );
@@ -210,7 +213,7 @@ export const isLastVisibleItemInAxis = R.curry(
          // if the visiblity object is empty
          R.pipe(
             getVisibilityArrFromSheet(axis), //receives sheet
-            isNothing
+            arrayIsNothing
          ),
          // then compare the index of the last item to the current index
          R.pipe(
