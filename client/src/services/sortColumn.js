@@ -3,13 +3,11 @@
  */
 
 import * as R from 'ramda';
+import { extractRowColFromCellKey, forLoopReduce } from '../helpers';
 import {
-   extractRowColFromCellKey,
-   forLoopReduce,
-   isNothing,
-   getObjectFromArrayByKeyValue,
-} from '../helpers';
-import { createNewAxisVisibility } from '../helpers/sortHelpers';
+   createNewAxisVisibility,
+   createNewAxisFilters,
+} from '../helpers/sortHelpers';
 import { SORT_INCREASING, ROW_AXIS } from '../constants';
 import { compareCellContent, compareCellContentDecreasing } from './sortAxis';
 
@@ -34,7 +32,7 @@ const updateCellsPerRowMap = R.curry((state, mapOfChangedRows) =>
    )
 );
 
-const createNewCellArrayAndRowVisibility = R.curry(
+const createNewCellArrayAndRowVisibilityAndRowFilters = R.curry(
    (state, mapOfChangedRows) => {
       return {
          updatedCells: updateCellsPerRowMap(state, mapOfChangedRows),
@@ -44,6 +42,11 @@ const createNewCellArrayAndRowVisibility = R.curry(
                state.sheet.rowVisibility,
                mapOfChangedRows
             ),
+            {}
+         ),
+         updatedFilters: R.assoc(
+            ROW_AXIS,
+            createNewAxisFilters(state.sheet.rowFilters, mapOfChangedRows),
             {}
          ),
       };
@@ -93,6 +96,5 @@ export default (state) =>
       R.sort(compareCellRow),
       R.sort(columnSortFunc(state)),
       createMapOfChangedRows,
-      R.tap((data) => console.log('createMapOfChangedRows returned', data)),
-      createNewCellArrayAndRowVisibility(state)
+      createNewCellArrayAndRowVisibilityAndRowFilters(state)
    )(state);

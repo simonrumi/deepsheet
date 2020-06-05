@@ -124,12 +124,6 @@ class Sheet extends Component {
       };
    }
 
-   // renderColHeaderStyle = R.pipe(
-   //    getRequiredNumItemsForAxis,
-   //    this.createColumnHeaderSpan,
-   //    this.columnHeaderStyle
-   // );
-
    renderGridSizingStyle = (sheet) =>
       this.getGridSizingStyle(
          R.map(getRequiredNumItemsForAxis(R.__, sheet), [ROW_AXIS, COLUMN_AXIS])

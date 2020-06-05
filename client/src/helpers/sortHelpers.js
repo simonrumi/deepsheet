@@ -9,12 +9,9 @@ const findBySourceIndexInTuples = (id, tuples) =>
       tuples
    );
 
-export const createNewAxisVisibility = (
-   axisVisibility,
-   mapOfChangedIndicies
-) => {
-   const returnVal = isNothing(axisVisibility)
-      ? {}
+const updateIndiciesOfSheetItem = (originalArr, mapOfChangedIndicies) =>
+   isNothing(originalArr)
+      ? []
       : R.map((item) => {
            const indexMap = findBySourceIndexInTuples(
               item.index,
@@ -23,8 +20,12 @@ export const createNewAxisVisibility = (
            if (isNothing(indexMap)) {
               return item;
            }
-           const returnVal = { ...item, index: indexMap[1] };
-           return returnVal;
-        })(axisVisibility);
-   return returnVal;
-};
+           return { ...item, index: indexMap[1] };
+        })(originalArr);
+
+// these 2 functions are just aliases for updateIndiciesOfSheetItem. The names of the aliases make their function clearer
+export const createNewAxisVisibility = (axisVisibility, mapOfChangedIndicies) =>
+   updateIndiciesOfSheetItem(axisVisibility, mapOfChangedIndicies);
+
+export const createNewAxisFilters = (axisFilters, mapOfChangedIndicies) =>
+   updateIndiciesOfSheetItem(axisFilters, mapOfChangedIndicies);

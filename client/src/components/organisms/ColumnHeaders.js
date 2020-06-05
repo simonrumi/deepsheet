@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import * as R from 'ramda';
 import { connect } from 'react-redux';
-import { indexToColumnLetter } from '../../helpers';
 import { shouldShowColumn } from '../../helpers/visibilityHelpers';
 import ColumnHeader from '../molecules/ColumnHeader';
 import TopLeftHeader from '../atoms/TopLeftHeader';
@@ -13,7 +12,7 @@ const COLUMN_HEADER_CLASSES =
 class ColumnHeaders extends Component {
    constructor(props) {
       super(props);
-      this.indexToColumnLetter = indexToColumnLetter.bind(this);
+      this.renderColumnHeaders = this.renderColumnHeaders.bind(this);
    }
 
    checkHeaders = (headers) =>
@@ -28,7 +27,6 @@ class ColumnHeaders extends Component {
       // recursive function to render a row of spreadeheet column headers A, B, C... etc
       const generateHeaders = (
          totalHeaders,
-         indexToNameFn,
          currentIndex = 0,
          headers = []
       ) => {
@@ -64,14 +62,9 @@ class ColumnHeaders extends Component {
             );
          }
 
-         return generateHeaders(
-            totalHeaders,
-            indexToNameFn,
-            ++currentIndex,
-            headers
-         );
+         return generateHeaders(totalHeaders, ++currentIndex, headers);
       };
-      return generateHeaders(this.props.totalColumns, this.indexToColumnLetter);
+      return generateHeaders(this.props.totalColumns);
    }
 
    render() {

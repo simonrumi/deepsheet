@@ -114,14 +114,18 @@ export default (store) => (next) => (action) => {
          break;
 
       case SORTED_AXIS:
-         const { updatedCells = [], updatedVisibility = {} } = sortAxis(
-            store.getState()
-         );
+         const {
+            updatedCells = [],
+            updatedVisibility = {},
+            updatedFilters = {},
+         } = sortAxis(store.getState());
          runIfSomething(replacedRowVisibility, updatedVisibility[ROW_AXIS]);
          runIfSomething(
             replacedColumnVisibility,
             updatedVisibility[COLUMN_AXIS]
          );
+         runIfSomething(replacedRowFilters, updatedFilters[ROW_AXIS]);
+         runIfSomething(replacedColumnFilters, updatedFilters[COLUMN_AXIS]);
          runCellDispatches(updatedCells);
          clearedSortOptions();
          break;

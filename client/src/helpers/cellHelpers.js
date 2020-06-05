@@ -1,11 +1,5 @@
 import * as R from 'ramda';
-import {
-   indexToColumnLetter,
-   indexToRowNumber,
-   isString,
-   isObject,
-   isSomething,
-} from './index';
+import { indexToColumnLetter, indexToRowNumber, isSomething } from './index';
 import { THIN_COLUMN } from '../constants';
 
 export const getCellContent = (cell) =>
