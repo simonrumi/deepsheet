@@ -6,7 +6,7 @@ import {
    getAxisFilterName,
 } from '../helpers/visibilityHelpers';
 import {
-   makeNewSheetObjectFromMap,
+   makeNewSheetItemFromMap,
    buildObject,
    reorderIndicies,
    createOptimizedMappingFromArray,
@@ -15,10 +15,7 @@ import {
 import { ROW_AXIS } from '../constants';
 
 const makeNewCellsFromMap = (rowUpdateMapping, state) => {
-   const getCellFromState = R.pipe(
-      createCellKey,
-      R.prop(R.__, state)
-   );
+   const getCellFromState = R.pipe(createCellKey, R.prop(R.__, state));
 
    const createCells = R.reduce((newCells, rowMapping) => {
       const rowIndex = rowMapping[0]; // this is the row that we are going to reconstruct
@@ -40,7 +37,7 @@ const makeNewCellsFromMap = (rowUpdateMapping, state) => {
    return createCells(rowUpdateMapping);
 };
 
-export default state => {
+export default (state) => {
    const rowIndexToMove = state.sheet.rowMoved;
    const insertBelowIndex = state.sheet.rowMovedTo;
    const reorderedIndicies = reorderIndicies(
@@ -56,14 +53,14 @@ export default state => {
 
    const rowUpdateArr = createMappingFromArray(reorderedIndicies);
 
-   const makeNewSheetObjFromNameFn = nameFn =>
+   const makeNewSheetItem = (createSheetItemName) =>
       R.pipe(
-         nameFn,
-         makeNewSheetObjectFromMap(rowUpdateArr, state.sheet)
+         createSheetItemName,
+         makeNewSheetItemFromMap(rowUpdateArr, state.sheet)
       )(ROW_AXIS);
 
-   const newRowFilters = makeNewSheetObjFromNameFn(getAxisFilterName);
-   const newRowVisibility = makeNewSheetObjFromNameFn(getAxisVisibilityName);
+   const newRowFilters = makeNewSheetItem(getAxisFilterName);
+   const newRowVisibility = makeNewSheetItem(getAxisVisibilityName);
    const hasChanged = true;
    return [newCells, newRowFilters, newRowVisibility, hasChanged];
 };

@@ -77,7 +77,7 @@ export default (store) => (next) => (action) => {
                R.not
             ),
          ]),
-         axisMoveFn, // if we pass all the conditions run the fn
+         axisMoveFn, // if we pass all the conditions, run the fn
          () => [null, null, null, false] // otherwise return null for all 3 values and false for hasChanged
       )(store.getState());
 

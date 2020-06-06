@@ -87,7 +87,6 @@ function mapStateToProps(state, ownProps) {
       totalColumns: state.sheet.totalColumns,
       index: ownProps.index,
       columnFilters: state.sheet.columnFilters,
-      columnVisibility: state.sheet.columnVisibility, // TODO once columnFIlters are updated then don't need this to trigger render
    };
 }
 
