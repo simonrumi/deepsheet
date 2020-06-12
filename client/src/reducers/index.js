@@ -4,14 +4,13 @@ import { cellKeyReducer } from './cellReducers';
 import { removeObjectFromArrayByKeyValue } from '../helpers';
 import { updatedAxisFilters } from '../helpers/visibilityHelpers';
 import { DEFAULT_SHEET_ID } from '../constants';
+import titleReducer from './titleReducer';
 import {
    UPDATED_SHEET_ID,
    FETCHED_SHEET,
    UPDATED_HAS_CHANGED,
    UPDATED_EDITOR,
    SET_EDITOR_REF,
-   UPDATED_TITLE,
-   SET_EDITING_TITLE,
    TOGGLED_SHOW_FILTER_MODAL,
    UPDATED_COLUMN_VISIBILITY,
    REPLACED_COLUMN_VISIBILITY,
@@ -32,6 +31,7 @@ import {
    UPDATED_SORT_OPTIONS,
    CLEARED_SORT_OPTIONS,
 } from '../actions/types';
+import { TITLE_EDIT_CANCELLED } from '../actions/titleTypes';
 
 const sheetIdReducer = (state = DEFAULT_SHEET_ID, action) => {
    switch (action.type) {
@@ -59,21 +59,14 @@ const sheetReducer = (state = {}, action) => {
             action.payload.index,
             state.columnVisibility
          );
-         const newColumnVisibility = R.append(
-            action.payload,
-            oldColumnValueRemoved
-         );
+         const newColumnVisibility = R.append(action.payload, oldColumnValueRemoved);
          return { ...state, columnVisibility: newColumnVisibility };
 
       case REPLACED_COLUMN_VISIBILITY:
          return { ...state, columnVisibility: action.payload };
 
       case UPDATED_ROW_VISIBILITY:
-         const oldRowValueRemoved = removeObjectFromArrayByKeyValue(
-            'index',
-            action.payload.index,
-            state.rowVisibility
-         );
+         const oldRowValueRemoved = removeObjectFromArrayByKeyValue('index', action.payload.index, state.rowVisibility);
          const newRowVisibility = R.append(action.payload, oldRowValueRemoved);
          return { ...state, rowVisibility: newRowVisibility };
 
@@ -90,23 +83,13 @@ const sheetReducer = (state = {}, action) => {
          };
 
       case UPDATED_COLUMN_FILTERS:
-         return updatedAxisFilters(
-            action.payload,
-            'columnFilters',
-            state,
-            state.columnFilters
-         );
+         return updatedAxisFilters(action.payload, 'columnFilters', state, state.columnFilters);
 
       case REPLACED_COLUMN_FILTERS:
          return { ...state, columnFilters: action.payload };
 
       case UPDATED_ROW_FILTERS:
-         return updatedAxisFilters(
-            action.payload,
-            'rowFilters',
-            state,
-            state.rowFilters
-         );
+         return updatedAxisFilters(action.payload, 'rowFilters', state, state.rowFilters);
 
       case REPLACED_ROW_FILTERS:
          return { ...state, rowFilters: action.payload };
@@ -174,26 +157,7 @@ const editorRefReducer = (state = {}, action) => {
    }
 };
 
-export const titleReducer = (state = {}, action) => {
-   switch (action.type) {
-      case FETCHED_SHEET:
-         return {
-            text: action.payload.title,
-            isEditingTitle: false,
-         };
-      case UPDATED_TITLE:
-         return action.payload;
-      case SET_EDITING_TITLE:
-         return { ...state, isEditingTitle: action.payload };
-      default:
-         return state;
-   }
-};
-
-export const filterModalReducer = (
-   state = { showFilterModal: false },
-   action
-) => {
+export const filterModalReducer = (state = { showFilterModal: false }, action) => {
    switch (action.type) {
       case TOGGLED_SHOW_FILTER_MODAL:
          const { showModal, rowIndex, colIndex } = action.payload;
@@ -213,7 +177,16 @@ export const staticReducers = {
    editorRef: editorRefReducer,
    editor: editorReducer,
    title: titleReducer,
-   form: reduxFormReducer,
+   form: reduxFormReducer.plugin({
+      titleForm: (state, action) => {
+         switch (action.type) {
+            case TITLE_EDIT_CANCELLED:
+               return undefined;
+            default:
+               return state;
+         }
+      },
+   }),
    filterModal: filterModalReducer,
    cellKeys: cellKeyReducer,
 };

@@ -3,6 +3,7 @@ import axios from 'axios';
 import managedStore from '../store';
 import { updatedSheetId } from '../actions';
 import sheetQuery from '../queries/sheetQuery';
+import titleMutation from '../queries/titleMutation';
 
 /***
 Need to have these impure functions for dealing with memoizedItems.
@@ -35,11 +36,7 @@ export const clearMemoizedItems = () =>
 // ...then call that function like this
 // fetchSummaryCellFromSheet(sheetId)
 const maybeMemoize = R.curry((fn, groupName, arg1, ...args) => {
-   const key = R.reduce(
-      (accumulator, value) => R.concat(accumulator, JSON.stringify(value)),
-      '',
-      [arg1, ...args]
-   );
+   const key = R.reduce((accumulator, value) => R.concat(accumulator, JSON.stringify(value)), '', [arg1, ...args]);
 
    if (R.hasPath([groupName, key], memoizedItems)) {
       return R.ifElse(
@@ -59,6 +56,7 @@ const maybeMemoize = R.curry((fn, groupName, arg1, ...args) => {
 });
 
 export const fetchSheet = async id => {
+   console.log('TODO sheetServices.fetchSheet needs a keys.js file to get prod vs dev url from');
    const sheet = await axios
       .post(
          'http://localhost:5000/graphql',
@@ -72,15 +70,38 @@ export const fetchSheet = async id => {
             },
          }
       )
-      .then(res => res.data.data.sheet);
+      .then(res => res.data.data.sheet)
+      .catch(err => console.log('error in sheetServices.fetchSheet', err));
    return sheet;
+};
+
+export const updateTitleInDB = async (id, title) => {
+   const updatedData = await axios
+      .post(
+         'http://localhost:5000/graphql',
+         {
+            mutation: titleMutation,
+            variables: { id, title },
+         },
+         {
+            headers: {
+               'Content-Type': 'application/json',
+            },
+         }
+      )
+      .then(res => {
+         console.log('sheetServices updateTitle res.data', res.data);
+         return res.data.data;
+      })
+      .catch(err => {
+         console.log('error in sheetServices.updateTitle', err);
+         return err;
+      });
 };
 
 export const loadSheet = async sheetId => {
    // first clear out the cell reducers from any previosly loaded sheet
-   const newCombinedReducers = managedStore.store.reducerManager.removeMany(
-      managedStore.state.cellKeys
-   );
+   const newCombinedReducers = managedStore.store.reducerManager.removeMany(managedStore.state.cellKeys);
    managedStore.store.replaceReducer(newCombinedReducers);
    clearMemoizedItems();
    // then get the new sheet

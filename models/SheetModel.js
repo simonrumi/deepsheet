@@ -26,7 +26,7 @@ const sheetSchema = new Schema(
    { collection: 'sheets' }
 );
 
-sheetSchema.statics.getSummaryCellContent = async function(id) {
+sheetSchema.statics.getSummaryCellContent = async function (id) {
    const data = await this.findById(id);
    const { row, column } = data.metadata.summaryCell;
    const rowData = await this.findOne(
@@ -36,4 +36,18 @@ sheetSchema.statics.getSummaryCellContent = async function(id) {
    return rowData.rows[row].columns[column].content;
 };
 
+sheetSchema.statics.updateTitle = async function (id, title) {
+   return this.findByIdAndUpdate(
+      { _id: id },
+      { title: title },
+      { useFindAndModify: false }, //got a mongoose warning saying this must be set
+      function (err, result) {
+         if (err) {
+            console.log('error in updateTitle', err);
+         } else {
+            return result;
+         }
+      }
+   );
+};
 mongoose.model('sheet', sheetSchema);

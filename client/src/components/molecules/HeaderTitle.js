@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { setEditingTitle } from '../../actions';
+import { openedTitleEditor } from '../../actions/titleActions';
 import { loadSheet } from '../../services/sheetServices';
 import Heading from '../atoms/Heading';
 import IconEdit from '../atoms/IconEdit';
@@ -9,17 +9,10 @@ import IconUpArrow from '../atoms/IconUpArrow';
 class HeaderTitle extends React.Component {
    render() {
       return (
-         <div
-            className="flex items-center justify-between px-2 py-1"
-            key="headerTitle"
-         >
+         <div className="flex items-center justify-between px-2 py-1" key="headerTitle">
             <Heading text={this.props.title.text} />
             <div className="flex items-end justify-between">
-               <IconEdit
-                  height="1.5em"
-                  width="1.5em"
-                  onClickFn={() => this.props.setEditingTitle(true)}
-               />
+               <IconEdit height="1.5em" width="1.5em" onClickFn={() => this.props.openedTitleEditor(true)} />
                {this.renderUpArrow()}
             </div>
          </div>
@@ -49,7 +42,4 @@ function mapStateToProps(state) {
    };
 }
 
-export default connect(
-   mapStateToProps,
-   { setEditingTitle }
-)(HeaderTitle);
+export default connect(mapStateToProps, { openedTitleEditor })(HeaderTitle);

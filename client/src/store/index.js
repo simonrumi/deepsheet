@@ -26,7 +26,7 @@ class ManagedStore {
       const reducerManager = createReducerManager(staticReducers);
       this._store = createStore(
          reducerManager.reduce,
-         applyMiddleware(reduxThunk, initializeSheet, orderSheet, filterSheet)
+         applyMiddleware(initializeSheet, orderSheet, filterSheet, reduxThunk) //moved reduxThunk to the end, used to be at the start, unsure if this is best
       );
       this._store.reducerManager = reducerManager;
    }

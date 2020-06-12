@@ -14,31 +14,23 @@ import {
    updatedCell,
    toggledShowFilterModal,
 } from '../actions';
-import {
-   getObjectFromArrayByKeyValue,
-   isNothing,
-   arrayContainsSomething,
-   forLoopMap,
-} from '../helpers';
-import {
-   getTotalForAxis,
-   getAxisVisibilityName,
-} from '../helpers/visibilityHelpers';
+import { getObjectFromArrayByKeyValue, isNothing, arrayContainsSomething, forLoopMap } from '../helpers';
+import { getTotalForAxis, getAxisVisibilityName } from '../helpers/visibilityHelpers';
 
 /* these are used by multiple functions below */
-const getAxis = (data) =>
+const getAxis = data =>
    R.ifElse(
       R.isNil,
       () => COLUMN_AXIS,
       () => ROW_AXIS
    )(data.rowIndex);
 
-const getOtherAxis = (axis) => (axis === ROW_AXIS ? COLUMN_AXIS : ROW_AXIS);
+const getOtherAxis = axis => (axis === ROW_AXIS ? COLUMN_AXIS : ROW_AXIS);
 
-const getVisibilityActionTypeByAxis = (axis) =>
+const getVisibilityActionTypeByAxis = axis =>
    axis === ROW_AXIS ? REPLACED_ROW_VISIBILITY : REPLACED_COLUMN_VISIBILITY;
 
-const getStateFromData = (data) => R.path(['store', 'getState'], data)();
+const getStateFromData = data => R.path(['store', 'getState'], data)();
 
 const getSheetFromData = R.pipe(getStateFromData, R.prop('sheet'));
 
@@ -52,12 +44,9 @@ const makeVisibilityAction = (axis, payload) => ({
 
 const dispatchVisibilityActions = R.curry((data, newAxesVisibility) =>
    R.map(
-      (axis) => {
+      axis => {
          const axisVisibilityName = getAxisVisibilityName(axis);
-         const visibilityPayload = R.prop(
-            axisVisibilityName,
-            newAxesVisibility
-         );
+         const visibilityPayload = R.prop(axisVisibilityName, newAxesVisibility);
          data.store.dispatch(makeVisibilityAction(axis, visibilityPayload));
          return true; // just to stop console complaining about not returning a value
       },
@@ -72,9 +61,7 @@ const escapeRegexChars = R.memoizeWith(
       const charNums = [91, 94, 36, 46, 124, 63, 42, 43, 40, 41, 92]; // nums for the chars [^$.|?*+()\
       const charCode = char.charCodeAt(0);
       const needsEscaping = R.includes(charCode, charNums);
-      const maybeEscapedChar = needsEscaping
-         ? String.fromCharCode(92, charCode)
-         : char;
+      const maybeEscapedChar = needsEscaping ? String.fromCharCode(92, charCode) : char;
       return R.concat(processedString, maybeEscapedChar);
    }, '')
 );
@@ -97,57 +84,45 @@ const createCellKey = (axis, itemIndex, otherAxisIndex) => {
    return 'cell_' + rowIndex + '_' + colIndex;
 };
 
-const getCellFromDataAndCellKey = R.curry((data, cellKey) =>
-   R.prop(cellKey, getStateFromData(data))
-);
+const getCellFromDataAndCellKey = R.curry((data, cellKey) => R.prop(cellKey, getStateFromData(data)));
 
 const getCellsInAxisItem = R.curry((data, axis, itemIndex, filters) => {
    const sheet = getStateFromData(data).sheet;
    const totalInOtherAxis = getTotalForAxis(getOtherAxis(axis), sheet);
-   return forLoopMap((otherAxisIndex) => {
+   return forLoopMap(otherAxisIndex => {
       const cellKey = createCellKey(axis, itemIndex, otherAxisIndex);
       return getCellFromDataAndCellKey(data, cellKey);
    }, totalInOtherAxis);
 });
 
-const checkCellsAgainstFilters = R.curry(
-   (axis, otherAxisFilters, cellsInAxisItem) => {
-      return R.reduce((cellAccumulator, cell) => {
-         return (
-            cellAccumulator &&
-            R.reduce(
-               (filterAccumulator, otherAxisFilter) =>
-                  filterAccumulator &&
-                  isCellShownByFilter(
-                     cell,
-                     otherAxisFilter,
-                     getOtherAxis(axis)
-                  ),
-               true
-            )(otherAxisFilters)
-         );
-      }, true)(cellsInAxisItem);
-   }
-);
+const checkCellsAgainstFilters = R.curry((axis, otherAxisFilters, cellsInAxisItem) => {
+   return R.reduce((cellAccumulator, cell) => {
+      return (
+         cellAccumulator &&
+         R.reduce(
+            (filterAccumulator, otherAxisFilter) =>
+               filterAccumulator && isCellShownByFilter(cell, otherAxisFilter, getOtherAxis(axis)),
+            true
+         )(otherAxisFilters)
+      );
+   }, true)(cellsInAxisItem);
+});
 
 const getVisibilityForCellsInAxisItem = (data, axis, itemIndex) => {
-   const otherAxisFilters = getFilters(
-      getOtherAxis(axis),
-      getSheetFromData(data)
-   );
+   const otherAxisFilters = getFilters(getOtherAxis(axis), getSheetFromData(data));
    return R.ifElse(
       // if there are no filters
-      (otherAxisFilters) =>
-         isNothing(otherAxisFilters) ||
-         !arrayContainsSomething(otherAxisFilters),
+      otherAxisFilters => isNothing(otherAxisFilters) || !arrayContainsSomething(otherAxisFilters),
       // return true
       R.T,
       // else check the cells in the axis item (e.g. cells in row 1) against the filters in the opposite axis (e.g. all columnFilters)
-      (otherAxisFilters) =>
-         R.pipe(
-            getCellsInAxisItem,
-            checkCellsAgainstFilters(axis, otherAxisFilters)
-         )(data, axis, itemIndex, otherAxisFilters)
+      otherAxisFilters =>
+         R.pipe(getCellsInAxisItem, checkCellsAgainstFilters(axis, otherAxisFilters))(
+            data,
+            axis,
+            itemIndex,
+            otherAxisFilters
+         )
    )(otherAxisFilters); // note otherAxisFilters obj is given to all 3 ifElse Fns - condition, onTrue and onFalse
 };
 
@@ -161,13 +136,10 @@ const filterAllItemsInAxis = R.curry((data, axis) => {
       getNewVisibilityForAxisItem(data, axis),
       getTotalForAxis(axis, getSheetFromData(data))
    );
-   return R.pipe(
-      getAxisVisibilityName,
-      R.assoc(R.__, axisVisibilityArr, {})
-   )(axis);
+   return R.pipe(getAxisVisibilityName, R.assoc(R.__, axisVisibilityArr, {}))(axis);
 });
 
-const filterAxes = (data) => {
+const filterAxes = data => {
    const newVisibility = R.pipe(
       R.map(filterAllItemsInAxis(data)),
       R.mergeAll //converts the array to an object like {rowVisibility: {...}, columnVisibility: {...}}
@@ -192,20 +164,14 @@ const getCellVisibilityForAxis = R.curry((cell, axis, sheet) => {
    return getAxisVisibilityByIndex(otherAxis, otherAxisIndex, sheet);
 });
 
-const getCellVisibilityFnsFromCell = (cell) =>
-   R.map(getCellVisibilityForAxis(cell), [ROW_AXIS, COLUMN_AXIS]);
+const getCellVisibilityFnsFromCell = cell => R.map(getCellVisibilityForAxis(cell), [ROW_AXIS, COLUMN_AXIS]);
 
-const getCellFromData = R.curry((data, cellKey) =>
-   R.pipe(getStateFromData, R.prop(cellKey))(data)
-);
+const getCellFromData = R.curry((data, cellKey) => R.pipe(getStateFromData, R.prop(cellKey))(data));
 
 // this returns an aray of 2 functions, one for each axis, which take the data as an argument and return something like
 // {index: 0, isVisible: true}
 // this array is used by the reduce function in setVisibilityForCell() below
-const getCellVisibilityFns = R.pipe(
-   getCellFromData,
-   getCellVisibilityFnsFromCell
-);
+const getCellVisibilityFns = R.pipe(getCellFromData, getCellVisibilityFnsFromCell);
 
 // every cell is going to be run through this function
 const setVisibilityForCell = (data, cellKey) => {
@@ -217,26 +183,25 @@ const setVisibilityForCell = (data, cellKey) => {
    );
    const cell = getCellFromData(data, cellKey);
    R.when(
-      (newVisibility) => newVisibility !== cell.visible,
-      (newVisibility) => updatedCell({ ...cell, visible: newVisibility })
+      newVisibility => newVisibility !== cell.visible,
+      newVisibility => updatedCell({ ...cell, visible: newVisibility })
    )(newCellVisibility);
 };
 
 const getCellKeysFromData = R.pipe(getStateFromData, R.prop('cellKeys'));
 
-const filterCells = (data) => {
+const filterCells = data => {
    const cellKeys = getCellKeysFromData(data);
-   R.map((cellKey) => {
+   R.map(cellKey => {
       return setVisibilityForCell(data, cellKey);
    }, cellKeys);
 };
 /**** end filterCells and related functions ******/
 
 /**** functions related to addNewFilter *****/
-const getFilterIndex = (data) =>
-   R.isNil(data.rowIndex) ? data.colIndex : data.rowIndex;
+const getFilterIndex = data => (R.isNil(data.rowIndex) ? data.colIndex : data.rowIndex);
 
-const getNewFilter = (data) =>
+const getNewFilter = data =>
    R.mergeAll([
       R.assoc('index', getFilterIndex(data), {}),
       R.pick(['filterExpression', 'caseSensitive', 'regex'])(data),
@@ -247,7 +212,7 @@ const getNewFilter = (data) =>
 // actually call the function. So ifElse gets a function that, when run, has all the right parameters ready to go.
 // Encasing all that is R.useWtih which takes the 3 parameters passed to it, and passes one param to each function
 // in the array.
-const addNewFilter = (data) => {
+const addNewFilter = data => {
    const newFilter = getNewFilter(data);
    R.useWith(R.ifElse, [
       R.thunkify(R.equals(ROW_AXIS)),
@@ -259,17 +224,11 @@ const addNewFilter = (data) => {
 /**** end addNewFilter and related functions ******/
 
 /* getDataFromActionAndStore - creates a data object for passing to subsequent functions in hideFiltered's pipe */
-const getDataFromActionAndStore = (actionData, store) =>
-   R.mergeAll([actionData, { store }]);
+const getDataFromActionAndStore = (actionData, store) => R.mergeAll([actionData, { store }]);
 
-const hideFiltered = R.pipe(
-   getDataFromActionAndStore,
-   addNewFilter,
-   filterAxes,
-   filterCells
-);
+const hideFiltered = R.pipe(getDataFromActionAndStore, addNewFilter, filterAxes, filterCells);
 
-const clearAllFilters = (store) => {
+const clearAllFilters = store => {
    store.dispatch({ type: RESET_VISIBLITY });
    toggledShowFilterModal();
    const filterDataReset = {
@@ -280,22 +239,16 @@ const clearAllFilters = (store) => {
       rowIndex: null,
       colIndex: 0, //doesn't really matter which filter icon that was clicked on, so we pretend it was column A
    };
-   R.pipe(
-      getDataFromActionAndStore,
-      filterAxes,
-      filterCells
-   )(filterDataReset, store);
+   R.pipe(getDataFromActionAndStore, filterAxes, filterCells)(filterDataReset, store);
 };
 
-export default (store) => (next) => (action) => {
+export default store => next => action => {
    if (!action) {
       return;
    }
    switch (action.type) {
       case HIDE_FILTERED:
-         console.log(
-            'TODO in filterSheet.js handle case where no sheet data returned from db'
-         );
+         console.log('TODO in filterSheet.js handle case where no sheet data returned from db');
          hideFiltered(action.payload, store);
          updatedHasChanged(true);
          break;
