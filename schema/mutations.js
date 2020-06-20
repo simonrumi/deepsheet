@@ -5,7 +5,7 @@ const SheetModel = mongoose.model('sheet');
 const SheetType = require('./types/sheet_type');
 
 const mutation = new GraphQLObjectType({
-   name: 'Mutation', // QQQ where is this name showing up?
+   name: 'TitleMutation',
    fields: {
       changeTitle: {
          type: SheetType,

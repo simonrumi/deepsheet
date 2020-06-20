@@ -1,5 +1,4 @@
 import {
-   UPDATED_TITLE,
    OPENED_TITLE_EDITOR,
    POSTING_UPDATED_TITLE,
    COMPLETED_TITLE_UPDATE,
@@ -9,7 +8,7 @@ import {
 import { FETCHED_SHEET } from '../actions/types';
 import { isSomething } from '../helpers';
 
-// action.payload should have
+// action.payload contains
 // {  text: some title,
 //    isEditingTitle: true/false,
 //    sheetId: some sheetId }
@@ -27,9 +26,6 @@ const titleReducer = (state = {}, action) => {
 
       case OPENED_TITLE_EDITOR:
          return { ...state, isEditingTitle: action.payload };
-
-      // case UPDATED_TITLE: // probably won't use this one
-      //    return action.payload;
 
       case POSTING_UPDATED_TITLE:
          return {

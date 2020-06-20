@@ -1,5 +1,4 @@
 import {
-   UPDATED_TITLE,
    OPENED_TITLE_EDITOR,
    POSTING_UPDATED_TITLE,
    COMPLETED_TITLE_UPDATE,
@@ -17,18 +16,19 @@ export const openedTitleEditor = isEditingTitle => {
 };
 
 export const updatedTitle = titleData => {
-   managedStore.store.dispatch({ type: POSTING_UPDATED_TITLE, payload: titleData }); //don't really need this payload
-
-   updateTitleInDB(titleData.sheetId, titleData.title)
+   managedStore.store.dispatch({ type: POSTING_UPDATED_TITLE });
+   updateTitleInDB(titleData.sheetId, titleData.text)
       .then(response => {
-         console.log('updatedTitle got response', response);
          managedStore.store.dispatch({
             type: COMPLETED_TITLE_UPDATE,
-            payload: { text: response.data, lastUpdated: Date.now() },
+            payload: {
+               text: response.data.changeTitle.title,
+               lastUpdated: Date.now(),
+            } /* note that "changeTitle" is the name of the mutation in titleMutation.js */,
          });
       })
       .catch(err => {
-         console.log('did not successfully update the title: err:', err);
+         console.error('did not successfully update the title: err:', err);
          managedStore.store.dispatch({
             type: TITLE_UPDATE_FAILED,
             payload: { ...titleData, errorMessage: 'title was not updated: ' + err },

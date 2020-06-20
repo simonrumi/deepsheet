@@ -3,7 +3,8 @@ import axios from 'axios';
 import managedStore from '../store';
 import { updatedSheetId } from '../actions';
 import sheetQuery from '../queries/sheetQuery';
-import titleMutation from '../queries/titleMutation';
+import titleMutation from '../queries/titleMutation'; // TODO only need one of these
+import { GRAPHQL_URL } from '../constants';
 
 /***
 Need to have these impure functions for dealing with memoizedItems.
@@ -56,10 +57,9 @@ const maybeMemoize = R.curry((fn, groupName, arg1, ...args) => {
 });
 
 export const fetchSheet = async id => {
-   console.log('TODO sheetServices.fetchSheet needs a keys.js file to get prod vs dev url from');
    const sheet = await axios
       .post(
-         'http://localhost:5000/graphql',
+         GRAPHQL_URL,
          {
             query: sheetQuery,
             variables: { id },
@@ -76,27 +76,7 @@ export const fetchSheet = async id => {
 };
 
 export const updateTitleInDB = async (id, title) => {
-   const updatedData = await axios
-      .post(
-         'http://localhost:5000/graphql',
-         {
-            mutation: titleMutation,
-            variables: { id, title },
-         },
-         {
-            headers: {
-               'Content-Type': 'application/json',
-            },
-         }
-      )
-      .then(res => {
-         console.log('sheetServices updateTitle res.data', res.data);
-         return res.data.data;
-      })
-      .catch(err => {
-         console.log('error in sheetServices.updateTitle', err);
-         return err;
-      });
+   return await titleMutation(id, title);
 };
 
 export const loadSheet = async sheetId => {
