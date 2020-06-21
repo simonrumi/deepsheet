@@ -21,7 +21,7 @@ export class TitleForm extends Component {
             sheetId: this.props.sheetId,
          });
       } catch (err) {
-         console.log('TitelForm.editTitle - error updating title', err);
+         console.error('TitleForm.editTitle - error updating title', err);
          throw new SubmissionError({
             title: 'title was not updated: ' + err,
          });

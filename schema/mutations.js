@@ -14,6 +14,7 @@ const mutation = new GraphQLObjectType({
             title: { type: GraphQLString },
          },
          resolve(parentValue, args, req) {
+            console.log('TitleMutation got args', args);
             return SheetModel.updateTitle(args.id, args.title);
          },
       },

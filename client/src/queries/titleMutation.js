@@ -11,10 +11,13 @@ const TITLE_MUTATION = gql`
 `;
 
 const titleMutation = async (id, title) => {
-   return await apolloClient.mutate({
+   const result = await apolloClient.mutate({
       mutation: TITLE_MUTATION,
       variables: { id, title },
    });
+   console.log('titleMutation result', result);
+   // previously did return await apolloClient.mutate() ...but this might have been the cause of the title update not working the first time around, so leave like this
+   return result;
 };
 
 export default titleMutation;

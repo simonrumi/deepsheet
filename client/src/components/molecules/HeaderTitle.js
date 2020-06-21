@@ -5,20 +5,9 @@ import { loadSheet } from '../../services/sheetServices';
 import Heading from '../atoms/Heading';
 import IconEdit from '../atoms/IconEdit';
 import IconUpArrow from '../atoms/IconUpArrow';
+import SaveIcon from '../atoms/IconSave';
 
 class HeaderTitle extends React.Component {
-   render() {
-      return (
-         <div className="flex items-center justify-between px-2 py-1" key="headerTitle">
-            <Heading text={this.props.title.text} />
-            <div className="flex items-end justify-between">
-               <IconEdit height="1.5em" width="1.5em" onClickFn={() => this.props.openedTitleEditor(true)} />
-               {this.renderUpArrow()}
-            </div>
-         </div>
-      );
-   }
-
    renderUpArrow() {
       if (this.props.sheet.parentSheetId) {
          return (
@@ -32,6 +21,25 @@ class HeaderTitle extends React.Component {
          );
       }
       return null;
+   }
+
+   renderSaveIcon() {
+      if (this.props.sheet.hasChanged) {
+         return <SaveIcon height="1.5em" width="1.5em" classes="pr-2" />;
+      }
+   }
+
+   render() {
+      return (
+         <div className="flex items-center justify-between px-2 py-1" key="headerTitle">
+            <Heading text={this.props.title.text} />
+            <div className="flex items-end justify-between">
+               {this.renderSaveIcon()}
+               <IconEdit height="1.5em" width="1.5em" onClickFn={() => this.props.openedTitleEditor(true)} />
+               {this.renderUpArrow()}
+            </div>
+         </div>
+      );
    }
 }
 

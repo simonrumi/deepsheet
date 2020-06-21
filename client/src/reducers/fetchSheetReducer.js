@@ -28,12 +28,4 @@ const fetchSheetReducer = (state = DEFAULT_SHEET_ID, action) => {
    }
 };
 
-///TODO
-// dispatch FETCHING SHEET
-// ...have UI respond to FETCHING SHEET
-// make COMPLETED FETCHING SHEET
-// ...have UI respond
-// make FETCH_SHEET_FAILED
-// ...have UI respond
-
 export default fetchSheetReducer;

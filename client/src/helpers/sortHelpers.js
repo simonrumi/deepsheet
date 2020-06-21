@@ -1,22 +1,15 @@
 import * as R from 'ramda';
-import { isNothing } from './index';
+import { isNothing, arrayContainsSomething } from './index';
 
 // tuples is an array of [sourceIndex, destinationIndex], e.g. [[0,2], [1,0], etc]
 const findBySourceIndexInTuples = (id, tuples) =>
-   R.reduce(
-      (accumulator, pair) => (pair[0] === id ? R.reduced(pair) : null),
-      null,
-      tuples
-   );
+   R.reduce((accumulator, pair) => (pair[0] === id ? R.reduced(pair) : null), null, tuples);
 
 const updateIndiciesOfSheetItem = (originalArr, mapOfChangedIndicies) =>
-   isNothing(originalArr)
+   isNothing(originalArr) || !arrayContainsSomething(originalArr)
       ? []
-      : R.map((item) => {
-           const indexMap = findBySourceIndexInTuples(
-              item.index,
-              mapOfChangedIndicies
-           );
+      : R.map(item => {
+           const indexMap = findBySourceIndexInTuples(item.index, mapOfChangedIndicies);
            if (isNothing(indexMap)) {
               return item;
            }
