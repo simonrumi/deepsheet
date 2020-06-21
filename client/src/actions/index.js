@@ -2,14 +2,12 @@ import * as R from 'ramda';
 import managedStore from '../store';
 
 import {
-   FETCHED_SHEET,
    UPDATED_HAS_CHANGED,
    UPDATED_EDITOR,
    SET_EDITOR_REF,
    UPDATED_CELL_,
    UPDATED_CONTENT_OF_CELL_,
    UPDATED_CELL_KEYS,
-   UPDATED_SHEET_ID,
    TOGGLED_SHOW_FILTER_MODAL,
    UPDATED_FILTER,
    UPDATED_COLUMN_FILTERS,
@@ -36,14 +34,6 @@ import {
 } from './types';
 
 console.log('TODO: split up the actions & types');
-
-export const fetchedSheet = sheet => {
-   managedStore.store.dispatch({ type: FETCHED_SHEET, payload: sheet });
-};
-
-export const updatedSheetId = sheetId => {
-   managedStore.store.dispatch({ type: UPDATED_SHEET_ID, payload: sheetId });
-};
 
 export const updatedHasChanged = hasChanged => {
    managedStore.store.dispatch({

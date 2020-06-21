@@ -3,11 +3,9 @@ import { reducer as reduxFormReducer } from 'redux-form';
 import { cellKeyReducer } from './cellReducers';
 import { removeObjectFromArrayByKeyValue } from '../helpers';
 import { updatedAxisFilters } from '../helpers/visibilityHelpers';
-import { DEFAULT_SHEET_ID } from '../constants';
 import titleReducer from './titleReducer';
+import fetchSheetReducer from './fetchSheetReducer';
 import {
-   UPDATED_SHEET_ID,
-   FETCHED_SHEET,
    UPDATED_HAS_CHANGED,
    UPDATED_EDITOR,
    SET_EDITOR_REF,
@@ -32,15 +30,7 @@ import {
    CLEARED_SORT_OPTIONS,
 } from '../actions/types';
 import { TITLE_EDIT_CANCELLED } from '../actions/titleTypes';
-
-const sheetIdReducer = (state = DEFAULT_SHEET_ID, action) => {
-   switch (action.type) {
-      case UPDATED_SHEET_ID:
-         return action.payload;
-      default:
-         return state;
-   }
-};
+import { FETCHED_SHEET } from '../actions/fetchSheetTypes';
 
 const sheetReducer = (state = {}, action) => {
    switch (action.type) {
@@ -172,7 +162,7 @@ export const filterModalReducer = (state = { showFilterModal: false }, action) =
 };
 
 export const staticReducers = {
-   sheetId: sheetIdReducer,
+   sheetId: fetchSheetReducer,
    sheet: sheetReducer,
    editorRef: editorRefReducer,
    editor: editorReducer,

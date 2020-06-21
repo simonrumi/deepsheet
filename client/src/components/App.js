@@ -16,10 +16,7 @@ const App = props => {
       <div>
          <ModalBackground />
          <div className="min-h-screen pb-1">
-            <Sheet sheetId={props.sheetId || DEFAULT_SHEET_ID} />
-            {/*
-               <Temp sheetId={props.sheetId || DEFAULT_SHEET_ID} />
-            */}
+            <Sheet />
          </div>
          <div className="w-full h-1 object-none object-bottom absolute">
             <Footer />
@@ -32,16 +29,7 @@ const logState = state => {
    if (R.keys(state.cellKeys).length === 0) {
       return;
    }
-   const stateKeys = [
-      'sheetId',
-      'sheet',
-      'editor',
-      'editorRef',
-      'title',
-      'form',
-      'filterModal',
-      'cellKeys',
-   ];
+   const stateKeys = ['sheetId', 'sheet', 'editor', 'editorRef', 'title', 'form', 'filterModal', 'cellKeys'];
 
    const baseStateObj = R.reduce(
       (acc, key) => {

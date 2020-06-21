@@ -5,7 +5,7 @@ import {
    TITLE_UPDATE_FAILED,
    TITLE_EDIT_CANCELLED,
 } from '../actions/titleTypes';
-import { FETCHED_SHEET } from '../actions/types';
+import { FETCHED_SHEET } from '../actions/fetchSheetTypes';
 import { isSomething } from '../helpers';
 
 // action.payload contains

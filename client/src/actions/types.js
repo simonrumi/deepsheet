@@ -1,4 +1,3 @@
-export const FETCHED_SHEET = 'fetched_sheet';
 export const UPDATED_HAS_CHANGED = 'updated_has_changed';
 export const UPDATED_COLUMN_VISIBILITY = 'updated_column_visibility';
 export const REPLACED_COLUMN_VISIBILITY = 'replaced_column_visibility';
@@ -10,7 +9,6 @@ export const UPDATED_CELL_BEING_EDITED = 'update_cell_being_edited';
 export const UPDATED_CELL_ = 'updated_cell_';
 export const UPDATED_CONTENT_OF_CELL_ = 'updated_content_of_cell_';
 export const UPDATED_CELL_KEYS = 'updated_cell_keys';
-export const UPDATED_SHEET_ID = 'updated_sheet_id';
 export const TOGGLED_SHOW_FILTER_MODAL = 'toggled_show_filter_modal';
 export const UPDATED_FILTER = 'updated_filter';
 export const UPDATED_COLUMN_FILTERS = 'updated_column_filters';

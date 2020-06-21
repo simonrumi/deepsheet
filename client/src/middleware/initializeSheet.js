@@ -1,7 +1,9 @@
 import * as R from 'ramda';
-import { UPDATED_SHEET_ID } from '../actions/types';
+import managedStore from '../store';
+import { UPDATED_SHEET_ID } from '../actions/fetchSheetTypes';
 import { fetchSheet } from '../services/sheetServices';
-import { fetchedSheet, updatedCellKeys } from '../actions';
+import { updatedCellKeys } from '../actions';
+import { fetchedSheet, fetchingSheet, fetchSheetError } from '../actions/fetchSheetActions';
 import { createCellReducers, populateCellsInStore } from '../reducers/cellReducers';
 
 // generates a flat array of all the key names to identify cells in the sheet
@@ -22,7 +24,7 @@ const initializeCells = sheet => {
       populateCellsInStore(sheet);
       updatedCellKeys(createCellKeys(sheet.rows));
    } else {
-      console.log('WARNING: App.render.initializeCells had no data to operate on');
+      console.warn('WARNING: App.render.initializeCells had no data to operate on');
    }
 };
 
@@ -33,13 +35,15 @@ export default store => next => async action => {
    switch (action.type) {
       case UPDATED_SHEET_ID:
          const newSheetId = action.payload;
+         fetchingSheet(newSheetId);
          try {
             const sheet = await fetchSheet(newSheetId);
             // if sheet has some data then dispatch the fetchedSheet action
             // note that R.juxt applies the argument sheet to both fns in its array
             R.when(R.pipe(R.isNil, R.not), R.juxt([R.pipe(fetchedSheet, store.dispatch), initializeCells]))(sheet);
          } catch (err) {
-            console.log('failed to fetchSheet', err);
+            console.error('failed to fetchSheet', err);
+            fetchSheetError(err);
             return {};
          }
          break;
