@@ -1,5 +1,4 @@
 import * as R from 'ramda';
-import managedStore from '../store';
 import { UPDATED_SHEET_ID } from '../actions/fetchSheetTypes';
 import { fetchSheet } from '../services/sheetServices';
 import { updatedCellKeys } from '../actions';
@@ -20,7 +19,7 @@ const createCellKeys = rows => {
 
 const initializeCells = sheet => {
    if (sheet.metadata) {
-      createCellReducers(sheet.metadata);
+      createCellReducers(sheet);
       populateCellsInStore(sheet);
       updatedCellKeys(createCellKeys(sheet.rows));
    } else {

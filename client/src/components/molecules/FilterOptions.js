@@ -7,6 +7,7 @@ import Checkbox from './Checkbox';
 import Button from '../atoms/Button';
 import { clearedAllFilters, updatedFilter } from '../../actions';
 import { isSomething, getObjectFromArrayByKeyValue } from '../../helpers';
+import { stateRowFilters, stateColumnFilters } from '../../helpers/dataStructureHelpers';
 
 class FilterOptions extends Component {
    constructor(props) {
@@ -14,7 +15,7 @@ class FilterOptions extends Component {
       this.editFilter = this.editFilter.bind(this);
    }
 
-   editFilter = (formValues) => {
+   editFilter = formValues => {
       this.props.updatedFilter({
          filterExpression: formValues.filterExpression,
          caseSensitive: formValues.caseSensitive,
@@ -25,29 +26,16 @@ class FilterOptions extends Component {
       });
    };
 
-   renderRegexCheckbox = (formProps) => (
-      <Checkbox formProps={formProps} testId="regexCheckbox" />
+   renderRegexCheckbox = formProps => <Checkbox formProps={formProps} testId="regexCheckbox" />;
+
+   renderFilterInput = formProps => (
+      <TextInput formProps={formProps} testId="filterInput" placeholder="placeholder value here" />
    );
 
-   renderFilterInput = (formProps) => (
-      <TextInput
-         formProps={formProps}
-         testId="filterInput"
-         placeholder="placeholder value here"
-      />
-   );
+   renderCaseSensitiveCheckbox = formProps => <Checkbox formProps={formProps} testId="caseSensitiveCheckbox" />;
 
-   renderCaseSensitiveCheckbox = (formProps) => (
-      <Checkbox formProps={formProps} testId="caseSensitiveCheckbox" />
-   );
-
-   renderClearFiltersButton = (formProps) => (
-      <Button
-         buttonType="button"
-         classes=""
-         onClickFn={this.props.clearedAllFilters}
-         label="Clear All Filtering"
-      />
+   renderClearFiltersButton = formProps => (
+      <Button buttonType="button" classes="" onClickFn={this.props.clearedAllFilters} label="Clear All Filtering" />
    );
 
    render() {
@@ -60,16 +48,9 @@ class FilterOptions extends Component {
             <div className={allClasses}>
                <Label label="Filter" />
                <div>
-                  <Field
-                     name="filterExpression"
-                     component={this.renderFilterInput}
-                  />
+                  <Field name="filterExpression" component={this.renderFilterInput} />
                   <div className="flex items-center px-2 py-2">
-                     <Field
-                        name="caseSensitive"
-                        component={this.renderCaseSensitiveCheckbox}
-                        classes="pl-0"
-                     />
+                     <Field name="caseSensitive" component={this.renderCaseSensitiveCheckbox} classes="pl-0" />
                      <Label label="Case sensitive" classes="pl-2" />
                   </div>
                   <div className="flex items-center px-2 py-2">
@@ -77,10 +58,7 @@ class FilterOptions extends Component {
                      <Label label="Regular expression" classes="pl-2" />
                   </div>
                   <div className="flex items-center py-2">
-                     <Field
-                        name="filterClearAll"
-                        component={this.renderClearFiltersButton}
-                     />
+                     <Field name="filterClearAll" component={this.renderClearFiltersButton} />
                   </div>
                   <div className="flex items-center">
                      <Button
@@ -89,12 +67,7 @@ class FilterOptions extends Component {
                         label="OK"
                         disabled={this.props.pristine || this.props.submitting}
                      />
-                     <Button
-                        buttonType="cancel"
-                        classes=""
-                        onClickFn={this.props.reset}
-                        label="Cancel"
-                     />
+                     <Button buttonType="cancel" classes="" onClickFn={this.props.reset} label="Cancel" />
                   </div>
                </div>
             </div>
@@ -103,7 +76,7 @@ class FilterOptions extends Component {
    }
 }
 
-const validateForm = (formValues) => {
+const validateForm = formValues => {
    const errors = {};
    // add error checking here, object keys should be the same as the Field names
    return errors;
@@ -114,20 +87,16 @@ const filterForm = reduxForm({
    validate: validateForm,
 })(FilterOptions);
 
-const getInitialFilterValues = (state) => {
+const getInitialFilterValues = state => {
    const existingColumnFilter = getObjectFromArrayByKeyValue(
       'index',
       state.filterModal.colIndex,
-      state.sheet.columnFilters
+      stateColumnFilters(state)
    );
    if (isSomething(existingColumnFilter)) {
       return existingColumnFilter;
    }
-   const existingRowFilter = getObjectFromArrayByKeyValue(
-      'index',
-      state.filterModal.rowIndex,
-      state.sheet.rowFilters
-   );
+   const existingRowFilter = getObjectFromArrayByKeyValue('index', state.filterModal.rowIndex, stateRowFilters(state));
    if (isSomething(existingRowFilter)) {
       return existingRowFilter;
    }
@@ -143,6 +112,4 @@ function mapStateToProps(state, ownProps) {
    };
 }
 
-export default connect(mapStateToProps, { updatedFilter, clearedAllFilters })(
-   filterForm
-);
+export default connect(mapStateToProps, { updatedFilter, clearedAllFilters })(filterForm);

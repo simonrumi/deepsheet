@@ -3,12 +3,8 @@ import { connect } from 'react-redux';
 import * as R from 'ramda';
 import { DragSource } from 'react-dnd';
 import { ItemTypes } from '../../constants';
-import {
-   indexToRowNumber,
-   extractRowColFromCellKey,
-   isSomething,
-   isNothing,
-} from '../../helpers';
+import { indexToRowNumber, extractRowColFromCellKey, isSomething, isNothing } from '../../helpers';
+import { stateRowFilters } from '../../helpers/dataStructureHelpers';
 import { toggledShowFilterModal, rowMoved } from '../../actions';
 import IconFilter from '../atoms/IconFilter';
 
@@ -40,20 +36,14 @@ class RowHeaderDetail extends Component {
       this.isFilterEngaged = this.isFilterEngaged.bind(this);
    }
 
-   showFilterModalForRow = rowIndex =>
-      this.props.toggledShowFilterModal(rowIndex, null);
+   showFilterModalForRow = rowIndex => this.props.toggledShowFilterModal(rowIndex, null);
 
    isFilterEngaged = (rowIndex, rowFilters) => {
       if (isNothing(rowFilters)) {
          return false;
       }
       return R.pipe(
-         R.find(
-            R.pipe(
-               R.prop('index'),
-               R.equals(rowIndex)
-            )
-         ),
+         R.find(R.pipe(R.prop('index'), R.equals(rowIndex))),
          R.prop('filterExpression'),
          isSomething
       )(rowFilters);
@@ -68,10 +58,7 @@ class RowHeaderDetail extends Component {
 
       return connectDragSource(
          <div className="flex w-full h-full cursor-row-resize">
-            <div
-               key={'rowNum_' + row}
-               className="w-2/4 text-center self-center text-grey-blue"
-            >
+            <div key={'rowNum_' + row} className="w-2/4 text-center self-center text-grey-blue">
                {rowNum}
             </div>
             <IconFilter
@@ -79,7 +66,7 @@ class RowHeaderDetail extends Component {
                classes={'w-2/4 text-center'}
                height="100%"
                width="100%"
-               fitlerEngaged={this.isFilterEngaged(row, this.props.rowFilters)}
+               fitlerEngaged={this.isFilterEngaged(row, stateRowFilters(this.props.state))}
                onClickFn={() => this.showFilterModalForRow(row)}
                testId={'row' + rowNum}
             />
@@ -90,20 +77,12 @@ class RowHeaderDetail extends Component {
 
 function mapStateToProps(state, ownProps) {
    return {
+      state,
       showFilterModal: state.showFilterModal,
       cellKey: ownProps.cellKey,
-      totalRows: state.sheet.totalRows,
-      rowFilters: state.sheet.rowFilters,
       sheet: state.sheet,
    };
 }
 
-const DragableRowHeader = DragSource(
-   ItemTypes.DRAGGABLE_ROW_HEADER,
-   dragSourceSpec,
-   dragCollect
-)(RowHeaderDetail);
-export default connect(
-   mapStateToProps,
-   { toggledShowFilterModal }
-)(DragableRowHeader);
+const DragableRowHeader = DragSource(ItemTypes.DRAGGABLE_ROW_HEADER, dragSourceSpec, dragCollect)(RowHeaderDetail);
+export default connect(mapStateToProps, { toggledShowFilterModal })(DragableRowHeader);

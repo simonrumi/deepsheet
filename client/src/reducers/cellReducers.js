@@ -1,25 +1,20 @@
 import * as R from 'ramda';
 import managedStore from '../store';
 import { extractRowColFromCellKey } from '../helpers';
+import { dbTotalRows, dbTotalColumns } from '../helpers/dataStructureHelpers';
 import { ROW_AXIS, COLUMN_AXIS } from '../constants';
 import { updatedCell } from '../actions';
-import {
-   UPDATED_CELL_KEYS,
-   UPDATED_CELL_,
-   UPDATED_CONTENT_OF_CELL_,
-} from '../actions/types';
+import { UPDATED_CELL_KEYS, UPDATED_CELL_, UPDATED_CONTENT_OF_CELL_ } from '../actions/types';
 
-export const createCellReducers = sheetMetadata => {
+export const createCellReducers = sheet => {
    const store = managedStore.store;
    const cellReducers = {};
    if (!store || !store.reducerManager) {
-      console.log(
-         'ERROR: generateCellReducers failed as there was no store.reducerManager'
-      );
+      console.log('ERROR: generateCellReducers failed as there was no store.reducerManager');
       return;
    }
-   for (let row = 0; row < sheetMetadata.totalRows; row++) {
-      for (let col = 0; col < sheetMetadata.totalColumns; col++) {
+   for (let row = 0; row < dbTotalRows(sheet); row++) {
+      for (let col = 0; col < dbTotalColumns(sheet); col++) {
          cellReducers['cell_' + row + '_' + col] = cellReducerFactory(row, col);
       }
    }
@@ -33,11 +28,7 @@ export const cellReducerFactory = (rowNum, colNum) => {
          return state;
       }
       const numsFromType = extractRowColFromCellKey(action.type);
-      if (
-         numsFromType &&
-         numsFromType[ROW_AXIS] === rowNum &&
-         numsFromType[COLUMN_AXIS] === colNum
-      ) {
+      if (numsFromType && numsFromType[ROW_AXIS] === rowNum && numsFromType[COLUMN_AXIS] === colNum) {
          const hasUpdatedCell = new RegExp(UPDATED_CELL_, 'ig');
          const hasUpdatedContent = new RegExp(UPDATED_CONTENT_OF_CELL_, 'ig');
          return hasUpdatedCell.test(action.type)

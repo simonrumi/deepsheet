@@ -11,63 +11,21 @@ import { ROW_AXIS, COLUMN_AXIS } from '../constants';
 //import * as RWrap from './ramdaWrappers'; // use this for debugging only
 
 // not for use in by any functions here, just for export
-export const getAxisFilterName = (axis) => R.concat(axis, 'Filters');
-
-/****
- * create values to populate sheet.rowFilters and sheet.columnFilters, for use by reducers/index.js
- ****/
-const createFilterObjKey = (filterData) =>
-   filterData.rowIndex || filterData.colIndex;
-
-const createFilterObj = (filterData) =>
-   R.omit(['showFilterModal', 'colIndex', 'rowIndex'], filterData);
-
-const checkFilterData = R.converge(R.and, [
-   R.has('rowIndex'),
-   R.has('colIndex'),
-]);
-
-const checkedFilterObj = R.ifElse(checkFilterData, createFilterObj, () => null);
-
-export const getFilterName = (filterData) =>
-   R.prop('rowIndex', filterData) ? 'rowFilters' : 'columnFilters';
-
-const updateFilterValue = (filterData, sheet) =>
-   R.assoc(
-      createFilterObjKey(filterData),
-      checkedFilterObj(filterData),
-      sheet[getFilterName(filterData)]
-   );
-
-export const replaceFilterEntry = (filterData, sheet) =>
-   R.assoc(
-      getFilterName(filterData),
-      updateFilterValue(filterData, sheet),
-      sheet
-   );
+export const getAxisFilterName = axis => R.concat(axis, 'Filters');
 
 /***
  * these functions are for use by the reducers for UPDATED_ROW_FILTERS and UPDATED_COLUMN_FILTERS
  ***/
 const removeOldFilter = R.curry((payload, filterArr) =>
    R.cond([
-      [
-         (payload, filterArr) =>
-            isNothing(filterArr) || isNothing(payload) ? true : false,
-         R.always([]),
-      ],
-      [
-         (payload, filterArr) => !arrayContainsSomething(filterArr),
-         R.always([]),
-      ],
+      [(payload, filterArr) => (isNothing(filterArr) || isNothing(payload) ? true : false), R.always([])],
+      [(payload, filterArr) => !arrayContainsSomething(filterArr), R.always([])],
       [
          R.T,
          (payload, filterArr) =>
             R.reduce(
                (accumulator, filter) =>
-                  R.propEq('index', filter.index, payload)
-                     ? accumulator
-                     : R.concat(accumulator, [filter]),
+                  R.propEq('index', filter.index, payload) ? accumulator : R.concat(accumulator, [filter]),
                []
             )(filterArr),
       ],
@@ -84,47 +42,30 @@ export const updatedAxisFilters = (payload, filterName, stateObj, filterArr) =>
 /****
  * figure out how many rows or columns are hidden due to filtering, for use by Sheet.js & ColumnHeaders.js
  ****/
-const confirmAxis = (axis) =>
-   axis === ROW_AXIS || axis === COLUMN_AXIS ? axis : '';
+const confirmAxis = axis => (axis === ROW_AXIS || axis === COLUMN_AXIS ? axis : '');
 
 export const getVisibilityForAxis = (axis, sheet) =>
    R.pipe(confirmAxis, R.concat(R.__, 'Visibility'), R.prop(R.__, sheet))(axis);
 
 const numHiddenItems = R.reduce(
-   (accumulator, visibilityObj) =>
-      !visibilityObj.isVisible ? accumulator + 1 : accumulator,
+   (accumulator, visibilityObj) => (!visibilityObj.isVisible ? accumulator + 1 : accumulator),
    0,
    R.__
 );
 
-const getNumHiddenItemsForAxis = R.pipe(
-   getVisibilityForAxis,
-   R.values,
-   numHiddenItems
-);
+const getNumHiddenItemsForAxis = R.pipe(getVisibilityForAxis, R.values, numHiddenItems);
 
 const pluralizeTail = R.pipe(R.tail, R.toLower, R.concat(R.__, 's'));
 
-const capitalizedPlural = R.converge(R.concat, [
-   capitalizeFirst,
-   pluralizeTail,
-]);
+const capitalizedPlural = R.converge(R.concat, [capitalizeFirst, pluralizeTail]);
 
 // create either "totalRows" or "totalColumns" from the axis which will be either "row" or "column"
-const createTotalsKey = (axis) =>
-   confirmAxis(axis)
-      ? R.pipe(capitalizedPlural, R.concat('total'))(axis)
-      : null;
+const createTotalsKey = axis => (confirmAxis(axis) ? R.pipe(capitalizedPlural, R.concat('total'))(axis) : null);
 
-export const getTotalForAxis = R.curry(
-   (axis, sheet) => sheet[createTotalsKey(axis)] || 0
-); //returning 0 if the totalsKey is bogus)
+export const getTotalForAxis = R.curry((axis, sheet) => sheet[createTotalsKey(axis)] || 0); //returning 0 if the totalsKey is bogus)
 
 export const getRequiredNumItemsForAxis = (axis, sheet) => {
-   const visibleItems = R.converge(R.subtract, [
-      getTotalForAxis,
-      getNumHiddenItemsForAxis,
-   ])(axis, sheet);
+   const visibleItems = R.converge(R.subtract, [getTotalForAxis, getNumHiddenItemsForAxis])(axis, sheet);
 
    if (typeof visibleItems === 'number') {
       return visibleItems;
@@ -135,19 +76,12 @@ export const getRequiredNumItemsForAxis = (axis, sheet) => {
 /****
  * row visibility, for use by Sheet.js
  *****/
-export const shouldShowRow = R.curry((sheet, cellKey) => {
-   if (
-      isNothing(sheet.rowVisibility) ||
-      !arrayContainsSomething(sheet.rowVisibility)
-   ) {
+export const shouldShowRow = R.curry((rowVisibility, cellKey) => {
+   if (isNothing(rowVisibility) || !arrayContainsSomething(rowVisibility)) {
       return true;
    }
    const rowColObj = extractRowColFromCellKey(cellKey);
-   const rowVisibilityObj = getObjectFromArrayByKeyValue(
-      'index',
-      rowColObj.row,
-      sheet.rowVisibility
-   );
+   const rowVisibilityObj = getObjectFromArrayByKeyValue('index', rowColObj.row, rowVisibility);
    return isSomething(rowVisibilityObj) ? rowVisibilityObj.isVisible : true;
 });
 
@@ -158,74 +92,56 @@ export const shouldShowRow = R.curry((sheet, cellKey) => {
  * consequently it doesn't seem worthwhile trying to generalize any of these functions
  ****/
 export const shouldShowColumn = R.curry((colVisibilityArr, colIndex) => {
-   if (
-      isNothing(colVisibilityArr) ||
-      !arrayContainsSomething(colVisibilityArr)
-   ) {
+   if (isNothing(colVisibilityArr) || !arrayContainsSomething(colVisibilityArr)) {
       return true;
    }
-   const colVisibilityObj = getObjectFromArrayByKeyValue(
-      'index',
-      colIndex,
-      colVisibilityArr
-   );
+   const colVisibilityObj = getObjectFromArrayByKeyValue('index', colIndex, colVisibilityArr);
    return isSomething(colVisibilityObj) ? colVisibilityObj.isVisible : true;
 });
 
 /* isFirstColumn for use by Sheet.js */
-export const isFirstColumn = (cellKey) => /.*_0$/.test(cellKey); //the cellKey should end with _0 indicating the first column
+export const isFirstColumn = cellKey => /.*_0$/.test(cellKey); //the cellKey should end with _0 indicating the first column
 
 export const isLastColumn = R.curry((totalColumns, cellKey) => {
    const { column } = extractRowColFromCellKey(cellKey);
    return column === totalColumns - 1;
 });
 
-export const getAxisVisibilityName = (axis) => R.concat(axis, 'Visibility'); // will be "rowVisibility" or "columnVisibility"
+export const getAxisVisibilityName = axis => R.concat(axis, 'Visibility'); // will be "rowVisibility" or "columnVisibility"
 
 /**** isLastVisibleItemInAxis and related functions ****/
 const findHighestVisibleItem = R.curry((currentIndex, visibilityArr) => {
-   const isVisibleAtCurrentIndex = getObjectFromArrayByKeyValue(
-      'index',
-      currentIndex,
-      visibilityArr
-   ).isVisible;
+   const isVisibleAtCurrentIndex = getObjectFromArrayByKeyValue('index', currentIndex, visibilityArr).isVisible;
    if (currentIndex === 0 || isVisibleAtCurrentIndex) {
       return currentIndex;
    }
    return findHighestVisibleItem(currentIndex - 1, visibilityArr);
 });
 
-const getAxisIndex = R.curry((axis, cellKey) =>
-   R.prop(axis, extractRowColFromCellKey(cellKey))
-);
+const getAxisIndex = R.curry((axis, cellKey) => R.prop(axis, extractRowColFromCellKey(cellKey)));
 
-const arrayIsNothing = (array) =>
-   isNothing(array) || !arrayContainsSomething(array);
+const arrayIsNothing = array => isNothing(array) || !arrayContainsSomething(array);
 
-const getVisibilityArrFromSheet = R.curry((axis, sheet) =>
-   R.pipe(getAxisVisibilityName, R.prop(R.__, sheet))(axis)
-);
+const getVisibilityArrFromSheet = R.curry((axis, sheet) => R.pipe(getAxisVisibilityName, R.prop(R.__, sheet))(axis));
 
-export const isLastVisibleItemInAxis = R.curry(
-   (axis, totalInAxis, sheet, cellKey) => {
-      const endIndex = totalInAxis - 1;
-      return R.ifElse(
-         // if the visiblity object is empty
-         R.pipe(
-            getVisibilityArrFromSheet(axis), //receives sheet
-            arrayIsNothing
-         ),
-         // then compare the index of the last item to the current index
-         R.pipe(
-            R.thunkify(getAxisIndex)(axis, cellKey), // ignores sheet parameter sent to it
-            R.equals(endIndex) // receives axis index
-         ),
-         // else find the index of the highest visible item and compare that to the current index
-         R.pipe(
-            getVisibilityArrFromSheet(axis), // receives sheet
-            findHighestVisibleItem(endIndex), // receives visibilityArr
-            R.equals(getAxisIndex(axis, cellKey)) // receives highest visible's index
-         )
-      )(sheet);
-   }
-);
+export const isLastVisibleItemInAxis = R.curry((axis, totalInAxis, sheet, cellKey) => {
+   const endIndex = totalInAxis - 1;
+   return R.ifElse(
+      // if the visiblity object is empty
+      R.pipe(
+         getVisibilityArrFromSheet(axis), //receives sheet
+         arrayIsNothing
+      ),
+      // then compare the index of the last item to the current index
+      R.pipe(
+         R.thunkify(getAxisIndex)(axis, cellKey), // ignores sheet parameter sent to it
+         R.equals(endIndex) // receives axis index
+      ),
+      // else find the index of the highest visible item and compare that to the current index
+      R.pipe(
+         getVisibilityArrFromSheet(axis), // receives sheet
+         findHighestVisibleItem(endIndex), // receives visibilityArr
+         R.equals(getAxisIndex(axis, cellKey)) // receives highest visible's index
+      )
+   )(sheet);
+});

@@ -6,13 +6,15 @@ import HTML5Backend from 'react-dnd-html5-backend';
 import { updatedSheetId } from '../actions/fetchSheetActions';
 import managedStore from '../store';
 import initializeSheet from '../middleware/initializeSheet';
-import { nothing } from '../helpers';
+import { nothing, isSomething } from '../helpers';
+import { stateTotalRows, stateTotalColumns } from '../helpers/dataStructureHelpers';
 import {
    shouldShowRow,
    isFirstColumn,
    isLastVisibleItemInAxis,
    getRequiredNumItemsForAxis,
 } from '../helpers/visibilityHelpers';
+import { stateRowVisibility } from '../helpers/dataStructureHelpers';
 import { ROW_AXIS, COLUMN_AXIS, THIN_COLUMN, ROW_HEIGHT } from '../constants';
 
 import LoadingIcon from './atoms/IconLoading';
@@ -37,7 +39,7 @@ class Sheet extends Component {
       R.ifElse(
          isLastVisibleItemInAxis(
             COLUMN_AXIS, // we are rendering a row, so need to check if this is the last visible column in the row
-            this.props.sheet.totalColumns,
+            stateTotalColumns(this.props.state),
             this.props.sheet
          ),
          this.renderEmptyEndCell,
@@ -54,15 +56,15 @@ class Sheet extends Component {
       return [this.maybeRowHeader(cellKey), this.renderCell(cellKey), this.maybeEmptyEndCell(cellKey)];
    };
 
-   maybeCell = sheet => R.ifElse(shouldShowRow(sheet), this.renderCellAndMaybeEdges, nothing);
+   maybeCell = state => R.ifElse(shouldShowRow(stateRowVisibility(state)), this.renderCellAndMaybeEdges, nothing);
 
    renderCells = () => {
       if (this.props.data && this.props.data.sheet && this.props.managedStore.store) {
          initializeSheet(this.props.managedStore.store, this.props.data.sheet);
       }
-      if (R.has('totalRows', this.props.sheet) && this.props.cellKeys && this.props.cellKeys.length > 0) {
+      if (isSomething(stateTotalRows(this.props.state)) && this.props.cellKeys && this.props.cellKeys.length > 0) {
          return R.pipe(
-            R.map(cellKey => this.maybeCell(this.props.sheet)(cellKey)),
+            R.map(cellKey => this.maybeCell(this.props.state)(cellKey)),
             R.prepend(<ColumnHeaders key="columnHeaders" />),
             R.append(<LastRow key="lastRow" />)
          )(this.props.cellKeys);
@@ -123,6 +125,7 @@ class Sheet extends Component {
 
 function mapStateToProps(state) {
    return {
+      state,
       sheet: state.sheet,
       showFilterModal: state.filterModal.showFilterModal,
       managedStore,

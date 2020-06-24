@@ -9,72 +9,78 @@ import { updatedTotalColumns, updatedCellKeys, updatedColumnVisibility, updatedH
 import { createCellKey } from '../helpers/cellHelpers';
 import { shouldShowRow } from '../helpers/visibilityHelpers';
 import {
-	addOneCellReducer,
-	addNewCellsToStore,
-	addManyCellReducersToStore,
-	maybeAddAxisVisibilityEntry,
+   stateTotalColumns,
+   stateTotalRows,
+   stateColumnVisibility,
+   stateRowVisibility,
+} from '../helpers/dataStructureHelpers';
+import {
+   addOneCellReducer,
+   addNewCellsToStore,
+   addManyCellReducersToStore,
+   maybeAddAxisVisibilityEntry,
 } from './insertNewAxis';
 
-const makeNewCell = (rowIndex, columnIndex, sheet) => {
-	const cellKey = createCellKey(rowIndex, columnIndex);
-	return {
-		row: rowIndex,
-		column: columnIndex,
-		content: '',
-		visible: shouldShowRow(sheet, cellKey), //(rowVisibility, rowIndex),
-	};
+const makeNewCell = (rowIndex, columnIndex, rowVisibility, cellKey) => {
+   return {
+      row: rowIndex,
+      column: columnIndex,
+      content: '',
+      visible: shouldShowRow(rowVisibility, cellKey),
+   };
 };
 
 const insertNewCellKeyInColumn = (rowIndex, columnIndex, newCellKey, cellKeys) =>
-	R.pipe(
-		createCellKey, // get the cellKey of the element before the spot newCellKey should go
-		R.equals,
-		R.findIndex(R.__, cellKeys), // find the index of the element before newCellKey
-		R.add(1), // R.insert inserts at the point before the given index, so adding 1 to place it after
-		R.insert(R.__, newCellKey, cellKeys)
-	)(rowIndex, columnIndex - 1);
+   R.pipe(
+      createCellKey, // get the cellKey of the element before the spot newCellKey should go
+      R.equals,
+      R.findIndex(R.__, cellKeys), // find the index of the element before newCellKey
+      R.add(1), // R.insert inserts at the point before the given index, so adding 1 to place it after
+      R.insert(R.__, newCellKey, cellKeys)
+   )(rowIndex, columnIndex - 1);
 
-const addOneCell = (columnIndex, rowIndex, sheet, updates) => {
-	const cellKey = createCellKey(rowIndex, columnIndex);
-	const cellKeys = insertNewCellKeyInColumn(rowIndex, columnIndex, cellKey, updates.cellKeys);
-	const cellReducers = addOneCellReducer(cellKey, rowIndex, columnIndex, updates.cellReducers);
-	const cell = makeNewCell(rowIndex, columnIndex, sheet, cellKey);
-	const cells = R.append(cell, updates.cells);
-	return { cellReducers, cellKeys, cells };
+const addOneCell = (columnIndex, rowIndex, state, updates) => {
+   const cellKey = createCellKey(rowIndex, columnIndex);
+   const cellKeys = insertNewCellKeyInColumn(rowIndex, columnIndex, cellKey, updates.cellKeys);
+   const cellReducers = addOneCellReducer(cellKey, rowIndex, columnIndex, updates.cellReducers);
+   const cell = makeNewCell(rowIndex, columnIndex, stateRowVisibility(state), cellKey);
+   const cells = R.append(cell, updates.cells);
+   return { cellReducers, cellKeys, cells };
 };
 
 const createUpdatesForNewCells = (
-	updates, //contains { cellReducers, cellKeys, cells }
-	sheet,
-	columnIndex,
-	totalRows,
-	rowIndex = 0
+   updates, //contains { cellReducers, cellKeys, cells }
+   state,
+   columnIndex,
+   totalRows,
+   rowIndex = 0
 ) => {
-	if (totalRows === rowIndex) {
-		return updates;
-	}
-	return createUpdatesForNewCells(
-		addOneCell(columnIndex, rowIndex, sheet, updates),
-		sheet,
-		columnIndex,
-		totalRows,
-		rowIndex + 1
-	);
+   if (totalRows === rowIndex) {
+      return updates;
+   }
+   return createUpdatesForNewCells(
+      addOneCell(columnIndex, rowIndex, state, updates),
+      state,
+      columnIndex,
+      totalRows,
+      rowIndex + 1
+   );
 };
 
-const insertNewColumn = (cellKeys, totalRows, totalColumns, sheet) => {
-	const updates = createUpdatesForNewCells(
-		{ cellKeys: cellKeys, cellReducers: {}, cells: [] },
-		sheet,
-		totalColumns,
-		totalRows
-	); // totalColumns, being the count of existing columns, will give us the index of the next column
-	updatedCellKeys(updates.cellKeys);
-	addManyCellReducersToStore(updates.cellReducers);
-	maybeAddAxisVisibilityEntry(totalColumns, sheet.columnVisibility, updatedColumnVisibility);
-	addNewCellsToStore(updates.cells);
-	updatedTotalColumns(totalColumns + 1);
-	updatedHasChanged(true);
+const insertNewColumn = (cellKeys, state) => {
+   const totalColumns = stateTotalColumns(state);
+   const updates = createUpdatesForNewCells(
+      { cellKeys: cellKeys, cellReducers: {}, cells: [] },
+      state,
+      totalColumns,
+      stateTotalRows(state)
+   ); // totalColumns, being the count of existing columns, will give us the index of the next column
+   updatedCellKeys(updates.cellKeys);
+   addManyCellReducersToStore(updates.cellReducers);
+   maybeAddAxisVisibilityEntry(totalColumns, stateColumnVisibility(state), updatedColumnVisibility);
+   addNewCellsToStore(updates.cells);
+   updatedTotalColumns(totalColumns + 1);
+   updatedHasChanged(true);
 };
 
 export default insertNewColumn;

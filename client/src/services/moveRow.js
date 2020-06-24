@@ -1,10 +1,8 @@
 import * as R from 'ramda';
 import { forLoopReduce } from '../helpers';
 import { createCellKey } from '../helpers/cellHelpers';
-import {
-   getAxisVisibilityName,
-   getAxisFilterName,
-} from '../helpers/visibilityHelpers';
+import { getAxisVisibilityName, getAxisFilterName } from '../helpers/visibilityHelpers';
+import { stateTotalRows, stateTotalColumns, stateRowMoved, stateRowMovedTo } from '../helpers/dataStructureHelpers';
 import {
    makeNewSheetItemFromMap,
    buildObject,
@@ -13,6 +11,8 @@ import {
    createMappingFromArray,
 } from './moveAxis';
 import { ROW_AXIS } from '../constants';
+
+console.log('TODO moving rows & columns needs work: restict movement & show spinner');
 
 const makeNewCellsFromMap = (rowUpdateMapping, state) => {
    const getCellFromState = R.pipe(createCellKey, R.prop(R.__, state));
@@ -25,39 +25,26 @@ const makeNewCellsFromMap = (rowUpdateMapping, state) => {
             R.pipe(
                buildObject, // builds a cell based on the cell in the row being moved, but with the index of the destination row
                R.assoc(createCellKey(rowIndex, columnIndex), R.__, accumulator) // puts the cell in the newCells object (the accumulator)
-            )(
-               getCellFromState(movedRowIndex, columnIndex),
-               R.assoc('row', rowIndex, {})
-            ), // params for buildObject
+            )(getCellFromState(movedRowIndex, columnIndex), R.assoc('row', rowIndex, {})), // params for buildObject
          newCells,
-         state.sheet.totalColumns
+         stateTotalColumns(state)
       );
       return newCells;
    }, {});
    return createCells(rowUpdateMapping);
 };
 
-export default (state) => {
-   const rowIndexToMove = state.sheet.rowMoved;
-   const insertBelowIndex = state.sheet.rowMovedTo;
-   const reorderedIndicies = reorderIndicies(
-      rowIndexToMove,
-      insertBelowIndex,
-      state.sheet.totalRows
-   );
+export default state => {
+   const rowIndexToMove = stateRowMoved(state);
+   const insertBelowIndex = stateRowMovedTo(state);
+   const reorderedIndicies = reorderIndicies(rowIndexToMove, insertBelowIndex, stateTotalRows(state));
 
-   const newCells = R.pipe(
-      createOptimizedMappingFromArray,
-      makeNewCellsFromMap(R.__, state)
-   )(reorderedIndicies);
+   const newCells = R.pipe(createOptimizedMappingFromArray, makeNewCellsFromMap(R.__, state))(reorderedIndicies);
 
    const rowUpdateArr = createMappingFromArray(reorderedIndicies);
 
-   const makeNewSheetItem = (createSheetItemName) =>
-      R.pipe(
-         createSheetItemName,
-         makeNewSheetItemFromMap(rowUpdateArr, state.sheet)
-      )(ROW_AXIS);
+   const makeNewSheetItem = createSheetItemName =>
+      R.pipe(createSheetItemName, makeNewSheetItemFromMap(rowUpdateArr, state.sheet))(ROW_AXIS);
 
    const newRowFilters = makeNewSheetItem(getAxisFilterName);
    const newRowVisibility = makeNewSheetItem(getAxisVisibilityName);

@@ -6,8 +6,6 @@ import Sheet from './Sheet';
 import ModalBackground from './atoms/ModalBackground';
 import Footer from './molecules/Footer';
 
-import { DEFAULT_SHEET_ID } from '../constants';
-
 // import Temp from './Temp';
 
 const App = props => {

@@ -1,7 +1,9 @@
 import React from 'react';
+import * as R from 'ramda';
 import { connect } from 'react-redux';
 import { openedTitleEditor } from '../../actions/titleActions';
 import { loadSheet } from '../../services/sheetServices';
+import { stateParentSheetId, stateHasChanged } from '../../helpers/dataStructureHelpers';
 import Heading from '../atoms/Heading';
 import IconEdit from '../atoms/IconEdit';
 import IconUpArrow from '../atoms/IconUpArrow';
@@ -9,13 +11,13 @@ import SaveIcon from '../atoms/IconSave';
 
 class HeaderTitle extends React.Component {
    renderUpArrow() {
-      if (this.props.sheet.parentSheetId) {
+      if (stateParentSheetId(this.props.state)) {
          return (
             <IconUpArrow
                height="1.5em"
                width="1.5em"
                classes="pl-2"
-               onClickFn={() => loadSheet(this.props.sheet.parentSheetId)}
+               onClickFn={() => R.pipe(stateParentSheetId, loadSheet)(this.props.state)}
                data-testid="titleUpArrow"
             />
          );
@@ -24,7 +26,7 @@ class HeaderTitle extends React.Component {
    }
 
    renderSaveIcon() {
-      if (this.props.sheet.hasChanged) {
+      if (stateHasChanged(this.props.state)) {
          return <SaveIcon height="1.5em" width="1.5em" classes="pr-2" />;
       }
    }
@@ -45,7 +47,7 @@ class HeaderTitle extends React.Component {
 
 function mapStateToProps(state) {
    return {
-      sheet: state.sheet,
+      state,
       title: state.title,
    };
 }

@@ -1,10 +1,8 @@
 import * as R from 'ramda';
-import axios from 'axios';
 import managedStore from '../store';
 import { updatedSheetId } from '../actions/fetchSheetActions';
 import sheetQuery from '../queries/sheetQuery';
 import titleMutation from '../queries/titleMutation'; // TODO only need one of these
-import { GRAPHQL_URL } from '../constants';
 
 /*
 Need to have these impure functions for dealing with memoizedItems.

@@ -11,11 +11,7 @@ class RowHeader extends Component {
       return (
          <div className="flex flex-col justify-between h-full border-t border-l">
             <RowHeaderDetail cellKey={this.props.cellKey} />
-            <RowDropTarget
-               key={'rowDropTarget_' + row}
-               rowIndex={row}
-               classes="w-full self-end cursor-row-resize"
-            />
+            <RowDropTarget key={'rowDropTarget_' + row} rowIndex={row} classes="w-full self-end cursor-row-resize" />
          </div>
       );
    }
@@ -25,8 +21,6 @@ function mapStateToProps(state, ownProps) {
    return {
       showFilterModal: state.showFilterModal,
       cellKey: ownProps.cellKey,
-      totalRows: state.sheet.totalRows,
-      rowFilters: state.sheet.rowFilters,
    };
 }
 

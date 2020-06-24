@@ -5,12 +5,7 @@
  * seem worthwhile generalizing them further.
  **/
 import * as R from 'ramda';
-import {
-   updatedTotalRows,
-   updatedCellKeys,
-   updatedRowVisibility,
-   updatedHasChanged,
-} from '../actions';
+import { updatedTotalRows, updatedCellKeys, updatedRowVisibility, updatedHasChanged } from '../actions';
 import { createCellKey } from '../helpers/cellHelpers';
 import { shouldShowColumn } from '../helpers/visibilityHelpers';
 import {
@@ -19,6 +14,13 @@ import {
    addManyCellReducersToStore,
    maybeAddAxisVisibilityEntry,
 } from './insertNewAxis';
+import {
+   stateTotalColumns,
+   stateTotalRows,
+   stateColumnVisibility,
+   stateRowVisibility,
+   // stateMetadata,
+} from '../helpers/dataStructureHelpers';
 
 const makeNewCell = (rowIndex, columnIndex, columnVisibility) => {
    return {
@@ -32,12 +34,7 @@ const makeNewCell = (rowIndex, columnIndex, columnVisibility) => {
 const addOneCell = (rowIndex, columnIndex, columnVisibility, updates) => {
    const cellKey = createCellKey(rowIndex, columnIndex);
    const cellKeys = R.append(cellKey, updates.cellKeys);
-   const cellReducers = addOneCellReducer(
-      cellKey,
-      rowIndex,
-      columnIndex,
-      updates.cellReducers
-   );
+   const cellReducers = addOneCellReducer(cellKey, rowIndex, columnIndex, updates.cellReducers);
    const cell = makeNewCell(rowIndex, columnIndex, columnVisibility);
    const cells = R.append(cell, updates.cells);
    return { cellReducers, cellKeys, cells };
@@ -62,20 +59,20 @@ const createUpdatesForNewCells = (
    );
 };
 
-const insertNewRow = (cellKeys, totalRows, totalColumns, sheet) => {
+const insertNewRow = (cellKeys, state) => {
+   const totalRows = stateTotalRows(state);
+   const totalColumns = stateTotalColumns(state);
+   const rowVisibility = stateRowVisibility(state);
+   const columnVisibility = stateColumnVisibility(state);
    const updates = createUpdatesForNewCells(
       { cellKeys: cellKeys, cellReducers: {}, cells: [] },
-      sheet.columnVisibility,
+      columnVisibility,
       totalRows,
       totalColumns
    ); // totalRows, being the count of existing rows, will give us the index of the next row
    updatedCellKeys(updates.cellKeys);
    addManyCellReducersToStore(updates.cellReducers);
-   maybeAddAxisVisibilityEntry(
-      totalRows,
-      sheet.rowVisibility,
-      updatedRowVisibility
-   );
+   maybeAddAxisVisibilityEntry(totalRows, rowVisibility, updatedRowVisibility);
    addNewCellsToStore(updates.cells);
    updatedTotalRows(totalRows + 1);
    updatedHasChanged(true);
