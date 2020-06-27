@@ -40,7 +40,8 @@ class Sheet extends Component {
          isLastVisibleItemInAxis(
             COLUMN_AXIS, // we are rendering a row, so need to check if this is the last visible column in the row
             stateTotalColumns(this.props.state),
-            this.props.sheet
+            // this.props.sheet
+            this.props.state
          ),
          this.renderEmptyEndCell,
          nothing
@@ -95,8 +96,8 @@ class Sheet extends Component {
       };
    }
 
-   renderGridSizingStyle = sheet =>
-      this.getGridSizingStyle(R.map(getRequiredNumItemsForAxis(R.__, sheet), [ROW_AXIS, COLUMN_AXIS]));
+   renderGridSizingStyle = state =>
+      this.getGridSizingStyle(R.map(getRequiredNumItemsForAxis(R.__, state), [ROW_AXIS, COLUMN_AXIS]));
 
    maybeRenderFilterModal = showFilterModal => (showFilterModal ? <FilterModal /> : null);
 
@@ -114,7 +115,7 @@ class Sheet extends Component {
             <Editor cellContent="" />
             {this.maybeRenderFilterModal(this.props.showFilterModal)}
             <DndProvider backend={HTML5Backend}>
-               <div className="grid-container pt-1" style={this.renderGridSizingStyle(this.props.sheet)}>
+               <div className="grid-container pt-1" style={this.renderGridSizingStyle(this.props.state)}>
                   {this.renderCells()}
                </div>
             </DndProvider>

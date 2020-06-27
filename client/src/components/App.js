@@ -27,7 +27,7 @@ const logState = state => {
    if (R.keys(state.cellKeys).length === 0) {
       return;
    }
-   const stateKeys = ['sheetId', 'sheet', 'editor', 'editorRef', 'title', 'form', 'filterModal', 'cellKeys'];
+   const stateKeys = ['sheetId', 'metadata', 'editor', 'editorRef', 'title', 'form', 'filterModal', 'cellKeys'];
 
    const baseStateObj = R.reduce(
       (acc, key) => {

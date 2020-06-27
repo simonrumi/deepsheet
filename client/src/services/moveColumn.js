@@ -9,7 +9,7 @@ import {
    stateColumnMovedTo,
 } from '../helpers/dataStructureHelpers';
 import {
-   makeNewSheetItemFromMap,
+   makeNewMetadataItemFromMap,
    buildObject,
    reorderIndicies,
    createOptimizedMappingFromArray,
@@ -48,11 +48,11 @@ export default state => {
 
    const columnUpdateArr = createMappingFromArray(reorderedIndicies);
 
-   const makeNewSheetItem = createSheetItemName =>
-      R.pipe(createSheetItemName, makeNewSheetItemFromMap(columnUpdateArr, state.sheet))(COLUMN_AXIS);
+   const makeNewMetadatatItem = itemName =>
+      R.pipe(itemName, makeNewMetadataItemFromMap(columnUpdateArr, state))(COLUMN_AXIS);
 
-   const newColumnFilters = makeNewSheetItem(getAxisFilterName);
-   const newColumnVisibility = makeNewSheetItem(getAxisVisibilityName);
+   const newColumnFilters = makeNewMetadatatItem(getAxisFilterName);
+   const newColumnVisibility = makeNewMetadatatItem(getAxisVisibilityName);
    const hasChanged = true;
    return [newCells, newColumnFilters, newColumnVisibility, hasChanged];
 };

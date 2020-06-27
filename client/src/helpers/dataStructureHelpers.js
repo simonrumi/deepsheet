@@ -1,11 +1,5 @@
 import * as R from 'ramda';
 import { isSomething } from './index';
-import { rowMoved, rowMovedTo, columnMoved, columnMovedTo } from '../actions';
-
-// idea is to abstract away the structure of the Sheet so database can serve it up however it likes
-// and we just make changes here
-
-//should do the same thing for the structure of the Store
 
 /***
  * functions for getting values from the metadata section of the data structure
@@ -59,14 +53,18 @@ export const dbRowFilters = metadataGetterSetter(dbMetadataLens, 'rowFilters');
  * (rather it makes a copy), still these setters will not be used for updating the state,
  * since we have the reducer system for that. The getters will be used, however
  ***/
-const stateMetadataLens = R.lensProp('sheet');
+const stateMetadataLens = R.lensProp('metadata');
 export const stateMetadata = R.view(stateMetadataLens);
 
 // get any top level property from the state's metadata
-// not used as of 6/24/20 ...but might need...?
-export const stateMetadataProp = (stateObj, propName) => metadataGetterSetter(stateMetadataLens, propName)(stateObj);
+export const stateMetadataProp = R.curry((stateObj, propName) =>
+   metadataGetterSetter(stateMetadataLens, propName)(stateObj)
+);
 
 // get/set totalRows from the state structure
+// use (other functions below are similar):
+// stateTotalRows(state) //returns value for totalRows
+// stateTotalRows(state, 12) // sets 12 as the value for totalRows
 export const stateTotalRows = metadataGetterSetter(stateMetadataLens, 'totalRows');
 
 // get/set totalColumns from the state structure
@@ -101,3 +99,15 @@ export const stateColumnMoved = metadataGetterSetter(stateMetadataLens, 'columnM
 
 // get/set columnMovedTo from the state structure
 export const stateColumnMovedTo = metadataGetterSetter(stateMetadataLens, 'columnMovedTo');
+
+// get/set rowSortByIndex from the state structure
+export const stateRowSortByIndex = metadataGetterSetter(stateMetadataLens, 'rowSortByIndex');
+
+// get/set rowSortDirection from the state structure
+export const stateRowSortDirection = metadataGetterSetter(stateMetadataLens, 'rowSortDirection');
+
+// get/set columnSortByIndex from the state structure
+export const stateColumnSortByIndex = metadataGetterSetter(stateMetadataLens, 'columnSortByIndex');
+
+// get/set rowSortByIndex from the state structure
+export const stateColumnSortDirection = metadataGetterSetter(stateMetadataLens, 'columnSortDirection');

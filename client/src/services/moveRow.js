@@ -4,7 +4,7 @@ import { createCellKey } from '../helpers/cellHelpers';
 import { getAxisVisibilityName, getAxisFilterName } from '../helpers/visibilityHelpers';
 import { stateTotalRows, stateTotalColumns, stateRowMoved, stateRowMovedTo } from '../helpers/dataStructureHelpers';
 import {
-   makeNewSheetItemFromMap,
+   makeNewMetadataItemFromMap,
    buildObject,
    reorderIndicies,
    createOptimizedMappingFromArray,
@@ -43,11 +43,10 @@ export default state => {
 
    const rowUpdateArr = createMappingFromArray(reorderedIndicies);
 
-   const makeNewSheetItem = createSheetItemName =>
-      R.pipe(createSheetItemName, makeNewSheetItemFromMap(rowUpdateArr, state.sheet))(ROW_AXIS);
+   const makeNewMetadatatItem = itemName => R.pipe(itemName, makeNewMetadataItemFromMap(rowUpdateArr, state))(ROW_AXIS);
 
-   const newRowFilters = makeNewSheetItem(getAxisFilterName);
-   const newRowVisibility = makeNewSheetItem(getAxisVisibilityName);
+   const newRowFilters = makeNewMetadatatItem(getAxisFilterName);
+   const newRowVisibility = makeNewMetadatatItem(getAxisVisibilityName);
    const hasChanged = true;
    return [newCells, newRowFilters, newRowVisibility, hasChanged];
 };

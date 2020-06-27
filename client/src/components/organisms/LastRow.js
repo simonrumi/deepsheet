@@ -30,12 +30,12 @@ class LastRow extends Component {
          getRequiredNumItemsForAxis, // will get the number of non-hidden columns
          R.add(2), // for the RowHeader and the last, empty cell
          this.makeLastRowArray
-      )(COLUMN_AXIS, this.props.sheet);
+      )(COLUMN_AXIS, this.props.state);
    }
 }
 
 function mapStateToProps(state, ownProps) {
-   return { sheet: state.sheet };
+   return { state };
 }
 
 export default connect(mapStateToProps)(LastRow);

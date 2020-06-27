@@ -163,7 +163,8 @@ export const filterModalReducer = (state = { showFilterModal: false }, action) =
 
 export const staticReducers = {
    sheetId: fetchSheetReducer,
-   sheet: sheetReducer,
+   // sheet: sheetReducer,
+   metadata: sheetReducer,
    editorRef: editorRefReducer,
    editor: editorReducer,
    title: titleReducer,

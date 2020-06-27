@@ -21,9 +21,10 @@ import {
 import moveRow from '../services/moveRow';
 import moveColumn from '../services/moveColumn';
 import sortAxis from '../services/sortAxis';
-import { runIfSomething } from '../helpers';
+import { runIfSomething, isSomething } from '../helpers';
+import { stateMetadataProp } from '../helpers/dataStructureHelpers';
 
-export default (store) => (next) => (action) => {
+export default store => next => action => {
    if (!action) {
       return;
    }
@@ -47,8 +48,8 @@ export default (store) => (next) => (action) => {
       });
    };
 
-   const runCellDispatches = async (updatedCells) => {
-      await R.map(async (cell) => {
+   const runCellDispatches = async updatedCells => {
+      await R.map(async cell => {
          const promisedDispatch = await store.dispatch({
             type: UPDATED_CELL_ + cell.row + '_' + cell.column,
             payload: cell,
@@ -64,16 +65,15 @@ export default (store) => (next) => (action) => {
       R.ifElse(
          R.allPass([
             // axisMoved must be present in sheet
-            R.pipe(R.path(['sheet', axisMoved]), R.isNil, R.not),
+            // R.pipe(R.path(['sheet', axisMoved]), R.isNil, R.not),
+            R.pipe(stateMetadataProp(R.__, axisMoved), isSomething),
             // axisMovedTo must be present in sheet
-            R.pipe(R.path(['sheet', axisMovedTo]), R.isNil, R.not),
+            // R.pipe(R.path(['sheet', axisMovedTo]), R.isNil, R.not),
+            R.pipe(stateMetadataProp(R.__, axisMovedTo), isSomething),
             // axisMoved and axisMovedTo values can't be equal
             R.pipe(
-               (state) =>
-                  R.equals(
-                     R.path(['sheet', axisMoved], state),
-                     R.path(['sheet', axisMovedTo], state)
-                  ),
+               // state => R.equals(R.path(['sheet', axisMoved], state), R.path(['sheet', axisMovedTo], state)),
+               state => R.equals(stateMetadataProp(state, axisMoved), stateMetadataProp(state, axisMovedTo)),
                R.not
             ),
          ]),
@@ -83,12 +83,12 @@ export default (store) => (next) => (action) => {
 
    switch (action.type) {
       case UPDATED_ROW_ORDER:
-         const [
-            newRowCells,
-            newRowFilters,
-            newRowVisibility,
-            rowsHaveChanged,
-         ] = maybeMoveAxis('rowMoved', 'rowMovedTo', moveRow, store);
+         const [newRowCells, newRowFilters, newRowVisibility, rowsHaveChanged] = maybeMoveAxis(
+            'rowMoved',
+            'rowMovedTo',
+            moveRow,
+            store
+         );
 
          // Note: if moveRow() returns an array then we get an error when trying to runCellDispatches() on it.
          // Instead here moveRow() returns an object which we convert to an array with R.values() ...and it works fine
@@ -101,12 +101,12 @@ export default (store) => (next) => (action) => {
          break;
 
       case UPDATED_COLUMN_ORDER:
-         const [
-            newColumnCells,
-            newColumnFilters,
-            newColumnVisibility,
-            columnsHaveChanged,
-         ] = maybeMoveAxis('columnMoved', 'columnMovedTo', moveColumn, store);
+         const [newColumnCells, newColumnFilters, newColumnVisibility, columnsHaveChanged] = maybeMoveAxis(
+            'columnMoved',
+            'columnMovedTo',
+            moveColumn,
+            store
+         );
          runCellDispatches(R.values(newColumnCells));
          runIfSomething(replacedColumnFilters, newColumnFilters);
          runIfSomething(replacedColumnVisibility, newColumnVisibility);
@@ -114,16 +114,9 @@ export default (store) => (next) => (action) => {
          break;
 
       case SORTED_AXIS:
-         const {
-            updatedCells = [],
-            updatedVisibility = {},
-            updatedFilters = {},
-         } = sortAxis(store.getState());
+         const { updatedCells = [], updatedVisibility = {}, updatedFilters = {} } = sortAxis(store.getState());
          runIfSomething(replacedRowVisibility, updatedVisibility[ROW_AXIS]);
-         runIfSomething(
-            replacedColumnVisibility,
-            updatedVisibility[COLUMN_AXIS]
-         );
+         runIfSomething(replacedColumnVisibility, updatedVisibility[COLUMN_AXIS]);
          runIfSomething(replacedRowFilters, updatedFilters[ROW_AXIS]);
          runIfSomething(replacedColumnFilters, updatedFilters[COLUMN_AXIS]);
          runCellDispatches(updatedCells);

@@ -88,7 +88,7 @@ export const updatedCellBeingEdited = cell => {
 
 export const updatedCell = cell => {
    if (R.isNil(cell) || R.not(R.has('content', cell))) {
-      console.log('WARNING: updatedCell could not create an action. It received', cell);
+      console.warn('WARNING: updatedCell could not create an action. It received', cell);
       return;
    }
    managedStore.store.dispatch({

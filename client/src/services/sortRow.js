@@ -4,7 +4,12 @@
 import * as R from 'ramda';
 import { extractRowColFromCellKey, forLoopReduce } from '../helpers';
 import { createNewAxisVisibility, createNewAxisFilters } from '../helpers/sortHelpers';
-import { stateColumnVisibility, stateColumnFilters } from '../helpers/dataStructureHelpers';
+import {
+   stateColumnVisibility,
+   stateColumnFilters,
+   stateRowSortByIndex,
+   stateRowSortDirection,
+} from '../helpers/dataStructureHelpers';
 import { SORT_INCREASING, COLUMN_AXIS } from '../constants';
 import { compareCellContent, compareCellContentDecreasing } from './sortAxis';
 
@@ -55,7 +60,7 @@ const createMapOfChangedColumns = newCellOrder =>
    );
 
 const rowSortFunc = state =>
-   state.sheet.rowSortDirection === SORT_INCREASING ? compareCellContent : compareCellContentDecreasing;
+   stateRowSortDirection(state) === SORT_INCREASING ? compareCellContent : compareCellContentDecreasing;
 
 const compareCellColumn = (cell1, cell2) => {
    if (cell1.column === cell2.column) {
@@ -69,7 +74,7 @@ const getCellsInRow = state =>
    R.reduce(
       (accumulator, cellKey) => {
          const { row } = extractRowColFromCellKey(cellKey);
-         return row === state.sheet.rowSortByIndex ? [...accumulator, state[cellKey]] : accumulator;
+         return row === stateRowSortByIndex(state) ? [...accumulator, state[cellKey]] : accumulator;
       },
       [],
       state.cellKeys
