@@ -1,11 +1,8 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import * as R from 'ramda';
-import {
-   updatedEditor,
-   updatedCellBeingEdited,
-   setEditorRef,
-} from '../../actions';
+import { updatedEditor, setEditorRef, hasChangedCell } from '../../actions';
+import { updatedCellBeingEdited } from '../../actions/cellActions';
 import { isSomething, isNothing } from '../../helpers';
 import EditorInput from '../atoms/EditorInput';
 
@@ -31,6 +28,10 @@ class Editor extends Component {
       };
       this.props.updatedEditor(newCellData);
       this.props.updatedCellBeingEdited(newCellData);
+      this.props.hasChangedCell({
+         row: this.props.editor.row,
+         column: this.props.editor.column,
+      });
    };
 
    renderClasses = () => {
@@ -62,7 +63,6 @@ const mapStateToProps = (state, ownProps) => {
    };
 };
 
-export default connect(
-   mapStateToProps,
-   { updatedEditor, updatedCellBeingEdited, setEditorRef }
-)(Editor);
+export default connect(mapStateToProps, { updatedEditor, updatedCellBeingEdited, setEditorRef, hasChangedCell })(
+   Editor
+);

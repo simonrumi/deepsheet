@@ -7,7 +7,7 @@ so by making the viewbox 640 x 640 the center can be shifted by 80,80
 '-80 -80 640 640'
 */
 const LoadingIcon = ({ style = {}, width = '100%', height = '100%', classes = '', viewBox = '-80 -80 640 640' }) => {
-   const allClasses = 'text-vibrant-blue ' + classes;
+   const allClasses = 'text-subdued-blue ' + classes;
    return (
       <div className={allClasses}>
          <svg

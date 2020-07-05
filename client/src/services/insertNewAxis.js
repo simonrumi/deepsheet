@@ -1,31 +1,21 @@
 import * as R from 'ramda';
 import managedStore from '../store';
 import { cellReducerFactory } from '../reducers/cellReducers';
-import { updatedCell } from '../actions';
+import { updatedCell } from '../actions/cellActions';
 import { isSomething } from '../helpers';
 
 // returns copy of cellReducers with and added cellReducer
 export const addOneCellReducer = (cellKey, row, column, cellReducers = {}) =>
-   R.pipe(cellReducerFactory, R.assoc(cellKey, R.__, cellReducers))(
-      row,
-      column
-   );
+   R.pipe(cellReducerFactory, R.assoc(cellKey, R.__, cellReducers))(row, column);
 
-export const addNewCellsToStore = (cells) =>
-   R.map((cell) => updatedCell(cell), cells);
+export const addNewCellsToStore = cells => R.map(cell => updatedCell(cell), cells);
 
-export const addManyCellReducersToStore = (cellReducers) => {
-   const combineNewReducers = managedStore.store.reducerManager.addMany(
-      cellReducers
-   );
+export const addManyCellReducersToStore = cellReducers => {
+   const combineNewReducers = managedStore.store.reducerManager.addMany(cellReducers);
    managedStore.store.replaceReducer(combineNewReducers);
 };
 
-export const maybeAddAxisVisibilityEntry = (
-   axisIndex,
-   axisVisibilityObj,
-   updatedAxisVisibilityFn
-) =>
+export const maybeAddAxisVisibilityEntry = (axisIndex, axisVisibilityObj, updatedAxisVisibilityFn) =>
    R.when(
       R.both(
          // axisVisibilityObj is not empty and...

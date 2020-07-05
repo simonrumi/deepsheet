@@ -1,27 +1,19 @@
 import * as R from 'ramda';
 import { UPDATED_SHEET_ID } from '../actions/fetchSheetTypes';
 import { fetchSheet } from '../services/sheetServices';
-import { updatedCellKeys } from '../actions';
+import { updatedCellKeys } from '../actions/cellActions';
 import { fetchedSheet, fetchingSheet, fetchSheetError } from '../actions/fetchSheetActions';
 import { createCellReducers, populateCellsInStore } from '../reducers/cellReducers';
+import { isSomething } from '../helpers';
+import { dbMetadata, dbCells } from '../helpers/dataStructureHelpers';
 
-// generates a flat array of all the key names to identify cells in the sheet
-const createCellKeys = rows => {
-   return R.reduce(
-      (accumulator, row) => {
-         const rowOfCells = R.map(cell => 'cell_' + cell.row + '_' + cell.column, row.columns);
-         return R.concat(accumulator, rowOfCells);
-      },
-      [], // starting value for accumulator
-      rows
-   );
-};
+const createCellKeys = R.map(cell => 'cell_' + cell.row + '_' + cell.column);
 
 const initializeCells = sheet => {
-   if (sheet.metadata) {
+   if (isSomething(dbMetadata(sheet))) {
       createCellReducers(sheet);
       populateCellsInStore(sheet);
-      updatedCellKeys(createCellKeys(sheet.rows));
+      R.pipe(dbCells, createCellKeys, updatedCellKeys)(sheet);
    } else {
       console.warn('WARNING: App.render.initializeCells had no data to operate on');
    }

@@ -1,7 +1,7 @@
 import * as R from 'ramda';
 import { reducer as reduxFormReducer } from 'redux-form';
-import { cellKeyReducer } from './cellReducers';
-import { removeObjectFromArrayByKeyValue } from '../helpers';
+import { cellKeyReducer, cellDbUpdatesReducer } from './cellReducers';
+import { removeObjectFromArrayByKeyValue, isNothing } from '../helpers';
 import { updatedAxisFilters } from '../helpers/visibilityHelpers';
 import titleReducer from './titleReducer';
 import fetchSheetReducer from './fetchSheetReducer';
@@ -20,6 +20,7 @@ import {
    UPDATED_ROW_FILTERS,
    REPLACED_ROW_FILTERS,
    RESET_VISIBLITY,
+   HAS_CHANGED_CELL,
    UPDATED_TOTAL_COLUMNS,
    UPDATED_TOTAL_ROWS,
    ROW_MOVED,
@@ -32,7 +33,7 @@ import {
 import { TITLE_EDIT_CANCELLED } from '../actions/titleTypes';
 import { FETCHED_SHEET } from '../actions/fetchSheetTypes';
 
-const sheetReducer = (state = {}, action) => {
+const metadataReducer = (state = {}, action) => {
    switch (action.type) {
       case FETCHED_SHEET:
          if (!action.payload || !action.payload.metadata) {
@@ -71,6 +72,17 @@ const sheetReducer = (state = {}, action) => {
             columnFilters: [],
             rowFilters: [],
          };
+
+      case HAS_CHANGED_CELL:
+         const changedCells = state.changedCells || [];
+         const cellAlreadyInArray = R.find(changedCell => {
+            const { row, column } = action.payload;
+            return changedCell.row === row && changedCell.column === column;
+         }, changedCells);
+         if (isNothing(cellAlreadyInArray)) {
+            changedCells.push(action.payload);
+         }
+         return { ...state, hasChanged: true, changedCells };
 
       case UPDATED_COLUMN_FILTERS:
          return updatedAxisFilters(action.payload, 'columnFilters', state, state.columnFilters);
@@ -163,8 +175,7 @@ export const filterModalReducer = (state = { showFilterModal: false }, action) =
 
 export const staticReducers = {
    sheetId: fetchSheetReducer,
-   // sheet: sheetReducer,
-   metadata: sheetReducer,
+   metadata: metadataReducer,
    editorRef: editorRefReducer,
    editor: editorReducer,
    title: titleReducer,
@@ -180,4 +191,5 @@ export const staticReducers = {
    }),
    filterModal: filterModalReducer,
    cellKeys: cellKeyReducer,
+   cellDbUpdates: cellDbUpdatesReducer,
 };

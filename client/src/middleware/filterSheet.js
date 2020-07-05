@@ -7,13 +7,8 @@ import {
    HIDE_FILTERED,
    CLEAR_ALL_FILTERS,
 } from '../actions/types';
-import {
-   updatedColumnFilters,
-   updatedRowFilters,
-   updatedHasChanged,
-   updatedCell,
-   toggledShowFilterModal,
-} from '../actions';
+import { updatedColumnFilters, updatedRowFilters, updatedHasChanged, toggledShowFilterModal } from '../actions';
+import { updatedCell } from '../actions/cellActions';
 import { getObjectFromArrayByKeyValue, isNothing, arrayContainsSomething, forLoopMap } from '../helpers';
 import { getTotalForAxis, getAxisVisibilityName } from '../helpers/visibilityHelpers';
 import { stateMetadataProp } from '../helpers/dataStructureHelpers';

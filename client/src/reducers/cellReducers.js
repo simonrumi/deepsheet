@@ -1,10 +1,18 @@
 import * as R from 'ramda';
 import managedStore from '../store';
-import { extractRowColFromCellKey } from '../helpers';
-import { dbTotalRows, dbTotalColumns } from '../helpers/dataStructureHelpers';
+import { extractRowColFromCellKey, isSomething } from '../helpers';
+import { dbTotalRows, dbTotalColumns, dbCells } from '../helpers/dataStructureHelpers';
 import { ROW_AXIS, COLUMN_AXIS } from '../constants';
-import { updatedCell } from '../actions';
-import { UPDATED_CELL_KEYS, UPDATED_CELL_, UPDATED_CONTENT_OF_CELL_ } from '../actions/types';
+import { updatedCell } from '../actions/cellActions';
+import {
+   UPDATED_CELL_KEYS,
+   UPDATED_CELL_,
+   UPDATED_CONTENT_OF_CELL_,
+   POSTING_UPDATED_CELLS,
+   COMPLETED_CELLS_UPDATE,
+   CELLS_UPDATE_FAILED,
+} from '../actions/cellTypes';
+import { FETCHED_SHEET } from '../actions/fetchSheetTypes';
 
 export const createCellReducers = sheet => {
    const store = managedStore.store;
@@ -54,9 +62,47 @@ export const cellKeyReducer = (state = {}, action) => {
    }
 };
 
-export const populateCellsInStore = sheet => {
-   const triggerCellActionsForRow = row => {
-      R.forEach(cell => updatedCell(cell), row.columns);
-   };
-   R.forEach(triggerCellActionsForRow, sheet.rows);
+export const populateCellsInStore = sheet => R.forEach(cell => updatedCell(cell), dbCells(sheet));
+
+export const cellDbUpdatesReducer = (state = {}, action) => {
+   switch (action.type) {
+      case FETCHED_SHEET:
+         return {
+            isCallingDb: false,
+            isStale: false,
+            needsUpdate: false,
+            errorMessage: null,
+            lastUpdated: Date.now(),
+         };
+
+      case POSTING_UPDATED_CELLS:
+         return {
+            isCallingDb: true,
+            isStale: true,
+            needsUpdate: true,
+            errorMessage: null,
+            lastUpdated: isSomething(state.lastUpdated) ? state.lastUpdated : null,
+         };
+
+      case COMPLETED_CELLS_UPDATE:
+         return {
+            isCallingDb: false,
+            isStale: false,
+            needsUpdate: false,
+            errorMessage: null,
+            lastUpdated: action.payload.timestamp,
+         };
+
+      case CELLS_UPDATE_FAILED:
+         return {
+            isCallingDb: false,
+            isStale: true,
+            needsUpdate: true,
+            errorMessage: isSomething(action.payload.errorMessage) ? action.payload.errorMessage : null,
+            lastUpdated: isSomething(state.lastUpdated) ? state.lastUpdated : null,
+         };
+
+      default:
+         return state;
+   }
 };

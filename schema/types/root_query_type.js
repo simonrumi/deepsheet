@@ -3,7 +3,7 @@ const { GraphQLObjectType, GraphQLNonNull, GraphQLID } = graphql;
 const SheetType = require('./sheet_type');
 const mongoose = require('mongoose');
 
-const Sheet = mongoose.model('sheet');
+const SheetModel = mongoose.model('sheet');
 
 const RootQueryType = new GraphQLObjectType({
    name: 'RootQueryType',
@@ -12,11 +12,12 @@ const RootQueryType = new GraphQLObjectType({
          type: SheetType,
          args: { id: { type: new GraphQLNonNull(GraphQLID) } },
          resolve(parentValue, args) {
-            return Sheet.findById(args.id, (err, sheet) => {
+            return SheetModel.findById(args.id, (err, sheetDoc) => {
                if (err) {
+                  console.log('Error finding sheet:', err);
                   return err;
                }
-               return sheet;
+               return sheetDoc;
             });
          },
       },

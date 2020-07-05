@@ -5,9 +5,6 @@ import {
    UPDATED_HAS_CHANGED,
    UPDATED_EDITOR,
    SET_EDITOR_REF,
-   UPDATED_CELL_,
-   UPDATED_CONTENT_OF_CELL_,
-   UPDATED_CELL_KEYS,
    TOGGLED_SHOW_FILTER_MODAL,
    UPDATED_FILTER,
    UPDATED_COLUMN_FILTERS,
@@ -22,6 +19,7 @@ import {
    REPLACED_COLUMN_VISIBILITY,
    UPDATED_ROW_VISIBILITY,
    REPLACED_ROW_VISIBILITY,
+   HAS_CHANGED_CELL,
    ROW_MOVED,
    ROW_MOVED_TO,
    COLUMN_MOVED,
@@ -79,26 +77,6 @@ export const updatedEditor = cellData => {
 
 export const setEditorRef = editorRef => {
    managedStore.store.dispatch({ type: SET_EDITOR_REF, payload: editorRef });
-};
-
-export const updatedCellBeingEdited = cell => {
-   const updateCellType = UPDATED_CONTENT_OF_CELL_ + cell.row + '_' + cell.column;
-   managedStore.store.dispatch({ type: updateCellType, payload: cell });
-};
-
-export const updatedCell = cell => {
-   if (R.isNil(cell) || R.not(R.has('content', cell))) {
-      console.warn('WARNING: updatedCell could not create an action. It received', cell);
-      return;
-   }
-   managedStore.store.dispatch({
-      type: UPDATED_CELL_ + cell.row + '_' + cell.column,
-      payload: cell,
-   });
-};
-
-export const updatedCellKeys = keys => {
-   managedStore.store.dispatch({ type: UPDATED_CELL_KEYS, payload: keys });
 };
 
 export const toggledShowFilterModal = (rowIndex, colIndex) => {
@@ -165,6 +143,13 @@ export const replacedRowVisibility = newVisibility => {
    managedStore.store.dispatch({
       type: REPLACED_ROW_VISIBILITY,
       payload: newVisibility,
+   });
+};
+
+export const hasChangedCell = cellCoordinates => {
+   managedStore.store.dispatch({
+      type: HAS_CHANGED_CELL,
+      payload: cellCoordinates,
    });
 };
 

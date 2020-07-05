@@ -31,6 +31,59 @@ const SHEET_QUERY = gql`
                regex
             }
          }
+         cells {
+            row
+            column
+            content {
+               text
+               subsheetId
+            }
+            visible
+         }
+      }
+   }
+`;
+
+const sheetQuery = async sheetId => {
+   return await apolloClient.query({
+      query: SHEET_QUERY,
+      variables: { id: sheetId },
+   });
+};
+
+export default sheetQuery;
+
+/* old version backup
+const SHEET_QUERY = gql`
+   query SheetQuery($id: ID!) {
+      sheet(id: $id) {
+         id
+         title
+         metadata {
+            totalRows
+            totalColumns
+            parentSheetId
+            columnVisibility {
+               index
+               isVisible
+            }
+            rowVisibility {
+               index
+               isVisible
+            }
+            columnFilters {
+               index
+               filterExpression
+               caseSensitive
+               regex
+            }
+            rowFilters {
+               index
+               filterExpression
+               caseSensitive
+               regex
+            }
+         }
          rows {
             row
             columns {
@@ -46,12 +99,4 @@ const SHEET_QUERY = gql`
       }
    }
 `;
-
-const sheetQuery = async sheetId => {
-   return await apolloClient.query({
-      query: SHEET_QUERY,
-      variables: { id: sheetId },
-   });
-};
-
-export default sheetQuery;
+*/

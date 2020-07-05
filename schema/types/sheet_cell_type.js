@@ -1,19 +1,13 @@
 const graphql = require('graphql');
-const {
-   GraphQLObjectType,
-   GraphQLInt,
-   GraphQLString,
-   GraphQLBoolean,
-   GraphQLNonNull,
-} = graphql;
-const SheetContentType = require('./sheet_content_type');
+const { GraphQLObjectType, GraphQLInt, GraphQLBoolean, GraphQLNonNull } = graphql;
+const CellContentType = require('./cell_content_type');
 
 const SheetCellType = new GraphQLObjectType({
    name: 'SheetCellType',
    fields: {
       row: { type: new GraphQLNonNull(GraphQLInt) },
       column: { type: new GraphQLNonNull(GraphQLInt) },
-      content: { type: new GraphQLNonNull(SheetContentType) },
+      content: { type: new GraphQLNonNull(CellContentType) },
       visible: { type: new GraphQLNonNull(GraphQLBoolean) },
    },
 });

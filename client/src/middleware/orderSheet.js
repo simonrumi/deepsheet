@@ -2,13 +2,13 @@ import * as R from 'ramda';
 import {
    UPDATED_ROW_ORDER,
    UPDATED_COLUMN_ORDER,
-   UPDATED_CELL_,
    ROW_MOVED,
    ROW_MOVED_TO,
    COLUMN_MOVED,
    COLUMN_MOVED_TO,
    SORTED_AXIS,
 } from '../actions/types';
+import { UPDATED_CELL_ } from '../actions/cellTypes';
 import { ROW_AXIS, COLUMN_AXIS } from '../constants';
 import {
    replacedRowFilters,

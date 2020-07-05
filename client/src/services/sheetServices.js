@@ -2,7 +2,8 @@ import * as R from 'ramda';
 import managedStore from '../store';
 import { updatedSheetId } from '../actions/fetchSheetActions';
 import sheetQuery from '../queries/sheetQuery';
-import titleMutation from '../queries/titleMutation'; // TODO only need one of these
+import titleMutation from '../queries/titleMutation';
+import { updateCellsMutation } from '../queries/cellMutations';
 
 /*
 Need to have these impure functions for dealing with memoizedItems.
@@ -72,4 +73,8 @@ export const loadSheet = async sheetId => {
    clearMemoizedItems();
    // then get the new sheet
    updatedSheetId(sheetId);
+};
+
+export const updateCellsInDB = async (id, cells) => {
+   return await updateCellsMutation(id, cells);
 };

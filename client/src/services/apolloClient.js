@@ -5,7 +5,7 @@ import { GRAPHQL_URL } from '../constants';
 export default new ApolloClient({
    uri: GRAPHQL_URL,
    credentials: 'same-origin',
-   cache: new InMemoryCache(),
+   cache: new InMemoryCache({ addTypename: false }),
    request: operation => {
       const token = localStorage.getItem('token');
       operation.setContext({

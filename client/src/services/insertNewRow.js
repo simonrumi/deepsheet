@@ -5,7 +5,8 @@
  * seem worthwhile generalizing them further.
  **/
 import * as R from 'ramda';
-import { updatedTotalRows, updatedCellKeys, updatedRowVisibility, updatedHasChanged } from '../actions';
+import { updatedTotalRows, updatedRowVisibility, updatedHasChanged } from '../actions';
+import { updatedCellKeys } from '../actions/cellActions';
 import { createCellKey } from '../helpers/cellHelpers';
 import { shouldShowColumn } from '../helpers/visibilityHelpers';
 import {

@@ -10,10 +10,10 @@ import ErrorText from '../atoms/ErrorText';
 export class TitleForm extends Component {
    constructor(props) {
       super(props);
-      this.editTitle = this.editTitle.bind(this);
+      this.submitNewTitle = this.submitNewTitle.bind(this);
    }
 
-   editTitle = formValues => {
+   submitNewTitle = formValues => {
       try {
          this.props.updatedTitle({
             text: formValues.title,
@@ -21,7 +21,7 @@ export class TitleForm extends Component {
             sheetId: this.props.sheetId,
          });
       } catch (err) {
-         console.error('TitleForm.editTitle - error updating title', err);
+         console.error('TitleForm.submitNewTitle - error updating title', err);
          throw new SubmissionError({
             title: 'title was not updated: ' + err,
          });
@@ -42,7 +42,7 @@ export class TitleForm extends Component {
       return (
          <form
             className="flex items-start justify-between px-2 py-1"
-            onSubmit={this.props.handleSubmit(this.editTitle)}
+            onSubmit={this.props.handleSubmit(this.submitNewTitle)}
             data-testid="titleForm">
             <Field name="title" component={this.renderInput} />
             <div className="flex flex-col">

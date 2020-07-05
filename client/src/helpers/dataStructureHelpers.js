@@ -1,55 +1,47 @@
 import * as R from 'ramda';
 import { isSomething } from './index';
 
-/***
- * functions for getting values from the metadata section of the data structure
- ***/
-
 /**
- * @param metadataLens a lens for a metadata sub-object e.g. R.lensProp('metadata')
- * @param metadataPropName the name of an property within the metadata sub-object
+ * @param lens a lens for a sub-object e.g. R.lensProp('metadata')
+ * @param propName the name of an property within the sub-object, e.g. 'totalRows'
  * @return a function taking 1 or 2 arguments
- * 1. the data (an object containing a metadata sub-object)
+ * 1. the data (an object containing the named sub-object, e.g. data.metadata)
  * 2. a new value to update the object with (optional)
  * the returned function is called either like this
- * returnedFunction(objectContainingMetadataObject) // will get the value of the metadataPropName key
- * returnedFunction(objectContainingMetadataObject, newValue) // will set the newValue at the metadataPropName key
+ * returnedFunction(objectContainingSubObject) // will get the value of the propName key
+ * returnedFunction(objectContainingSubObject, newValue) // will set the newValue at the propName key
  **/
-
-const metadataGetterSetter = (metadataLens, metadataPropName) => {
-   const metadataPropLens = R.lensProp(metadataPropName); // a lens to focus on, e.g. 'totalRows'
-   const fullPathLens = R.compose(metadataLens, metadataPropLens); // a lens to focus on, e.g. state.totalRows
+const subObjectGetterSetter = (lens, propName) => {
+   const propLens = R.lensProp(propName); // a lens to focus on, e.g. 'totalRows'
+   const fullPathLens = R.compose(lens, propLens); // a lens to focus on, e.g. state.totalRows
    return (data, newValue) =>
       isSomething(newValue) ? R.set(fullPathLens, newValue, data) : R.view(fullPathLens, data);
 };
 
 /*** get/set values from the db metadata structure ***/
 const dbMetadataLens = R.lensProp('metadata');
+console.log('TODO: dataStructureHelper only has getter for dbMetatdata currently, needs to set as well');
+export const dbMetadata = R.view(dbMetadataLens);
 
-// get/set totalRows from the db structure
-export const dbTotalRows = metadataGetterSetter(dbMetadataLens, 'totalRows');
+// get/set values from the db structure
+// dbTotalRows(dbObject) //returns value for totalRows
+// dbTotalRows(dbObject, 12) // sets 12 as the value for totalRows (if this is possible)
+export const dbTotalRows = subObjectGetterSetter(dbMetadataLens, 'totalRows');
+export const dbTotalColumns = subObjectGetterSetter(dbMetadataLens, 'totalColumns');
+export const dbParentSheetId = subObjectGetterSetter(dbMetadataLens, 'parentSheetId');
+export const dbColumnVisibility = subObjectGetterSetter(dbMetadataLens, 'columnVisibility');
+export const dbRowVisibility = subObjectGetterSetter(dbMetadataLens, 'rowVisibility');
+export const dbColumnFilters = subObjectGetterSetter(dbMetadataLens, 'columnFilters');
+export const dbRowFilters = subObjectGetterSetter(dbMetadataLens, 'rowFilters');
 
-// get/set totalColumns from the db structure
-export const dbTotalColumns = metadataGetterSetter(dbMetadataLens, 'totalColumns');
-
-// get/set parentSheetId from the db structure
-export const dbParentSheetId = metadataGetterSetter(dbMetadataLens, 'parentSheetId');
-
-// get/set columnVisibility from the db structure
-export const dbColumnVisibility = metadataGetterSetter(dbMetadataLens, 'columnVisibility');
-
-// get/set rowVisibility from the db structure
-export const dbRowVisibility = metadataGetterSetter(dbMetadataLens, 'rowVisibility');
-
-// get/set columnFilters from the db structure
-export const dbColumnFilters = metadataGetterSetter(dbMetadataLens, 'columnFilters');
-
-// get/set rowFilters from the db structure
-export const dbRowFilters = metadataGetterSetter(dbMetadataLens, 'rowFilters');
+/*** get/set values from the db cell structure ***/
+const dbCellsLens = R.lensProp('cells');
+console.log('TODO: dataStructureHelper only has getter for dbCells currently, needs to set as well');
+export const dbCells = R.view(dbCellsLens);
 
 /***
  * get/set values from the state metadata structure
- * Note: the setters come with the metadataGetterSetter, but while setting a value doesn't mutate the state,
+ * Note: the setters come with the subObjectGetterSetter, but while setting a value doesn't mutate the state,
  * (rather it makes a copy), still these setters will not be used for updating the state,
  * since we have the reducer system for that. The getters will be used, however
  ***/
@@ -58,56 +50,53 @@ export const stateMetadata = R.view(stateMetadataLens);
 
 // get any top level property from the state's metadata
 export const stateMetadataProp = R.curry((stateObj, propName) =>
-   metadataGetterSetter(stateMetadataLens, propName)(stateObj)
+   subObjectGetterSetter(stateMetadataLens, propName)(stateObj)
 );
 
-// get/set totalRows from the state structure
+// get/set values from the state structure
 // use (other functions below are similar):
 // stateTotalRows(state) //returns value for totalRows
 // stateTotalRows(state, 12) // sets 12 as the value for totalRows
-export const stateTotalRows = metadataGetterSetter(stateMetadataLens, 'totalRows');
+export const stateTotalRows = subObjectGetterSetter(stateMetadataLens, 'totalRows');
+export const stateTotalColumns = subObjectGetterSetter(stateMetadataLens, 'totalColumns');
+export const stateParentSheetId = subObjectGetterSetter(stateMetadataLens, 'parentSheetId');
+export const stateColumnVisibility = subObjectGetterSetter(stateMetadataLens, 'columnVisibility');
+export const stateRowVisibility = subObjectGetterSetter(stateMetadataLens, 'rowVisibility');
+export const stateColumnFilters = subObjectGetterSetter(stateMetadataLens, 'columnFilters');
+export const stateRowFilters = subObjectGetterSetter(stateMetadataLens, 'rowFilters');
+export const stateHasChanged = subObjectGetterSetter(stateMetadataLens, 'hasChanged');
+export const stateChangedCells = subObjectGetterSetter(stateMetadataLens, 'changedCells');
+export const stateRowMoved = subObjectGetterSetter(stateMetadataLens, 'rowMoved');
+export const stateRowMovedTo = subObjectGetterSetter(stateMetadataLens, 'rowMovedTo');
+export const stateColumnMoved = subObjectGetterSetter(stateMetadataLens, 'columnMoved');
+export const stateColumnMovedTo = subObjectGetterSetter(stateMetadataLens, 'columnMovedTo');
+export const stateRowSortByIndex = subObjectGetterSetter(stateMetadataLens, 'rowSortByIndex');
+export const stateRowSortDirection = subObjectGetterSetter(stateMetadataLens, 'rowSortDirection');
+export const stateColumnSortByIndex = subObjectGetterSetter(stateMetadataLens, 'columnSortByIndex');
+export const stateColumnSortDirection = subObjectGetterSetter(stateMetadataLens, 'columnSortDirection');
 
-// get/set totalColumns from the state structure
-export const stateTotalColumns = metadataGetterSetter(stateMetadataLens, 'totalColumns');
+/*** other, non-metadata state values ***/
 
-// get/set parentSheetId from the state structure
-export const stateParentSheetId = metadataGetterSetter(stateMetadataLens, 'parentSheetId');
+// get/set values from the state cell structure
+export const stateCell = (row, column, state, cellData) => {
+   const cellName = 'cell_' + row + '_' + column;
+   const stateCellLens = R.lensProp(cellName);
+   return isSomething(cellData) ? R.set(stateCellLens, cellData, state) : R.view(stateCellLens, state);
+};
 
-// get/set columnVisibility from the state structure
-export const stateColumnVisibility = metadataGetterSetter(stateMetadataLens, 'columnVisibility');
+// get the sheet's id. Will never set this, only retrieve it, as it is mongodb that generates this.
+const stateSheetIdLens = R.lensProp('sheetId');
+export const stateSheetId = R.view(stateSheetIdLens); // use: stateSheetId(stateObj);
 
-// get/set rowVisibility from the state structure
-export const stateRowVisibility = metadataGetterSetter(stateMetadataLens, 'rowVisibility');
+const stateTitleLens = R.lensProp('title');
+const stateTitleIsCallingDb = subObjectGetterSetter(stateTitleLens, 'isCallingDb');
 
-// get/set columnFilters from the state structure
-export const stateColumnFilters = metadataGetterSetter(stateMetadataLens, 'columnFilters');
+const stateCellDbUpdatesLens = R.lensProp('cellDbUpdates');
+export const stateCellDbUpdatesIsCallingDb = subObjectGetterSetter(stateCellDbUpdatesLens, 'isCallingDb');
+export const stateCellDbUpdatesErrorMessage = subObjectGetterSetter(stateCellDbUpdatesLens, 'errorMessage');
+export const stateCellDbUpdatesIsStale = subObjectGetterSetter(stateCellDbUpdatesLens, 'isStale');
+export const stateCellDbUpdatesLastUpdated = subObjectGetterSetter(stateCellDbUpdatesLens, 'lastUpdated');
+export const stateCellDbUpdatesNeedsUpdate = subObjectGetterSetter(stateCellDbUpdatesLens, 'needsUpdate');
 
-// get/set rowFilters from the state structure
-export const stateRowFilters = metadataGetterSetter(stateMetadataLens, 'rowFilters');
-
-// get/set hasChanged from the state structure
-export const stateHasChanged = metadataGetterSetter(stateMetadataLens, 'hasChanged');
-
-// get/set rowMoved from the state structure
-export const stateRowMoved = metadataGetterSetter(stateMetadataLens, 'rowMoved');
-
-// get/set rowMovedTo from the state structure
-export const stateRowMovedTo = metadataGetterSetter(stateMetadataLens, 'rowMovedTo');
-
-// get/set columnMoved from the state structure
-export const stateColumnMoved = metadataGetterSetter(stateMetadataLens, 'columnMoved');
-
-// get/set columnMovedTo from the state structure
-export const stateColumnMovedTo = metadataGetterSetter(stateMetadataLens, 'columnMovedTo');
-
-// get/set rowSortByIndex from the state structure
-export const stateRowSortByIndex = metadataGetterSetter(stateMetadataLens, 'rowSortByIndex');
-
-// get/set rowSortDirection from the state structure
-export const stateRowSortDirection = metadataGetterSetter(stateMetadataLens, 'rowSortDirection');
-
-// get/set columnSortByIndex from the state structure
-export const stateColumnSortByIndex = metadataGetterSetter(stateMetadataLens, 'columnSortByIndex');
-
-// get/set rowSortByIndex from the state structure
-export const stateColumnSortDirection = metadataGetterSetter(stateMetadataLens, 'columnSortDirection');
+// return true if any of the objects with sub-values of "isCallingDb" are true
+export const stateIsCallingDb = state => stateTitleIsCallingDb(state) || stateCellDbUpdatesIsCallingDb(state);

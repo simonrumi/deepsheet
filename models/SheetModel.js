@@ -1,9 +1,9 @@
 const R = require('ramda');
 const mongoose = require('mongoose');
-const { Schema } = mongoose;
+const { Schema, Query, Document } = mongoose;
 const VisibilityModel = require('./VisibilityModel');
 const FilterModel = require('./FilterModel');
-const RowModel = require('./RowModel');
+const CellModel = require('./CellModel');
 
 const sheetSchema = new Schema(
    {
@@ -21,19 +21,30 @@ const sheetSchema = new Schema(
          rowFilters: [FilterModel],
       },
       title: { type: String, requried: true, default: 'My Deep Deep Sheet' },
-      rows: [RowModel],
+      cells: [CellModel],
    },
    { collection: 'sheets' }
 );
 
+sheetSchema.index({ 'cells.row': 1, 'cells.column': 1 }, { unique: true });
+
+const cellsValidator = function (cells) {
+   const freeOfDupeCells = R.reduce((accumulator, currentCell) => {
+      const dupeCells = R.filter(cell => currentCell.row === cell.row && currentCell.column === cell.column)(
+         accumulator
+      );
+      return R.isEmpty(dupeCells) ? R.append(currentCell, accumulator) : R.reduced(false);
+   }, []);
+   return freeOfDupeCells(cells) ? true : false;
+};
+
+sheetSchema.path('cells').validate(cellsValidator, 'cannot have multiple cells at the same row & column');
+
 sheetSchema.statics.getSummaryCellContent = async function (id) {
    const data = await this.findById(id);
    const { row, column } = data.metadata.summaryCell;
-   const rowData = await this.findOne(
-      { _id: id },
-      { rows: { $elemMatch: { row: JSON.stringify(row) } } }
-   );
-   return rowData.rows[row].columns[column].content;
+   const cellData = await this.findOne({ _id: id }, { cells: { $elemMatch: { row: row, column: column } } });
+   return cellData.cells[0].content.text;
 };
 
 sheetSchema.statics.updateTitle = async function (id, title) {
@@ -44,10 +55,28 @@ sheetSchema.statics.updateTitle = async function (id, title) {
       function (err, result) {
          if (err) {
             console.log('error in updateTitle', err);
-         } else {
-            return result;
          }
+         return result;
       }
    );
 };
+
+// sheetSchema.statics.updateCells = async function ({ id, cells }) {
+//    /// TODO need to write this!!!
+//    R.map(cell => {
+//       const conditions = { _id: id, 'cells.row': cell.row, 'cells.column': cell.column };
+//       this.findOneAndUpdate(
+//          conditions,
+//          { $set: { 'cells.$[]': cell } },
+//          { new: true, useFindAndModify: false }, // "new" returns the updated version, not the original one
+//          (err, result) => {
+//             if (err) {
+//                console.log('error updatingCells ', err);
+//             }
+//             return result;
+//          }
+//       );
+//    }, cells);
+// };
+
 mongoose.model('sheet', sheetSchema);
