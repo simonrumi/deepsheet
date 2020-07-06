@@ -1,5 +1,6 @@
 import * as R from 'ramda';
 import managedStore from '../store';
+import { UPDATED_HAS_CHANGED } from './types';
 import {
    UPDATED_CELL_,
    UPDATED_CONTENT_OF_CELL_,
@@ -8,6 +9,7 @@ import {
    COMPLETED_CELLS_UPDATE,
    CELLS_UPDATE_FAILED,
 } from './cellTypes';
+import { stateIsStale } from '../helpers/dataStructureHelpers';
 import { updateCellsInDB } from '../services/sheetServices';
 
 export const updatedCell = cell => {
@@ -36,17 +38,18 @@ export const updatedCellKeys = keys => {
 export const updatedCells = updatedCellsData => {
    managedStore.store.dispatch({ type: POSTING_UPDATED_CELLS });
    console.log('cellActions.updatedCells got updatedCellsData', updatedCellsData);
-   // updatedCellsData.changedCells.__typename = 'CellInput';  ////this doens't work
    updateCellsInDB(updatedCellsData.sheetId, updatedCellsData.changedCells)
       .then(response => {
          managedStore.store.dispatch({
             type: COMPLETED_CELLS_UPDATE,
-            /// TODO  is this the payload we should be sending here?
             payload: {
                text: response.data.updateCells,
                lastUpdated: Date.now(),
             } /* note that "updateCells" is the name of the mutation in cellMutation.js */,
          });
+         if (!stateIsStale(managedStore.store.getState())) {
+            managedStore.store.dispatch({ type: UPDATED_HAS_CHANGED, payload: false });
+         }
       })
       .catch(err => {
          console.error('did not successfully update the cells in the db: err:', err);

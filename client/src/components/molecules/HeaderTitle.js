@@ -13,7 +13,7 @@ import {
    stateSheetId,
    stateIsCallingDb,
    stateCellDbUpdatesErrorMessage,
-   stateCellDbUpdatesNeedsUpdate,
+   stateCellDbUpdatesIsStale,
 } from '../../helpers/dataStructureHelpers';
 import Heading from '../atoms/Heading';
 import IconEdit from '../atoms/IconEdit';
@@ -36,7 +36,9 @@ class HeaderTitle extends React.Component {
             const cellData = stateCell(row, column, this.props.state);
             return R.omit(['hasChanged'], cellData); // the hasChanged ppty is just for the redux state, not for the db to save
          })(changedCellsCoordinates);
+
          const sheetId = stateSheetId(this.props.state);
+
          try {
             this.props.updatedCells({ sheetId, changedCells });
          } catch (err) {
@@ -67,7 +69,7 @@ class HeaderTitle extends React.Component {
       }
       if (stateHasChanged(this.props.state)) {
          const classes =
-            stateCellDbUpdatesErrorMessage(this.props.state) && stateCellDbUpdatesNeedsUpdate(this.props.state)
+            stateCellDbUpdatesErrorMessage(this.props.state) && stateCellDbUpdatesIsStale(this.props.state)
                ? 'pr-2 text-burnt-orange '
                : 'pr-2 ';
          return <SaveIcon height="1.5em" width="1.5em" classes={classes} onClickFn={this.handleSave} />;

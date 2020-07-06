@@ -1,3 +1,4 @@
+export const HAS_CHANGED_CELL = 'has_changed_cell';
 export const UPDATED_CELL_ = 'updated_cell_';
 export const UPDATED_CONTENT_OF_CELL_ = 'updated_content_of_cell_';
 export const UPDATED_CELL_KEYS = 'updated_cell_keys';

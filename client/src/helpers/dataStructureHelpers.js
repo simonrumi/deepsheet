@@ -65,7 +65,6 @@ export const stateRowVisibility = subObjectGetterSetter(stateMetadataLens, 'rowV
 export const stateColumnFilters = subObjectGetterSetter(stateMetadataLens, 'columnFilters');
 export const stateRowFilters = subObjectGetterSetter(stateMetadataLens, 'rowFilters');
 export const stateHasChanged = subObjectGetterSetter(stateMetadataLens, 'hasChanged');
-export const stateChangedCells = subObjectGetterSetter(stateMetadataLens, 'changedCells');
 export const stateRowMoved = subObjectGetterSetter(stateMetadataLens, 'rowMoved');
 export const stateRowMovedTo = subObjectGetterSetter(stateMetadataLens, 'rowMovedTo');
 export const stateColumnMoved = subObjectGetterSetter(stateMetadataLens, 'columnMoved');
@@ -89,14 +88,22 @@ const stateSheetIdLens = R.lensProp('sheetId');
 export const stateSheetId = R.view(stateSheetIdLens); // use: stateSheetId(stateObj);
 
 const stateTitleLens = R.lensProp('title');
-const stateTitleIsCallingDb = subObjectGetterSetter(stateTitleLens, 'isCallingDb');
+export const stateTitleIsCallingDb = subObjectGetterSetter(stateTitleLens, 'isCallingDb');
+export const stateTitleIsEditingTitle = subObjectGetterSetter(stateTitleLens, 'isEditingTitle');
+export const stateTitleIsStale = subObjectGetterSetter(stateTitleLens, 'isStale');
+export const stateTitleLastUpdated = subObjectGetterSetter(stateTitleLens, 'lastUpdated');
+export const stateTitleNeedsUpdate = subObjectGetterSetter(stateTitleLens, 'needsUpdate');
+export const stateTitleText = subObjectGetterSetter(stateTitleLens, 'text');
 
 const stateCellDbUpdatesLens = R.lensProp('cellDbUpdates');
 export const stateCellDbUpdatesIsCallingDb = subObjectGetterSetter(stateCellDbUpdatesLens, 'isCallingDb');
 export const stateCellDbUpdatesErrorMessage = subObjectGetterSetter(stateCellDbUpdatesLens, 'errorMessage');
 export const stateCellDbUpdatesIsStale = subObjectGetterSetter(stateCellDbUpdatesLens, 'isStale');
 export const stateCellDbUpdatesLastUpdated = subObjectGetterSetter(stateCellDbUpdatesLens, 'lastUpdated');
-export const stateCellDbUpdatesNeedsUpdate = subObjectGetterSetter(stateCellDbUpdatesLens, 'needsUpdate');
+export const stateChangedCells = subObjectGetterSetter(stateCellDbUpdatesLens, 'changedCells');
 
 // return true if any of the objects with sub-values of "isCallingDb" are true
 export const stateIsCallingDb = state => stateTitleIsCallingDb(state) || stateCellDbUpdatesIsCallingDb(state);
+
+// return true if any of the objects with sub-values of "isStale" are true
+export const stateIsStale = state => stateTitleIsStale(state) || stateCellDbUpdatesIsStale(state);

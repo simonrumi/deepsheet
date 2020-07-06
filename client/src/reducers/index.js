@@ -1,7 +1,7 @@
 import * as R from 'ramda';
 import { reducer as reduxFormReducer } from 'redux-form';
 import { cellKeyReducer, cellDbUpdatesReducer } from './cellReducers';
-import { removeObjectFromArrayByKeyValue, isNothing } from '../helpers';
+import { removeObjectFromArrayByKeyValue } from '../helpers';
 import { updatedAxisFilters } from '../helpers/visibilityHelpers';
 import titleReducer from './titleReducer';
 import fetchSheetReducer from './fetchSheetReducer';
@@ -20,7 +20,6 @@ import {
    UPDATED_ROW_FILTERS,
    REPLACED_ROW_FILTERS,
    RESET_VISIBLITY,
-   HAS_CHANGED_CELL,
    UPDATED_TOTAL_COLUMNS,
    UPDATED_TOTAL_ROWS,
    ROW_MOVED,
@@ -31,6 +30,7 @@ import {
    CLEARED_SORT_OPTIONS,
 } from '../actions/types';
 import { TITLE_EDIT_CANCELLED } from '../actions/titleTypes';
+import { HAS_CHANGED_CELL } from '../actions/cellTypes';
 import { FETCHED_SHEET } from '../actions/fetchSheetTypes';
 
 const metadataReducer = (state = {}, action) => {
@@ -74,15 +74,7 @@ const metadataReducer = (state = {}, action) => {
          };
 
       case HAS_CHANGED_CELL:
-         const changedCells = state.changedCells || [];
-         const cellAlreadyInArray = R.find(changedCell => {
-            const { row, column } = action.payload;
-            return changedCell.row === row && changedCell.column === column;
-         }, changedCells);
-         if (isNothing(cellAlreadyInArray)) {
-            changedCells.push(action.payload);
-         }
-         return { ...state, hasChanged: true, changedCells };
+         return { ...state, hasChanged: true };
 
       case UPDATED_COLUMN_FILTERS:
          return updatedAxisFilters(action.payload, 'columnFilters', state, state.columnFilters);

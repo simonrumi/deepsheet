@@ -19,7 +19,6 @@ import {
    REPLACED_COLUMN_VISIBILITY,
    UPDATED_ROW_VISIBILITY,
    REPLACED_ROW_VISIBILITY,
-   HAS_CHANGED_CELL,
    ROW_MOVED,
    ROW_MOVED_TO,
    COLUMN_MOVED,
@@ -30,6 +29,7 @@ import {
    SORTED_AXIS,
    CLEARED_SORT_OPTIONS,
 } from './types';
+import { HAS_CHANGED_CELL } from './cellTypes';
 
 console.log('TODO: split up the actions & types');
 
