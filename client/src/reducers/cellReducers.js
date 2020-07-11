@@ -9,9 +9,10 @@ import {
    UPDATED_CELL_,
    UPDATED_CONTENT_OF_CELL_,
    POSTING_UPDATED_CELLS,
-   COMPLETED_CELLS_UPDATE,
+   COMPLETED_SAVE_CELLS,
    CELLS_UPDATE_FAILED,
    HAS_CHANGED_CELL,
+   COMPLETED_SAVE_CELL_,
 } from '../actions/cellTypes';
 import { FETCHED_SHEET } from '../actions/fetchSheetTypes';
 
@@ -19,7 +20,7 @@ export const createCellReducers = sheet => {
    const store = managedStore.store;
    const cellReducers = {};
    if (!store || !store.reducerManager) {
-      console.log('ERROR: generateCellReducers failed as there was no store.reducerManager');
+      console.error('ERROR: generateCellReducers failed as there was no store.reducerManager');
       return;
    }
    for (let row = 0; row < dbTotalRows(sheet); row++) {
@@ -39,16 +40,21 @@ export const cellReducerFactory = (rowNum, colNum) => {
       const numsFromType = extractRowColFromCellKey(action.type);
       if (numsFromType && numsFromType[ROW_AXIS] === rowNum && numsFromType[COLUMN_AXIS] === colNum) {
          const hasUpdatedCell = new RegExp(UPDATED_CELL_, 'ig');
+         if (hasUpdatedCell.test(action.type)) {
+            return action.payload;
+         }
          const hasUpdatedContent = new RegExp(UPDATED_CONTENT_OF_CELL_, 'ig');
-         return hasUpdatedCell.test(action.type)
-            ? action.payload
-            : hasUpdatedContent.test(action.type)
-            ? {
-                 ...state,
-                 content: action.payload.content,
-                 hasChanged: action.payload.hasChanged,
-              }
-            : state;
+         if (hasUpdatedContent.test(action.type)) {
+            return {
+               ...state,
+               content: action.payload.content,
+               isStale: action.payload.isStale,
+            };
+         }
+         const completedSaveCell = new RegExp(COMPLETED_SAVE_CELL_, 'ig');
+         if (completedSaveCell.test(action.type)) {
+            return { ...state, isStale: false };
+         }
       }
       return state;
    };
@@ -72,7 +78,6 @@ export const cellDbUpdatesReducer = (state = {}, action) => {
             ...state,
             isCallingDb: false,
             isStale: false,
-            // needsUpdate: false,
             errorMessage: null,
             lastUpdated: Date.now(),
          };
@@ -86,13 +91,13 @@ export const cellDbUpdatesReducer = (state = {}, action) => {
             lastUpdated: isSomething(state.lastUpdated) ? state.lastUpdated : null,
          };
 
-      case COMPLETED_CELLS_UPDATE:
+      case COMPLETED_SAVE_CELLS:
          return {
             ...state,
             isCallingDb: false,
             isStale: false,
             errorMessage: null,
-            lastUpdated: action.payload.timestamp,
+            lastUpdated: action.payload.lastUpdated,
             changedCells: [],
          };
 

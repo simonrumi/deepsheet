@@ -1,9 +1,18 @@
 import * as R from 'ramda';
 import managedStore from '../store';
 import { updatedSheetId } from '../actions/fetchSheetActions';
+import { updatedCells } from '../actions/cellActions';
+import { updatedMetadata } from '../actions/metadataActions';
 import sheetQuery from '../queries/sheetQuery';
 import titleMutation from '../queries/titleMutation';
-import { updateCellsMutation } from '../queries/cellMutations';
+import { isSomething, arrayContainsSomething } from '../helpers';
+import {
+   stateChangedCells,
+   stateCell,
+   stateSheetId,
+   stateMetadataIsStale,
+   saveableStateMetadata,
+} from '../helpers/dataStructureHelpers';
 
 /*
 Need to have these impure functions for dealing with memoizedItems.
@@ -75,6 +84,42 @@ export const loadSheet = async sheetId => {
    updatedSheetId(sheetId);
 };
 
-export const updateCellsInDB = async (id, cells) => {
-   return await updateCellsMutation(id, cells);
+const getChangedCells = state => {
+   const changedCellsCoordinates = stateChangedCells(state);
+   if (isSomething(changedCellsCoordinates) && arrayContainsSomething(changedCellsCoordinates)) {
+      return R.map(({ row, column }) => {
+         const cellData = stateCell(row, column, state);
+         return R.omit(['isStale'], cellData); // the isStale ppty is just for the redux state, not for the db to save
+      })(changedCellsCoordinates);
+   }
+   return null;
+};
+
+export const saveCellUpdates = async state => {
+   const changedCells = getChangedCells(state);
+   const sheetId = stateSheetId(state);
+   if (changedCells) {
+      try {
+         await updatedCells({ sheetId, changedCells });
+      } catch (err) {
+         console.error('Error updating cells in db', err);
+         throw new Error('Error updating cells in db', err);
+      }
+   }
+};
+
+const getChangedMetadata = state => (stateMetadataIsStale(state) ? saveableStateMetadata(state) : null);
+
+export const saveMetadataUpdates = async state => {
+   console.log('TODO sheetServices.saveMetadataUpdates is saving all the metadata not just the changed parts');
+   const changedMetadata = getChangedMetadata(state);
+   const sheetId = stateSheetId(state);
+   if (changedMetadata) {
+      try {
+         await updatedMetadata({ sheetId, changedMetadata });
+      } catch (err) {
+         console.error('Error updating metadata in db', err);
+         throw new Error('Error updating metadata in db', err);
+      }
+   }
 };

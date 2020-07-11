@@ -1,8 +1,11 @@
 const graphql = require('graphql');
+const R = require('ramda');
 const { GraphQLObjectType, GraphQLNonNull, GraphQLString, GraphQLID } = graphql;
 const mongoose = require('mongoose');
 const SheetModel = mongoose.model('sheet');
 const SheetType = require('./types/sheet_type');
+const UpdateMetadataInput = require('./types/update_metadata_input');
+const UpdateMetadataPayload = require('./types/update_metadata_payload');
 const AddCellInput = require('./types/add_cell_input');
 const UpdateCellsInput = require('./types/update_cells_input');
 const UpdateCellsPayload = require('./types/update_cells_payload');
@@ -18,8 +21,38 @@ const RootMutationType = new GraphQLObjectType({
             title: { type: GraphQLString },
          },
          resolve(parentValue, args, context) {
-            console.log('RootMutation.changeTitle got args', args);
             return SheetModel.updateTitle(args.id, args.title);
+         },
+      },
+
+      updateMetadata: {
+         type: UpdateMetadataPayload,
+         args: {
+            input: {
+               type: new GraphQLNonNull(UpdateMetadataInput),
+            },
+         },
+         resolve: async (parentValue, args, context) => {
+            const sheetDoc = await SheetModel.findById(args.input.id);
+            const newMetadata = R.mergeAll([
+               sheetDoc.toObject().metadata, //toObject() gets rid of any weird props included from mongoose
+               R.pick(
+                  [
+                     'totalRows',
+                     'totalColumns',
+                     'parentSheetId',
+                     'summaryCell',
+                     'columnVisibility',
+                     'rowVisibility',
+                     'columnFilters',
+                     'rowFilters',
+                  ],
+                  args.input
+               ),
+            ]);
+            sheetDoc.metadata = newMetadata;
+            const result = await sheetDoc.save();
+            return result;
          },
       },
 

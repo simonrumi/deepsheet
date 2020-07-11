@@ -15,20 +15,17 @@ import {
    replacedColumnFilters,
    replacedRowVisibility,
    replacedColumnVisibility,
-   updatedHasChanged,
+   hasChangedMetadata,
    clearedSortOptions,
 } from '../actions';
 import moveRow from '../services/moveRow';
 import moveColumn from '../services/moveColumn';
 import sortAxis from '../services/sortAxis';
+import { hasChangedCell } from '../actions';
 import { runIfSomething, isSomething } from '../helpers';
 import { stateMetadataProp } from '../helpers/dataStructureHelpers';
 
-export default store => next => action => {
-   if (!action) {
-      return;
-   }
-
+export default store => next => async action => {
    const clearMoveData = () => {
       store.dispatch({
          type: ROW_MOVED,
@@ -50,6 +47,11 @@ export default store => next => action => {
 
    const runCellDispatches = async updatedCells => {
       await R.map(async cell => {
+         hasChangedCell({
+            row: cell.row,
+            column: cell.column,
+         });
+
          const promisedDispatch = await store.dispatch({
             type: UPDATED_CELL_ + cell.row + '_' + cell.column,
             payload: cell,
@@ -78,12 +80,12 @@ export default store => next => action => {
             ),
          ]),
          axisMoveFn, // if we pass all the conditions, run the fn
-         () => [null, null, null, false] // otherwise return null for all 3 values and false for hasChanged
+         () => [null, null, null] // otherwise return null for all 3 values
       )(store.getState());
 
    switch (action.type) {
       case UPDATED_ROW_ORDER:
-         const [newRowCells, newRowFilters, newRowVisibility, rowsHaveChanged] = maybeMoveAxis(
+         const [newRowCells, newRowFilters, newRowVisibility /* rowsHaveChanged */] = maybeMoveAxis(
             'rowMoved',
             'rowMovedTo',
             moveRow,
@@ -97,11 +99,11 @@ export default store => next => action => {
          runCellDispatches(R.values(newRowCells));
          runIfSomething(replacedRowFilters, newRowFilters);
          runIfSomething(replacedRowVisibility, newRowVisibility);
-         updatedHasChanged(rowsHaveChanged);
+         hasChangedMetadata();
          break;
 
       case UPDATED_COLUMN_ORDER:
-         const [newColumnCells, newColumnFilters, newColumnVisibility, columnsHaveChanged] = maybeMoveAxis(
+         const [newColumnCells, newColumnFilters, newColumnVisibility /* columnsHaveChanged */] = maybeMoveAxis(
             'columnMoved',
             'columnMovedTo',
             moveColumn,
@@ -110,7 +112,7 @@ export default store => next => action => {
          runCellDispatches(R.values(newColumnCells));
          runIfSomething(replacedColumnFilters, newColumnFilters);
          runIfSomething(replacedColumnVisibility, newColumnVisibility);
-         updatedHasChanged(columnsHaveChanged);
+         hasChangedMetadata();
          break;
 
       case SORTED_AXIS:

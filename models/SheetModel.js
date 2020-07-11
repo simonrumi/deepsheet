@@ -61,22 +61,4 @@ sheetSchema.statics.updateTitle = async function (id, title) {
    );
 };
 
-// sheetSchema.statics.updateCells = async function ({ id, cells }) {
-//    /// TODO need to write this!!!
-//    R.map(cell => {
-//       const conditions = { _id: id, 'cells.row': cell.row, 'cells.column': cell.column };
-//       this.findOneAndUpdate(
-//          conditions,
-//          { $set: { 'cells.$[]': cell } },
-//          { new: true, useFindAndModify: false }, // "new" returns the updated version, not the original one
-//          (err, result) => {
-//             if (err) {
-//                console.log('error updatingCells ', err);
-//             }
-//             return result;
-//          }
-//       );
-//    }, cells);
-// };
-
 mongoose.model('sheet', sheetSchema);

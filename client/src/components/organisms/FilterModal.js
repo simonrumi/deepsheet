@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { updatedSortOptions, sortedAxis } from '../../actions';
 import SortOptions from '../molecules/SortOptions';
-import FilterOptions from '../molecules/FilterOptions'; // TODO move this back to FilterOptions.js
+import FilterOptions from '../molecules/FilterOptions';
 import FilterModalHeading from '../molecules/FilterModalHeading';
 
 class FilterModal extends Component {
@@ -33,7 +33,4 @@ function mapStateToProps(state, ownProps) {
    };
 }
 
-export default connect(
-   mapStateToProps,
-   { updatedSortOptions, sortedAxis }
-)(FilterModal);
+export default connect(mapStateToProps, { updatedSortOptions, sortedAxis })(FilterModal);

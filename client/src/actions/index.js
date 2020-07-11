@@ -2,7 +2,7 @@ import * as R from 'ramda';
 import managedStore from '../store';
 
 import {
-   UPDATED_HAS_CHANGED,
+   HAS_CHANGED_METADATA,
    UPDATED_EDITOR,
    SET_EDITOR_REF,
    TOGGLED_SHOW_FILTER_MODAL,
@@ -33,10 +33,9 @@ import { HAS_CHANGED_CELL } from './cellTypes';
 
 console.log('TODO: split up the actions & types');
 
-export const updatedHasChanged = hasChanged => {
+export const hasChangedMetadata = () => {
    managedStore.store.dispatch({
-      type: UPDATED_HAS_CHANGED,
-      payload: hasChanged,
+      type: HAS_CHANGED_METADATA,
    });
 };
 

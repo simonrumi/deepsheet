@@ -20,9 +20,6 @@ const initializeCells = sheet => {
 };
 
 export default store => next => async action => {
-   if (!action) {
-      return;
-   }
    switch (action.type) {
       case UPDATED_SHEET_ID:
          const newSheetId = action.payload;
@@ -31,7 +28,7 @@ export default store => next => async action => {
             const sheet = await fetchSheet(newSheetId);
             // if sheet has some data then dispatch the fetchedSheet action
             // note that R.juxt applies the argument sheet to both fns in its array
-            R.when(R.pipe(R.isNil, R.not), R.juxt([R.pipe(fetchedSheet, store.dispatch), initializeCells]))(sheet);
+            R.when(isSomething, R.juxt([R.pipe(fetchedSheet, store.dispatch), initializeCells]))(sheet);
          } catch (err) {
             console.error('failed to fetchSheet', err);
             fetchSheetError(err);

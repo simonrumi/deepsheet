@@ -20,10 +20,9 @@ const subObjectGetterSetter = (lens, propName) => {
 
 /*** get/set values from the db metadata structure ***/
 const dbMetadataLens = R.lensProp('metadata');
-console.log('TODO: dataStructureHelper only has getter for dbMetatdata currently, needs to set as well');
 export const dbMetadata = R.view(dbMetadataLens);
 
-// get/set values from the db structure
+// get/set values from the db structure, usage:
 // dbTotalRows(dbObject) //returns value for totalRows
 // dbTotalRows(dbObject, 12) // sets 12 as the value for totalRows (if this is possible)
 export const dbTotalRows = subObjectGetterSetter(dbMetadataLens, 'totalRows');
@@ -36,7 +35,6 @@ export const dbRowFilters = subObjectGetterSetter(dbMetadataLens, 'rowFilters');
 
 /*** get/set values from the db cell structure ***/
 const dbCellsLens = R.lensProp('cells');
-console.log('TODO: dataStructureHelper only has getter for dbCells currently, needs to set as well');
 export const dbCells = R.view(dbCellsLens);
 
 /***
@@ -47,6 +45,19 @@ export const dbCells = R.view(dbCellsLens);
  ***/
 const stateMetadataLens = R.lensProp('metadata');
 export const stateMetadata = R.view(stateMetadataLens);
+export const saveableStateMetadata = R.pipe(
+   stateMetadata,
+   R.pick([
+      'totalRows',
+      'totalColumns',
+      'parentSheetId',
+      'summaryCell',
+      'columnVisibility',
+      'rowVisibility',
+      'columnFilters',
+      'rowFilters',
+   ])
+);
 
 // get any top level property from the state's metadata
 export const stateMetadataProp = R.curry((stateObj, propName) =>
@@ -64,7 +75,6 @@ export const stateColumnVisibility = subObjectGetterSetter(stateMetadataLens, 'c
 export const stateRowVisibility = subObjectGetterSetter(stateMetadataLens, 'rowVisibility');
 export const stateColumnFilters = subObjectGetterSetter(stateMetadataLens, 'columnFilters');
 export const stateRowFilters = subObjectGetterSetter(stateMetadataLens, 'rowFilters');
-export const stateHasChanged = subObjectGetterSetter(stateMetadataLens, 'hasChanged');
 export const stateRowMoved = subObjectGetterSetter(stateMetadataLens, 'rowMoved');
 export const stateRowMovedTo = subObjectGetterSetter(stateMetadataLens, 'rowMovedTo');
 export const stateColumnMoved = subObjectGetterSetter(stateMetadataLens, 'columnMoved');
@@ -73,6 +83,10 @@ export const stateRowSortByIndex = subObjectGetterSetter(stateMetadataLens, 'row
 export const stateRowSortDirection = subObjectGetterSetter(stateMetadataLens, 'rowSortDirection');
 export const stateColumnSortByIndex = subObjectGetterSetter(stateMetadataLens, 'columnSortByIndex');
 export const stateColumnSortDirection = subObjectGetterSetter(stateMetadataLens, 'columnSortDirection');
+export const stateMetadataIsStale = subObjectGetterSetter(stateMetadataLens, 'isStale');
+export const stateMetadataIsCallingDb = subObjectGetterSetter(stateMetadataLens, 'isCallingDb');
+export const stateMetadataErrorMessage = subObjectGetterSetter(stateMetadataLens, 'errorMessage');
+export const stateMetadataLastUpdated = subObjectGetterSetter(stateMetadataLens, 'lastUpdated');
 
 /*** other, non-metadata state values ***/
 
@@ -102,8 +116,14 @@ export const stateCellDbUpdatesIsStale = subObjectGetterSetter(stateCellDbUpdate
 export const stateCellDbUpdatesLastUpdated = subObjectGetterSetter(stateCellDbUpdatesLens, 'lastUpdated');
 export const stateChangedCells = subObjectGetterSetter(stateCellDbUpdatesLens, 'changedCells');
 
-// return true if any of the objects with sub-values of "isCallingDb" are true
-export const stateIsCallingDb = state => stateTitleIsCallingDb(state) || stateCellDbUpdatesIsCallingDb(state);
+// return true if any of the state objects with sub-values of "isCallingDb" are true
+export const stateIsCallingDb = state =>
+   stateTitleIsCallingDb(state) || stateCellDbUpdatesIsCallingDb(state) || stateMetadataIsCallingDb(state);
 
-// return true if any of the objects with sub-values of "isStale" are true
-export const stateIsStale = state => stateTitleIsStale(state) || stateCellDbUpdatesIsStale(state);
+// return true if any of the state objects with sub-values of "isStale" are true
+export const stateIsStale = state =>
+   stateTitleIsStale(state) || stateCellDbUpdatesIsStale(state) || stateMetadataIsStale(state);
+
+// return true if we have an issue with any state objects that tried to save to the db but got error messages
+export const stateErrorMessages = state =>
+   stateCellDbUpdatesErrorMessage(state) || stateTitleNeedsUpdate(state) || stateMetadataErrorMessage(state);

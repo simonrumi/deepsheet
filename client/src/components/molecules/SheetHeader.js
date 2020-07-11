@@ -2,18 +2,12 @@ import React from 'react';
 import * as R from 'ramda';
 import { connect } from 'react-redux';
 import { openedTitleEditor } from '../../actions/titleActions';
-import { updatedCells } from '../../actions/cellActions';
-import { loadSheet } from '../../services/sheetServices';
-import { isSomething } from '../../helpers';
+import { loadSheet, saveCellUpdates, saveMetadataUpdates } from '../../services/sheetServices';
 import {
    stateParentSheetId,
-   stateHasChanged,
-   stateChangedCells,
-   stateCell,
-   stateSheetId,
+   stateIsStale,
    stateIsCallingDb,
-   stateCellDbUpdatesErrorMessage,
-   stateCellDbUpdatesIsStale,
+   stateErrorMessages,
 } from '../../helpers/dataStructureHelpers';
 import Heading from '../atoms/Heading';
 import IconEdit from '../atoms/IconEdit';
@@ -21,7 +15,7 @@ import IconUpArrow from '../atoms/IconUpArrow';
 import SaveIcon from '../atoms/IconSave';
 import LoadingIcon from '../atoms/IconLoading';
 
-class HeaderTitle extends React.Component {
+class SheetHeader extends React.Component {
    constructor(props) {
       super(props);
       this.handleSave = this.handleSave.bind(this);
@@ -29,23 +23,12 @@ class HeaderTitle extends React.Component {
       this.renderUpArrow = this.renderUpArrow.bind(this);
    }
 
-   handleSave() {
-      const changedCellsCoordinates = stateChangedCells(this.props.state);
-      if (isSomething(changedCellsCoordinates)) {
-         const changedCells = R.map(({ row, column }) => {
-            const cellData = stateCell(row, column, this.props.state);
-            return R.omit(['hasChanged'], cellData); // the hasChanged ppty is just for the redux state, not for the db to save
-         })(changedCellsCoordinates);
-
-         const sheetId = stateSheetId(this.props.state);
-
-         try {
-            this.props.updatedCells({ sheetId, changedCells });
-         } catch (err) {
-            console.error('HeaderTitle.handleSave - error updating cells in db', err);
-            throw new Error('Error updating cells in db', err);
-         }
-      }
+   async handleSave() {
+      await this.props.saveCellUpdates(this.props.state);
+      console.log(
+         'TODO: SheetHeader.handleSave currently calling saveCellUpdates then saveMetadataUpdates serially--yeech!!'
+      );
+      await this.props.saveMetadataUpdates(this.props.state);
    }
 
    renderUpArrow() {
@@ -67,18 +50,15 @@ class HeaderTitle extends React.Component {
       if (stateIsCallingDb(this.props.state)) {
          return <LoadingIcon height="2em" width="2em" classes="pr-2" />;
       }
-      if (stateHasChanged(this.props.state)) {
-         const classes =
-            stateCellDbUpdatesErrorMessage(this.props.state) && stateCellDbUpdatesIsStale(this.props.state)
-               ? 'pr-2 text-burnt-orange '
-               : 'pr-2 ';
+      if (stateIsStale(this.props.state)) {
+         const classes = stateErrorMessages(this.props.state) ? 'pr-2 text-burnt-orange ' : 'pr-2 ';
          return <SaveIcon height="1.5em" width="1.5em" classes={classes} onClickFn={this.handleSave} />;
       }
    }
 
    render() {
       return (
-         <div className="flex items-center justify-between px-2 py-1" key="headerTitle">
+         <div className="flex items-center justify-between px-2 py-1" key="SheetHeader">
             <Heading text={this.props.title.text} />
             <div className="flex items-end justify-between">
                {this.renderSaveIcon()}
@@ -97,4 +77,4 @@ function mapStateToProps(state) {
    };
 }
 
-export default connect(mapStateToProps, { openedTitleEditor, updatedCells })(HeaderTitle);
+export default connect(mapStateToProps, { openedTitleEditor, saveCellUpdates, saveMetadataUpdates })(SheetHeader);

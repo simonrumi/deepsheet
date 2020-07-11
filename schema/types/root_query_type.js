@@ -12,6 +12,7 @@ const RootQueryType = new GraphQLObjectType({
          type: SheetType,
          args: { id: { type: new GraphQLNonNull(GraphQLID) } },
          resolve(parentValue, args) {
+            console.log('getting sheet for id', args.id);
             return SheetModel.findById(args.id, (err, sheetDoc) => {
                if (err) {
                   console.log('Error finding sheet:', err);

@@ -24,7 +24,7 @@ class Editor extends Component {
          row: this.props.editor.row,
          column: this.props.editor.column,
          content: { text: event.target.value },
-         hasChanged: true,
+         isStale: true,
       };
       this.props.updatedEditor(newCellData);
       this.props.updatedCellBeingEdited(newCellData);

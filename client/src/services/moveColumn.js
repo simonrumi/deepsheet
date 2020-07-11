@@ -53,6 +53,6 @@ export default state => {
 
    const newColumnFilters = makeNewMetadatatItem(getAxisFilterName);
    const newColumnVisibility = makeNewMetadatatItem(getAxisVisibilityName);
-   const hasChanged = true;
-   return [newCells, newColumnFilters, newColumnVisibility, hasChanged];
+   const isStale = true;
+   return [newCells, newColumnFilters, newColumnVisibility, isStale];
 };

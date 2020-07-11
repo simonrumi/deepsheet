@@ -1,4 +1,4 @@
-export const UPDATED_HAS_CHANGED = 'updated_has_changed';
+export const HAS_CHANGED_METADATA = 'has_changed_metadata';
 export const UPDATED_COLUMN_VISIBILITY = 'updated_column_visibility';
 export const REPLACED_COLUMN_VISIBILITY = 'replaced_column_visibility';
 export const UPDATED_ROW_VISIBILITY = 'updated_row_visibility';

@@ -8,10 +8,8 @@ class SubsheetCell extends Component {
          <div
             className="grid-item border border-burnt-orange cursor-pointer"
             onClick={() => {
-               console.log('loading subsheetId', this.props.subsheetId);
                loadSheet(this.props.subsheetId);
-            }}
-         >
+            }}>
             <div>{this.props.subContent}</div>
          </div>
       );

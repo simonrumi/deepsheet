@@ -1,12 +1,12 @@
 import * as R from 'ramda';
 import { reducer as reduxFormReducer } from 'redux-form';
 import { cellKeyReducer, cellDbUpdatesReducer } from './cellReducers';
-import { removeObjectFromArrayByKeyValue } from '../helpers';
+import { removeObjectFromArrayByKeyValue, isSomething } from '../helpers';
 import { updatedAxisFilters } from '../helpers/visibilityHelpers';
 import titleReducer from './titleReducer';
 import fetchSheetReducer from './fetchSheetReducer';
 import {
-   UPDATED_HAS_CHANGED,
+   HAS_CHANGED_METADATA,
    UPDATED_EDITOR,
    SET_EDITOR_REF,
    TOGGLED_SHOW_FILTER_MODAL,
@@ -30,8 +30,8 @@ import {
    CLEARED_SORT_OPTIONS,
 } from '../actions/types';
 import { TITLE_EDIT_CANCELLED } from '../actions/titleTypes';
-import { HAS_CHANGED_CELL } from '../actions/cellTypes';
 import { FETCHED_SHEET } from '../actions/fetchSheetTypes';
+import { POSTING_UPDATED_METADATA, COMPLETED_SAVE_METADATA, METADATA_UPDATE_FAILED } from '../actions/metadataTypes';
 
 const metadataReducer = (state = {}, action) => {
    switch (action.type) {
@@ -41,8 +41,9 @@ const metadataReducer = (state = {}, action) => {
          }
          return action.payload.metadata || null;
 
-      case UPDATED_HAS_CHANGED:
-         return { ...state, hasChanged: action.payload };
+      case HAS_CHANGED_METADATA: {
+         return { ...state, isStale: true };
+      }
 
       case UPDATED_COLUMN_VISIBILITY:
          const oldColumnValueRemoved = removeObjectFromArrayByKeyValue(
@@ -72,9 +73,6 @@ const metadataReducer = (state = {}, action) => {
             columnFilters: [],
             rowFilters: [],
          };
-
-      case HAS_CHANGED_CELL:
-         return { ...state, hasChanged: true };
 
       case UPDATED_COLUMN_FILTERS:
          return updatedAxisFilters(action.payload, 'columnFilters', state, state.columnFilters);
@@ -126,6 +124,33 @@ const metadataReducer = (state = {}, action) => {
             rowSortDirection: null,
             columnSortByIndex: null,
             columnSortDirection: null,
+         };
+
+      case POSTING_UPDATED_METADATA:
+         return {
+            ...state,
+            isCallingDb: true,
+            isStale: true,
+            errorMessage: null,
+            lastUpdated: isSomething(state.lastUpdated) ? state.lastUpdated : null,
+         };
+
+      case COMPLETED_SAVE_METADATA:
+         return {
+            ...state,
+            isCallingDb: false,
+            isStale: false,
+            errorMessage: null,
+            lastUpdated: action.payload.lastUpdated,
+         };
+
+      case METADATA_UPDATE_FAILED:
+         return {
+            ...state,
+            isCallingDb: false,
+            isStale: true,
+            errorMessage: isSomething(action.payload.errorMessage) ? action.payload.errorMessage : null,
+            lastUpdated: isSomething(state.lastUpdated) ? state.lastUpdated : null,
          };
 
       default:

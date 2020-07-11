@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import HeaderTitle from './molecules/HeaderTitle';
+import SheetHeader from './molecules/SheetHeader';
 import TitleForm from './molecules/TitleForm';
 
 export class Header extends Component {
@@ -10,14 +10,9 @@ export class Header extends Component {
 
    renderTitleOrTitleForm() {
       if (this.props.title.isEditingTitle) {
-         return (
-            <TitleForm
-               onSubmit={this.editTitle}
-               title={this.props.title.text}
-            />
-         );
+         return <TitleForm onSubmit={this.editTitle} title={this.props.title.text} />;
       }
-      return <HeaderTitle />;
+      return <SheetHeader />;
    }
 }
 

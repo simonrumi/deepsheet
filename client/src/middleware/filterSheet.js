@@ -7,7 +7,7 @@ import {
    HIDE_FILTERED,
    CLEAR_ALL_FILTERS,
 } from '../actions/types';
-import { updatedColumnFilters, updatedRowFilters, updatedHasChanged, toggledShowFilterModal } from '../actions';
+import { updatedColumnFilters, updatedRowFilters, hasChangedMetadata, toggledShowFilterModal } from '../actions';
 import { updatedCell } from '../actions/cellActions';
 import { getObjectFromArrayByKeyValue, isNothing, arrayContainsSomething, forLoopMap } from '../helpers';
 import { getTotalForAxis, getAxisVisibilityName } from '../helpers/visibilityHelpers';
@@ -240,19 +240,16 @@ const clearAllFilters = store => {
    R.pipe(getDataFromActionAndStore, filterAxes, filterCells)(filterDataReset, store);
 };
 
-export default store => next => action => {
-   if (!action) {
-      return;
-   }
+export default store => next => async action => {
    switch (action.type) {
       case HIDE_FILTERED:
          console.log('TODO in filterSheet.js handle case where no sheet data returned from db');
          hideFiltered(action.payload, store);
-         updatedHasChanged(true);
+         hasChangedMetadata();
          break;
       case CLEAR_ALL_FILTERS:
          clearAllFilters(store);
-         updatedHasChanged(true);
+         hasChangedMetadata();
          break;
       default:
    }
