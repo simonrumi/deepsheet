@@ -13,6 +13,7 @@ import {
    CELLS_UPDATE_FAILED,
    HAS_CHANGED_CELL,
    COMPLETED_SAVE_CELL_,
+   HAS_ADDED_CELL,
 } from '../actions/cellTypes';
 import { FETCHED_SHEET } from '../actions/fetchSheetTypes';
 
@@ -123,6 +124,14 @@ export const cellDbUpdatesReducer = (state = {}, action) => {
             ...state,
             isStale: true,
             changedCells,
+         };
+
+      case HAS_ADDED_CELL:
+         const addedCells = state.addedCells || [];
+         return {
+            ...state,
+            isStale: true,
+            addedCells: R.append(action.payload, addedCells),
          };
 
       default:

@@ -12,6 +12,7 @@ import {
    stateSheetId,
    stateMetadataIsStale,
    saveableStateMetadata,
+   stateAddedCells,
 } from '../helpers/dataStructureHelpers';
 
 /*
@@ -75,15 +76,6 @@ export const updateTitleInDB = async (id, title) => {
    return await titleMutation(id, title);
 };
 
-export const loadSheet = async sheetId => {
-   // first clear out the cell reducers from any previosly loaded sheet
-   const newCombinedReducers = managedStore.store.reducerManager.removeMany(managedStore.state.cellKeys);
-   managedStore.store.replaceReducer(newCombinedReducers);
-   clearMemoizedItems();
-   // then get the new sheet
-   updatedSheetId(sheetId);
-};
-
 const getChangedCells = state => {
    const changedCellsCoordinates = stateChangedCells(state);
    if (isSomething(changedCellsCoordinates) && arrayContainsSomething(changedCellsCoordinates)) {
@@ -95,12 +87,33 @@ const getChangedCells = state => {
    return null;
 };
 
+console.log('***TODO: in sheetServices pull out common functionality from getChangedCells and getAddedCells');
+const getAddedCells = state => {
+   const addedCellsCoordinates = stateAddedCells(state);
+   if (isSomething(addedCellsCoordinates) && arrayContainsSomething(addedCellsCoordinates)) {
+      return R.map(({ row, column }) => {
+         const cellData = stateCell(row, column, state);
+         return R.omit(['isStale'], cellData); // the isStale ppty is just for the redux state, not for the db to save
+      })(addedCellsCoordinates);
+   }
+   return null;
+};
+
 export const saveCellUpdates = async state => {
    const changedCells = getChangedCells(state);
+   const addedCells = getAddedCells(state);
+   const allUpdatedCells = isSomething(changedCells)
+      ? isSomething(addedCells)
+         ? R.concat(changedCells, addedCells)
+         : changedCells
+      : isSomething(addedCells)
+      ? addedCells
+      : null;
+   console.log('sheetServices.saveCellUpdates allUpdatedCells', allUpdatedCells);
    const sheetId = stateSheetId(state);
-   if (changedCells) {
+   if (allUpdatedCells) {
       try {
-         await updatedCells({ sheetId, changedCells });
+         await updatedCells({ sheetId, updatedCells: allUpdatedCells });
       } catch (err) {
          console.error('Error updating cells in db', err);
          throw new Error('Error updating cells in db', err);
@@ -113,9 +126,10 @@ const getChangedMetadata = state => (stateMetadataIsStale(state) ? saveableState
 export const saveMetadataUpdates = async state => {
    console.log('TODO sheetServices.saveMetadataUpdates is saving all the metadata not just the changed parts');
    const changedMetadata = getChangedMetadata(state);
-   const sheetId = stateSheetId(state);
+   console.log('sheetServices.saveMetadataUpdates got changedMetadata', changedMetadata);
    if (changedMetadata) {
       try {
+         const sheetId = stateSheetId(state);
          await updatedMetadata({ sheetId, changedMetadata });
       } catch (err) {
          console.error('Error updating metadata in db', err);
@@ -123,3 +137,20 @@ export const saveMetadataUpdates = async state => {
       }
    }
 };
+
+export const saveAllUpdates = async state => {
+   console.log('TODO sheetServices.saveAllUpdates is calling saveMetadataUpdates & saveCellUpdates serially -- yeech!');
+   await saveMetadataUpdates(state);
+   await saveCellUpdates(state);
+};
+
+export const loadSheet = R.curry(async (state, sheetId) => {
+   // save any changes to the current sheet
+   saveAllUpdates(state);
+   // clear out the cell reducers from any previosly loaded sheet
+   const newCombinedReducers = managedStore.store.reducerManager.removeMany(managedStore.state.cellKeys);
+   managedStore.store.replaceReducer(newCombinedReducers);
+   clearMemoizedItems();
+   // then get the new sheet
+   updatedSheetId(sheetId);
+});

@@ -61,6 +61,7 @@ class Sheet extends Component {
 
    renderCells = () => {
       if (this.props.data && this.props.data.sheet && this.props.managedStore.store) {
+         console.log('calling initializeSheet from sheet.js');
          initializeSheet(this.props.managedStore.store, this.props.data.sheet);
       }
       if (isSomething(stateTotalRows(this.props.state)) && this.props.cellKeys && this.props.cellKeys.length > 0) {

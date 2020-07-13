@@ -2,7 +2,7 @@ import React from 'react';
 import * as R from 'ramda';
 import { connect } from 'react-redux';
 import { openedTitleEditor } from '../../actions/titleActions';
-import { loadSheet, saveCellUpdates, saveMetadataUpdates } from '../../services/sheetServices';
+import { loadSheet, saveAllUpdates } from '../../services/sheetServices';
 import {
    stateParentSheetId,
    stateIsStale,
@@ -24,11 +24,7 @@ class SheetHeader extends React.Component {
    }
 
    async handleSave() {
-      await this.props.saveCellUpdates(this.props.state);
-      console.log(
-         'TODO: SheetHeader.handleSave currently calling saveCellUpdates then saveMetadataUpdates serially--yeech!!'
-      );
-      await this.props.saveMetadataUpdates(this.props.state);
+      await this.props.saveAllUpdates(this.props.state);
    }
 
    renderUpArrow() {
@@ -38,7 +34,7 @@ class SheetHeader extends React.Component {
                height="1.5em"
                width="1.5em"
                classes="pl-2"
-               onClickFn={() => R.pipe(stateParentSheetId, loadSheet)(this.props.state)}
+               onClickFn={() => R.pipe(stateParentSheetId, loadSheet(this.props.state))(this.props.state)}
                data-testid="titleUpArrow"
             />
          );
@@ -77,4 +73,7 @@ function mapStateToProps(state) {
    };
 }
 
-export default connect(mapStateToProps, { openedTitleEditor, saveCellUpdates, saveMetadataUpdates })(SheetHeader);
+export default connect(mapStateToProps, {
+   openedTitleEditor,
+   saveAllUpdates,
+})(SheetHeader);

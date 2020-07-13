@@ -7,13 +7,35 @@ import { createCellReducers, populateCellsInStore } from '../reducers/cellReduce
 import { isSomething } from '../helpers';
 import { dbMetadata, dbCells } from '../helpers/dataStructureHelpers';
 
+/***** ordering cells by row then column */
+const filterToCurrentRow = R.curry((rowIndex, cells) => R.filter(cell => cell.row === rowIndex)(cells));
+const sortByColumns = R.sortBy(cell => cell.column);
+
+const orderCells = cells => {
+   const buildSortedArr = (unsortedCells, sortedCells = [], currentRow = 0) => {
+      const cellsSortedSoFar = R.pipe(
+         filterToCurrentRow,
+         sortByColumns,
+         R.concat(sortedCells)
+      )(currentRow, unsortedCells);
+      return cellsSortedSoFar.length === cells.length
+         ? cellsSortedSoFar
+         : buildSortedArr(unsortedCells, cellsSortedSoFar, currentRow + 1);
+   };
+   return R.pipe(
+      R.sortBy(cell => cell.row),
+      buildSortedArr
+   )(cells);
+};
+/********/
+
 const createCellKeys = R.map(cell => 'cell_' + cell.row + '_' + cell.column);
 
 const initializeCells = sheet => {
    if (isSomething(dbMetadata(sheet))) {
       createCellReducers(sheet);
       populateCellsInStore(sheet);
-      R.pipe(dbCells, createCellKeys, updatedCellKeys)(sheet);
+      R.pipe(dbCells, orderCells, createCellKeys, updatedCellKeys)(sheet);
    } else {
       console.warn('WARNING: App.render.initializeCells had no data to operate on');
    }
@@ -22,6 +44,7 @@ const initializeCells = sheet => {
 export default store => next => async action => {
    switch (action.type) {
       case UPDATED_SHEET_ID:
+         console.log('got UPDATED_SHEET_ID in initializeSheet.js');
          const newSheetId = action.payload;
          fetchingSheet(newSheetId);
          try {

@@ -18,6 +18,7 @@ import {
 import {
    addOneCellReducer,
    addNewCellsToStore,
+   addNewCellsToCellDbUpdates,
    addManyCellReducersToStore,
    maybeAddAxisVisibilityEntry,
 } from './insertNewAxis';
@@ -26,8 +27,9 @@ const makeNewCell = (rowIndex, columnIndex, rowVisibility, cellKey) => {
    return {
       row: rowIndex,
       column: columnIndex,
-      content: '',
+      content: { text: '', subsheetId: null },
       visible: shouldShowRow(rowVisibility, cellKey),
+      isStale: true,
    };
 };
 
@@ -80,6 +82,7 @@ const insertNewColumn = (cellKeys, state) => {
    addManyCellReducersToStore(updates.cellReducers);
    maybeAddAxisVisibilityEntry(totalColumns, stateColumnVisibility(state), updatedColumnVisibility);
    addNewCellsToStore(updates.cells);
+   addNewCellsToCellDbUpdates(updates.cells);
    updatedTotalColumns(totalColumns + 1);
    hasChangedMetadata();
 };

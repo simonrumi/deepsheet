@@ -8,7 +8,7 @@ class SubsheetCell extends Component {
          <div
             className="grid-item border border-burnt-orange cursor-pointer"
             onClick={() => {
-               loadSheet(this.props.subsheetId);
+               loadSheet(this.props.state, this.props.subsheetId);
             }}>
             <div>{this.props.subContent}</div>
          </div>
@@ -18,6 +18,7 @@ class SubsheetCell extends Component {
 
 function mapStateToProps(state, ownProps) {
    return {
+      state,
       subContent: ownProps.cell.content.text,
       subsheetId: ownProps.cell.content.subsheetId,
    };

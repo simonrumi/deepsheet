@@ -115,6 +115,7 @@ export const stateCellDbUpdatesErrorMessage = subObjectGetterSetter(stateCellDbU
 export const stateCellDbUpdatesIsStale = subObjectGetterSetter(stateCellDbUpdatesLens, 'isStale');
 export const stateCellDbUpdatesLastUpdated = subObjectGetterSetter(stateCellDbUpdatesLens, 'lastUpdated');
 export const stateChangedCells = subObjectGetterSetter(stateCellDbUpdatesLens, 'changedCells');
+export const stateAddedCells = subObjectGetterSetter(stateCellDbUpdatesLens, 'addedCells');
 
 // return true if any of the state objects with sub-values of "isCallingDb" are true
 export const stateIsCallingDb = state =>

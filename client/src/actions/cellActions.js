@@ -8,6 +8,7 @@ import {
    COMPLETED_SAVE_CELLS,
    COMPLETED_SAVE_CELL_,
    CELLS_UPDATE_FAILED,
+   HAS_ADDED_CELL,
 } from './cellTypes';
 import { updateCellsMutation } from '../queries/cellMutations';
 
@@ -36,8 +37,8 @@ export const updatedCellKeys = keys => {
 export const updatedCells = async updatedCellsData => {
    managedStore.store.dispatch({ type: POSTING_UPDATED_CELLS });
    try {
-      const { sheetId, changedCells } = updatedCellsData;
-      const response = await updateCellsMutation(sheetId, changedCells);
+      const { sheetId, updatedCells } = updatedCellsData;
+      const response = await updateCellsMutation(sheetId, updatedCells);
       managedStore.store.dispatch({
          type: COMPLETED_SAVE_CELLS,
          payload: {
@@ -48,7 +49,7 @@ export const updatedCells = async updatedCellsData => {
       R.map(cell => {
          const type = COMPLETED_SAVE_CELL_ + cell.row + '_' + cell.column;
          managedStore.store.dispatch({ type });
-      })(changedCells);
+      })(updatedCells);
    } catch (err) {
       console.error('did not successfully update the cells in the db: err:', err);
       managedStore.store.dispatch({
@@ -56,4 +57,11 @@ export const updatedCells = async updatedCellsData => {
          payload: { errorMessage: 'cells were not updated in the db: ' + err },
       });
    }
+};
+
+export const hasAddedCell = cellCoordinates => {
+   managedStore.store.dispatch({
+      type: HAS_ADDED_CELL,
+      payload: cellCoordinates,
+   });
 };

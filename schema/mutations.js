@@ -80,13 +80,32 @@ const RootMutationType = new GraphQLObjectType({
             },
          },
          resolve: async (parentValue, args, context) => {
+            console.log('mutations.updateCells got args.input', args.input);
             const { id, cells } = args.input;
             const sheetDoc = await SheetModel.findById(id);
+            console.log('mutations.updateCells got sheetDoc', sheetDoc);
             const updatedCells = updateCells(sheetDoc.cells, cells);
             sheetDoc.cells = updatedCells;
+            console.log('mutations.updateCells udpated SheetDoc to look like this now', sheetDoc);
             return await sheetDoc.save();
          },
       },
+
+      // addCells: {
+      //    type: UpdateCellsPayload,
+      //    args: {
+      //       input: {
+      //          type: new GraphQLNonNull(UpdateCellsInput),
+      //       },
+      //    },
+      //    resolve: async (parentValue, args, context) => {
+      //       const { id, cells } = args.input;
+      //       const sheetDoc = await SheetModel.findById(id);
+      //       console.log('mutations.addCells got args.input.cells', cells, 'and sheetDoc.cells', sheetDoc.cells);
+      //       sheetDoc.cells = R.concat(sheetDoc.cells, cells);
+      //       return await sheetDoc.save();
+      //    },
+      // },
    },
 });
 

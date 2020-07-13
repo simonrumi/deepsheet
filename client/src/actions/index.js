@@ -145,6 +145,7 @@ export const replacedRowVisibility = newVisibility => {
    });
 };
 
+console.log('TODO (easy) move hasChangedCell from actions.index.js to cellActions.js');
 export const hasChangedCell = cellCoordinates => {
    managedStore.store.dispatch({
       type: HAS_CHANGED_CELL,

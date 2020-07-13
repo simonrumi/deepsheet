@@ -12,6 +12,7 @@ import { shouldShowColumn } from '../helpers/visibilityHelpers';
 import {
    addOneCellReducer,
    addNewCellsToStore,
+   addNewCellsToCellDbUpdates,
    addManyCellReducersToStore,
    maybeAddAxisVisibilityEntry,
 } from './insertNewAxis';
@@ -27,8 +28,9 @@ const makeNewCell = (rowIndex, columnIndex, columnVisibility) => {
    return {
       row: rowIndex,
       column: columnIndex,
-      content: '',
+      content: { text: '', subsheetId: null },
       visible: shouldShowColumn(columnVisibility, columnIndex),
+      isStale: true,
    };
 };
 
@@ -51,6 +53,12 @@ const createUpdatesForNewCells = (
    if (totalColumns === columnIndex) {
       return updates;
    }
+   console.log(
+      'insertNewRow.createUpdatesForNewCells got rowIndex',
+      rowIndex,
+      'adding One Cell for columnIndex',
+      columnIndex
+   );
    return createUpdatesForNewCells(
       addOneCell(rowIndex, columnIndex, columnVisibility, updates),
       columnVisibility,
@@ -62,6 +70,7 @@ const createUpdatesForNewCells = (
 
 const insertNewRow = (cellKeys, state) => {
    const totalRows = stateTotalRows(state);
+   console.log('insertNewRow got stateTotalRows(state)', totalRows);
    const totalColumns = stateTotalColumns(state);
    const rowVisibility = stateRowVisibility(state);
    const columnVisibility = stateColumnVisibility(state);
@@ -75,6 +84,7 @@ const insertNewRow = (cellKeys, state) => {
    addManyCellReducersToStore(updates.cellReducers);
    maybeAddAxisVisibilityEntry(totalRows, rowVisibility, updatedRowVisibility);
    addNewCellsToStore(updates.cells);
+   addNewCellsToCellDbUpdates(updates.cells);
    updatedTotalRows(totalRows + 1);
    hasChangedMetadata();
 };

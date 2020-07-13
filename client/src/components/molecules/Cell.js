@@ -2,12 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import * as R from 'ramda';
 import { updatedEditor } from '../../actions';
-import {
-   extractRowColFromCellKey,
-   nothing,
-   isSomething,
-   isNothing,
-} from '../../helpers';
+import { extractRowColFromCellKey, nothing, isSomething, isNothing } from '../../helpers';
 import { createClassNames, createCellId } from '../../helpers/cellHelpers';
 import managedStore from '../../store';
 import SubsheetCell from './SubsheetCell';
@@ -44,42 +39,31 @@ class Cell extends Component {
       return (
          <div
             className={createClassNames(this.props.classes)}
-            onClick={event =>
-               this.onCellClick(event, this.props.cellKey, this.props.editorRef)
-            }
-            id={createCellId(cell.column, cell.row)}
-         >
+            onClick={event => this.onCellClick(event, this.props.cellKey, this.props.editorRef)}
+            id={createCellId(cell.column, cell.row)}>
             {cell.content.text}
          </div>
       );
    }
 
-   renderBlankCell = cell => (
-      <div className={createClassNames(this.props.classes)} />
-   );
+   renderBlankCell = cell => <div className={createClassNames(this.props.classes)} />;
 
    renderSubsheetCell = cell => <SubsheetCell cell={cell} />;
 
    renderCell = R.cond([
       [R.isNil, nothing],
-      [
-         R.pipe(
-            R.prop('visible'),
-            R.not
-         ),
-         nothing,
-      ],
+      [R.pipe(R.prop('visible'), R.not), nothing],
       [R.thunkify(R.identity)(this.props.blankCell), this.renderBlankCell],
       [
          R.pipe(
-            R.path(['content', 'subsheetId']),
+            R.path(['content', 'subsheetId']), // TODO replace this with something from dataStructureHelpers
             isSomething
          ),
          this.renderSubsheetCell,
       ],
       [
          R.pipe(
-            R.path(['content', 'subsheetId']),
+            R.path(['content', 'subsheetId']), // TODO replace this with something from dataStructureHelpers
             isNothing
          ),
          this.renderRegularCell,
@@ -102,7 +86,4 @@ function mapStateToProps(state, ownProps) {
    };
 }
 
-export default connect(
-   mapStateToProps,
-   { updatedEditor }
-)(Cell);
+export default connect(mapStateToProps, { updatedEditor })(Cell);
