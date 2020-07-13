@@ -11,8 +11,8 @@ export const addOneCellReducer = (cellKey, row, column, cellReducers = {}) =>
 export const addNewCellsToStore = cells => R.map(cell => updatedCell(cell), cells);
 
 export const addNewCellsToCellDbUpdates = R.map(cell => {
-   console.log('insertNewAxis.addNewCellsToCellDbUpdates got cell', cell.row, cell.column);
    hasAddedCell({ row: cell.row, column: cell.column });
+   return null; // don;t need to return anything, but adding this to clear a warning in the console
 });
 
 export const addManyCellReducersToStore = cellReducers => {

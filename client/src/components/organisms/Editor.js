@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import * as R from 'ramda';
-import { updatedEditor, setEditorRef, hasChangedCell } from '../../actions';
-import { updatedCellBeingEdited } from '../../actions/cellActions';
+import { updatedEditor, setEditorRef } from '../../actions';
+import { updatedCellBeingEdited, hasChangedCell } from '../../actions/cellActions';
 import { isSomething, isNothing } from '../../helpers';
 import EditorInput from '../atoms/EditorInput';
 

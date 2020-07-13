@@ -29,7 +29,6 @@ import {
    SORTED_AXIS,
    CLEARED_SORT_OPTIONS,
 } from './types';
-import { HAS_CHANGED_CELL } from './cellTypes';
 
 console.log('TODO: split up the actions & types');
 
@@ -142,14 +141,6 @@ export const replacedRowVisibility = newVisibility => {
    managedStore.store.dispatch({
       type: REPLACED_ROW_VISIBILITY,
       payload: newVisibility,
-   });
-};
-
-console.log('TODO (easy) move hasChangedCell from actions.index.js to cellActions.js');
-export const hasChangedCell = cellCoordinates => {
-   managedStore.store.dispatch({
-      type: HAS_CHANGED_CELL,
-      payload: cellCoordinates,
    });
 };
 

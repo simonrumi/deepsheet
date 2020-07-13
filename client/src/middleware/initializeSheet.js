@@ -44,7 +44,6 @@ const initializeCells = sheet => {
 export default store => next => async action => {
    switch (action.type) {
       case UPDATED_SHEET_ID:
-         console.log('got UPDATED_SHEET_ID in initializeSheet.js');
          const newSheetId = action.payload;
          fetchingSheet(newSheetId);
          try {

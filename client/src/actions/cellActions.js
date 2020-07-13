@@ -9,10 +9,9 @@ import {
    COMPLETED_SAVE_CELL_,
    CELLS_UPDATE_FAILED,
    HAS_ADDED_CELL,
+   HAS_CHANGED_CELL,
 } from './cellTypes';
 import { updateCellsMutation } from '../queries/cellMutations';
-
-console.log('TODO move hasChangedCell into cellActions.js');
 
 export const updatedCell = cell => {
    if (R.isNil(cell) || R.not(R.has('content', cell))) {
@@ -49,6 +48,7 @@ export const updatedCells = async updatedCellsData => {
       R.map(cell => {
          const type = COMPLETED_SAVE_CELL_ + cell.row + '_' + cell.column;
          managedStore.store.dispatch({ type });
+         return null; // no return value needed, putting here to clear a warning from the console
       })(updatedCells);
    } catch (err) {
       console.error('did not successfully update the cells in the db: err:', err);
@@ -57,6 +57,13 @@ export const updatedCells = async updatedCellsData => {
          payload: { errorMessage: 'cells were not updated in the db: ' + err },
       });
    }
+};
+
+export const hasChangedCell = cellCoordinates => {
+   managedStore.store.dispatch({
+      type: HAS_CHANGED_CELL,
+      payload: cellCoordinates,
+   });
 };
 
 export const hasAddedCell = cellCoordinates => {

@@ -15,14 +15,14 @@ import {
    stateAddedCells,
 } from '../helpers/dataStructureHelpers';
 
-/*
+/****
+ * not using memoization at this poiint, but keepin here in case it comes up again
+
 Need to have these impure functions for dealing with memoizedItems.
 Can't put memoizedItems into the Redux store because then there's a circular dependancy
 where this file imports an update action, and actions imports fetchSummaryCellFromSheet
-*/
-console.log(
-   'TODO might be able to put memoizedItems into the store, now that fetchSummaryCellFromSheet is not being used. See comment in sheetServices.js'
-);
+
+// TODO might be able to put memoizedItems into the store, now that fetchSummaryCellFromSheet is not being used. See comment in sheetServices.js
 const memoizedItems = {};
 
 const updatedMemoizedItems = R.curry((groupName, item) => {
@@ -35,16 +35,16 @@ export const clearMemoizedItems = () =>
       R.keys,
       R.map(key => (memoizedItems[key] = {}))
    )(memoizedItems);
-/*** end impure functions ***/
 
-/* these args (arg1, ...args) are the args for the fn.
-the first one is split out of the args array so that R.curry is forced to return a function,
-if there is not at least 1 argument supplied to maybeMemoize, (after the 1st argument which is the fn).
 
-make memoized items with functions like this
-export const fetchSummaryCellFromSheet = maybeMemoize(async sheetId => {
-...then call that function like this
-fetchSummaryCellFromSheet(sheetId) */
+// these args (arg1, ...args) are the args for the fn.
+// the first one is split out of the args array so that R.curry is forced to return a function,
+// if there is not at least 1 argument supplied to maybeMemoize, (after the 1st argument which is the fn).
+
+// make memoized items with functions like this
+// export const fetchSummaryCellFromSheet = maybeMemoize(async sheetId => {
+// ...then call that function like this
+// fetchSummaryCellFromSheet(sheetId) 
 const maybeMemoize = R.curry((fn, groupName, arg1, ...args) => {
    const key = R.reduce((accumulator, value) => R.concat(accumulator, JSON.stringify(value)), '', [arg1, ...args]);
 
@@ -64,6 +64,7 @@ const maybeMemoize = R.curry((fn, groupName, arg1, ...args) => {
       R.path([key, 'value']) // return the result (of calling fn with the args)
    )(arg1, ...args);
 });
+/*** end memoization functions ***/
 
 export const fetchSheet = async sheetId => {
    const sheet = sheetQuery(sheetId)
@@ -76,28 +77,19 @@ export const updateTitleInDB = async (id, title) => {
    return await titleMutation(id, title);
 };
 
-const getChangedCells = state => {
-   const changedCellsCoordinates = stateChangedCells(state);
-   if (isSomething(changedCellsCoordinates) && arrayContainsSomething(changedCellsCoordinates)) {
+const getUpdatedCells = R.curry((state, updatedCellCoordinates) => {
+   if (isSomething(updatedCellCoordinates) && arrayContainsSomething(updatedCellCoordinates)) {
       return R.map(({ row, column }) => {
          const cellData = stateCell(row, column, state);
          return R.omit(['isStale'], cellData); // the isStale ppty is just for the redux state, not for the db to save
-      })(changedCellsCoordinates);
+      })(updatedCellCoordinates);
    }
    return null;
-};
+});
 
-console.log('***TODO: in sheetServices pull out common functionality from getChangedCells and getAddedCells');
-const getAddedCells = state => {
-   const addedCellsCoordinates = stateAddedCells(state);
-   if (isSomething(addedCellsCoordinates) && arrayContainsSomething(addedCellsCoordinates)) {
-      return R.map(({ row, column }) => {
-         const cellData = stateCell(row, column, state);
-         return R.omit(['isStale'], cellData); // the isStale ppty is just for the redux state, not for the db to save
-      })(addedCellsCoordinates);
-   }
-   return null;
-};
+const getChangedCells = state => R.pipe(stateChangedCells, getUpdatedCells(state))(state);
+
+const getAddedCells = state => R.pipe(stateAddedCells, getUpdatedCells(state))(state);
 
 export const saveCellUpdates = async state => {
    const changedCells = getChangedCells(state);
@@ -150,7 +142,6 @@ export const loadSheet = R.curry(async (state, sheetId) => {
    // clear out the cell reducers from any previosly loaded sheet
    const newCombinedReducers = managedStore.store.reducerManager.removeMany(managedStore.state.cellKeys);
    managedStore.store.replaceReducer(newCombinedReducers);
-   clearMemoizedItems();
    // then get the new sheet
    updatedSheetId(sheetId);
 });

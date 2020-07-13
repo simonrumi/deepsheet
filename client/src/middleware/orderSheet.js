@@ -21,7 +21,7 @@ import {
 import moveRow from '../services/moveRow';
 import moveColumn from '../services/moveColumn';
 import sortAxis from '../services/sortAxis';
-import { hasChangedCell } from '../actions';
+import { hasChangedCell } from '../actions/cellActions';
 import { runIfSomething, isSomething } from '../helpers';
 import { stateMetadataProp } from '../helpers/dataStructureHelpers';
 
