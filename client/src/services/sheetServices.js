@@ -89,23 +89,12 @@ const getUpdatedCells = R.curry((state, updatedCellCoordinates) => {
 
 const getChangedCells = state => R.pipe(stateChangedCells, getUpdatedCells(state))(state);
 
-const getAddedCells = state => R.pipe(stateAddedCells, getUpdatedCells(state))(state);
-
 export const saveCellUpdates = async state => {
    const changedCells = getChangedCells(state);
-   const addedCells = getAddedCells(state);
-   const allUpdatedCells = isSomething(changedCells)
-      ? isSomething(addedCells)
-         ? R.concat(changedCells, addedCells)
-         : changedCells
-      : isSomething(addedCells)
-      ? addedCells
-      : null;
-   console.log('sheetServices.saveCellUpdates allUpdatedCells', allUpdatedCells);
    const sheetId = stateSheetId(state);
-   if (allUpdatedCells) {
+   if (changedCells) {
       try {
-         await updatedCells({ sheetId, updatedCells: allUpdatedCells });
+         await updatedCells({ sheetId, updatedCells: changedCells });
       } catch (err) {
          console.error('Error updating cells in db', err);
          throw new Error('Error updating cells in db', err);

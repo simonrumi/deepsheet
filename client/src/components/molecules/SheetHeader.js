@@ -2,6 +2,7 @@ import React from 'react';
 import * as R from 'ramda';
 import { connect } from 'react-redux';
 import { openedTitleEditor } from '../../actions/titleActions';
+import { menuHidden } from '../../actions/menuActions';
 import { loadSheet, saveAllUpdates } from '../../services/sheetServices';
 import {
    stateParentSheetId,
@@ -54,8 +55,8 @@ class SheetHeader extends React.Component {
 
    render() {
       return (
-         <div className="flex items-center justify-between px-2 py-1" key="SheetHeader">
-            <Heading text={this.props.title.text} />
+         <div className="flex items-center justify-between px-2 py-1" onClick={this.props.menuHidden} key="SheetHeader">
+            <Heading text={this.props.title.text} classes="pr-2" />
             <div className="flex items-end justify-between">
                {this.renderSaveIcon()}
                <IconEdit height="1.5em" width="1.5em" onClickFn={() => this.props.openedTitleEditor(true)} />
@@ -76,4 +77,5 @@ function mapStateToProps(state) {
 export default connect(mapStateToProps, {
    openedTitleEditor,
    saveAllUpdates,
+   menuHidden,
 })(SheetHeader);

@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { updatedSortOptions, sortedAxis } from '../../actions';
+import { menuHidden } from '../../actions/menuActions';
 import SortOptions from '../molecules/SortOptions';
 import FilterOptions from '../molecules/FilterOptions';
 import FilterModalHeading from '../molecules/FilterModalHeading';
@@ -8,6 +9,7 @@ import FilterModalHeading from '../molecules/FilterModalHeading';
 class FilterModal extends Component {
    render() {
       if (this.props.showFilterModal) {
+         window.setTimeout(this.props.menuHidden, 0); // setTimeout makes this happen 1 tick after the render, to avoid console error
          return (
             <div className="fixed z-20 top-0 mt-4 left-1/3 w-1/2 md:w-1/3 border border-solid border-grey-blue bg-white shadow-lg px-2 py-2">
                <FilterModalHeading />
@@ -33,4 +35,4 @@ function mapStateToProps(state, ownProps) {
    };
 }
 
-export default connect(mapStateToProps, { updatedSortOptions, sortedAxis })(FilterModal);
+export default connect(mapStateToProps, { updatedSortOptions, sortedAxis, menuHidden })(FilterModal);

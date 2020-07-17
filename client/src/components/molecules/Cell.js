@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import * as R from 'ramda';
 import { updatedEditor } from '../../actions';
+import { menuHidden } from '../../actions/menuActions';
 import { extractRowColFromCellKey, nothing, isSomething, isNothing } from '../../helpers';
 import { createClassNames, createCellId } from '../../helpers/cellHelpers';
 import managedStore from '../../store';
@@ -24,6 +25,8 @@ class Cell extends Component {
          content: { text: event.target.innerHTML },
       };
       this.props.updatedEditor(cellData);
+
+      this.props.menuHidden();
 
       // need this setTimeout to ensure the code runs on the next tick,
       // otherwise the EditorInput is disabled when given the focus
@@ -76,6 +79,7 @@ class Cell extends Component {
 function mapStateToProps(state, ownProps) {
    const cell = managedStore.state[ownProps.cellKey];
    return {
+      state,
       sheet: state.sheet,
       cellKey: ownProps.cellKey,
       classes: ownProps.classes,
@@ -86,4 +90,4 @@ function mapStateToProps(state, ownProps) {
    };
 }
 
-export default connect(mapStateToProps, { updatedEditor })(Cell);
+export default connect(mapStateToProps, { updatedEditor, menuHidden })(Cell);

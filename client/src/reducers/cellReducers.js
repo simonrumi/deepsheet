@@ -112,6 +112,7 @@ export const cellDbUpdatesReducer = (state = {}, action) => {
          };
 
       case HAS_CHANGED_CELL:
+      case HAS_ADDED_CELL:
          const changedCells = state.changedCells || [];
          const cellAlreadyInArray = R.find(changedCell => {
             const { row, column } = action.payload;
@@ -124,14 +125,6 @@ export const cellDbUpdatesReducer = (state = {}, action) => {
             ...state,
             isStale: true,
             changedCells,
-         };
-
-      case HAS_ADDED_CELL:
-         const addedCells = state.addedCells || [];
-         return {
-            ...state,
-            isStale: true,
-            addedCells: R.append(action.payload, addedCells),
          };
 
       default:

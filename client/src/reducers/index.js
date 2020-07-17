@@ -5,6 +5,7 @@ import { removeObjectFromArrayByKeyValue, isSomething } from '../helpers';
 import { updatedAxisFilters } from '../helpers/visibilityHelpers';
 import titleReducer from './titleReducer';
 import fetchSheetReducer from './fetchSheetReducer';
+import menuReducer from './menuReducer';
 import {
    HAS_CHANGED_METADATA,
    UPDATED_EDITOR,
@@ -210,4 +211,5 @@ export const staticReducers = {
    filterModal: filterModalReducer,
    cellKeys: cellKeyReducer,
    cellDbUpdates: cellDbUpdatesReducer,
+   menu: menuReducer,
 };

@@ -37,6 +37,7 @@ const logState = state => {
       'filterModal',
       'cellKeys',
       'cellDbUpdates',
+      'menu',
    ];
 
    const baseStateObj = R.reduce(

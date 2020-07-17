@@ -2,17 +2,25 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import SheetHeader from './molecules/SheetHeader';
 import TitleForm from './molecules/TitleForm';
+import Menu from './molecules/Menu';
 
 export class Header extends Component {
-   render() {
-      return <div>{this.renderTitleOrTitleForm()}</div>;
-   }
-
    renderTitleOrTitleForm() {
       if (this.props.title.isEditingTitle) {
          return <TitleForm onSubmit={this.editTitle} title={this.props.title.text} />;
       }
       return <SheetHeader />;
+   }
+
+   render() {
+      return (
+         <div className="flex">
+            <div className="pr-2 max-w-4">
+               <Menu />
+            </div>
+            <div className="w-full">{this.renderTitleOrTitleForm()}</div>
+         </div>
+      );
    }
 }
 
