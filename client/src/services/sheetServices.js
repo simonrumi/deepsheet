@@ -12,59 +12,7 @@ import {
    stateSheetId,
    stateMetadataIsStale,
    saveableStateMetadata,
-   stateAddedCells,
 } from '../helpers/dataStructureHelpers';
-
-/****
- * not using memoization at this poiint, but keepin here in case it comes up again
-
-Need to have these impure functions for dealing with memoizedItems.
-Can't put memoizedItems into the Redux store because then there's a circular dependancy
-where this file imports an update action, and actions imports fetchSummaryCellFromSheet
-
-// TODO might be able to put memoizedItems into the store, now that fetchSummaryCellFromSheet is not being used. See comment in sheetServices.js
-const memoizedItems = {};
-
-const updatedMemoizedItems = R.curry((groupName, item) => {
-   memoizedItems[groupName] = { ...memoizedItems[groupName], ...item };
-   return item; // passing this through
-});
-
-export const clearMemoizedItems = () =>
-   R.pipe(
-      R.keys,
-      R.map(key => (memoizedItems[key] = {}))
-   )(memoizedItems);
-
-
-// these args (arg1, ...args) are the args for the fn.
-// the first one is split out of the args array so that R.curry is forced to return a function,
-// if there is not at least 1 argument supplied to maybeMemoize, (after the 1st argument which is the fn).
-
-// make memoized items with functions like this
-// export const fetchSummaryCellFromSheet = maybeMemoize(async sheetId => {
-// ...then call that function like this
-// fetchSummaryCellFromSheet(sheetId) 
-const maybeMemoize = R.curry((fn, groupName, arg1, ...args) => {
-   const key = R.reduce((accumulator, value) => R.concat(accumulator, JSON.stringify(value)), '', [arg1, ...args]);
-
-   if (R.hasPath([groupName, key], memoizedItems)) {
-      return R.ifElse(
-         () => memoizedItems[groupName][key].forceUpdate,
-         fn, //fn is fed the args
-         () => R.path([groupName, key, 'value'], memoizedItems)
-      )(arg1, ...args);
-   }
-
-   return R.pipe(
-      fn, // get the result from calling the fn with the args
-      R.assoc('value', R.__, { forceUpdate: false }), //create an obj with value: result
-      R.assoc(key, R.__, {}), // create a parent obj with key: obj
-      updatedMemoizedItems(groupName), // put parent obj into memoizedItems and return the item
-      R.path([key, 'value']) // return the result (of calling fn with the args)
-   )(arg1, ...args);
-});
-/*** end memoization functions ***/
 
 export const fetchSheet = async sheetId => {
    const sheet = sheetQuery(sheetId)
@@ -134,3 +82,54 @@ export const loadSheet = R.curry(async (state, sheetId) => {
    // then get the new sheet
    updatedSheetId(sheetId);
 });
+
+/****
+ * not using memoization at this poiint, but keepin here in case it comes up again
+
+Need to have these impure functions for dealing with memoizedItems.
+Can't put memoizedItems into the Redux store because then there's a circular dependancy
+where this file imports an update action, and actions imports fetchSummaryCellFromSheet
+
+// TODO might be able to put memoizedItems into the store, now that fetchSummaryCellFromSheet is not being used. See comment in sheetServices.js
+const memoizedItems = {};
+
+const updatedMemoizedItems = R.curry((groupName, item) => {
+   memoizedItems[groupName] = { ...memoizedItems[groupName], ...item };
+   return item; // passing this through
+});
+
+export const clearMemoizedItems = () =>
+   R.pipe(
+      R.keys,
+      R.map(key => (memoizedItems[key] = {}))
+   )(memoizedItems);
+
+
+// these args (arg1, ...args) are the args for the fn.
+// the first one is split out of the args array so that R.curry is forced to return a function,
+// if there is not at least 1 argument supplied to maybeMemoize, (after the 1st argument which is the fn).
+
+// make memoized items with functions like this
+// export const fetchSummaryCellFromSheet = maybeMemoize(async sheetId => {
+// ...then call that function like this
+// fetchSummaryCellFromSheet(sheetId) 
+const maybeMemoize = R.curry((fn, groupName, arg1, ...args) => {
+   const key = R.reduce((accumulator, value) => R.concat(accumulator, JSON.stringify(value)), '', [arg1, ...args]);
+
+   if (R.hasPath([groupName, key], memoizedItems)) {
+      return R.ifElse(
+         () => memoizedItems[groupName][key].forceUpdate,
+         fn, //fn is fed the args
+         () => R.path([groupName, key, 'value'], memoizedItems)
+      )(arg1, ...args);
+   }
+
+   return R.pipe(
+      fn, // get the result from calling the fn with the args
+      R.assoc('value', R.__, { forceUpdate: false }), //create an obj with value: result
+      R.assoc(key, R.__, {}), // create a parent obj with key: obj
+      updatedMemoizedItems(groupName), // put parent obj into memoizedItems and return the item
+      R.path([key, 'value']) // return the result (of calling fn with the args)
+   )(arg1, ...args);
+});
+/*** end memoization functions ***/

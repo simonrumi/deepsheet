@@ -1,19 +1,37 @@
 const graphql = require('graphql');
 const R = require('ramda');
-const { GraphQLObjectType, GraphQLNonNull, GraphQLString, GraphQLID } = graphql;
+const { GraphQLObjectType, GraphQLNonNull, GraphQLString, GraphQLID, GraphQLInt } = graphql;
 const mongoose = require('mongoose');
 const SheetModel = mongoose.model('sheet');
 const SheetType = require('./types/sheet_type');
 const UpdateMetadataInput = require('./types/update_metadata_input');
 const UpdateMetadataPayload = require('./types/update_metadata_payload');
-const AddCellInput = require('./types/add_cell_input');
 const UpdateCellsInput = require('./types/update_cells_input');
 const UpdateCellsPayload = require('./types/update_cells_payload');
-const { updateCells } = require('./helpers/updateCellsHelpers');
+const { updateCells } = require('../helpers/updateCellsHelpers');
+const { createEmptySheet } = require('../helpers/sheetHelpers');
+const { DEFAULT_ROWS, DEFAULT_COLUMNS, DEFAULT_TITLE } = require('../constants');
 
 const RootMutationType = new GraphQLObjectType({
    name: 'RootMutation',
    fields: {
+      createSheet: {
+         type: SheetType,
+         args: {
+            rows: { type: GraphQLInt },
+            columns: { type: GraphQLInt },
+            title: { type: GraphQLString },
+         },
+         resolve(parentValue, args, context) {
+            const defaultSheet = createEmptySheet(
+               args.rows || DEFAULT_ROWS,
+               args.columns || DEFAULT_COLUMNS,
+               args.title || DEFAULT_TITLE
+            );
+            return new SheetModel(defaultSheet).save();
+         },
+      },
+
       changeTitle: {
          type: SheetType,
          args: {
@@ -56,22 +74,6 @@ const RootMutationType = new GraphQLObjectType({
          },
       },
 
-      addCell: {
-         type: UpdateCellsPayload,
-         args: {
-            input: {
-               type: new GraphQLNonNull(AddCellInput),
-            },
-         },
-         resolve: async (parentValue, args, context) => {
-            const { id, row, column, text, subsheetId, visible } = args.input;
-            const sheetDoc = await SheetModel.findById(id);
-            const newCell = { row, column, content: { text: text || null, subsheetId: subsheetId || null }, visible };
-            sheetDoc.cells.push(newCell);
-            return await sheetDoc.save();
-         },
-      },
-
       updateCells: {
          type: UpdateCellsPayload,
          args: {
@@ -80,32 +82,13 @@ const RootMutationType = new GraphQLObjectType({
             },
          },
          resolve: async (parentValue, args, context) => {
-            console.log('mutations.updateCells got args.input', args.input);
             const { id, cells } = args.input;
             const sheetDoc = await SheetModel.findById(id);
-            console.log('mutations.updateCells got sheetDoc', sheetDoc);
             const updatedCells = updateCells(sheetDoc.cells, cells);
             sheetDoc.cells = updatedCells;
-            console.log('mutations.updateCells udpated SheetDoc to look like this now', sheetDoc);
             return await sheetDoc.save();
          },
       },
-
-      // addCells: {
-      //    type: UpdateCellsPayload,
-      //    args: {
-      //       input: {
-      //          type: new GraphQLNonNull(UpdateCellsInput),
-      //       },
-      //    },
-      //    resolve: async (parentValue, args, context) => {
-      //       const { id, cells } = args.input;
-      //       const sheetDoc = await SheetModel.findById(id);
-      //       console.log('mutations.addCells got args.input.cells', cells, 'and sheetDoc.cells', sheetDoc.cells);
-      //       sheetDoc.cells = R.concat(sheetDoc.cells, cells);
-      //       return await sheetDoc.save();
-      //    },
-      // },
    },
 });
 

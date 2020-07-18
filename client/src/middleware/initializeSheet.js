@@ -1,5 +1,6 @@
 import * as R from 'ramda';
 import { UPDATED_SHEET_ID } from '../actions/fetchSheetTypes';
+import { COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
 import { fetchSheet } from '../services/sheetServices';
 import { updatedCellKeys } from '../actions/cellActions';
 import { fetchedSheet, fetchingSheet, fetchSheetError } from '../actions/fetchSheetActions';
@@ -57,6 +58,11 @@ export default store => next => async action => {
             return {};
          }
          break;
+
+      case COMPLETED_CREATE_SHEET:
+         initializeCells(action.payload.sheet);
+         break;
+
       default:
    }
    return next(action);

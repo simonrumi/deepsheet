@@ -1,7 +1,7 @@
 import * as R from 'ramda';
 import { reducer as reduxFormReducer } from 'redux-form';
 import { cellKeyReducer, cellDbUpdatesReducer } from './cellReducers';
-import { removeObjectFromArrayByKeyValue, isSomething } from '../helpers';
+import { removeObjectFromArrayByKeyValue, isSomething, maybeHasPath } from '../helpers';
 import { updatedAxisFilters } from '../helpers/visibilityHelpers';
 import titleReducer from './titleReducer';
 import fetchSheetReducer from './fetchSheetReducer';
@@ -33,14 +33,15 @@ import {
 import { TITLE_EDIT_CANCELLED } from '../actions/titleTypes';
 import { FETCHED_SHEET } from '../actions/fetchSheetTypes';
 import { POSTING_UPDATED_METADATA, COMPLETED_SAVE_METADATA, METADATA_UPDATE_FAILED } from '../actions/metadataTypes';
+import { COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
 
 const metadataReducer = (state = {}, action) => {
    switch (action.type) {
       case FETCHED_SHEET:
-         if (!action.payload || !action.payload.metadata) {
-            return null;
-         }
-         return action.payload.metadata || null;
+         return maybeHasPath(['payload', 'metadata'], action);
+
+      case COMPLETED_CREATE_SHEET:
+         return maybeHasPath(['payload', 'sheet', 'metadata'], action);
 
       case HAS_CHANGED_METADATA: {
          return { ...state, isStale: true };

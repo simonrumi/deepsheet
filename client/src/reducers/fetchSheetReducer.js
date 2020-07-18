@@ -1,4 +1,5 @@
 import { UPDATED_SHEET_ID, FETCHING_SHEET, FETCHED_SHEET, FETCH_SHEET_ERROR } from '../actions/fetchSheetTypes';
+import { POSTING_CREATE_SHEET, COMPLETED_CREATE_SHEET, SHEET_CREATION_FAILED } from '../actions/sheetTypes';
 import { DEFAULT_SHEET_ID } from '../constants';
 
 const fetchSheetReducer = (state = DEFAULT_SHEET_ID, action) => {
@@ -13,10 +14,22 @@ const fetchSheetReducer = (state = DEFAULT_SHEET_ID, action) => {
             errorMessage: null,
          };
 
+      case POSTING_CREATE_SHEET:
+         return {
+            ...state,
+            isCallingDb: true,
+            errorMessage: null,
+         };
+
       case FETCHED_SHEET:
          return action.payload.id;
 
+      case COMPLETED_CREATE_SHEET:
+         console.log('fetchSheetReducer got action', action);
+         return action.payload.sheet.id;
+
       case FETCH_SHEET_ERROR:
+      case SHEET_CREATION_FAILED:
          return {
             sheetId: null,
             isCallingDb: false,

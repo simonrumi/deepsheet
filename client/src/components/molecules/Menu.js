@@ -4,6 +4,7 @@ import IconMenu from '../atoms/IconMenu';
 import IconClose from '../atoms/IconClose';
 import IconLoading from '../atoms/IconLoading';
 import { menuShown, menuHidden } from '../../actions/menuActions';
+import { createdSheet } from '../../actions/sheetActions';
 import { stateIsStale, stateIsCallingDb, stateShowMenu } from '../../helpers/dataStructureHelpers';
 import { saveAllUpdates } from '../../services/sheetServices';
 
@@ -20,7 +21,7 @@ class Menu extends Component {
    }
 
    handleNewSheet() {
-      console.log('handleNewSheet');
+      this.props.createdSheet();
    }
 
    renderSave(textClasses) {
@@ -73,4 +74,4 @@ const mapStateToProps = (state, ownProps) => {
    };
 };
 
-export default connect(mapStateToProps, { saveAllUpdates, menuShown, menuHidden })(Menu);
+export default connect(mapStateToProps, { saveAllUpdates, menuShown, menuHidden, createdSheet })(Menu);

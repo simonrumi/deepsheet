@@ -1,4 +1,5 @@
 import { MENU_SHOWN, MENU_HIDDEN, SET_MENU_REF } from '../actions/menuTypes';
+import { COMPLETED_CREATE_SHEET, SHEET_CREATION_FAILED } from '../actions/sheetTypes';
 
 const menuReducer = (state = {}, action) => {
    switch (action.type) {
@@ -10,6 +11,10 @@ const menuReducer = (state = {}, action) => {
 
       case SET_MENU_REF:
          return { ...state, menuRef: action.payload };
+
+      case COMPLETED_CREATE_SHEET:
+      case SHEET_CREATION_FAILED:
+         return { ...state, showMenu: false };
 
       default:
          return state;
