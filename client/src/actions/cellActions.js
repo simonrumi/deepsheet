@@ -10,6 +10,8 @@ import {
    CELLS_UPDATE_FAILED,
    HAS_ADDED_CELL,
    HAS_CHANGED_CELL,
+   HIGHLIGHTED_CELL_,
+   UNHIGHLIGHTED_CELL_,
 } from './cellTypes';
 import { updateCellsMutation } from '../queries/cellMutations';
 
@@ -70,5 +72,17 @@ export const hasAddedCell = cellCoordinates => {
    managedStore.store.dispatch({
       type: HAS_ADDED_CELL,
       payload: cellCoordinates,
+   });
+};
+
+export const highlightedCell = cellData => {
+   managedStore.store.dispatch({
+      type: HIGHLIGHTED_CELL_ + cellData.row + '_' + cellData.column,
+   });
+};
+
+export const unhighlightedCell = cellData => {
+   managedStore.store.dispatch({
+      type: UNHIGHLIGHTED_CELL_ + cellData.row + '_' + cellData.column,
    });
 };

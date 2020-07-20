@@ -1,10 +1,12 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import * as R from 'ramda';
-import { updatedEditor } from '../../actions';
+import { updatedEditor } from '../../actions/editorActions';
+import { highlightedCell, unhighlightedCell } from '../../actions/cellActions';
 import { menuHidden } from '../../actions/menuActions';
 import { extractRowColFromCellKey, nothing, isSomething, isNothing } from '../../helpers';
 import { createClassNames, createCellId } from '../../helpers/cellHelpers';
+import { getStateCellSubsheetId, stateCellIsHighlighted } from '../../helpers/dataStructureHelpers';
 import managedStore from '../../store';
 import SubsheetCell from './SubsheetCell';
 
@@ -24,9 +26,9 @@ class Cell extends Component {
          column,
          content: { text: event.target.innerHTML },
       };
+      this.props.highlightedCell(cellData);
       this.props.updatedEditor(cellData);
-
-      this.props.menuHidden();
+      this.props.menuHidden(); // in case the menu was showing, hide it
 
       // need this setTimeout to ensure the code runs on the next tick,
       // otherwise the EditorInput is disabled when given the focus
@@ -39,9 +41,10 @@ class Cell extends Component {
    }
 
    renderRegularCell(cell) {
+      const isHighlighted = stateCellIsHighlighted(cell.row, cell.column, this.props.state);
       return (
          <div
-            className={createClassNames(this.props.classes)}
+            className={createClassNames(this.props.classes, isHighlighted)}
             onClick={event => this.onCellClick(event, this.props.cellKey, this.props.editorRef)}
             id={createCellId(cell.column, cell.row)}>
             {cell.content.text}
@@ -57,20 +60,8 @@ class Cell extends Component {
       [R.isNil, nothing],
       [R.pipe(R.prop('visible'), R.not), nothing],
       [R.thunkify(R.identity)(this.props.blankCell), this.renderBlankCell],
-      [
-         R.pipe(
-            R.path(['content', 'subsheetId']), // TODO replace this with something from dataStructureHelpers
-            isSomething
-         ),
-         this.renderSubsheetCell,
-      ],
-      [
-         R.pipe(
-            R.path(['content', 'subsheetId']), // TODO replace this with something from dataStructureHelpers
-            isNothing
-         ),
-         this.renderRegularCell,
-      ],
+      [R.pipe(getStateCellSubsheetId(R.__, this.props.state), isSomething), this.renderSubsheetCell],
+      [R.pipe(getStateCellSubsheetId(R.__, this.props.state), isNothing), this.renderRegularCell],
    ]);
 
    render = () => this.renderCell(this.props.cell);
@@ -90,4 +81,4 @@ function mapStateToProps(state, ownProps) {
    };
 }
 
-export default connect(mapStateToProps, { updatedEditor, menuHidden })(Cell);
+export default connect(mapStateToProps, { updatedEditor, menuHidden, highlightedCell, unhighlightedCell })(Cell);

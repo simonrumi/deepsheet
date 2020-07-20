@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { setEditorRef } from '../../actions';
+import { setEditorRef } from '../../actions/editorActions';
 
 class EditorInput extends Component {
    constructor(props) {
@@ -40,7 +40,4 @@ const mapStateToProps = (state, ownProps) => {
    };
 };
 
-export default connect(
-   mapStateToProps,
-   { setEditorRef }
-)(EditorInput);
+export default connect(mapStateToProps, { setEditorRef })(EditorInput);

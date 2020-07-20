@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import * as R from 'ramda';
-import { updatedEditor, setEditorRef } from '../../actions';
-import { updatedCellBeingEdited, hasChangedCell } from '../../actions/cellActions';
+import { updatedEditor, setEditorRef } from '../../actions/editorActions';
+import { updatedCellBeingEdited, hasChangedCell, unhighlightedCell } from '../../actions/cellActions';
 import { isSomething, isNothing } from '../../helpers';
+import { stateEditorRow, stateEditorColumn } from '../../helpers/dataStructureHelpers';
 import EditorInput from '../atoms/EditorInput';
 
 class Editor extends Component {
@@ -14,6 +15,10 @@ class Editor extends Component {
    }
 
    handleBlur = () => {
+      this.props.unhighlightedCell({
+         row: stateEditorRow(this.props.state),
+         column: stateEditorColumn(this.props.state),
+      });
       this.props.updatedEditor({});
       this.props.updatedCellBeingEdited({});
    };
@@ -58,11 +63,16 @@ class Editor extends Component {
 
 const mapStateToProps = (state, ownProps) => {
    return {
+      state,
       editor: state.editor,
       editorRef: state.editorRef,
    };
 };
 
-export default connect(mapStateToProps, { updatedEditor, updatedCellBeingEdited, setEditorRef, hasChangedCell })(
-   Editor
-);
+export default connect(mapStateToProps, {
+   updatedEditor,
+   updatedCellBeingEdited,
+   setEditorRef,
+   hasChangedCell,
+   unhighlightedCell,
+})(Editor);

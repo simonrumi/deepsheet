@@ -7,3 +7,5 @@ export const POSTING_UPDATED_CELLS = 'posting_updated_cells';
 export const COMPLETED_SAVE_CELLS = 'completed_save_cells';
 export const COMPLETED_SAVE_CELL_ = 'completed_save_cell_';
 export const CELLS_UPDATE_FAILED = 'cells_update_failed';
+export const HIGHLIGHTED_CELL_ = 'highlighted_cell_';
+export const UNHIGHLIGHTED_CELL_ = 'unhighlighted_cell_';

@@ -1,5 +1,5 @@
 import * as R from 'ramda';
-import { isSomething } from './index';
+import { isSomething, isNothing } from './index';
 
 /**
  * @param lens a lens for a sub-object e.g. R.lensProp('metadata')
@@ -91,10 +91,39 @@ export const stateMetadataLastUpdated = subObjectGetterSetter(stateMetadataLens,
 /*** other, non-metadata state values ***/
 
 // get/set values from the state cell structure
-export const stateCell = (row, column, state, cellData) => {
+const getStateCellLens = (row, column) => {
    const cellName = 'cell_' + row + '_' + column;
-   const stateCellLens = R.lensProp(cellName);
+   return R.lensProp(cellName);
+};
+export const stateCell = (row, column, state, cellData) => {
+   const stateCellLens = getStateCellLens(row, column);
    return isSomething(cellData) ? R.set(stateCellLens, cellData, state) : R.view(stateCellLens, state);
+};
+
+export const stateCellIsHighlighted = (row, column, state, isHighlightedNew) => {
+   const isHighlightedLens = R.lensPath(['cell_' + row + '_' + column, 'isHighlighted']);
+   // note using R.isNil because only want to test if it is null or undefined
+   return R.isNil(isHighlightedNew)
+      ? R.view(isHighlightedLens, state)
+      : R.set(isHighlightedLens, isHighlightedNew, state);
+};
+
+export const getStateCellSubsheetId = R.curry((cell, state) => {
+   if (isNothing(cell)) {
+      return null;
+   }
+   const cellName = 'cell_' + cell.row + '_' + cell.column;
+   const subsheetIdLens = R.lensPath([cellName, 'content', 'subsheetId']);
+   return R.view(subsheetIdLens, state);
+});
+
+export const getStateCellText = (cell, state) => {
+   if (isNothing(cell)) {
+      return null;
+   }
+   const cellName = 'cell_' + cell.row + '_' + cell.column;
+   const textLens = R.lensPath([cellName, 'content', 'text']);
+   return R.view(textLens, state);
 };
 
 // get the sheet's id. Will never set this, only retrieve it, as it is mongodb that generates this.
@@ -119,6 +148,13 @@ export const stateChangedCells = subObjectGetterSetter(stateCellDbUpdatesLens, '
 const stateMenuLens = R.lensProp('menu');
 export const stateShowMenu = subObjectGetterSetter(stateMenuLens, 'showMenu');
 
+const editorLens = R.lensProp('editor');
+export const stateEditorRow = subObjectGetterSetter(editorLens, 'row');
+export const stateEditorColumn = subObjectGetterSetter(editorLens, 'column');
+
+/**
+ * stuff to do with wether any parts of the state is stale
+ */
 // return true if any of the state objects with sub-values of "isCallingDb" are true
 export const stateIsCallingDb = state =>
    stateTitleIsCallingDb(state) || stateCellDbUpdatesIsCallingDb(state) || stateMetadataIsCallingDb(state);

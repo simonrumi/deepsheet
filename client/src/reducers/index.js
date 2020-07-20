@@ -6,10 +6,9 @@ import { updatedAxisFilters } from '../helpers/visibilityHelpers';
 import titleReducer from './titleReducer';
 import fetchSheetReducer from './fetchSheetReducer';
 import menuReducer from './menuReducer';
+import { editorReducer, editorRefReducer } from './editorReducers';
 import {
    HAS_CHANGED_METADATA,
-   UPDATED_EDITOR,
-   SET_EDITOR_REF,
    TOGGLED_SHOW_FILTER_MODAL,
    UPDATED_COLUMN_VISIBILITY,
    REPLACED_COLUMN_VISIBILITY,
@@ -156,24 +155,6 @@ const metadataReducer = (state = {}, action) => {
             lastUpdated: isSomething(state.lastUpdated) ? state.lastUpdated : null,
          };
 
-      default:
-         return state;
-   }
-};
-
-const editorReducer = (state = {}, action) => {
-   switch (action.type) {
-      case UPDATED_EDITOR:
-         return action.payload;
-      default:
-         return state;
-   }
-};
-
-const editorRefReducer = (state = {}, action) => {
-   switch (action.type) {
-      case SET_EDITOR_REF:
-         return action.payload;
       default:
          return state;
    }

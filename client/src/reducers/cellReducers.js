@@ -14,6 +14,8 @@ import {
    HAS_CHANGED_CELL,
    COMPLETED_SAVE_CELL_,
    HAS_ADDED_CELL,
+   HIGHLIGHTED_CELL_,
+   UNHIGHLIGHTED_CELL_,
 } from '../actions/cellTypes';
 import { FETCHED_SHEET } from '../actions/fetchSheetTypes';
 
@@ -40,11 +42,11 @@ export const cellReducerFactory = (rowNum, colNum) => {
       }
       const numsFromType = extractRowColFromCellKey(action.type);
       if (numsFromType && numsFromType[ROW_AXIS] === rowNum && numsFromType[COLUMN_AXIS] === colNum) {
-         const hasUpdatedCell = new RegExp(UPDATED_CELL_, 'ig');
+         const hasUpdatedCell = new RegExp(`^${UPDATED_CELL_}`, 'ig');
          if (hasUpdatedCell.test(action.type)) {
             return action.payload;
          }
-         const hasUpdatedContent = new RegExp(UPDATED_CONTENT_OF_CELL_, 'ig');
+         const hasUpdatedContent = new RegExp(`^${UPDATED_CONTENT_OF_CELL_}`, 'ig');
          if (hasUpdatedContent.test(action.type)) {
             return {
                ...state,
@@ -52,9 +54,17 @@ export const cellReducerFactory = (rowNum, colNum) => {
                isStale: action.payload.isStale,
             };
          }
-         const completedSaveCell = new RegExp(COMPLETED_SAVE_CELL_, 'ig');
+         const completedSaveCell = new RegExp(`^${COMPLETED_SAVE_CELL_}`, 'ig');
          if (completedSaveCell.test(action.type)) {
             return { ...state, isStale: false };
+         }
+         const highlightedCell = new RegExp(`^${HIGHLIGHTED_CELL_}`, 'ig');
+         if (highlightedCell.test(action.type)) {
+            return { ...state, isHighlighted: true };
+         }
+         const unhighlightedCell = new RegExp(`^${UNHIGHLIGHTED_CELL_}`, 'ig');
+         if (unhighlightedCell.test(action.type)) {
+            return { ...state, isHighlighted: false };
          }
       }
       return state;

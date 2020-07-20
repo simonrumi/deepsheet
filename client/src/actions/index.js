@@ -3,8 +3,6 @@ import managedStore from '../store';
 
 import {
    HAS_CHANGED_METADATA,
-   UPDATED_EDITOR,
-   SET_EDITOR_REF,
    TOGGLED_SHOW_FILTER_MODAL,
    UPDATED_FILTER,
    UPDATED_COLUMN_FILTERS,
@@ -64,17 +62,6 @@ export const replacedRowFilters = rowFilters => {
       type: REPLACED_ROW_FILTERS,
       payload: rowFilters,
    });
-};
-
-export const updatedEditor = cellData => {
-   managedStore.store.dispatch({
-      type: UPDATED_EDITOR,
-      payload: cellData,
-   });
-};
-
-export const setEditorRef = editorRef => {
-   managedStore.store.dispatch({ type: SET_EDITOR_REF, payload: editorRef });
 };
 
 export const toggledShowFilterModal = (rowIndex, colIndex) => {
