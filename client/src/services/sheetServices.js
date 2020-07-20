@@ -29,7 +29,7 @@ const getUpdatedCells = R.curry((state, updatedCellCoordinates) => {
    if (isSomething(updatedCellCoordinates) && arrayContainsSomething(updatedCellCoordinates)) {
       return R.map(({ row, column }) => {
          const cellData = stateCell(row, column, state);
-         return R.omit(['isStale'], cellData); // the isStale ppty is just for the redux state, not for the db to save
+         return R.omit(['isStale', 'isHighlighted'], cellData); // the isStale ppty is just for the redux state, not for the db to save
       })(updatedCellCoordinates);
    }
    return null;
