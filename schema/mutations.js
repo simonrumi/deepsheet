@@ -8,9 +8,10 @@ const UpdateMetadataInput = require('./types/update_metadata_input');
 const UpdateMetadataPayload = require('./types/update_metadata_payload');
 const UpdateCellsInput = require('./types/update_cells_input');
 const UpdateCellsPayload = require('./types/update_cells_payload');
+const NewSheetInput = require('./types/new_sheet_input');
 const { updateCells } = require('../helpers/updateCellsHelpers');
-const { createEmptySheet } = require('../helpers/sheetHelpers');
-const { DEFAULT_ROWS, DEFAULT_COLUMNS, DEFAULT_TITLE } = require('../constants');
+const { createNewSheet } = require('../helpers/sheetHelpers');
+const { DEFAULT_ROWS, DEFAULT_COLUMNS, DEFAULT_TITLE, DEFAULT_SUMMARY_CELL } = require('../constants');
 
 const RootMutationType = new GraphQLObjectType({
    name: 'RootMutation',
@@ -18,16 +19,20 @@ const RootMutationType = new GraphQLObjectType({
       createSheet: {
          type: SheetType,
          args: {
-            rows: { type: GraphQLInt },
-            columns: { type: GraphQLInt },
-            title: { type: GraphQLString },
+            input: {
+               type: NewSheetInput,
+            },
          },
          resolve(parentValue, args, context) {
-            const defaultSheet = createEmptySheet(
-               args.rows || DEFAULT_ROWS,
-               args.columns || DEFAULT_COLUMNS,
-               args.title || DEFAULT_TITLE
-            );
+            const { rows, columns, title, parentSheetId, summaryCell, summaryCellText } = args.input;
+            const defaultSheet = createNewSheet({
+               totalRows: rows || DEFAULT_ROWS,
+               totalColumns: columns || DEFAULT_COLUMNS,
+               title: title || DEFAULT_TITLE,
+               parentSheetId: parentSheetId || null,
+               summaryCell: summaryCell || DEFAULT_SUMMARY_CELL,
+               summaryCellText: summaryCellText || '',
+            });
             return new SheetModel(defaultSheet).save();
          },
       },

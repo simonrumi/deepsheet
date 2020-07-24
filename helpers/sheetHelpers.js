@@ -13,12 +13,15 @@ const createBlankCell = (row, column) => {
    };
 };
 
-const createEmptySheet = (totalRows, totalColumns, title) => {
+const createNewSheet = ({ totalRows, totalColumns, title, parentSheetId, summaryCell, summaryCellText }) => {
    const cells = forLoopReduce(
       (cellsAccumulator, rowIndex) => {
          const rowOfCells = forLoopReduce(
             (rowAccumulator, columnIndex) => {
                const cell = createBlankCell(rowIndex, columnIndex);
+               if (summaryCell && summaryCell.row === rowIndex && summaryCell.column === columnIndex) {
+                  cell.content.text = summaryCellText || '';
+               }
                return R.append(cell, rowAccumulator);
             },
             [],
@@ -34,9 +37,11 @@ const createEmptySheet = (totalRows, totalColumns, title) => {
       metadata: {
          totalRows,
          totalColumns,
+         parentSheetId,
+         summaryCell,
       },
       cells,
    };
 };
 
-module.exports = { createEmptySheet };
+module.exports = { createNewSheet };

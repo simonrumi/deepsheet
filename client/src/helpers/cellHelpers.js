@@ -1,5 +1,17 @@
 import * as R from 'ramda';
 import { indexToColumnLetter, indexToRowNumber, isSomething } from './index';
+import {
+   cellRow,
+   cellColumn,
+   cellText,
+   cellSubsheetId,
+   cellVisible,
+   cellRowSetter,
+   cellColumnSetter,
+   cellTextSetter,
+   cellSubsheetIdSetter,
+   cellVisibleSetter,
+} from './dataStructureHelpers';
 import { THIN_COLUMN } from '../constants';
 
 export const getCellContent = cell =>
@@ -30,3 +42,13 @@ export const renderWholeRowGridSizingStyle = numCols => {
       gridTemplateColumns: columnsStyle,
    };
 };
+
+// returns an object with only the cell's fields that are savable in the db
+export const getSavableCellData = cell =>
+   R.pipe(
+      cellRowSetter(cellRow(cell)),
+      cellColumnSetter(cellColumn(cell)),
+      cellTextSetter(cellText(cell)),
+      cellSubsheetIdSetter(cellSubsheetId(cell)),
+      cellVisibleSetter(cellVisible(cell))
+   )({});

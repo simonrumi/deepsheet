@@ -33,6 +33,10 @@ export const dbRowVisibility = subObjectGetterSetter(dbMetadataLens, 'rowVisibil
 export const dbColumnFilters = subObjectGetterSetter(dbMetadataLens, 'columnFilters');
 export const dbRowFilters = subObjectGetterSetter(dbMetadataLens, 'rowFilters');
 
+// get the sheet's id from db structur
+const dbSheetIdLens = R.lensProp('id');
+export const dbSheetId = R.view(dbSheetIdLens);
+
 /*** get/set values from the db cell structure ***/
 const dbCellsLens = R.lensProp('cells');
 export const dbCells = R.view(dbCellsLens);
@@ -88,9 +92,7 @@ export const stateMetadataIsCallingDb = subObjectGetterSetter(stateMetadataLens,
 export const stateMetadataErrorMessage = subObjectGetterSetter(stateMetadataLens, 'errorMessage');
 export const stateMetadataLastUpdated = subObjectGetterSetter(stateMetadataLens, 'lastUpdated');
 
-/*** other, non-metadata state values ***/
-
-// get/set values from the state cell structure
+/**** get/set values from the state's cell structure ****/
 const getStateCellLens = (row, column) => {
    const cellName = 'cell_' + row + '_' + column;
    return R.lensProp(cellName);
@@ -126,6 +128,28 @@ export const getStateCellText = (cell, state) => {
    return R.view(textLens, state);
 };
 
+/*** get and values for the cell itself - note that getters and setters are separate fns so that the setter can be curried ***/
+const cellRowLens = R.lensProp('row');
+export const cellRow = cell => R.view(cellRowLens, cell);
+export const cellRowSetter = R.curry((newRow, cell) => R.set(cellRowLens, newRow, cell));
+
+const cellColumnLens = R.lensProp('column');
+export const cellColumn = cell => R.view(cellColumnLens, cell);
+export const cellColumnSetter = R.curry((newColumn, cell) => R.set(cellColumnLens, newColumn, cell));
+
+const cellTextLens = R.lensPath(['content', 'text']);
+export const cellText = cell => R.view(cellTextLens, cell);
+export const cellTextSetter = R.curry((newText, cell) => R.set(cellTextLens, newText, cell));
+
+const cellSubsheetIdLens = R.lensPath(['content', 'subsheetId']);
+export const cellSubsheetId = cell => R.view(cellSubsheetIdLens, cell);
+export const cellSubsheetIdSetter = R.curry((newSubsheetId, cell) => R.set(cellSubsheetIdLens, newSubsheetId, cell));
+
+const cellVisibleLens = R.lensProp('visible');
+export const cellVisible = cell => R.view(cellVisibleLens, cell);
+export const cellVisibleSetter = R.curry((newVisibility, cell) => R.set(cellVisibleLens, newVisibility, cell));
+
+/*** other state values ***/
 // get the sheet's id. Will never set this, only retrieve it, as it is mongodb that generates this.
 const stateSheetIdLens = R.lensProp('sheetId');
 export const stateSheetId = R.view(stateSheetIdLens); // use: stateSheetId(stateObj);

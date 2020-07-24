@@ -39,6 +39,7 @@ export const updatedCells = async updatedCellsData => {
    managedStore.store.dispatch({ type: POSTING_UPDATED_CELLS });
    try {
       const { sheetId, updatedCells } = updatedCellsData;
+      console.log('cellActions.updatedCells got updatedCells', updatedCells);
       const response = await updateCellsMutation(sheetId, updatedCells);
       managedStore.store.dispatch({
          type: COMPLETED_SAVE_CELLS,

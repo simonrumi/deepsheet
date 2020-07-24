@@ -2,13 +2,21 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import * as R from 'ramda';
 import { updatedEditor } from '../../actions/editorActions';
-import { highlightedCell, unhighlightedCell } from '../../actions/cellActions';
+import { highlightedCell } from '../../actions/cellActions';
 import { menuHidden } from '../../actions/menuActions';
+import { createdSheet } from '../../actions/sheetActions';
 import { extractRowColFromCellKey, nothing, isSomething, isNothing } from '../../helpers';
 import { createClassNames, createCellId } from '../../helpers/cellHelpers';
-import { getStateCellSubsheetId, stateCellIsHighlighted } from '../../helpers/dataStructureHelpers';
+import {
+   cellSubsheetId,
+   stateCellIsHighlighted,
+   stateSheetId,
+   stateEditorRow,
+   stateEditorColumn,
+} from '../../helpers/dataStructureHelpers';
 import managedStore from '../../store';
 import SubsheetCell from './SubsheetCell';
+import IconNewDoc from '../atoms/IconNewDoc';
 
 class Cell extends Component {
    constructor(props) {
@@ -17,6 +25,38 @@ class Cell extends Component {
       this.renderRegularCell = this.renderRegularCell.bind(this);
       this.renderSubsheetCell = this.renderSubsheetCell.bind(this);
       this.renderBlankCell = this.renderBlankCell.bind(this);
+      this.renderNewDocIcon = this.renderNewDocIcon.bind(this);
+      this.triggerCreatedSheetAction = this.triggerCreatedSheetAction.bind(this);
+   }
+
+   triggerCreatedSheetAction() {
+      const rows = null;
+      const columns = null;
+      const title = null;
+      const parentSheetId = stateSheetId(this.props.state);
+      const summaryCell = null; // this would be to tell which cell in the new sheet is the summary cell. Default is 0,0  - probably never will set this in advance
+      const parentSheetCell = this.props.cell;
+      this.props.createdSheet({ rows, columns, title, parentSheetId, summaryCell, parentSheetCell });
+   }
+
+   renderNewDocIcon(isHighlighted) {
+      const cellCoordinates = {
+         row: stateEditorRow(this.props.state),
+         column: stateEditorColumn(this.props.state),
+      };
+      return isHighlighted ? (
+         <div className="relative">
+            {/* onMouseDown is fired before onBlur, whereas onClick is after onBlur. 
+            Since the Editor has the focus when a cell is clicked, clicking on IconNewDoc will cause
+            the Editor's onBlur to fire...but we need to call triggerCreatedSheet action before the onBlur,
+            hence the use of onMouseDown */}
+            <IconNewDoc
+               classes="w-4 z-10 absolute bottom-0 left-0"
+               cellCoordinates={cellCoordinates}
+               onMouseDownFn={this.triggerCreatedSheetAction}
+            />
+         </div>
+      ) : null;
    }
 
    onCellClick(event, cellKey, editorRef) {
@@ -47,6 +87,7 @@ class Cell extends Component {
             className={createClassNames(this.props.classes, isHighlighted)}
             onClick={event => this.onCellClick(event, this.props.cellKey, this.props.editorRef)}
             id={createCellId(cell.column, cell.row)}>
+            {this.renderNewDocIcon(isHighlighted)}
             {cell.content.text}
          </div>
       );
@@ -60,8 +101,8 @@ class Cell extends Component {
       [R.isNil, nothing],
       [R.pipe(R.prop('visible'), R.not), nothing],
       [R.thunkify(R.identity)(this.props.blankCell), this.renderBlankCell],
-      [R.pipe(getStateCellSubsheetId(R.__, this.props.state), isSomething), this.renderSubsheetCell],
-      [R.pipe(getStateCellSubsheetId(R.__, this.props.state), isNothing), this.renderRegularCell],
+      [R.pipe(cellSubsheetId, isSomething), this.renderSubsheetCell],
+      [R.pipe(cellSubsheetId, isNothing), this.renderRegularCell],
    ]);
 
    render = () => this.renderCell(this.props.cell);
@@ -81,4 +122,9 @@ function mapStateToProps(state, ownProps) {
    };
 }
 
-export default connect(mapStateToProps, { updatedEditor, menuHidden, highlightedCell, unhighlightedCell })(Cell);
+export default connect(mapStateToProps, {
+   updatedEditor,
+   menuHidden,
+   highlightedCell,
+   createdSheet,
+})(Cell);

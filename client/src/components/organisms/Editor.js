@@ -15,12 +15,17 @@ class Editor extends Component {
    }
 
    handleBlur = () => {
-      this.props.unhighlightedCell({
+      console.log('Editor.handleBlur');
+      const currentCellCoordinates = {
          row: stateEditorRow(this.props.state),
          column: stateEditorColumn(this.props.state),
-      });
-      this.props.updatedEditor({});
-      this.props.updatedCellBeingEdited({});
+      };
+      //this must happen 1 tick later so that clicking on the newDoc icon will get registered
+      window.setTimeout(() => {
+         this.props.unhighlightedCell(currentCellCoordinates);
+         this.props.updatedEditor({});
+         this.props.updatedCellBeingEdited({});
+      }, 0);
    };
 
    handleChange = event => {

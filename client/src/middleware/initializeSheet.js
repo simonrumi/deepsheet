@@ -36,7 +36,13 @@ const initializeCells = sheet => {
    if (isSomething(dbMetadata(sheet))) {
       createCellReducers(sheet);
       populateCellsInStore(sheet);
-      R.pipe(dbCells, orderCells, createCellKeys, updatedCellKeys)(sheet);
+      R.pipe(
+         dbCells,
+         orderCells,
+         createCellKeys,
+         R.tap(data => console.log('initializeCells-createCellKeys returned', data)),
+         updatedCellKeys
+      )(sheet);
    } else {
       console.warn('WARNING: App.render.initializeCells had no data to operate on');
    }
