@@ -7,9 +7,11 @@ const SheetType = require('./types/sheet_type');
 const UpdateMetadataInput = require('./types/update_metadata_input');
 const UpdateMetadataPayload = require('./types/update_metadata_payload');
 const UpdateCellsInput = require('./types/update_cells_input');
+const UpdateSubsheetIdInput = require('./types/update_subsheet_id_input');
 const UpdateCellsPayload = require('./types/update_cells_payload');
+const UpdateCellPayload = require('./types/update_cell_payload');
 const NewSheetInput = require('./types/new_sheet_input');
-const { updateCells } = require('../helpers/updateCellsHelpers');
+const { findCellByRowAndColumn, updateCells, deleteSubsheetId } = require('../helpers/updateCellsHelpers');
 const { createNewSheet } = require('../helpers/sheetHelpers');
 const { DEFAULT_ROWS, DEFAULT_COLUMNS, DEFAULT_TITLE, DEFAULT_SUMMARY_CELL } = require('../constants');
 
@@ -92,6 +94,26 @@ const RootMutationType = new GraphQLObjectType({
             const updatedCells = updateCells(sheetDoc.cells, cells);
             sheetDoc.cells = updatedCells;
             return await sheetDoc.save();
+         },
+      },
+
+      deleteSubsheetId: {
+         type: UpdateCellPayload,
+         args: {
+            input: {
+               type: new GraphQLNonNull(UpdateSubsheetIdInput),
+            },
+         },
+         resolve: async (parentValue, args, context) => {
+            const { sheetId, row, column, text } = args.input;
+            console.log('deleteSubsheetId mutation, sheetId', sheetId, 'row', row, 'column', column, 'text', text);
+            const sheetDoc = await SheetModel.findById(sheetId);
+            const updatedCells = deleteSubsheetId(sheetDoc.cells, row, column, text);
+            sheetDoc.cells = updatedCells;
+            await sheetDoc.save();
+            const cell = findCellByRowAndColumn(row, column, sheetDoc.cells);
+            console.log('deleteSubsheetId after sheetDoc.save, cell is', cell);
+            return { cell };
          },
       },
    },

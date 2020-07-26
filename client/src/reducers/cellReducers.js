@@ -14,8 +14,9 @@ import {
    HAS_CHANGED_CELL,
    COMPLETED_SAVE_CELL_,
    HAS_ADDED_CELL,
-   HIGHLIGHTED_CELL_,
-   UNHIGHLIGHTED_CELL_,
+   POSTING_DELETE_SUBSHEET_ID_,
+   COMPLETED_DELETE_SUBSHEET_ID_,
+   DELETE_SUBSHEET_ID_FAILED_,
 } from '../actions/cellTypes';
 import { FETCHED_SHEET } from '../actions/fetchSheetTypes';
 
@@ -58,13 +59,17 @@ export const cellReducerFactory = (rowNum, colNum) => {
          if (completedSaveCell.test(action.type)) {
             return { ...state, isStale: false };
          }
-         const highlightedCell = new RegExp(`^${HIGHLIGHTED_CELL_}`, 'ig');
-         if (highlightedCell.test(action.type)) {
-            return { ...state, isHighlighted: true };
+         const postingDeleteSubsheetId = new RegExp(`^${POSTING_DELETE_SUBSHEET_ID_}`, 'ig');
+         if (postingDeleteSubsheetId.test(action.type)) {
+            return { ...state, isCallingDb: true, isStale: true };
          }
-         const unhighlightedCell = new RegExp(`^${UNHIGHLIGHTED_CELL_}`, 'ig');
-         if (unhighlightedCell.test(action.type)) {
-            return { ...state, isHighlighted: false };
+         const completedDeleteSubsheetId = new RegExp(`^${COMPLETED_DELETE_SUBSHEET_ID_}`, 'ig');
+         if (completedDeleteSubsheetId.test(action.type)) {
+            return { ...state, content: action.payload.cell.content, isCallingDb: false, isStale: false };
+         }
+         const deleteSubsheetIdFailed = new RegExp(`^${DELETE_SUBSHEET_ID_FAILED_}`, 'ig');
+         if (deleteSubsheetIdFailed.test(action.type)) {
+            return { ...state, isCallingDb: false, isStale: true };
          }
       }
       return state;

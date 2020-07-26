@@ -1,8 +1,9 @@
 import * as R from 'ramda';
 import { reducer as reduxFormReducer } from 'redux-form';
-import { cellKeyReducer, cellDbUpdatesReducer } from './cellReducers';
 import { removeObjectFromArrayByKeyValue, isSomething, maybeHasPath } from '../helpers';
 import { updatedAxisFilters } from '../helpers/visibilityHelpers';
+import { cellKeyReducer, cellDbUpdatesReducer } from './cellReducers';
+import { focusReducer } from './focusReducer';
 import titleReducer from './titleReducer';
 import fetchSheetReducer from './fetchSheetReducer';
 import menuReducer from './menuReducer';
@@ -194,4 +195,5 @@ export const staticReducers = {
    cellKeys: cellKeyReducer,
    cellDbUpdates: cellDbUpdatesReducer,
    menu: menuReducer,
+   focus: focusReducer,
 };

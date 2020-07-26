@@ -102,13 +102,13 @@ export const stateCell = (row, column, state, cellData) => {
    return isSomething(cellData) ? R.set(stateCellLens, cellData, state) : R.view(stateCellLens, state);
 };
 
-export const stateCellIsHighlighted = (row, column, state, isHighlightedNew) => {
+/* export const stateCellIsHighlighted = (row, column, state, isHighlightedNew) => {
    const isHighlightedLens = R.lensPath(['cell_' + row + '_' + column, 'isHighlighted']);
    // note using R.isNil because only want to test if it is null or undefined
    return R.isNil(isHighlightedNew)
       ? R.view(isHighlightedLens, state)
       : R.set(isHighlightedLens, isHighlightedNew, state);
-};
+}; */
 
 export const getStateCellSubsheetId = R.curry((cell, state) => {
    if (isNothing(cell)) {
@@ -149,10 +149,22 @@ const cellVisibleLens = R.lensProp('visible');
 export const cellVisible = cell => R.view(cellVisibleLens, cell);
 export const cellVisibleSetter = R.curry((newVisibility, cell) => R.set(cellVisibleLens, newVisibility, cell));
 
+const cellIsCallingDbLens = R.lensProp('isCallingDb');
+export const cellIsCallingDb = cell => R.view(cellIsCallingDbLens, cell);
+export const cellIsCallingDbSetter = R.curry((value, cell) => R.set(cellIsCallingDbLens, value, cell));
+
+const cellIsStaleLens = R.lensProp('isStale');
+export const cellIsStale = cell => R.view(cellIsStaleLens, cell);
+export const cellIsStaleSetter = R.curry((value, cell) => R.set(cellIsStaleLens, value, cell));
+
 /*** other state values ***/
 // get the sheet's id. Will never set this, only retrieve it, as it is mongodb that generates this.
 const stateSheetIdLens = R.lensProp('sheetId');
 export const stateSheetId = R.view(stateSheetIdLens); // use: stateSheetId(stateObj);
+
+const stateFocusLens = R.lensProp('focus'); // there's a property called focus which is used to track which UI element currently has focus
+export const stateFocus = (state, element) =>
+   isSomething(element) ? R.set(stateFocusLens, element, state) : R.view(stateFocusLens, state);
 
 const stateTitleLens = R.lensProp('title');
 export const stateTitleIsCallingDb = subObjectGetterSetter(stateTitleLens, 'isCallingDb');

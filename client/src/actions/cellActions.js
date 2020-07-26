@@ -10,10 +10,12 @@ import {
    CELLS_UPDATE_FAILED,
    HAS_ADDED_CELL,
    HAS_CHANGED_CELL,
-   HIGHLIGHTED_CELL_,
-   UNHIGHLIGHTED_CELL_,
+   POSTING_DELETE_SUBSHEET_ID_,
+   COMPLETED_DELETE_SUBSHEET_ID_,
+   DELETE_SUBSHEET_ID_FAILED_,
 } from './cellTypes';
-import { updateCellsMutation } from '../queries/cellMutations';
+import { UPDATED_FOCUS } from './focusTypes';
+import { updateCellsMutation, deleteSubsheetIdMutation } from '../queries/cellMutations';
 
 export const updatedCell = cell => {
    if (R.isNil(cell) || R.not(R.has('content', cell))) {
@@ -62,6 +64,28 @@ export const updatedCells = async updatedCellsData => {
    }
 };
 
+export const deleteSubsheetId = R.curry(async (row, column, text, sheetId) => {
+   managedStore.store.dispatch({ type: POSTING_DELETE_SUBSHEET_ID_ + row + '_' + column });
+   try {
+      const response = await deleteSubsheetIdMutation(sheetId, row, column, text);
+      managedStore.store.dispatch({
+         type: COMPLETED_DELETE_SUBSHEET_ID_ + row + '_' + column,
+         payload: {
+            cell: response.data.deleteSubsheetId.cell,
+         }, //note that "deleteSubsheetId" is the name of the mutation in cellMutation.js
+      });
+   } catch (err) {
+      console.error('did not successfully delete the subsheetId of cell', row, column, 'in the db: err:', err);
+      managedStore.store.dispatch({
+         type: DELETE_SUBSHEET_ID_FAILED_ + row + '_' + column,
+         payload: {
+            errorMessage:
+               'did not successfully delete the subsheetId of cell ' + row + ',' + column + 'in the db. err:' + err,
+         },
+      });
+   }
+});
+
 export const hasChangedCell = cellCoordinates => {
    managedStore.store.dispatch({
       type: HAS_CHANGED_CELL,
@@ -76,14 +100,9 @@ export const hasAddedCell = cellCoordinates => {
    });
 };
 
-export const highlightedCell = cellData => {
+export const focusedCell = cellData => {
    managedStore.store.dispatch({
-      type: HIGHLIGHTED_CELL_ + cellData.row + '_' + cellData.column,
-   });
-};
-
-export const unhighlightedCell = cellData => {
-   managedStore.store.dispatch({
-      type: UNHIGHLIGHTED_CELL_ + cellData.row + '_' + cellData.column,
+      type: UPDATED_FOCUS,
+      payload: { cell: cellData },
    });
 };

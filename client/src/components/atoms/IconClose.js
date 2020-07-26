@@ -1,6 +1,6 @@
 import React from 'react';
 
-const IconMenu = ({
+const IconClose = ({
    style = {},
    width = '100%',
    height = '100%',
@@ -33,4 +33,4 @@ const IconMenu = ({
    );
 };
 
-export default IconMenu;
+export default IconClose;

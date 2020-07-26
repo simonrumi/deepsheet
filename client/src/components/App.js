@@ -38,6 +38,7 @@ const logState = state => {
       'cellKeys',
       'cellDbUpdates',
       'menu',
+      'focus',
    ];
 
    const baseStateObj = R.reduce(

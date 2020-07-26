@@ -1,6 +1,5 @@
 const graphql = require('graphql');
 const { GraphQLID, GraphQLList, GraphQLNonNull, GraphQLInputObjectType } = graphql;
-const SheetCellType = require('./sheet_cell_type');
 const CellInput = require('./cell_input');
 
 const UpdateCellsInput = new GraphQLInputObjectType({

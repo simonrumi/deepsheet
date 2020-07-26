@@ -55,7 +55,6 @@ const getChangedMetadata = state => (stateMetadataIsStale(state) ? saveableState
 export const saveMetadataUpdates = async state => {
    console.log('TODO sheetServices.saveMetadataUpdates is saving all the metadata not just the changed parts');
    const changedMetadata = getChangedMetadata(state);
-   console.log('sheetServices.saveMetadataUpdates got changedMetadata', changedMetadata);
    if (changedMetadata) {
       try {
          const sheetId = stateSheetId(state);

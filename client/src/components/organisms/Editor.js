@@ -2,9 +2,8 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import * as R from 'ramda';
 import { updatedEditor, setEditorRef } from '../../actions/editorActions';
-import { updatedCellBeingEdited, hasChangedCell, unhighlightedCell } from '../../actions/cellActions';
+import { updatedCellBeingEdited, hasChangedCell } from '../../actions/cellActions';
 import { isSomething, isNothing } from '../../helpers';
-import { stateEditorRow, stateEditorColumn } from '../../helpers/dataStructureHelpers';
 import EditorInput from '../atoms/EditorInput';
 
 class Editor extends Component {
@@ -15,14 +14,8 @@ class Editor extends Component {
    }
 
    handleBlur = () => {
-      console.log('Editor.handleBlur');
-      const currentCellCoordinates = {
-         row: stateEditorRow(this.props.state),
-         column: stateEditorColumn(this.props.state),
-      };
       //this must happen 1 tick later so that clicking on the newDoc icon will get registered
       window.setTimeout(() => {
-         this.props.unhighlightedCell(currentCellCoordinates);
          this.props.updatedEditor({});
          this.props.updatedCellBeingEdited({});
       }, 0);
@@ -79,5 +72,4 @@ export default connect(mapStateToProps, {
    updatedCellBeingEdited,
    setEditorRef,
    hasChangedCell,
-   unhighlightedCell,
 })(Editor);
