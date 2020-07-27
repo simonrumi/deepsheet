@@ -54,7 +54,7 @@ class SubsheetCell extends Component {
       if (cellIsCallingDb(this.props.cell)) {
          return (
             <div className="relative w-full">
-               <div className="absolute bottom-0 left-0 z-10 w-1/3 flex justify-start">
+               <div className="absolute bottom-4 left-0 z-10 min-w-full flex justify-start">
                   <IconLoading classes="w-4 flex-1" />
                </div>
             </div>
@@ -63,7 +63,7 @@ class SubsheetCell extends Component {
       if (cellHasFocus) {
          return (
             <div className="relative w-full">
-               <div className="absolute bottom-0 left-0 z-10 w-1/3 flex justify-start">
+               <div className="absolute bottom-4 left-0 z-10 min-w-full flex justify-start">
                   {this.renderIconDownToSubsheet()}
                   {this.renderIconUnlinkSubsheet()}
                </div>
@@ -79,14 +79,28 @@ class SubsheetCell extends Component {
       this.props.menuHidden(); // in case the menu was showing, hide it
    }
 
+   innerDivClassNames = cellHasFocus => {
+      const cellBaseClasses = 'm-px p-px ';
+      const borderClasses = cellHasFocus ? 'border-2 border-subdued-blue' : 'border border-burnt-orange';
+      return cellBaseClasses + borderClasses;
+   };
+
    render() {
       const cellHasFocus = isCellFocused(this.props.cell, this.props.state);
       return (
-         <div className="grid-item border border-burnt-orange cursor-pointer" onClick={evt => this.onCellClick(evt)}>
-            {this.renderIcons(cellHasFocus)}
-            <div>{this.props.subContent}</div>
+         <div
+            className="grid-item grid items-stretch cursor-pointer border-t border-l"
+            onClick={evt => this.onCellClick(evt)}>
+            <div className={this.innerDivClassNames(cellHasFocus)}>
+               {this.renderIcons(cellHasFocus)}
+               {this.props.subContent}
+            </div>
          </div>
       );
+      // note the class grid-item makes this cell an item within the large grid which is the spreadsheet
+      // while these classes create a 1x1 grid that takes up the full space within that:
+      // grid items-stretch
+      // In the inner div there is the text, with m-px giving a 1px margin so its orange border is a little separated from the outer div's grey border
    }
 }
 

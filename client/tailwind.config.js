@@ -12,6 +12,7 @@ module.exports = {
             'light-light-orange-transparent': 'rgba(255, 230, 199, 0.5)',
          },
          inset: {
+            '4': '4px',
             '1/4': '25%',
             '1/3': '33%',
             '1/2': '50%',

@@ -46,7 +46,7 @@ class Cell extends Component {
       if (cellHasFocus) {
          return (
             <div className="relative w-full">
-               <div className="absolute bottom-0 left-0 z-10 w-1/3 flex justify-start">{this.renderIconNewDoc()}</div>
+               <div className="absolute bottom-4 left-0 z-10 w-1/3 flex justify-start">{this.renderIconNewDoc()}</div>
             </div>
          );
       }
