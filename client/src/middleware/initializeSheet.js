@@ -6,6 +6,7 @@ import { updatedCellKeys } from '../actions/cellActions';
 import { fetchedSheet, fetchingSheet, fetchSheetError } from '../actions/fetchSheetActions';
 import { createCellReducers, populateCellsInStore } from '../reducers/cellReducers';
 import { isSomething } from '../helpers';
+import { applyFilters } from '../helpers/visibilityHelpers';
 import { dbMetadata, dbCells } from '../helpers/dataStructureHelpers';
 
 /***** ordering cells by row then column */
@@ -37,6 +38,7 @@ const initializeCells = sheet => {
       createCellReducers(sheet);
       populateCellsInStore(sheet);
       R.pipe(dbCells, orderCells, createCellKeys, updatedCellKeys)(sheet);
+      applyFilters(sheet);
    } else {
       console.warn('WARNING: App.render.initializeCells had no data to operate on');
    }
@@ -50,8 +52,11 @@ export default store => next => async action => {
          try {
             const sheet = await fetchSheet(newSheetId);
             // if sheet has some data then dispatch the fetchedSheet action
-            // note that R.juxt applies the argument sheet to both fns in its array
-            R.when(isSomething, R.juxt([R.pipe(fetchedSheet, store.dispatch), initializeCells]))(sheet);
+            R.when(
+               isSomething,
+               // note that R.juxt applies the argument sheet to both fns in its array
+               R.juxt([R.pipe(fetchedSheet, store.dispatch), initializeCells])
+            )(sheet);
          } catch (err) {
             console.error('failed to fetchSheet', err);
             fetchSheetError(err);

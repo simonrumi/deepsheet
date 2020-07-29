@@ -1,6 +1,9 @@
 import * as R from 'ramda';
 import { isSomething, isNothing } from './index';
 
+const createGetterSetter = lens => (data, newValue) =>
+   isSomething(newValue) ? R.set(lens, newValue, data) : R.view(lens, data);
+
 /**
  * @param lens a lens for a sub-object e.g. R.lensProp('metadata')
  * @param propName the name of an property within the sub-object, e.g. 'totalRows'
@@ -14,8 +17,9 @@ import { isSomething, isNothing } from './index';
 const subObjectGetterSetter = (lens, propName) => {
    const propLens = R.lensProp(propName); // a lens to focus on, e.g. 'totalRows'
    const fullPathLens = R.compose(lens, propLens); // a lens to focus on, e.g. state.totalRows
-   return (data, newValue) =>
-      isSomething(newValue) ? R.set(fullPathLens, newValue, data) : R.view(fullPathLens, data);
+   // return (data, newValue) =>
+   //    isSomething(newValue) ? R.set(fullPathLens, newValue, data) : R.view(fullPathLens, data);
+   return createGetterSetter(fullPathLens);
 };
 
 /*** get/set values from the db metadata structure ***/
@@ -33,13 +37,26 @@ export const dbRowVisibility = subObjectGetterSetter(dbMetadataLens, 'rowVisibil
 export const dbColumnFilters = subObjectGetterSetter(dbMetadataLens, 'columnFilters');
 export const dbRowFilters = subObjectGetterSetter(dbMetadataLens, 'rowFilters');
 
-// get the sheet's id from db structur
+// get the sheet's id from db structure
 const dbSheetIdLens = R.lensProp('id');
 export const dbSheetId = R.view(dbSheetIdLens);
 
 /*** get/set values from the db cell structure ***/
 const dbCellsLens = R.lensProp('cells');
 export const dbCells = R.view(dbCellsLens);
+
+/*** get/set values from the db filter structure ***/
+const filterFilterExpressionLens = R.lensProp('filterExpression');
+export const filterFilterExpression = createGetterSetter(filterFilterExpressionLens);
+
+const filterCaseSensitiveLens = R.lensProp('caseSensitive');
+export const filterCaseSensitive = createGetterSetter(filterCaseSensitiveLens);
+
+const filterRegexLens = R.lensProp('regex');
+export const filterRegex = createGetterSetter(filterRegexLens);
+
+const filterIndexLens = R.lensProp('index');
+export const filterIndex = createGetterSetter(filterIndexLens);
 
 /***
  * get/set values from the state metadata structure

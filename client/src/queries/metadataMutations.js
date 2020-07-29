@@ -8,8 +8,6 @@ const UPDATE_METATDATA_MUTATION = gql`
       $totalColumns: Int
       $parentSheetId: ID
       $summaryCell: SheetSummaryCellInput
-      $rowVisibility: [SheetVisibilityInput]
-      $columnVisibility: [SheetVisibilityInput]
       $rowFilters: [SheetFilterInput]
       $columnFilters: [SheetFilterInput]
    ) {
@@ -20,8 +18,6 @@ const UPDATE_METATDATA_MUTATION = gql`
             totalColumns: $totalColumns
             parentSheetId: $parentSheetId
             summaryCell: $summaryCell
-            rowVisibility: $rowVisibility
-            columnVisibility: $columnVisibility
             rowFilters: $rowFilters
             columnFilters: $columnFilters
          }

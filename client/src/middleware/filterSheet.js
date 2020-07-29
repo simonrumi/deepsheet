@@ -255,3 +255,5 @@ export default store => next => async action => {
    }
    return next(action);
 };
+
+// TODO BUG: on loadSheet the filtering of columns works but filtering rows doesn't - the right column headers show, but the cells themselves aren't hidden

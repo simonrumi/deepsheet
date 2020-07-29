@@ -7,7 +7,16 @@ import {
    arrayContainsSomething,
    getObjectFromArrayByKeyValue,
 } from './index';
-import { stateMetadataProp } from './dataStructureHelpers';
+import { updatedFilter } from '../actions';
+import {
+   stateMetadataProp,
+   dbRowFilters,
+   dbColumnFilters,
+   filterFilterExpression,
+   filterCaseSensitive,
+   filterRegex,
+   filterIndex,
+} from './dataStructureHelpers';
 import { ROW_AXIS, COLUMN_AXIS } from '../constants';
 //import * as RWrap from './ramdaWrappers'; // use this for debugging only
 
@@ -147,3 +156,21 @@ export const isLastVisibleItemInAxis = R.curry((axis, totalInAxis, state, cellKe
       )
    )(state);
 });
+
+// TOOD  consolidatethe 2 maps into 1 function
+const mapWithUpdatedFilter = axis =>
+   R.map(filter => {
+      return updatedFilter({
+         filterExpression: filterFilterExpression(filter),
+         caseSensitive: filterCaseSensitive(filter),
+         regex: filterRegex(filter),
+         showFilterModal: false,
+         rowIndex: axis === ROW_AXIS ? filterIndex(filter) : null,
+         colIndex: axis === COLUMN_AXIS ? filterIndex(filter) : null,
+      });
+   });
+
+export const applyFilters = sheet => {
+   R.pipe(dbRowFilters, mapWithUpdatedFilter(ROW_AXIS))(sheet);
+   R.pipe(dbColumnFilters, mapWithUpdatedFilter(COLUMN_AXIS))(sheet);
+};
