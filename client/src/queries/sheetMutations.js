@@ -30,14 +30,6 @@ const CREATE_SHEET_MUTATION = gql`
                row
                column
             }
-            columnVisibility {
-               index
-               isVisible
-            }
-            rowVisibility {
-               index
-               isVisible
-            }
             columnFilters {
                index
                filterExpression

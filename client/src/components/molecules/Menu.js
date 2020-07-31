@@ -21,7 +21,7 @@ class Menu extends Component {
    }
 
    handleNewSheet() {
-      this.props.createdSheet();
+      this.props.createdSheet({});
    }
 
    renderSave(textClasses) {

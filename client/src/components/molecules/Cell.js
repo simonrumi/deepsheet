@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import * as R from 'ramda';
 import { updatedEditor } from '../../actions/editorActions';
-import { focusedCell } from '../../actions/cellActions';
+import { focusedCell } from '../../actions/focusActions';
 import { menuHidden } from '../../actions/menuActions';
 import { createdSheet } from '../../actions/sheetActions';
 import { nothing, isSomething, isNothing } from '../../helpers';

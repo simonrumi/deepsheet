@@ -32,8 +32,6 @@ export const dbMetadata = R.view(dbMetadataLens);
 export const dbTotalRows = subObjectGetterSetter(dbMetadataLens, 'totalRows');
 export const dbTotalColumns = subObjectGetterSetter(dbMetadataLens, 'totalColumns');
 export const dbParentSheetId = subObjectGetterSetter(dbMetadataLens, 'parentSheetId');
-export const dbColumnVisibility = subObjectGetterSetter(dbMetadataLens, 'columnVisibility');
-export const dbRowVisibility = subObjectGetterSetter(dbMetadataLens, 'rowVisibility');
 export const dbColumnFilters = subObjectGetterSetter(dbMetadataLens, 'columnFilters');
 export const dbRowFilters = subObjectGetterSetter(dbMetadataLens, 'rowFilters');
 
@@ -68,16 +66,7 @@ const stateMetadataLens = R.lensProp('metadata');
 export const stateMetadata = R.view(stateMetadataLens);
 export const saveableStateMetadata = R.pipe(
    stateMetadata,
-   R.pick([
-      'totalRows',
-      'totalColumns',
-      'parentSheetId',
-      'summaryCell',
-      'columnVisibility',
-      'rowVisibility',
-      'columnFilters',
-      'rowFilters',
-   ])
+   R.pick(['totalRows', 'totalColumns', 'parentSheetId', 'summaryCell', 'columnFilters', 'rowFilters'])
 );
 
 // get any top level property from the state's metadata

@@ -4,6 +4,7 @@ import { COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
 import { fetchSheet } from '../services/sheetServices';
 import { updatedCellKeys } from '../actions/cellActions';
 import { fetchedSheet, fetchingSheet, fetchSheetError } from '../actions/fetchSheetActions';
+import { clearedFocus } from '../actions/focusActions';
 import { createCellReducers, populateCellsInStore } from '../reducers/cellReducers';
 import { isSomething } from '../helpers';
 import { applyFilters } from '../helpers/visibilityHelpers';
@@ -39,6 +40,7 @@ const initializeCells = sheet => {
       populateCellsInStore(sheet);
       R.pipe(dbCells, orderCells, createCellKeys, updatedCellKeys)(sheet);
       applyFilters(sheet);
+      clearedFocus();
    } else {
       console.warn('WARNING: App.render.initializeCells had no data to operate on');
    }

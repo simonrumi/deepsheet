@@ -10,14 +10,6 @@ export const SHEET_QUERY = gql`
             totalRows
             totalColumns
             parentSheetId
-            columnVisibility {
-               index
-               isVisible
-            }
-            rowVisibility {
-               index
-               isVisible
-            }
             columnFilters {
                index
                filterExpression

@@ -243,9 +243,12 @@ const clearAllFilters = store => {
 export default store => next => async action => {
    switch (action.type) {
       case HIDE_FILTERED:
+         const { filterOptions, isInitializingSheet } = action.payload;
          console.log('TODO in filterSheet.js handle case where no sheet data returned from db');
-         hideFiltered(action.payload, store);
-         hasChangedMetadata();
+         hideFiltered(filterOptions, store);
+         if (!isInitializingSheet) {
+            hasChangedMetadata();
+         }
          break;
       case CLEAR_ALL_FILTERS:
          clearAllFilters(store);
@@ -255,5 +258,3 @@ export default store => next => async action => {
    }
    return next(action);
 };
-
-// TODO BUG: on loadSheet the filtering of columns works but filtering rows doesn't - the right column headers show, but the cells themselves aren't hidden

@@ -138,7 +138,6 @@ const metadataReducer = (state = {}, action) => {
          };
 
       case COMPLETED_SAVE_METADATA:
-         console.log('COMPLETED_SAVE_METADATA');
          return {
             ...state,
             isCallingDb: false,

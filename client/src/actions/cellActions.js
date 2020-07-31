@@ -14,7 +14,6 @@ import {
    COMPLETED_DELETE_SUBSHEET_ID_,
    DELETE_SUBSHEET_ID_FAILED_,
 } from './cellTypes';
-import { UPDATED_FOCUS } from './focusTypes';
 import { updateCellsMutation, deleteSubsheetIdMutation } from '../queries/cellMutations';
 
 export const updatedCell = cell => {
@@ -41,7 +40,6 @@ export const updatedCells = async updatedCellsData => {
    managedStore.store.dispatch({ type: POSTING_UPDATED_CELLS });
    try {
       const { sheetId, updatedCells } = updatedCellsData;
-      console.log('cellActions.updatedCells got updatedCells', updatedCells);
       const response = await updateCellsMutation(sheetId, updatedCells);
       managedStore.store.dispatch({
          type: COMPLETED_SAVE_CELLS,
@@ -97,12 +95,5 @@ export const hasAddedCell = cellCoordinates => {
    managedStore.store.dispatch({
       type: HAS_ADDED_CELL,
       payload: cellCoordinates,
-   });
-};
-
-export const focusedCell = cellData => {
-   managedStore.store.dispatch({
-      type: UPDATED_FOCUS,
-      payload: { cell: cellData },
    });
 };

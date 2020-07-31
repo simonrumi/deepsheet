@@ -1,7 +1,6 @@
 const R = require('ramda');
 const mongoose = require('mongoose');
 const { Schema, Query, Document } = mongoose;
-const VisibilityModel = require('./VisibilityModel');
 const FilterModel = require('./FilterModel');
 const CellModel = require('./CellModel');
 
@@ -15,8 +14,6 @@ const sheetSchema = new Schema(
             row: { type: Number },
             column: { type: Number },
          },
-         columnVisibility: [VisibilityModel],
-         rowVisibility: [VisibilityModel],
          columnFilters: [FilterModel],
          rowFilters: [FilterModel],
       },

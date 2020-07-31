@@ -6,6 +6,7 @@ import { updatedMetadata } from '../actions/metadataActions';
 import sheetQuery from '../queries/sheetQuery';
 import titleMutation from '../queries/titleMutation';
 import { isSomething, arrayContainsSomething } from '../helpers';
+import { getSaveableCellData } from '../helpers/cellHelpers';
 import {
    stateChangedCells,
    stateCell,
@@ -29,7 +30,8 @@ const getUpdatedCells = R.curry((state, updatedCellCoordinates) => {
    if (isSomething(updatedCellCoordinates) && arrayContainsSomething(updatedCellCoordinates)) {
       return R.map(({ row, column }) => {
          const cellData = stateCell(row, column, state);
-         return R.omit(['isStale', 'isHighlighted'], cellData); // these properties are just for the redux state, not for the db to save
+         return getSaveableCellData(cellData);
+         // return R.omit(['isStale', 'isHighlighted'], cellData); // these properties are just for the redux state, not for the db to save
       })(updatedCellCoordinates);
    }
    return null;

@@ -45,7 +45,7 @@ export const renderWholeRowGridSizingStyle = numCols => {
 };
 
 // returns an object with only the cell's fields that are savable in the db
-export const getSavableCellData = cell =>
+export const getSaveableCellData = cell =>
    R.pipe(
       cellRowSetter(cellRow(cell)),
       cellColumnSetter(cellColumn(cell)),

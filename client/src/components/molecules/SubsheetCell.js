@@ -3,7 +3,8 @@ import * as R from 'ramda';
 import { connect } from 'react-redux';
 import { loadSheet } from '../../services/sheetServices';
 import { menuHidden } from '../../actions/menuActions';
-import { focusedCell, deleteSubsheetId } from '../../actions/cellActions';
+import { deleteSubsheetId } from '../../actions/cellActions';
+import { focusedCell, clearedFocus } from '../../actions/focusActions';
 import { cellColumn, cellRow, cellText, cellIsCallingDb, stateSheetId } from '../../helpers/dataStructureHelpers';
 import { isCellFocused } from '../../helpers/cellHelpers';
 import IconDownToSubsheet from '../atoms/IconDownToSubsheet';
@@ -24,7 +25,8 @@ class SubsheetCell extends Component {
       const row = cellRow(this.props.cell);
       const column = cellColumn(this.props.cell);
       const text = cellText(this.props.cell);
-      R.pipe(stateSheetId, deleteSubsheetId(row, column, text))(this.props.state);
+      await R.pipe(stateSheetId, deleteSubsheetId(row, column, text))(this.props.state);
+      clearedFocus();
    }
 
    renderIconUnlinkSubsheet() {

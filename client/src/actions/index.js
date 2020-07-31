@@ -28,7 +28,8 @@ import {
    CLEARED_SORT_OPTIONS,
 } from './types';
 
-console.log('TODO: split up the actions & types');
+// TODO: continue to split up the actions & types
+// could separate out filters and visilibity stuff
 
 export const hasChangedMetadata = () => {
    managedStore.store.dispatch({
@@ -72,14 +73,14 @@ export const toggledShowFilterModal = (rowIndex, colIndex) => {
    });
 };
 
-export const updatedFilter = filterOptions => {
+export const updatedFilter = (filterOptions, isInitializingSheet) => {
    managedStore.store.dispatch({
       type: UPDATED_FILTER,
       payload: filterOptions,
    });
    managedStore.store.dispatch({
       type: HIDE_FILTERED,
-      payload: filterOptions,
+      payload: { filterOptions, isInitializingSheet },
    });
 };
 

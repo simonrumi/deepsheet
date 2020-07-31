@@ -160,14 +160,18 @@ export const isLastVisibleItemInAxis = R.curry((axis, totalInAxis, state, cellKe
 // TOOD  consolidatethe 2 maps into 1 function
 const mapWithUpdatedFilter = axis =>
    R.map(filter => {
-      return updatedFilter({
-         filterExpression: filterFilterExpression(filter),
-         caseSensitive: filterCaseSensitive(filter),
-         regex: filterRegex(filter),
-         showFilterModal: false,
-         rowIndex: axis === ROW_AXIS ? filterIndex(filter) : null,
-         colIndex: axis === COLUMN_AXIS ? filterIndex(filter) : null,
-      });
+      const isInitializingSheet = true;
+      return updatedFilter(
+         {
+            filterExpression: filterFilterExpression(filter),
+            caseSensitive: filterCaseSensitive(filter),
+            regex: filterRegex(filter),
+            showFilterModal: false,
+            rowIndex: axis === ROW_AXIS ? filterIndex(filter) : null,
+            colIndex: axis === COLUMN_AXIS ? filterIndex(filter) : null,
+         },
+         isInitializingSheet
+      );
    });
 
 export const applyFilters = sheet => {

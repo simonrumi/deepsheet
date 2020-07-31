@@ -30,14 +30,6 @@ const UPDATE_METATDATA_MUTATION = gql`
                row
                column
             }
-            columnVisibility {
-               index
-               isVisible
-            }
-            rowVisibility {
-               index
-               isVisible
-            }
             columnFilters {
                index
                filterExpression
@@ -61,8 +53,6 @@ export const updateMetadataMutation = async ({
    totalColumns,
    parentSheetId,
    summaryCell,
-   rowVisibility,
-   columnVisibility,
    rowFilters,
    columnFilters,
 }) => {
@@ -74,8 +64,6 @@ export const updateMetadataMutation = async ({
          totalColumns,
          parentSheetId,
          summaryCell,
-         rowVisibility,
-         columnVisibility,
          rowFilters,
          columnFilters,
       },
@@ -90,10 +78,6 @@ export const updateMetadataMutation = async ({
   "totalRows": 20,
   "totalColumns": 60,
   "summaryCell" : { "row": 0, "column": 1 },
-  "rowVisibility": [
-    { "index": 0, "isVisible": false },
-    { "index": 1, "isVisible": false }
-  ],
   "rowFilters": [
     {"index": 0, "filterExpression": "ert", "caseSensitive": false, "regex": false},
     {"index": 2, "filterExpression": "of", "caseSensitive": true, "regex": false}

@@ -1,12 +1,19 @@
 import * as R from 'ramda';
 import managedStore from '../store';
 import { createSheetMutation } from '../queries/sheetMutations';
+import { isSomething } from '../helpers';
 import { cellText, cellSubsheetIdSetter, dbSheetId } from '../helpers/dataStructureHelpers';
-import { getSavableCellData } from '../helpers/cellHelpers';
+import { getSaveableCellData } from '../helpers/cellHelpers';
 import { updatedCells } from './cellActions';
 import { POSTING_CREATE_SHEET, COMPLETED_CREATE_SHEET, SHEET_CREATION_FAILED } from './sheetTypes';
 
-// TODO BUG: after making subsheet from a cell, going back to parent sheet doesn't show which cells are subsheets
+const saveParentSheetData = async (parentSheetCell, parentSheetId, newSheet) => {
+   const savableParentSheetCell = R.pipe(
+      getSaveableCellData,
+      R.pipe(dbSheetId, cellSubsheetIdSetter)(newSheet)
+   )(parentSheetCell);
+   await updatedCells({ sheetId: parentSheetId, updatedCells: [savableParentSheetCell] });
+};
 
 export const createdSheet = async ({ rows, columns, title, parentSheetId, summaryCell, parentSheetCell }) => {
    managedStore.store.dispatch({ type: POSTING_CREATE_SHEET });
@@ -21,12 +28,9 @@ export const createdSheet = async ({ rows, columns, title, parentSheetId, summar
          summaryCellText,
       });
 
-      const savableParentSheetCell = R.pipe(
-         getSavableCellData,
-         R.pipe(dbSheetId, cellSubsheetIdSetter)(response.data.createSheet)
-      )(parentSheetCell); //note that "createSheet" is the name of the mutation in sheetMutation.js
-
-      await updatedCells({ sheetId: parentSheetId, updatedCells: [savableParentSheetCell] });
+      if (isSomething(parentSheetId)) {
+         await saveParentSheetData(parentSheetCell, parentSheetId, response.data.createSheet); //note that "createSheet" is the name of the mutation in sheetMutation.js
+      }
 
       managedStore.store.dispatch({
          type: COMPLETED_CREATE_SHEET,
