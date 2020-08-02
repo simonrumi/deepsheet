@@ -1,7 +1,28 @@
 import { gql } from 'apollo-boost';
 import apolloClient from '../services/apolloClient';
 
-export const SHEET_QUERY = gql`
+const SHEETS_QUERY = gql`
+   query FetchSheets {
+      sheets {
+         sheets {
+            id
+            title
+            metadata {
+               parentSheetId
+            }
+         }
+      }
+   }
+`;
+
+export const sheetsQuery = async () => {
+   return await apolloClient.query({
+      query: SHEETS_QUERY,
+      // fetchPolicy: 'network-only', // in other words, get it from the network, not the cache. Might help if cache is not showing new sheets
+   });
+};
+
+const SHEET_QUERY = gql`
    query SheetQuery($id: ID!) {
       sheet(id: $id) {
          id

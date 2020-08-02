@@ -18,6 +18,7 @@ const saveParentSheetData = async (parentSheetCell, parentSheetId, newSheet) => 
 export const createdSheet = async ({ rows, columns, title, parentSheetId, summaryCell, parentSheetCell }) => {
    managedStore.store.dispatch({ type: POSTING_CREATE_SHEET });
    const summaryCellText = cellText(parentSheetCell);
+   console.log('TODO move call to createSheetMutation() from sheetActions.js to sheetServices.js');
    try {
       const response = await createSheetMutation({
          rows,

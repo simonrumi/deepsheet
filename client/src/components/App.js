@@ -29,6 +29,7 @@ const logState = state => {
    }
    const stateKeys = [
       'sheetId',
+      'sheets',
       'metadata',
       'editor',
       'editorRef',

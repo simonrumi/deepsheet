@@ -6,6 +6,7 @@ import { cellKeyReducer, cellDbUpdatesReducer } from './cellReducers';
 import { focusReducer } from './focusReducer';
 import titleReducer from './titleReducer';
 import fetchSheetReducer from './fetchSheetReducer';
+import sheetsReducer from './sheetsReducer';
 import menuReducer from './menuReducer';
 import { editorReducer, editorRefReducer } from './editorReducers';
 import {
@@ -176,6 +177,7 @@ export const filterModalReducer = (state = { showFilterModal: false }, action) =
 
 export const staticReducers = {
    sheetId: fetchSheetReducer,
+   sheets: sheetsReducer,
    metadata: metadataReducer,
    editorRef: editorRefReducer,
    editor: editorReducer,

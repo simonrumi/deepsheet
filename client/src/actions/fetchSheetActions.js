@@ -1,6 +1,7 @@
 import managedStore from '../store';
 import { UPDATED_SHEET_ID, FETCHING_SHEET, FETCHED_SHEET, FETCH_SHEET_ERROR } from './fetchSheetTypes';
 
+/* single sheet */
 export const updatedSheetId = sheetId => {
    managedStore.store.dispatch({ type: UPDATED_SHEET_ID, payload: sheetId });
 };

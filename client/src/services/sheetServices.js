@@ -3,7 +3,8 @@ import managedStore from '../store';
 import { updatedSheetId } from '../actions/fetchSheetActions';
 import { updatedCells } from '../actions/cellActions';
 import { updatedMetadata } from '../actions/metadataActions';
-import sheetQuery from '../queries/sheetQuery';
+import { fetchingSheets, fetchedSheets, fetchSheetsError } from '../actions/sheetsActions';
+import sheetQuery, { sheetsQuery } from '../queries/sheetQueries';
 import titleMutation from '../queries/titleMutation';
 import { isSomething, arrayContainsSomething } from '../helpers';
 import { getSaveableCellData } from '../helpers/cellHelpers';
@@ -20,6 +21,17 @@ export const fetchSheet = async sheetId => {
       .then(res => res.data.sheet)
       .catch(err => console.error('error in sheetServices.fetchSheet', err));
    return sheet;
+};
+
+export const fetchSheets = async () => {
+   fetchingSheets();
+   try {
+      const response = await sheetsQuery();
+      fetchedSheets(response.data.sheets);
+   } catch (err) {
+      console.log('error fetching sheets:', err);
+      fetchSheetsError(err);
+   }
 };
 
 export const updateTitleInDB = async (id, title) => {
