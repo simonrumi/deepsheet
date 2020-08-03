@@ -1,6 +1,6 @@
 const graphql = require('graphql');
 const R = require('ramda');
-const { GraphQLObjectType, GraphQLNonNull, GraphQLString, GraphQLID, GraphQLInt } = graphql;
+const { GraphQLObjectType, GraphQLNonNull, GraphQLList, GraphQLString, GraphQLID } = graphql;
 const mongoose = require('mongoose');
 const SheetModel = mongoose.model('sheet');
 const SheetType = require('./types/sheet_type');
@@ -12,8 +12,9 @@ const UpdateCellsPayload = require('./types/update_cells_payload');
 const UpdateCellPayload = require('./types/update_cell_payload');
 const NewSheetInput = require('./types/new_sheet_input');
 const { findCellByRowAndColumn, updateCells, deleteSubsheetId } = require('../helpers/updateCellsHelpers');
-const { createNewSheet } = require('../helpers/sheetHelpers');
+const { createNewSheet, getAllSheets } = require('../helpers/sheetHelpers');
 const { DEFAULT_ROWS, DEFAULT_COLUMNS, DEFAULT_TITLE, DEFAULT_SUMMARY_CELL } = require('../constants');
+const SheetsPayload = require('./types/sheets_payload');
 
 const RootMutationType = new GraphQLObjectType({
    name: 'RootMutation',
@@ -114,6 +115,17 @@ const RootMutationType = new GraphQLObjectType({
             const cell = findCellByRowAndColumn(row, column, sheetDoc.cells);
             console.log('deleteSubsheetId after sheetDoc.save, cell is', cell);
             return { cell };
+         },
+      },
+
+      deleteSheets: {
+         type: SheetsPayload,
+         args: {
+            ids: { type: new GraphQLList(GraphQLID) },
+         },
+         resolve: async (parentValue, args, context) => {
+            await SheetModel.deleteMany({ _id: { $in: args.ids } });
+            return getAllSheets();
          },
       },
    },

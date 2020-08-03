@@ -1,5 +1,6 @@
 import { gql } from 'apollo-boost';
 import apolloClient from '../services/apolloClient';
+// import { SHEETS_QUERY } from './sheetQueries';
 
 const CREATE_SHEET_MUTATION = gql`
    mutation CreateSheet(
@@ -63,4 +64,26 @@ export const createSheetMutation = async ({ rows, columns, title, parentSheetId,
    });
    console.log('createSheetMutation result', result);
    return result;
+};
+
+const DELETE_SHEETS_MUTATION = gql`
+   mutation DeleteSheets($ids: [ID]) {
+      deleteSheets(ids: $ids) {
+         sheets {
+            id
+            title
+            metadata {
+               parentSheetId
+            }
+         }
+      }
+   }
+`;
+
+export const deleteSheetsMutation = async ids => {
+   const result = await apolloClient.mutate({
+      mutation: DELETE_SHEETS_MUTATION,
+      variables: { ids },
+   });
+   return result.data.deleteSheets;
 };

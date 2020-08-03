@@ -3,8 +3,16 @@ import managedStore from '../store';
 import { updatedSheetId } from '../actions/fetchSheetActions';
 import { updatedCells } from '../actions/cellActions';
 import { updatedMetadata } from '../actions/metadataActions';
-import { fetchingSheets, fetchedSheets, fetchSheetsError } from '../actions/sheetsActions';
+import {
+   fetchingSheets,
+   fetchedSheets,
+   fetchSheetsError,
+   deletingSheets,
+   deletedSheets,
+   deleteSheetsError,
+} from '../actions/sheetsActions';
 import sheetQuery, { sheetsQuery } from '../queries/sheetQueries';
+import { deleteSheetsMutation } from '../queries/sheetMutations';
 import titleMutation from '../queries/titleMutation';
 import { isSomething, arrayContainsSomething } from '../helpers';
 import { getSaveableCellData } from '../helpers/cellHelpers';
@@ -34,6 +42,17 @@ export const fetchSheets = async () => {
    }
 };
 
+export const deleteSheets = async sheetIds => {
+   deletingSheets();
+   try {
+      const newSheets = await deleteSheetsMutation(sheetIds);
+      deletedSheets(newSheets);
+   } catch (err) {
+      console.log('error deleting sheets:', err);
+      deleteSheetsError(err);
+   }
+};
+
 export const updateTitleInDB = async (id, title) => {
    return await titleMutation(id, title);
 };
@@ -43,7 +62,6 @@ const getUpdatedCells = R.curry((state, updatedCellCoordinates) => {
       return R.map(({ row, column }) => {
          const cellData = stateCell(row, column, state);
          return getSaveableCellData(cellData);
-         // return R.omit(['isStale', 'isHighlighted'], cellData); // these properties are just for the redux state, not for the db to save
       })(updatedCellCoordinates);
    }
    return null;

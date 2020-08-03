@@ -5,6 +5,7 @@ import { fetchSheet } from '../services/sheetServices';
 import { updatedCellKeys } from '../actions/cellActions';
 import { fetchedSheet, fetchingSheet, fetchSheetError } from '../actions/fetchSheetActions';
 import { clearedFocus } from '../actions/focusActions';
+import { menuHidden } from '../actions/menuActions';
 import { createCellReducers, populateCellsInStore } from '../reducers/cellReducers';
 import { isSomething } from '../helpers';
 import { applyFilters } from '../helpers/visibilityHelpers';
@@ -56,8 +57,8 @@ export default store => next => async action => {
             // if sheet has some data then dispatch the fetchedSheet action
             R.when(
                isSomething,
-               // note that R.juxt applies the argument sheet to both fns in its array
-               R.juxt([R.pipe(fetchedSheet, store.dispatch), initializeCells])
+               // note that R.juxt applies the argument sheet to all fns in its array
+               R.juxt([R.pipe(fetchedSheet, store.dispatch), R.pipe(menuHidden, store.dispatch), initializeCells])
             )(sheet);
          } catch (err) {
             console.error('failed to fetchSheet', err);

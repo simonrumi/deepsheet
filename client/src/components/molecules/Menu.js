@@ -4,10 +4,14 @@ import { connect } from 'react-redux';
 import IconMenu from '../atoms/IconMenu';
 import IconClose from '../atoms/IconClose';
 import IconLoading from '../atoms/IconLoading';
+import IconRightArrow from '../atoms/IconRightArrow';
+import IconDelete from '../atoms/IconDelete';
 import { menuSaveText, menuNewSheetText, menuSheetsText } from '../displayText';
 import { menuShown, menuHidden } from '../../actions/menuActions';
 import { createdSheet } from '../../actions/sheetActions';
+import { loadSheet, saveAllUpdates, fetchSheets, deleteSheets } from '../../services/sheetServices';
 import { isSomething, arrayContainsSomething } from '../../helpers';
+import { buildSheetsTree, getSheetIdsFromNode } from '../../helpers/sheetsHelpers';
 import {
    stateIsStale,
    stateIsCallingDb,
@@ -16,8 +20,6 @@ import {
    stateSheetsIsCallingDb,
    stateSheetsErrorMessage,
 } from '../../helpers/dataStructureHelpers';
-import { saveAllUpdates, fetchSheets } from '../../services/sheetServices';
-import { buildSheetsTree } from '../../helpers/sheetsHelpers';
 
 class Menu extends Component {
    constructor(props) {
@@ -28,6 +30,75 @@ class Menu extends Component {
       this.handleFetchSheets = this.handleFetchSheets.bind(this);
       this.buildSheetList = this.buildSheetList.bind(this);
       this.renderSheetListError = this.renderSheetListError.bind(this);
+      this.handleSheetDelete = this.handleSheetDelete.bind(this);
+   }
+
+   handleSheetDelete(node) {
+      const sheetIds = getSheetIdsFromNode(node);
+      deleteSheets(sheetIds);
+   }
+
+   displayChildren(basicClasses, hoverClasses, children) {
+      const childrenList = R.map(childNode => {
+         const grandChildrenList =
+            isSomething(childNode.children) && arrayContainsSomething(childNode.children)
+               ? this.displayChildren(basicClasses, hoverClasses, childNode.children)
+               : null;
+         return (
+            <li className={basicClasses} key={childNode.sheet.id}>
+               <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                     <IconRightArrow height="0.75em" width="0.75em" classes="pr-2 text-subdued-blue" />
+                     <span className={hoverClasses} onClick={() => loadSheet(this.props.state, childNode.sheet.id)}>
+                        {childNode.sheet.title}
+                     </span>
+                  </div>
+                  <IconDelete
+                     height="1.0em"
+                     width="1.0em"
+                     classes="pr-2"
+                     onClickFn={() => this.handleSheetDelete(childNode)}
+                  />
+               </div>
+               {grandChildrenList}
+            </li>
+         );
+      })(children);
+      return <ul>{childrenList}</ul>;
+   }
+
+   renderSheetListError() {
+      const err = stateSheetsErrorMessage(this.props.state);
+      if (isSomething(err)) {
+         return <div>{err}</div>;
+      }
+   }
+
+   buildSheetList(textClasses) {
+      const basicClasses = 'pl-2 pt-2 text-subdued-blue';
+      const hoverClasses = 'hover:text-vibrant-blue cursor-pointer';
+      const sheetsArr = stateSheets(this.props.state);
+      if (isSomething(sheetsArr) && arrayContainsSomething(sheetsArr)) {
+         const sheetsTree = buildSheetsTree(sheetsArr);
+         const sheetList = R.map(node => (
+            <li key={node.sheet.id} className={'ml-2 ' + basicClasses}>
+               <div className="flex align-center justify-between">
+                  <span className={hoverClasses} onClick={() => loadSheet(this.props.state, node.sheet.id)}>
+                     {node.sheet.title}
+                  </span>
+                  <IconDelete
+                     height="1.0em"
+                     width="1.0em"
+                     classes="pr-2"
+                     onClickFn={() => this.handleSheetDelete(node)}
+                  />
+               </div>
+               {this.displayChildren(basicClasses, hoverClasses, node.children)}
+            </li>
+         ))(sheetsTree);
+         return <ul>{sheetList}</ul>;
+      }
+      return null;
    }
 
    async handleFetchSheets() {
@@ -38,48 +109,6 @@ class Menu extends Component {
    async handleSave() {
       await this.props.saveAllUpdates(this.props.state);
       menuHidden();
-   }
-
-   handleNewSheet() {
-      this.props.createdSheet({});
-   }
-
-   renderSheetListError() {
-      const err = stateSheetsErrorMessage(this.props.state);
-      if (isSomething(err)) {
-         return <div>{err}</div>;
-      }
-   }
-
-   displayChildren(textClasses, children) {
-      const childrenList = R.map(childNode => {
-         const grandChildrenList =
-            isSomething(childNode.children) && arrayContainsSomething(childNode.children)
-               ? this.displayChildren(textClasses, childNode.children)
-               : null;
-         return (
-            <li className={textClasses} key={childNode.sheet.id}>
-               {childNode.sheet.title}
-               {grandChildrenList}
-            </li>
-         );
-      })(children);
-      return <ul>{childrenList}</ul>;
-   }
-
-   buildSheetList(textClasses) {
-      const sheetsArr = stateSheets(this.props.state);
-      if (isSomething(sheetsArr) && arrayContainsSomething(sheetsArr)) {
-         const sheetsTree = buildSheetsTree(sheetsArr);
-         const sheetList = R.map(node => (
-            <li key={node.sheet.id} className={textClasses}>
-               <div>{node.sheet.title}</div>
-               {this.displayChildren(textClasses, node.children)}
-            </li>
-         ))(sheetsTree);
-         return <ul>{sheetList}</ul>;
-      }
-      return null;
    }
 
    renderSheets(textClasses) {
@@ -107,6 +136,10 @@ class Menu extends Component {
          return <IconLoading height="2em" width="2em" classes="p-2" />;
       }
       return <div className="p-2 text-grey-blue">{menuSaveText()}</div>;
+   }
+
+   handleNewSheet() {
+      this.props.createdSheet({});
    }
 
    renderHamburgerOrMenu() {

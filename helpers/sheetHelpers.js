@@ -1,5 +1,8 @@
 const R = require('ramda');
 const { forLoopReduce } = require('./index');
+const mongoose = require('mongoose');
+
+const SheetModel = mongoose.model('sheet');
 
 const createBlankCell = (row, column) => {
    return {
@@ -44,4 +47,16 @@ const createNewSheet = ({ totalRows, totalColumns, title, parentSheetId, summary
    };
 };
 
-module.exports = { createNewSheet };
+const getAllSheets = () => {
+   console.log('will need to updated sheetHelpers.getAllSheets to get sheets only for a user');
+   const sheets = SheetModel.find({}, (err, sheetDocs) => {
+      if (err) {
+         console.log('Error returning all sheets', err);
+         return err;
+      }
+      return sheetDocs;
+   });
+   return { sheets };
+};
+
+module.exports = { createNewSheet, getAllSheets };

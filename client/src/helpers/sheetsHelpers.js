@@ -84,3 +84,13 @@ export const buildSheetsTree = sheetsArr => {
       unassignedSheets
    );
 };
+
+export const getSheetIdsFromNode = (node, sheetIds = []) => {
+   const updatedSheetIds = R.append(node.sheet.id, sheetIds);
+   return isNothing(node.children) || !arrayContainsSomething(node.children)
+      ? updatedSheetIds
+      : R.pipe(
+           R.reduce((accumulatorArr, childNode) => getSheetIdsFromNode(childNode, accumulatorArr), []),
+           R.concat(updatedSheetIds)
+        )(node.children);
+};
