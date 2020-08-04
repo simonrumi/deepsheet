@@ -107,13 +107,11 @@ const RootMutationType = new GraphQLObjectType({
          },
          resolve: async (parentValue, args, context) => {
             const { sheetId, row, column, text } = args.input;
-            console.log('deleteSubsheetId mutation, sheetId', sheetId, 'row', row, 'column', column, 'text', text);
             const sheetDoc = await SheetModel.findById(sheetId);
             const updatedCells = deleteSubsheetId(sheetDoc.cells, row, column, text);
             sheetDoc.cells = updatedCells;
             await sheetDoc.save();
             const cell = findCellByRowAndColumn(row, column, sheetDoc.cells);
-            console.log('deleteSubsheetId after sheetDoc.save, cell is', cell);
             return { cell };
          },
       },

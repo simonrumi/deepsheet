@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const { Schema, Query, Document } = mongoose;
 const FilterModel = require('./FilterModel');
 const CellModel = require('./CellModel');
+const { isSomething } = require('../helpers');
 
 const sheetSchema = new Schema(
    {
@@ -39,9 +40,12 @@ sheetSchema.path('cells').validate(cellsValidator, 'cannot have multiple cells a
 
 sheetSchema.statics.getSummaryCellContent = async function (id) {
    const data = await this.findById(id);
-   const { row, column } = data.metadata.summaryCell;
-   const cellData = await this.findOne({ _id: id }, { cells: { $elemMatch: { row: row, column: column } } });
-   return cellData.cells[0].content.text;
+   if (isSomething(data)) {
+      const { row, column } = data.metadata.summaryCell;
+      const cellData = await this.findOne({ _id: id }, { cells: { $elemMatch: { row: row, column: column } } });
+      return cellData.cells[0].content.text;
+   }
+   return '';
 };
 
 sheetSchema.statics.updateTitle = async function (id, title) {

@@ -11,7 +11,7 @@ import {
    deletedSheets,
    deleteSheetsError,
 } from '../actions/sheetsActions';
-import sheetQuery, { sheetsQuery } from '../queries/sheetQueries';
+import { sheetQuery, sheetsQuery } from '../queries/sheetQueries';
 import { deleteSheetsMutation } from '../queries/sheetMutations';
 import titleMutation from '../queries/titleMutation';
 import { isSomething, arrayContainsSomething } from '../helpers';

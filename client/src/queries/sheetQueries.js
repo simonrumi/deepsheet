@@ -18,7 +18,6 @@ const SHEETS_QUERY = gql`
 export const sheetsQuery = async () => {
    return await apolloClient.query({
       query: SHEETS_QUERY,
-      // fetchPolicy: 'network-only', // in other words, get it from the network, not the cache. Might help if cache is not showing new sheets
    });
 };
 
@@ -57,12 +56,10 @@ const SHEET_QUERY = gql`
    }
 `;
 
-const sheetQuery = async sheetId => {
+export const sheetQuery = async sheetId => {
    return await apolloClient.query({
       query: SHEET_QUERY,
       variables: { id: sheetId },
       fetchPolicy: 'network-only', // in other words, every time a different sheet is loaded, we're getting it from the network, not the cache. Otherwise cache might show old version of sheet
    });
 };
-
-export default sheetQuery;

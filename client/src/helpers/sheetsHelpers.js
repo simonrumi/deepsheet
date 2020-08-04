@@ -1,6 +1,8 @@
 import * as R from 'ramda';
 import { isSomething, isNothing, arrayContainsSomething } from './index';
-import { stateParentSheetId } from './dataStructureHelpers';
+import { stateParentSheetId, cellSubsheetIdSetter, cellSubsheetId, dbCells } from './dataStructureHelpers';
+import { fetchSheet } from '../services/sheetServices';
+import { updateCellsMutation } from '../queries/cellMutations';
 
 /* Here's what a node in the tree looks like
    node = { 
@@ -93,4 +95,27 @@ export const getSheetIdsFromNode = (node, sheetIds = []) => {
            R.reduce((accumulatorArr, childNode) => getSheetIdsFromNode(childNode, accumulatorArr), []),
            R.concat(updatedSheetIds)
         )(node.children);
+};
+
+const getCellsFromSheet = async sheetId => {
+   const sheet = await fetchSheet(sheetId);
+   return dbCells(sheet);
+};
+
+export const removeSheetFromParent = async node => {
+   const sheetId = node.sheet.id;
+   const parentId = stateParentSheetId(node.sheet);
+   const parentCells = await getCellsFromSheet(parentId);
+   const hasUpdatedParentCell = await R.reduce(
+      async (accumulator, parentCell) => {
+         if (cellSubsheetId(parentCell) === sheetId) {
+            const newCell = cellSubsheetIdSetter(null, parentCell);
+            const response = await updateCellsMutation(parentId, [newCell]);
+            return R.reduced(true);
+         }
+         return accumulator;
+      },
+      false,
+      parentCells
+   );
 };

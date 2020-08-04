@@ -11,7 +11,7 @@ import { menuShown, menuHidden } from '../../actions/menuActions';
 import { createdSheet } from '../../actions/sheetActions';
 import { loadSheet, saveAllUpdates, fetchSheets, deleteSheets } from '../../services/sheetServices';
 import { isSomething, arrayContainsSomething } from '../../helpers';
-import { buildSheetsTree, getSheetIdsFromNode } from '../../helpers/sheetsHelpers';
+import { buildSheetsTree, getSheetIdsFromNode, removeSheetFromParent } from '../../helpers/sheetsHelpers';
 import {
    stateIsStale,
    stateIsCallingDb,
@@ -19,6 +19,8 @@ import {
    stateSheets,
    stateSheetsIsCallingDb,
    stateSheetsErrorMessage,
+   stateSheetId,
+   stateParentSheetId,
 } from '../../helpers/dataStructureHelpers';
 
 class Menu extends Component {
@@ -33,9 +35,13 @@ class Menu extends Component {
       this.handleSheetDelete = this.handleSheetDelete.bind(this);
    }
 
-   handleSheetDelete(node) {
+   async handleSheetDelete(node) {
+      await removeSheetFromParent(node);
       const sheetIds = getSheetIdsFromNode(node);
-      deleteSheets(sheetIds);
+      await deleteSheets(sheetIds);
+      if (stateParentSheetId(node.sheet) === stateSheetId(this.props.state)) {
+         await loadSheet(this.props.state, stateSheetId(this.props.state));
+      }
    }
 
    displayChildren(basicClasses, hoverClasses, children) {
