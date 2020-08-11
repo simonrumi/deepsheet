@@ -106,11 +106,11 @@ export const removeSheetFromParent = async node => {
    const sheetId = node.sheet.id;
    const parentId = stateParentSheetId(node.sheet);
    const parentCells = await getCellsFromSheet(parentId);
-   const hasUpdatedParentCell = await R.reduce(
+   await R.reduce(
       async (accumulator, parentCell) => {
          if (cellSubsheetId(parentCell) === sheetId) {
             const newCell = cellSubsheetIdSetter(null, parentCell);
-            const response = await updateCellsMutation(parentId, [newCell]);
+            await updateCellsMutation(parentId, [newCell]);
             return R.reduced(true);
          }
          return accumulator;
