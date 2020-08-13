@@ -29,6 +29,8 @@ export const createdSheet = async ({ rows, columns, title, parentSheetId, summar
          summaryCellText,
       });
 
+      console.log('sheetActions.createdSheet createSheetMutation got response', response);
+
       if (isSomething(parentSheetId)) {
          await saveParentSheetData(parentSheetCell, parentSheetId, response.data.createSheet); //note that "createSheet" is the name of the mutation in sheetMutation.js
       }
