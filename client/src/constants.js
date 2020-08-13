@@ -1,4 +1,4 @@
-export const DEFAULT_SHEET_ID = '5ef8d279e80b425d0863c709'; // used by UPDATED_SHEET_ID
+export const DEFAULT_SHEET_ID = null; // expecting to trigger making a new sheet //'5ef8d279e80b425d0863c709'; // used by UPDATED_SHEET_ID
 
 export const SERVER_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : 'No_prod_server_yet';
 

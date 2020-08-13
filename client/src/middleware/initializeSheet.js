@@ -3,11 +3,12 @@ import { UPDATED_SHEET_ID } from '../actions/fetchSheetTypes';
 import { COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
 import { fetchSheet } from '../services/sheetServices';
 import { updatedCellKeys } from '../actions/cellActions';
+import { createdSheet } from '../actions/sheetActions';
 import { fetchedSheet, fetchingSheet, fetchSheetError } from '../actions/fetchSheetActions';
 import { clearedFocus } from '../actions/focusActions';
 import { menuHidden } from '../actions/menuActions';
 import { createCellReducers, populateCellsInStore } from '../reducers/cellReducers';
-import { isSomething } from '../helpers';
+import { isSomething, isNothing } from '../helpers';
 import { applyFilters } from '../helpers/visibilityHelpers';
 import { dbMetadata, dbCells } from '../helpers/dataStructureHelpers';
 
@@ -47,13 +48,20 @@ const initializeCells = sheet => {
    }
 };
 
+const getOrCreateSheet = async sheetId => {
+   if (isNothing(sheetId)) {
+      return await createdSheet({});
+   }
+   return await fetchSheet(sheetId);
+};
+
 export default store => next => async action => {
    switch (action.type) {
       case UPDATED_SHEET_ID:
          const newSheetId = action.payload;
          fetchingSheet(newSheetId);
          try {
-            const sheet = await fetchSheet(newSheetId);
+            const sheet = await getOrCreateSheet(newSheetId);
             // if sheet has some data then dispatch the fetchedSheet action
             R.when(
                isSomething,
