@@ -27,6 +27,7 @@ const RootMutationType = new GraphQLObjectType({
             },
          },
          async resolve(parentValue, args, context) {
+            throw new Error('Error from createSheet mutation received args', args);
             const { rows, columns, title, parentSheetId, summaryCell, summaryCellText } = args.input;
             const defaultSheet = createNewSheet({
                totalRows: rows || DEFAULT_ROWS,
