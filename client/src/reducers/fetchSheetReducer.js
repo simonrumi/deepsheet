@@ -5,6 +5,7 @@ import { DEFAULT_SHEET_ID } from '../constants';
 const fetchSheetReducer = (state = DEFAULT_SHEET_ID, action) => {
    switch (action.type) {
       case UPDATED_SHEET_ID:
+         console.log('fetchSheetReducer got UPDATED_SHEET_ID with action.payload', action.payload);
          return action.payload;
 
       case FETCHING_SHEET:
@@ -25,7 +26,6 @@ const fetchSheetReducer = (state = DEFAULT_SHEET_ID, action) => {
          return action.payload.id;
 
       case COMPLETED_CREATE_SHEET:
-         console.log('fetchSheetReducer got action', action);
          return action.payload.sheet.id;
 
       case FETCH_SHEET_ERROR:

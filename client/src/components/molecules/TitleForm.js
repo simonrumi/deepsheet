@@ -14,6 +14,7 @@ export class TitleForm extends Component {
    }
 
    submitNewTitle = formValues => {
+      console.log('submitNewTitle got formValues', formValues);
       try {
          this.props.updatedTitle({
             text: formValues.title,

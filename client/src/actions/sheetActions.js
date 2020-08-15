@@ -18,7 +18,9 @@ const saveParentSheetData = async (parentSheetCell, parentSheetId, newSheet) => 
 export const createdSheet = async ({ rows, columns, title, parentSheetId, summaryCell, parentSheetCell }) => {
    managedStore.store.dispatch({ type: POSTING_CREATE_SHEET });
    const summaryCellText = cellText(parentSheetCell);
-   console.log('TODO move call to createSheetMutation() from sheetActions.js to sheetServices.js');
+   console.log(
+      'sheetActions.createdSheet called. TODO move call to createSheetMutation() from sheetActions.js to sheetServices.js'
+   );
    try {
       const response = await createSheetMutation({
          rows,
@@ -28,8 +30,6 @@ export const createdSheet = async ({ rows, columns, title, parentSheetId, summar
          summaryCell,
          summaryCellText,
       });
-
-      console.log('sheetActions.createdSheet createSheetMutation got response', response);
 
       if (isSomething(parentSheetId)) {
          await saveParentSheetData(parentSheetCell, parentSheetId, response.data.createSheet); //note that "createSheet" is the name of the mutation in sheetMutation.js

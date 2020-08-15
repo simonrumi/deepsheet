@@ -6,6 +6,7 @@ import {
    TITLE_EDIT_CANCELLED,
 } from '../actions/titleTypes';
 import { FETCHED_SHEET } from '../actions/fetchSheetTypes';
+import { COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
 import { isSomething } from '../helpers';
 
 // action.payload contains
@@ -17,6 +18,16 @@ const titleReducer = (state = {}, action) => {
       case FETCHED_SHEET:
          return {
             text: action.payload.title,
+            isEditingTitle: false,
+            isCallingDb: false,
+            isStale: false,
+            needsUpdate: false,
+            lastUpdated: Date.now(),
+         };
+
+      case COMPLETED_CREATE_SHEET:
+         return {
+            text: action.payload.sheet.title,
             isEditingTitle: false,
             isCallingDb: false,
             isStale: false,

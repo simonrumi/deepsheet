@@ -48,31 +48,38 @@ const initializeCells = sheet => {
    }
 };
 
-const getOrCreateSheet = async sheetId => {
-   if (isNothing(sheetId)) {
-      return await createdSheet({});
+const runFetchSheet = async (store, sheetId) => {
+   fetchingSheet(sheetId);
+   try {
+      const sheet = await fetchSheet(sheetId);
+      console.log('iniitializeSheet.runFetchSheet got sheet', sheet);
+      // if sheet has some data then dispatch the fetchedSheet action
+      R.when(
+         isSomething,
+         // note that R.juxt applies the argument sheet to all fns in its array
+         R.juxt([R.pipe(fetchedSheet, store.dispatch), R.pipe(menuHidden, store.dispatch), initializeCells])
+      )(sheet);
+   } catch (err) {
+      console.error('failed to fetchSheet', err);
+      fetchSheetError(err);
+      return {};
    }
-   return await fetchSheet(sheetId);
+};
+
+const getOrCreateSheet = async (store, sheetId) => {
+   if (isNothing(sheetId)) {
+      const sheet = await createdSheet({});
+      console.log('initializeSheet.getOrCreateSheet createdSheet', sheet);
+      return sheet;
+   }
+   return await runFetchSheet(store, sheetId);
 };
 
 export default store => next => async action => {
    switch (action.type) {
       case UPDATED_SHEET_ID:
-         const newSheetId = action.payload;
-         fetchingSheet(newSheetId);
-         try {
-            const sheet = await getOrCreateSheet(newSheetId);
-            // if sheet has some data then dispatch the fetchedSheet action
-            R.when(
-               isSomething,
-               // note that R.juxt applies the argument sheet to all fns in its array
-               R.juxt([R.pipe(fetchedSheet, store.dispatch), R.pipe(menuHidden, store.dispatch), initializeCells])
-            )(sheet);
-         } catch (err) {
-            console.error('failed to fetchSheet', err);
-            fetchSheetError(err);
-            return {};
-         }
+         console.log('initializeSheet got UPDATED_SHEET_ID with action.payload', action.payload);
+         await getOrCreateSheet(store, action.payload);
          break;
 
       case COMPLETED_CREATE_SHEET:

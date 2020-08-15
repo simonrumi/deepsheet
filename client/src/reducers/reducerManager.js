@@ -69,9 +69,7 @@ export function createReducerManager(initialReducers) {
 
    const removeMany = keys => {
       if (!keys || !(keys instanceof Array)) {
-         console.log(
-            'WARNING: invalid keys array supplied to reducerManager.removeMany(), so no reducers removed'
-         );
+         console.log('WARNING: invalid keys array supplied to reducerManager.removeMany(), so no reducers removed');
          return combineReducers(_reducers);
       }
       keysToRemove = concat(keysToRemove, keys);

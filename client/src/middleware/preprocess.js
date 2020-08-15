@@ -5,9 +5,9 @@ export default store => next => async action => {
       return;
    }
    if (action instanceof Promise) {
-      console.warn(
-         'Preprocess got an action that was a Promise, so will resolve before proceeding. This should probably be ok'
-      );
+      // console.warn(
+      //    'Preprocess got an action that was a Promise, so will resolve before proceeding. This should probably be ok'
+      // );
       const resolvedAction = await Promise.resolve(action);
       if (isSomething(resolvedAction)) {
          return next(resolvedAction);

@@ -98,6 +98,10 @@ export const getSheetIdsFromNode = (node, sheetIds = []) => {
 };
 
 const getCellsFromSheet = async sheetId => {
+   if (isNothing(sheetId)) {
+      console.error('sheetsHelpers.js getCellsFromSheet was not given a sheetId');
+      return null;
+   }
    const sheet = await fetchSheet(sheetId);
    return dbCells(sheet);
 };
@@ -105,6 +109,9 @@ const getCellsFromSheet = async sheetId => {
 export const removeSheetFromParent = async node => {
    const sheetId = node.sheet.id;
    const parentId = stateParentSheetId(node.sheet);
+   if (isNothing(sheetId) || isNothing(parentId)) {
+      return null;
+   }
    const parentCells = await getCellsFromSheet(parentId);
    await R.reduce(
       async (accumulator, parentCell) => {

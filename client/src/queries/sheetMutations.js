@@ -62,7 +62,6 @@ export const createSheetMutation = async ({ rows, columns, title, parentSheetId,
       mutation: CREATE_SHEET_MUTATION,
       variables: { rows, columns, title, parentSheetId, summaryCell, summaryCellText },
    });
-   console.log('createSheetMutation result', result);
    return result;
 };
 

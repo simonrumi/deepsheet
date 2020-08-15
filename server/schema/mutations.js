@@ -26,7 +26,7 @@ const RootMutationType = new GraphQLObjectType({
                type: NewSheetInput,
             },
          },
-         resolve(parentValue, args, context) {
+         async resolve(parentValue, args, context) {
             const { rows, columns, title, parentSheetId, summaryCell, summaryCellText } = args.input;
             const defaultSheet = createNewSheet({
                totalRows: rows || DEFAULT_ROWS,
@@ -36,7 +36,8 @@ const RootMutationType = new GraphQLObjectType({
                summaryCell: summaryCell || DEFAULT_SUMMARY_CELL,
                summaryCellText: summaryCellText || '',
             });
-            return new SheetModel(defaultSheet).save();
+            const result = await new SheetModel(defaultSheet).save();
+            return result;
          },
       },
 

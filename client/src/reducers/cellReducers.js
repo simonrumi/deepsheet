@@ -19,6 +19,7 @@ import {
    DELETE_SUBSHEET_ID_FAILED_,
 } from '../actions/cellTypes';
 import { FETCHED_SHEET } from '../actions/fetchSheetTypes';
+import { COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
 
 export const createCellReducers = sheet => {
    const store = managedStore.store;
@@ -89,6 +90,7 @@ export const populateCellsInStore = sheet => R.forEach(cell => updatedCell(cell)
 
 export const cellDbUpdatesReducer = (state = {}, action) => {
    switch (action.type) {
+      case COMPLETED_CREATE_SHEET:
       case FETCHED_SHEET:
          return {
             ...state,

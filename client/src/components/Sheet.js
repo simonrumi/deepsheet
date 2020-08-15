@@ -4,8 +4,9 @@ import { connect } from 'react-redux';
 import { DndProvider } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 import { updatedSheetId } from '../actions/fetchSheetActions';
+import { createdSheet } from '../actions/sheetActions';
 import managedStore from '../store';
-import initializeSheet from '../middleware/initializeSheet';
+// import initializeSheet from '../middleware/initializeSheet';
 import { nothing, isSomething } from '../helpers';
 import { stateTotalRows, stateTotalColumns } from '../helpers/dataStructureHelpers';
 import {
@@ -28,7 +29,14 @@ import FilterModal from './organisms/FilterModal';
 
 class Sheet extends Component {
    componentDidMount() {
-      this.props.updatedSheetId(this.props.sheetId);
+      R.ifElse(
+         // if sheetId isn't null
+         isSomething,
+         // trigger the action to load the sheet
+         this.props.updatedSheetId,
+         // otherswise create a new sheet
+         R.thunkify(this.props.createdSheet)({})
+      )(this.props.sheetId);
    }
 
    renderEmptyEndCell = cellKey => (
@@ -60,10 +68,10 @@ class Sheet extends Component {
    maybeCell = state => R.ifElse(shouldShowRow(stateRowVisibility(state)), this.renderCellAndMaybeEdges, nothing);
 
    renderCells = () => {
-      if (this.props.data && this.props.data.sheet && this.props.managedStore.store) {
-         console.log('calling initializeSheet from sheet.js');
-         initializeSheet(this.props.managedStore.store, this.props.data.sheet);
-      }
+      // 'Sheet.js renderCells() was calling initializeSheet, but commented out because it should not be necessary - initializeSheet is middleware and should get called when needed'
+      // if (this.props.data && this.props.data.sheet && this.props.managedStore.store) {
+      //    initializeSheet(this.props.managedStore.store, this.props.data.sheet);
+      // }
       if (isSomething(stateTotalRows(this.props.state)) && this.props.cellKeys && this.props.cellKeys.length > 0) {
          return R.pipe(
             R.map(cellKey => this.maybeCell(this.props.state)(cellKey)),
@@ -135,4 +143,4 @@ function mapStateToProps(state) {
       sheetId: state.sheetId, // if no existing sheetId in the store, this will be the DEFAULT_SHEET_ID
    };
 }
-export default connect(mapStateToProps, { updatedSheetId })(Sheet);
+export default connect(mapStateToProps, { updatedSheetId, createdSheet })(Sheet);

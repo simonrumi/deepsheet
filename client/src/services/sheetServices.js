@@ -37,7 +37,7 @@ export const fetchSheets = async () => {
       const response = await sheetsQuery();
       fetchedSheets(response.data.sheets);
    } catch (err) {
-      console.log('error fetching sheets:', err);
+      console.error('error fetching sheets:', err);
       fetchSheetsError(err);
    }
 };
@@ -48,7 +48,7 @@ export const deleteSheets = async sheetIds => {
       const newSheets = await deleteSheetsMutation(sheetIds);
       deletedSheets(newSheets);
    } catch (err) {
-      console.log('error deleting sheets:', err);
+      console.error('error deleting sheets:', err);
       deleteSheetsError(err);
    }
 };
