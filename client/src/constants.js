@@ -9,6 +9,7 @@ export const GRAPHQL_URL =
       ? 'http://localhost:5000/graphql'
       : 'https://stupefied-lamarr-20c8d9.netlify.app/graphql';
 
+console.log('client/src/constants.js process.env.NODE_ENV', process.env.NODE_ENV);
 console.log('remember to update GRAPHQL_URL in client/src/constants.js when changing domain');
 
 export const ROW_AXIS = 'row';

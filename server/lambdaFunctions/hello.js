@@ -1,7 +1,6 @@
-exports.handler = function (event, context, callback) {
-   //server side functionality
-   callback(null, {
+export async function handler(event, context) {
+   return {
       statusCode: 200,
-      body: 'Hello world',
-   });
-};
+      body: JSON.stringify({ message: 'Hello world' }),
+   };
+}

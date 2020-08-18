@@ -1,7 +1,5 @@
 const proxy = require('http-proxy-middleware');
 
-console.log('TODO: setupProxy is currently hardcorded to localhost:5000');
-
 module.exports = function (app) {
    app.use(proxy(['/api', '/auth/google'], { target: 'http://localhost:5000' }));
    app.use(
@@ -11,4 +9,5 @@ module.exports = function (app) {
          // but both http://localhost:9000/.netlify/functions/hello and http://localhost:9000/hello work
       })
    );
+   // app.use(proxy('/graphql', { target: 'http://localhost:5000' })); // experiment to see if graphql still works
 };
