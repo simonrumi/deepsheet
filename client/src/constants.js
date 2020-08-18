@@ -4,10 +4,11 @@ export const DEFAULT_SHEET_ID = null; // expecting to trigger making a new sheet
 export const SERVER_URL =
    process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : 'https://stupefied-lamarr-20c8d9.netlify.app/';
 
+console.warn('In constants.js temporarily changed prod GRAPHQL_URL to use the lambdafunctions2-- branch');
 export const GRAPHQL_URL =
    process.env.NODE_ENV === 'development'
       ? 'http://localhost:5000/graphql'
-      : 'https://stupefied-lamarr-20c8d9.netlify.app/graphql';
+      : 'https://lambdafunctions2--stupefied-lamarr-20c8d9.netlify.app/graphql';
 
 console.log('client/src/constants.js process.env.NODE_ENV', process.env.NODE_ENV);
 console.log('remember to update GRAPHQL_URL in client/src/constants.js when changing domain');
