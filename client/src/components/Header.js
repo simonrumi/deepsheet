@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import axios from 'axios';
 import { connect } from 'react-redux';
 import SheetHeader from './molecules/SheetHeader';
 import TitleForm from './molecules/TitleForm';
@@ -12,7 +13,17 @@ export class Header extends Component {
       return <SheetHeader />;
    }
 
+   async tempLambdaFunctionTest() {
+      try {
+         const res = await axios.get('.netlify/functions/hello');
+         console.log('got response from .netlify/functions/hello:', res);
+      } catch (err) {
+         console.log('tempLambdaFunctionTest error', err);
+      }
+   }
+
    render() {
+      this.tempLambdaFunctionTest();
       return (
          <div className="flex">
             <div className="pr-2 max-w-4">

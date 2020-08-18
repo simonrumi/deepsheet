@@ -4,3 +4,6 @@ dev.js
 
 # Local Netlify folder
 .netlify
+
+# lambda functions build dir
+/server/lambda

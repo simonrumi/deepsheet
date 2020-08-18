@@ -22,8 +22,10 @@ const app = express();
 var corsOptions = {
    origin: function (origin, callback) {
       if (keys.whitelist.indexOf(origin) !== -1 || !origin) {
+         console.log('corsOptions will allow origin', origin);
          callback(null, true);
       } else {
+         console.log('corsOptions will NOT allow origin', origin);
          callback(new Error('Not allowed by CORS'));
       }
    },
