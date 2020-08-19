@@ -1,6 +1,8 @@
 {
    "name": "client",
    "version": "0.1.0",
+   "description": "The client folder for Deepsheet",
+   "author": "Simon Amarasingham",
    "private": true,
    "dependencies": {
       "@apollo/react-hooks": "^3.1.5",

@@ -1,8 +1,9 @@
 {
-   "name": "server",
+   "name": "parent",
    "version": "1.0.0",
-   "description": "",
+   "description": "The parent, i.e. root folder for Deepsheet",
    "author": "Simon Amarasingham",
+   "repository": "https://github.com/simonrumi/deepsheet",
    "license": "ISC",
    "main": "index.js",
    "scripts": {

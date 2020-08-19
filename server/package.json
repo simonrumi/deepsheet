@@ -1,8 +1,8 @@
 {
    "name": "server",
    "version": "1.0.0",
-   "description": "",
-   "author": "",
+   "description": "The server folder for Deepsheet",
+   "author": "Simon Amarasingham",
    "license": "ISC",
    "dependencies": {
       "cors": "^2.8.5",
