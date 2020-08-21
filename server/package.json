@@ -5,16 +5,20 @@
    "author": "Simon Amarasingham",
    "license": "ISC",
    "dependencies": {
+      "apollo-server-lambda": "^2.16.1",
+      "bufferutil": "^4.0.1",
       "cors": "^2.8.5",
       "express": "^4.17.1",
       "express-graphql": "^0.9.0",
       "graphql": "^15.0.0",
       "mongoose": "^5.9.21",
+      "netlify-lambda": "^2.0.1",
       "ramda": "^0.27.0",
-      "netlify-lambda": "^2.0.1"
+      "utf-8-validate": "^5.0.2",
+      "webpack-node-externals": "^2.5.1"
    },
    "scripts": {
       "lambda": "netlify-lambda serve lambdaFunctions",
-      "build:lambda": "netlify-lambda build lambdaFunctions"
+      "build:lambda": "netlify-lambda build lambdaFunctions --config webpack.functions.js"
    }
 }
