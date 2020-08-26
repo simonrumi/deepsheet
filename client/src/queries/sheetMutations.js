@@ -68,12 +68,10 @@ export const createSheetMutation = async ({ rows, columns, title, parentSheetId,
 const DELETE_SHEETS_MUTATION = gql`
    mutation DeleteSheets($ids: [ID]) {
       deleteSheets(ids: $ids) {
-         sheets {
-            id
-            title
-            metadata {
-               parentSheetId
-            }
+         id
+         title
+         metadata {
+            parentSheetId
          }
       }
    }

@@ -7,3 +7,4 @@ dev.js
 
 # lambda functions build dir
 /server/lambda
+/serverLambda/lambda

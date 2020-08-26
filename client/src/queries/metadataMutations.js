@@ -22,26 +22,24 @@ const UPDATE_METATDATA_MUTATION = gql`
             columnFilters: $columnFilters
          }
       ) {
-         metadata {
-            totalRows
-            totalColumns
-            parentSheetId
-            summaryCell {
-               row
-               column
-            }
-            columnFilters {
-               index
-               filterExpression
-               caseSensitive
-               regex
-            }
-            rowFilters {
-               index
-               filterExpression
-               caseSensitive
-               regex
-            }
+         totalRows
+         totalColumns
+         parentSheetId
+         summaryCell {
+            row
+            column
+         }
+         columnFilters {
+            index
+            filterExpression
+            caseSensitive
+            regex
+         }
+         rowFilters {
+            index
+            filterExpression
+            caseSensitive
+            regex
          }
       }
    }

@@ -206,7 +206,7 @@ export const stateEditorColumn = subObjectGetterSetter(editorLens, 'column');
 const stateSheetsLens = R.lensProp('sheets');
 export const stateSheetsIsCallingDb = subObjectGetterSetter(stateSheetsLens, 'isCallingDb');
 export const stateSheetsErrorMessage = subObjectGetterSetter(stateSheetsLens, 'errorMessage');
-export const stateSheets = subObjectGetterSetter(stateSheetsLens, 'sheets');
+export const stateSheets = R.view(stateSheetsLens); // subObjectGetterSetter(stateSheetsLens, 'sheets');
 
 /************************************************ STATE IS_STALE  **********************************************/
 

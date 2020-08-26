@@ -1,0 +1,24 @@
+{
+   "name": "serverLambda",
+   "version": "1.0.0",
+   "description": "The folder for lambda functions for Deepsheet",
+   "author": "Simon Amarasingham",
+   "license": "ISC",
+   "dependencies": {
+      "apollo-server-lambda": "^2.16.1",
+      "aws4": "^1.10.1",
+      "bufferutil": "^4.0.1",
+      "graphql": "^15.0.0",
+      "mongodb": "^3.6.0",
+      "mongodb-client-encryption": "^1.1.0",
+      "mongoose": "^5.10.0",
+      "netlify-lambda": "^2.0.1",
+      "ramda": "^0.27.1",
+      "utf-8-validate": "^5.0.2",
+      "webpack-node-externals": "^2.5.1"
+   },
+   "scripts": {
+      "lambda": "netlify-lambda serve lambdaFunctions",
+      "build:lambda": "netlify-lambda build lambdaFunctions --config webpack.functions.js"
+   }
+}

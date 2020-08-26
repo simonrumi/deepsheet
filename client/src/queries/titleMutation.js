@@ -2,7 +2,7 @@ import { gql } from 'apollo-boost';
 import apolloClient from '../services/apolloClient';
 
 const TITLE_MUTATION = gql`
-   mutation ChangeTitle($id: ID!, $title: String) {
+   mutation ChangeTitle($id: ID!, $title: String!) {
       changeTitle(id: $id, title: $title) {
          id
          title

@@ -10,12 +10,12 @@
       "test": "echo \"Error: no test specified\" && exit 1",
       "tailwind:css": "tailwind build client/src/css/tailwind.src.css -c client/tailwind.config.js -o client/src/css/tailwind.css",
       "server": "nodemon ./server/index.js",
+      "lambda": "npm run lambda --prefix serverLambda",
       "client": "npm run start --prefix client",
-      "dev": "npm run tailwind:css && concurrently \"npm run server\" \"npm run client\" \"npm run lambda\"",
+      "dev": "npm run tailwind:css && concurrently \"npm run client\" \"npm run lambda\"",
       "postinstall": "cd server && npm install && cd ../client && npm install",
       "prebuild": "npm run tailwind:css",
-      "build": "cd client && npm run build && cd ../server && npm run build:lambda",
-      "lambda": "npm run lambda --prefix server"
+      "build": "cd client && npm run build && cd ../serverLambda && npm run build:lambda"
    },
    "dependencies": {
       "tailwindcss": "^1.2.0"

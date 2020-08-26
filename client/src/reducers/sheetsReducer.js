@@ -34,12 +34,7 @@ const sheetsReducer = (state = {}, action) => {
          };
 
       case DELETED_SHEETS:
-         // note action.payload looks like { sheets: [ {id etc}, {id etc}, ] }
-         return {
-            ...action.payload,
-            isCallingDb: false,
-            errorMessage: null,
-         };
+         return action.payload;
 
       case DELETE_SHEETS_ERROR:
          return {

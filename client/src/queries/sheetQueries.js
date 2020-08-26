@@ -4,12 +4,10 @@ import apolloClient from '../services/apolloClient';
 const SHEETS_QUERY = gql`
    query FetchSheets {
       sheets {
-         sheets {
-            id
-            title
-            metadata {
-               parentSheetId
-            }
+         id
+         title
+         metadata {
+            parentSheetId
          }
       }
    }
@@ -22,8 +20,8 @@ export const sheetsQuery = async () => {
 };
 
 const SHEET_QUERY = gql`
-   query SheetQuery($id: ID!) {
-      sheet(id: $id) {
+   query SheetQuery($sheetId: ID!) {
+      sheet(sheetId: $sheetId) {
          id
          title
          metadata {
@@ -59,7 +57,7 @@ const SHEET_QUERY = gql`
 export const sheetQuery = async sheetId => {
    return await apolloClient.query({
       query: SHEET_QUERY,
-      variables: { id: sheetId },
+      variables: { sheetId },
       fetchPolicy: 'network-only', // in other words, every time a different sheet is loaded, we're getting it from the network, not the cache. Otherwise cache might show old version of sheet
    });
 };
