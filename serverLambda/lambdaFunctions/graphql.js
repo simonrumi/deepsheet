@@ -1,10 +1,10 @@
 const { ApolloServer } = require('apollo-server-lambda');
 const dbConnector = require('./dbConnector');
-const typeDefs = require('../typeDefs');
-const resolvers = require('../resolvers');
+const typeDefs = require('./typeDefs');
+const resolvers = require('./resolvers');
 
 exports.handler = async function (event, context) {
-   console.log('lambda ENVIRONMENT VARIABLES\n' + JSON.stringify(process.env, null, 2));
+   // console.log('lambda ENVIRONMENT VARIABLES\n' + JSON.stringify(process.env, null, 2));
    const db = await dbConnector();
    const server = new ApolloServer({ typeDefs, resolvers: resolvers(db) });
    console.log('created apollo server');

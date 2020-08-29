@@ -1,6 +1,8 @@
 import ApolloClient, { InMemoryCache /* HttpLink, ApolloLink */ } from 'apollo-boost';
 import { GRAPHQL_URL } from '../constants';
 
+console.log('apolloClient.js GRAPHQL_URL is', GRAPHQL_URL);
+
 // following funtion taken from https://github.com/apollographql/apollo-client/issues/5229
 export default new ApolloClient({
    uri: GRAPHQL_URL,

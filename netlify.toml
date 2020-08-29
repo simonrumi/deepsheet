@@ -1,8 +1,11 @@
 # root netlify.toml
 [build]
   command = "npm run build"
-  # functions = "serverlambda/lambda" # netlify dev uses this directory to scaffold and serve your functions
-  # publish = "client/build" # directory where deploy-ready HTML files etc are. Don't seem to need to specify this as it is set in the UI 
+  # netlify dev uses this directory to scaffold and serve your functions
+  # used to be "serverlambda/lambda", 
+  # but perhaps the netlify.toml in serverLambda takes care of the "/lambda" part
+  functions = "serverlambda" 
+  publish = "client/build" # directory where deploy-ready HTML files etc are. Don't seem to need to specify this as it is set in the UI 
 
 # note: each of these fields are OPTIONAL, with an exception that when you're specifying "command" and "port", you must specify framework = "#custom"
 [dev]
