@@ -18,6 +18,7 @@
       "build": "cd client && npm run build && cd ../serverLambda && npm run build:lambda"
    },
    "dependencies": {
+      "netlify-cli": "^2.59.2",
       "tailwindcss": "^1.2.0"
    },
    "devDependencies": {
