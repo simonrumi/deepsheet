@@ -5,9 +5,8 @@ dev.js
 # Local Netlify folder
 .netlify
 
-# probably can delete these
-old-graphql_js.txt
-old-resolvers_js.txt
+# probably can delete files named like this
+old-*.txt
 
 # lambda functions build dir
 /server/lambda

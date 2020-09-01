@@ -1,6 +1,6 @@
 const R = require('ramda');
 const mongoose = require('mongoose');
-const { Schema, Query, Document } = mongoose;
+const { Schema } = mongoose;
 const FilterModel = require('./FilterModel');
 const CellModel = require('./CellModel');
 const { isSomething } = require('../helpers');

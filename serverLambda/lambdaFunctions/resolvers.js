@@ -1,10 +1,10 @@
 const R = require('ramda');
-const { isSomething } = require('../helpers');
+const { isSomething } = require('./helpers');
 const mongoose = require('mongoose');
-require('../models/SheetModel');
+require('./models/SheetModel');
 const SheetModel = mongoose.model('sheet');
-const { getAllSheets, createNewSheet } = require('../helpers/sheetHelpers');
-const { updateCells, deleteSubsheetId, findCellByRowAndColumn } = require('../helpers/updateCellsHelpers');
+const { getAllSheets, createNewSheet } = require('./helpers/sheetHelpers');
+const { updateCells, deleteSubsheetId, findCellByRowAndColumn } = require('./helpers/updateCellsHelpers');
 const { DEFAULT_ROWS, DEFAULT_COLUMNS, DEFAULT_TITLE, DEFAULT_SUMMARY_CELL } = require('../constants');
 
 module.exports = db => ({
@@ -13,7 +13,7 @@ module.exports = db => ({
          console.log('Query.sheet got args', args);
          try {
             const sheetResult = SheetModel.findById(args.sheetId);
-            console.log('Query.sheet got sheet', sheet);
+            console.log('Query.sheet got result', sheetResult);
             return sheetResult;
          } catch (err) {
             console.log('Error finding sheet:', err);
