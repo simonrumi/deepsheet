@@ -9,5 +9,4 @@ module.exports = function (app) {
          // but both http://localhost:9000/.netlify/functions/hello and http://localhost:9000/hello work
       })
    );
-   // app.use(proxy('/graphql', { target: 'http://localhost:5000' })); // experiment to see if graphql still works
 };

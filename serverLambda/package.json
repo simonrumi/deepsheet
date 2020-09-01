@@ -1,5 +1,5 @@
 {
-   "name": "serverLambda",
+   "name": "server-lambda",
    "version": "1.0.0",
    "description": "The folder for lambda functions for Deepsheet",
    "author": "Simon Amarasingham",

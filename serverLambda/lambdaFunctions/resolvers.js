@@ -63,10 +63,10 @@ module.exports = db => ({
             summaryCellText: summaryCellText || '',
          });
          try {
-            console.log('resolvers Mutation.createSheet made defaultSheet', defaultSheet);
             const newSheet = await new SheetModel(defaultSheet).save();
-            console.log('resolvers Mutation.createSheet saved newSheet', newSheet);
             return newSheet;
+            // for some reason doing the above in a single line doesn't work...don't be tempted
+            // return await new SheetModel(defaultSheet).save();
          } catch (err) {
             console.log('Error creating sheet:', err);
             return err;

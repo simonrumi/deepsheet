@@ -24,8 +24,6 @@ const sheetSchema = new Schema(
    { collection: 'sheets' }
 );
 
-// sheetSchema.index({ 'cells.row': 1, 'cells.column': 1 }, { unique: true });
-
 const cellsValidator = function (cells) {
    const freeOfDupeCells = R.reduce((accumulator, currentCell) => {
       const dupeCells = R.filter(cell => currentCell.row === cell.row && currentCell.column === cell.column)(
