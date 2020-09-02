@@ -28,7 +28,6 @@ const deleteSubsheetId = (originalCells, row, column, text = '') =>
    R.map(cell => {
       if (cell.row === row && cell.column === column) {
          const newContent = { ...cell.content, subsheetId: null, text };
-         console.log('deleteSubsheetId changing cell', { ...cell, content: newContent });
          return { ...cell, content: newContent };
       }
       return cell;

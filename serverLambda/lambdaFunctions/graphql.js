@@ -5,13 +5,11 @@ const resolvers = require('./resolvers');
 
 exports.handler = async function (event, context) {
    // console.log('lambda ENVIRONMENT VARIABLES\n' + JSON.stringify(process.env, null, 2));
-   console.log('graphql.js handler function, got context', context);
    const db = await dbConnector();
    const server = new ApolloServer({ typeDefs, resolvers: resolvers(db), debug: true });
    console.log('created apollo server');
    return new Promise((yay, nay) => {
       const callbackFns = (err, args) => (err ? nay(err) : yay(args));
-      console.log('lambda handler calling server.createHandler()');
       server.createHandler()(event, context, callbackFns);
    });
 };

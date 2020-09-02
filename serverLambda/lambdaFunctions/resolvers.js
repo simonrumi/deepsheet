@@ -10,10 +10,8 @@ const { DEFAULT_ROWS, DEFAULT_COLUMNS, DEFAULT_TITLE, DEFAULT_SUMMARY_CELL } = r
 module.exports = db => ({
    Query: {
       sheet: async (parent, args, context) => {
-         console.log('Query.sheet got args', args);
          try {
             const sheetResult = SheetModel.findById(args.sheetId);
-            console.log('Query.sheet got result', sheetResult);
             return sheetResult;
          } catch (err) {
             console.log('Error finding sheet:', err);
@@ -26,7 +24,6 @@ module.exports = db => ({
       },
 
       subsheetId: async (parent, args, context) => {
-         console.log('subsheetId resolver, got parent', parent);
          if (parent.subsheetId) {
             try {
                const subsheet = await SheetModel.findById(parent.subsheetId);
