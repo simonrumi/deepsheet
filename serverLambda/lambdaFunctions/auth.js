@@ -8,9 +8,11 @@ export async function handler(event, context, callback) {
    const facebookEndpoint =
       'https://www.facebook.com/v8.0/dialog/oauth?' +
       `client_id=${keys.facebookClientID}` +
-      `&redirect_uri=http://localhost:9000/authReturn` +
+      `&redirect_uri=${keys.authReturnURI}` +
       `&state=${keys.facebookStateCheck}` +
       `&response_type=code`;
+
+   console.log('created facebookEndpoint', facebookEndpoint);
 
    const response = {
       statusCode: 301,
