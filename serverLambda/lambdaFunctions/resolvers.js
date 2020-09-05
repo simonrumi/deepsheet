@@ -144,5 +144,16 @@ module.exports = db => ({
             return err;
          }
       },
+
+      login: async (parent, args, context) => {
+         // TODO write this properly when auth stuff is worked out
+         const user = { id: '123abc', name: 'Bart Foo' };
+         return user;
+      },
+
+      logout: async (parent, args, context) => {
+         // TODO write this properly when auth stuff is worked out
+         return false;
+      },
    },
 });

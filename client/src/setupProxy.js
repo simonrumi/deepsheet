@@ -1,7 +1,6 @@
 const proxy = require('http-proxy-middleware');
 
 module.exports = function (app) {
-   app.use(proxy(['/api', '/auth/google'], { target: 'http://localhost:5000' }));
    app.use(
       proxy('/.netlify/functions/', {
          target: 'http://localhost:9000',
@@ -9,4 +8,11 @@ module.exports = function (app) {
          // but both http://localhost:9000/.netlify/functions/hello and http://localhost:9000/hello work
       })
    );
+   // may want to do something like this for auth stuff
+   /* app.use(
+      proxy(['/auth/google', '/auth/facebook'], {
+         target: 'http://localhost:9000/.netlify/functions',
+         pathRewrite: { '^/\\.netlify/functions': '' },
+      })
+   ); */
 };
