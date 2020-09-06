@@ -1,9 +1,5 @@
 const keys = require('../config/keys');
 
-// redirect to facebook login page
-// 307 status = temporary redirect
-// 301 = permanent redirect ...perhaps this is correct since it will always go here?
-
 export async function handler(event, context, callback) {
    const { access_token, token_type, expires_in } = event.body;
    console.log('auth.js got event.body', event.body);
@@ -23,15 +19,20 @@ export async function handler(event, context, callback) {
       `client_id=${keys.facebookClientID}` +
       `&redirect_uri=${keys.authReturnURI}` +
       `&state=${keys.facebookStateCheck}` +
-      `&response_type=code`;
+      `&response_type=code` +
+      `&scope=email`;
 
    console.log('auth.js did not get access_token, so redirecting to facebookEndpoint', facebookEndpoint);
 
+   // redirect to facebook login page
+   // Wikipedia says: "307 Temporary Redirect (since HTTP/1.1)
+   // In this case, the request should be repeated with another URI; however, future requests should still use the original URI.""
    const response = {
-      statusCode: 301,
+      statusCode: 307,
       headers: {
          Location: facebookEndpoint,
       },
+      body: {},
    };
    return callback(null, response);
 }

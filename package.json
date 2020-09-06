@@ -10,7 +10,7 @@
       "tailwind:css": "tailwind build client/src/css/tailwind.src.css -c client/tailwind.config.js -o client/src/css/tailwind.css",
       "lambda": "npm run lambda --prefix serverLambda",
       "client": "npm run start --prefix client",
-      "dev": "npm run tailwind:css && concurrently \"npm run client\" \"npm run lambda\"",
+      "dev": "npm run tailwind:css && cd ./serverLambda && npm run build:lambda && cd .. && concurrently \"npm run client\" \"npm run lambda\"",
       "postinstall": "cd serverLambda && npm install && cd ../client && npm install",
       "prebuild": "npm run tailwind:css",
       "build": "cd client && npm run build && cd ../serverLambda && npm run build:lambda"

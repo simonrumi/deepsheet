@@ -58,7 +58,8 @@ export async function handler(event, context, callback) {
       };
    }
 
-   console.log('authReturn.js got to the end and will return json string with code', code);
+   // if we get here then we didn't get an access token nor did we get an error.
+   // This shouldn't happen....but leaving it here just in case
    return {
       statusCode: 401,
       body: JSON.stringify({
