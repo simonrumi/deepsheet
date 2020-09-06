@@ -39,12 +39,21 @@ export async function handler(event, context, callback) {
       console.log('authReturn.js tried to get FB accesstoken and got response.data', response.data);
       const { access_token, token_type, expires_in } = response.data;
       if (access_token) {
+         const basicUserInfo = await axios.get(
+            `https://graph.facebook.com/me?fields=id,name,email&access_token=${access_token}`
+         );
+         console.log('got basicUserInfo.data', basicUserInfo.data);
+         const { id, name, email } = basicUserInfo.data;
+
          return {
             statusCode: 200,
             body: JSON.stringify({
                access_token,
                token_type,
                expires_in,
+               id,
+               name,
+               email,
             }),
          };
       }

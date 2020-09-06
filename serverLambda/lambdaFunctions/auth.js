@@ -19,7 +19,7 @@ export async function handler(event, context, callback) {
       `client_id=${keys.facebookClientID}` +
       `&redirect_uri=${keys.authReturnURI}` +
       `&state=${keys.facebookStateCheck}` +
-      `&response_type=code` +
+      `&response_type=code,granted_scopes` +
       `&scope=email`;
 
    console.log('auth.js did not get access_token, so redirecting to facebookEndpoint', facebookEndpoint);
