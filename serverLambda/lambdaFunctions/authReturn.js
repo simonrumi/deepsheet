@@ -29,7 +29,7 @@ export async function handler(event, context, callback) {
    const fbAccessTokenEndpoint =
       'https://graph.facebook.com/v8.0/oauth/access_token?' +
       `client_id=${keys.facebookClientID}` +
-      `&redirect_uri=${authUri}` +
+      `&redirect_uri=${keys.authUri}` +
       `&client_secret=${keys.facebookClientSecret}` +
       `&code=${code}`;
 
