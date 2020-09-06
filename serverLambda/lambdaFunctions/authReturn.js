@@ -29,13 +29,25 @@ export async function handler(event, context, callback) {
    const fbAccessTokenEndpoint =
       'https://graph.facebook.com/v8.0/oauth/access_token?' +
       `client_id=${keys.facebookClientID}` +
-      `&redirect_uri=${keys.authUri}` +
+      `&redirect_uri=${keys.authReturnURI}` +
       `&client_secret=${keys.facebookClientSecret}` +
       `&code=${code}`;
 
    try {
       console.log('authReturn.js looks good so GETting fbAccessTokenEndpoint', fbAccessTokenEndpoint);
-      await axios.get(fbAccessTokenEndpoint);
+      const response = await axios.get(fbAccessTokenEndpoint);
+      console.log('authReturn.js tried to get FB accesstoken and got response.data', response.data);
+      const { access_token, token_type, expires_in } = response.data;
+      if (access_token) {
+         return {
+            statusCode: 200,
+            body: JSON.stringify({
+               access_token,
+               token_type,
+               expires_in,
+            }),
+         };
+      }
    } catch (error) {
       console.log('Error getting fb access token:', error);
       return {
@@ -48,9 +60,9 @@ export async function handler(event, context, callback) {
 
    console.log('authReturn.js got to the end and will return json string with code', code);
    return {
-      statusCode: 200,
+      statusCode: 401,
       body: JSON.stringify({
-         code,
+         error: 'authorization failed, but for no known reason',
       }),
    };
 }
