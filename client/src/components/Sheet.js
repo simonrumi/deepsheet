@@ -5,10 +5,9 @@ import { DndProvider } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 import { updatedSheetId } from '../actions/fetchSheetActions';
 import { createdSheet } from '../actions/sheetActions';
-import managedStore from '../store';
-// import initializeSheet from '../middleware/initializeSheet';
+
 import { nothing, isSomething } from '../helpers';
-import { stateTotalRows, stateTotalColumns } from '../helpers/dataStructureHelpers';
+import { stateTotalRows, stateTotalColumns, stateIsLoggedIn } from '../helpers/dataStructureHelpers';
 import {
    shouldShowRow,
    isFirstColumn,
@@ -26,6 +25,7 @@ import RowHeader from './organisms/RowHeader';
 import LastRow from './organisms/LastRow';
 import Cell from './molecules/Cell';
 import FilterModal from './organisms/FilterModal';
+import LoginModal from './organisms/LoginModal';
 
 class Sheet extends Component {
    componentDidMount() {
@@ -68,10 +68,6 @@ class Sheet extends Component {
    maybeCell = state => R.ifElse(shouldShowRow(stateRowVisibility(state)), this.renderCellAndMaybeEdges, nothing);
 
    renderCells = () => {
-      // 'Sheet.js renderCells() was calling initializeSheet, but commented out because it should not be necessary - initializeSheet is middleware and should get called when needed'
-      // if (this.props.data && this.props.data.sheet && this.props.managedStore.store) {
-      //    initializeSheet(this.props.managedStore.store, this.props.data.sheet);
-      // }
       if (isSomething(stateTotalRows(this.props.state)) && this.props.cellKeys && this.props.cellKeys.length > 0) {
          return R.pipe(
             R.map(cellKey => this.maybeCell(this.props.state)(cellKey)),
@@ -79,7 +75,14 @@ class Sheet extends Component {
             R.append(<LastRow key="lastRow" />)
          )(this.props.cellKeys);
       }
-      return <div>Unknown status</div>;
+   };
+
+   mayberRenderLogin = state => {
+      console.log('Sheet.js maybeRenderLogin got state', state);
+      if (!stateIsLoggedIn(state)) {
+         return <LoginModal />;
+      }
+      return null;
    };
 
    columnHeaderStyle = colSpan => {
@@ -123,6 +126,7 @@ class Sheet extends Component {
             <Header />
             <Editor cellContent="" />
             {this.maybeRenderFilterModal(this.props.showFilterModal)}
+            {this.mayberRenderLogin(this.props.state)}
             <DndProvider backend={HTML5Backend}>
                <div className="grid-container pt-1" style={this.renderGridSizingStyle(this.props.state)}>
                   {this.renderCells()}
@@ -138,7 +142,6 @@ function mapStateToProps(state) {
       state,
       sheet: state.sheet,
       showFilterModal: state.filterModal.showFilterModal,
-      managedStore,
       cellKeys: state.cellKeys,
       sheetId: state.sheetId, // if no existing sheetId in the store, this will be the DEFAULT_SHEET_ID
    };

@@ -1,4 +1,5 @@
 module.exports = {
+   purge: ['./src/**/*.js', './public/**/*.html'],
    theme: {
       extend: {
          colors: {
@@ -12,7 +13,7 @@ module.exports = {
             'light-light-orange-transparent': 'rgba(255, 230, 199, 0.5)',
          },
          inset: {
-            '4': '4px',
+            4: '4px',
             '1/4': '25%',
             '1/3': '33%',
             '1/2': '50%',
@@ -29,7 +30,7 @@ module.exports = {
          },
       },
       flex: {
-         '2': '2 2 0%',
+         2: '2 2 0%',
       },
       cursor: {
          auto: 'auto',

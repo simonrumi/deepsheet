@@ -8,17 +8,15 @@ export const isString = R.pipe(R.type, R.equals('String'));
 export const isObject = R.pipe(R.type, R.equals('Object'));
 
 // like R.hasPath but returns either the thing at the given path or null
-export const maybeHasPath = (path, obj) =>
-   R.isNil(obj) ? null : R.hasPath(path, obj) ? R.path(path, obj) : null;
+export const maybeHasPath = (path, obj) => (R.isNil(obj) ? null : R.hasPath(path, obj) ? R.path(path, obj) : null);
 
-const makeArr = (length) => new Array(length);
+const makeArr = length => new Array(length);
 export const mapWithIndex = R.addIndex(R.map);
 
 // when you want to map, but you don't have an array, just a number of times to run the function supplied to map
 // the function gets the index as a param each time
 // returns an array
-export const forLoopMap = (fn, length) =>
-   mapWithIndex((val, index) => fn(index), makeArr(length));
+export const forLoopMap = (fn, length) => mapWithIndex((val, index) => fn(index), makeArr(length));
 
 export const reduceWithIndex = R.addIndex(R.reduce);
 
@@ -26,41 +24,25 @@ export const reduceWithIndex = R.addIndex(R.reduce);
 // the function gets the params (accumulator, index)
 // returns the final result collected by the accumulator
 export const forLoopReduce = (fn, initialVal, length) =>
-   reduceWithIndex(
-      (accumulator, value, index) => fn(accumulator, index),
-      initialVal,
-      makeArr(length)
-   );
+   reduceWithIndex((accumulator, value, index) => fn(accumulator, index), initialVal, makeArr(length));
 
 export const isNothing = R.either(R.isNil, R.isEmpty);
 export const isSomething = R.pipe(isNothing, R.not);
-export const arrayContainsSomething = R.reduce(
-   (accumulator, arrItem) => accumulator && isSomething(arrItem),
-   true
-);
+export const arrayContainsSomething = R.reduce((accumulator, arrItem) => accumulator || isSomething(arrItem), false);
+// export const arrayContainsSomething = R.reduce((accumulator, arrItem) => accumulator && isSomething(arrItem), true);
 
 // use like this:
 // runIfSomething(myFn, thingToTest, extraParameters)
 // if the thingToTest exists and is not empty, myFn will run, having the thingToTest and extraParameters passed to it
 export const runIfSomething = (fn, thing, ...args) =>
-   R.when(
-      R.both(R.pipe(R.isNil, R.not), R.pipe(R.isEmpty, R.not)),
-      R.thunkify(fn)(thing, ...args),
-      thing
-   );
+   R.when(R.both(R.pipe(R.isNil, R.not), R.pipe(R.isEmpty, R.not)), R.thunkify(fn)(thing, ...args), thing);
 
 export const capitalizeFirst = R.pipe(R.head, R.toUpper);
 
-export const capitalCase = R.converge(R.concat, [
-   capitalizeFirst,
-   R.pipe(R.tail, R.toLower),
-]);
+export const capitalCase = R.converge(R.concat, [capitalizeFirst, R.pipe(R.tail, R.toLower)]);
 
 export const getObjectFromArrayByKeyValue = R.curry((key, value, arr) =>
-   isSomething(arr)
-      ? R.find((item) => isObject(item) && R.propEq(key, value, item), arr) ||
-        null
-      : null
+   isSomething(arr) ? R.find(item => isObject(item) && R.propEq(key, value, item), arr) || null : null
 );
 
 export const removeObjectFromArrayByKeyValue = R.curry((key, value, arr) =>
@@ -68,15 +50,13 @@ export const removeObjectFromArrayByKeyValue = R.curry((key, value, arr) =>
       ? arr
       : R.reduce(
            (accumulator, currObj) =>
-              isSomething(currObj[key]) && currObj[key] === value
-                 ? accumulator
-                 : R.append(currObj, accumulator),
+              isSomething(currObj[key]) && currObj[key] === value ? accumulator : R.append(currObj, accumulator),
            [],
            arr
         )
 );
 
-export const indexToColumnLetter = (index) => {
+export const indexToColumnLetter = index => {
    let num = index + 1; // counting from 1, A = 1, Z = 26
    const getPlaceValue = (num, placeValues = []) => {
       const BASE = 26;
@@ -99,18 +79,16 @@ export const indexToColumnLetter = (index) => {
 
    const UPPERCASE_CODE_OFFSET = 64; // 65 is "A" but we want to add to map to "A"
    const columnLetters = placeValues.reduce((accumulator, currentValue) => {
-      return (
-         accumulator + String.fromCharCode(currentValue + UPPERCASE_CODE_OFFSET)
-      );
+      return accumulator + String.fromCharCode(currentValue + UPPERCASE_CODE_OFFSET);
    }, '');
    return columnLetters;
 };
 
-export const indexToRowNumber = (index) => {
+export const indexToRowNumber = index => {
    return parseInt(index, 10) + 1;
 };
 
-export const extractRowColFromCellKey = (str) => {
+export const extractRowColFromCellKey = str => {
    // expecting a string like some_prefix_2_3
    //where 2 & 3 are the row and column numbers respectively
    const regex = new RegExp(/.*_(\d+)_(\d+)$/);

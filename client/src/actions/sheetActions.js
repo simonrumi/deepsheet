@@ -2,7 +2,7 @@ import * as R from 'ramda';
 import managedStore from '../store';
 import { createSheetMutation } from '../queries/sheetMutations';
 import { isSomething } from '../helpers';
-import { cellText, cellSubsheetIdSetter, dbSheetId } from '../helpers/dataStructureHelpers';
+import { cellText, cellSubsheetIdSetter, dbSheetId, stateIsLoggedIn } from '../helpers/dataStructureHelpers';
 import { getSaveableCellData } from '../helpers/cellHelpers';
 import { updatedCells } from './cellActions';
 import { POSTING_CREATE_SHEET, COMPLETED_CREATE_SHEET, SHEET_CREATION_FAILED } from './sheetTypes';
@@ -17,6 +17,13 @@ const saveParentSheetData = async (parentSheetCell, parentSheetId, newSheet) => 
 
 export const createdSheet = async ({ rows, columns, title, parentSheetId, summaryCell, parentSheetCell }) => {
    managedStore.store.dispatch({ type: POSTING_CREATE_SHEET });
+   if (!stateIsLoggedIn(managedStore.state)) {
+      managedStore.store.dispatch({
+         type: SHEET_CREATION_FAILED,
+         payload: { errorMessage: 'Not logged in so sheet was not created in the db' },
+      });
+      return;
+   }
    const summaryCellText = cellText(parentSheetCell);
    console.log(
       'sheetActions.createdSheet called. TODO move call to createSheetMutation() from sheetActions.js to sheetServices.js'

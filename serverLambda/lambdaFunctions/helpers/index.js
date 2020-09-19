@@ -2,7 +2,7 @@ const R = require('ramda');
 
 const isNothing = R.either(R.isNil, R.isEmpty);
 const isSomething = R.pipe(isNothing, R.not);
-const arrayContainsSomething = R.reduce((accumulator, arrItem) => accumulator && isSomething(arrItem), true);
+const arrayContainsSomething = R.reduce((accumulator, arrItem) => accumulator || isSomething(arrItem), false);
 
 const makeArr = length => new Array(length);
 const mapWithIndex = R.addIndex(R.map);

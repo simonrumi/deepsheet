@@ -2,6 +2,7 @@ const { ApolloServer } = require('apollo-server-lambda');
 const dbConnector = require('./dbConnector');
 const typeDefs = require('./typeDefs');
 const resolvers = require('./resolvers');
+const { validateUserSession } = require('./helpers/userHelpers');
 
 export async function handler(event, context) {
    // console.log('lambda ENVIRONMENT VARIABLES\n' + JSON.stringify(process.env, null, 2));
@@ -10,6 +11,9 @@ export async function handler(event, context) {
       typeDefs,
       resolvers: resolvers(db),
       debug: true,
+      context: async args => ({
+         isAuthorized: await validateUserSession(args.event.headers),
+      }),
    });
 
    console.log('created apollo server');

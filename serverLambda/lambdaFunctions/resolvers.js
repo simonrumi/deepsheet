@@ -1,11 +1,18 @@
 const R = require('ramda');
-const { isSomething } = require('./helpers');
+// note that we have to create the Models first, before requiring in code below that relies on them
 const mongoose = require('mongoose');
 require('./models/SheetModel');
 const SheetModel = mongoose.model('sheet');
+require('./models/UserModel');
+const UserModel = mongoose.model('user');
+require('./models/SessionModel');
+const SessionModel = mongoose.model('session');
+const { isSomething, arrayContainsSomething } = require('./helpers');
 const { getAllSheets, createNewSheet } = require('./helpers/sheetHelpers');
 const { updateCells, deleteSubsheetId, findCellByRowAndColumn } = require('./helpers/updateCellsHelpers');
+const { validateNewUser, makeAuthCall } = require('./helpers/userHelpers');
 const { DEFAULT_ROWS, DEFAULT_COLUMNS, DEFAULT_TITLE, DEFAULT_SUMMARY_CELL } = require('../constants');
+const { AuthenticationError } = require('apollo-server-lambda');
 
 module.exports = db => ({
    Query: {
@@ -46,10 +53,29 @@ module.exports = db => ({
             return err;
          }
       },
+
+      user: async (parent, args, context) => {
+         try {
+            const userResult = UserModel.findById(args.userId);
+            return userResult;
+         } catch (err) {
+            console.log('Error finding user:', err);
+            return err;
+         }
+      },
    },
 
    Mutation: {
       createSheet: async (parent, args, context) => {
+         console.log('createSheet resolver got context', context);
+         if (!context.isAuthorized) {
+            // ***********TOOD NEXT This doesn;t work:
+            // return await makeAuthCall({ action: 'createSheet', data: args.input });
+            // because how do we redirect from this mutation?
+            // .....so watch S Grider's videos to see how he routes people to login flow
+            // might need to do it on the client, based on some auth cookie
+            return new AuthenticationError('User must log in first');
+         }
          const { rows, columns, title, parentSheetId, summaryCell, summaryCellText } = args.input;
          const defaultSheet = createNewSheet({
             totalRows: rows || DEFAULT_ROWS,
@@ -62,7 +88,7 @@ module.exports = db => ({
          try {
             const newSheet = await new SheetModel(defaultSheet).save();
             return newSheet;
-            // for some reason doing the above in a single line doesn't work...don't be tempted
+            // for some reason doing the above in a single line like this doesn't work...don't be tempted:
             // return await new SheetModel(defaultSheet).save();
          } catch (err) {
             console.log('Error creating sheet:', err);
@@ -107,7 +133,7 @@ module.exports = db => ({
          }
       },
 
-      updateCells: async (parentValue, args, context) => {
+      updateCells: async (parent, args, context) => {
          const { id, cells } = args.input;
          try {
             const sheetDoc = await SheetModel.findById(id);
@@ -120,7 +146,7 @@ module.exports = db => ({
          }
       },
 
-      deleteSubsheetId: async (parentValue, args, context) => {
+      deleteSubsheetId: async (parent, args, context) => {
          const { sheetId, row, column, text } = args.input;
          try {
             const sheetDoc = await SheetModel.findById(sheetId);
@@ -135,7 +161,7 @@ module.exports = db => ({
          }
       },
 
-      deleteSheets: async (parentValue, args, context) => {
+      deleteSheets: async (parent, args, context) => {
          try {
             await SheetModel.deleteMany({ _id: { $in: args.ids } });
             return getAllSheets();
@@ -145,15 +171,60 @@ module.exports = db => ({
          }
       },
 
-      login: async (parent, args, context) => {
-         // TODO write this properly when auth stuff is worked out
-         const user = { id: '123abc', name: 'Bart Foo' };
-         return user;
+      createUser: async (parent, args, context) => {
+         const { isValid, error } = await validateNewUser(args.input);
+         if (!isValid) {
+            return error;
+         }
+         try {
+            const newUser = await new UserModel(args.input).save();
+            return newUser;
+         } catch (err) {
+            console.log('Error creating user:', err);
+            return err;
+         }
       },
 
-      logout: async (parent, args, context) => {
-         // TODO write this properly when auth stuff is worked out
-         return false;
+      // note that we haven't ended up using this because sessions are handled by authReturn.js which is talking directly to mongodb
+      createUserSession: async (parent, args, context) => {
+         const { userId, email, userIdFromProvider } = args.input;
+
+         const createSession = async () => {
+            try {
+               const newSession = await new SessionModel().save();
+               console.log('created session', newSession);
+               return newSession;
+            } catch (err) {
+               console.log('Error creating session:', err);
+               return err;
+            }
+         };
+
+         const returnError = () => {
+            console.log('could not create session');
+            return new Error('could not create session');
+         };
+
+         return R.ifElse(arrayContainsSomething, createSession, returnError)([userId, email, userIdFromProvider]);
+      },
+
+      // note that we haven't ended up using this because sessions are handled by authReturn.js which is talking directly to mongodb
+      refreshUserSession: async (parent, args, context) => {
+         try {
+            console.log('refreshUserSession got args', args);
+            const currentSession = await SessionModel.findById(args.sessionId);
+            console.log('refreshUserSession got currentSession', currentSession);
+            if (currentSession) {
+               currentSession.lastAccessed = Date.now();
+               const refreshsedSession = await currentSession.save();
+               console.log('refreshsedSession is', refreshsedSession);
+               return refreshsedSession;
+            }
+            return null; // will need to create a new session in this case
+         } catch (err) {
+            console.log('error refreshing session', err);
+            return err;
+         }
       },
    },
 });

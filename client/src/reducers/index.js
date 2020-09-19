@@ -9,6 +9,7 @@ import fetchSheetReducer from './fetchSheetReducer';
 import sheetsReducer from './sheetsReducer';
 import menuReducer from './menuReducer';
 import { editorReducer, editorRefReducer } from './editorReducers';
+import authReducer from './authReducers';
 import {
    HAS_CHANGED_METADATA,
    TOGGLED_SHOW_FILTER_MODAL,
@@ -197,4 +198,5 @@ export const staticReducers = {
    cellDbUpdates: cellDbUpdatesReducer,
    menu: menuReducer,
    focus: focusReducer,
+   auth: authReducer,
 };

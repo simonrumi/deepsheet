@@ -1,6 +1,8 @@
 import * as R from 'ramda';
 import { isSomething, isNothing } from './index';
 
+console.log('dataStructureHelpers TODO: use createGetter instead of createGetterSetter for all state data');
+
 /************************************************ GENERAL STUFF **********************************************/
 
 const createGetterSetter = lens => (data, newValue) =>
@@ -19,9 +21,14 @@ const createGetterSetter = lens => (data, newValue) =>
 const subObjectGetterSetter = (lens, propName) => {
    const propLens = R.lensProp(propName); // a lens to focus on, e.g. 'totalRows'
    const fullPathLens = R.compose(lens, propLens); // a lens to focus on, e.g. state.totalRows
-   // return (data, newValue) =>
-   //    isSomething(newValue) ? R.set(fullPathLens, newValue, data) : R.view(fullPathLens, data);
    return createGetterSetter(fullPathLens);
+};
+
+const createGetter = lens => data => R.view(lens, data);
+const subObjectGetter = (lens, propName) => {
+   const propLens = R.lensProp(propName); // e.g. propName = 'totalRows'
+   const fullPathLens = R.compose(lens, propLens); // gets us to e.g. metadata.totalRows
+   return createGetter(fullPathLens);
 };
 
 /************************************************ DB **********************************************/
@@ -103,6 +110,17 @@ export const stateMetadataIsStale = subObjectGetterSetter(stateMetadataLens, 'is
 export const stateMetadataIsCallingDb = subObjectGetterSetter(stateMetadataLens, 'isCallingDb');
 export const stateMetadataErrorMessage = subObjectGetterSetter(stateMetadataLens, 'errorMessage');
 export const stateMetadataLastUpdated = subObjectGetterSetter(stateMetadataLens, 'lastUpdated');
+
+/************************************************ STATE FILTER MODAL **********************************************/
+const stateFilterModalLens = R.lensProp('filterModal');
+export const stateShowFilterModal = subObjectGetter(stateFilterModalLens, 'showFilterModal');
+export const stateFilterColumnIndex = subObjectGetter(stateFilterModalLens, 'colIndex');
+export const stateFilterRowIndex = subObjectGetter(stateFilterModalLens, 'rowIndex');
+
+/************************************************ STATE AUTH **********************************************/
+const stateAuthLens = R.lensProp('auth');
+export const stateIsLoggedIn = subObjectGetter(stateAuthLens, 'isLoggedIn');
+export const stateShowLoginModal = subObjectGetter(stateAuthLens, 'showLoginModal');
 
 /************************************************ STATE CELL **********************************************/
 

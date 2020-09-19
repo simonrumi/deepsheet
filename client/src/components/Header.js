@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import axios from 'axios';
 import { connect } from 'react-redux';
 import SheetHeader from './molecules/SheetHeader';
 import TitleForm from './molecules/TitleForm';
@@ -14,11 +13,6 @@ export class Header extends Component {
    }
 
    render() {
-      axios
-         .get('/.netlify/functions/auth')
-         .then(res => console.log('login response', res))
-         .catch(err => console.log('error getting login info:', err));
-
       return (
          <div className="flex">
             <div className="pr-2 max-w-4">

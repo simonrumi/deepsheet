@@ -6,12 +6,32 @@ const { gql } = require('apollo-server-lambda');
 // but did not uninstall them!!! ....so try installing from scratch to see what happens
 
 const UserMutations = gql`
-   extend type Mutation {
-      # TODO: what identifier do we need to supply when logging in?
-      login: UserType
+   input AccessInput {
+      token: String
+      tokenProvider: String
+      userIdFromProvider: String
+      tokenType: String
+      tokenExpires: Int
+   }
 
-      # note that we're returning a Boolean when logging out, since there's nothing really to return, but we need to return something
-      logout: Boolean
+   input NewUserInput {
+      firstName: String
+      lastName: String
+      email: String
+      sheets: [ID]
+      access: AccessInput
+   }
+
+   input UserSessionInput {
+      userId: ID
+      email: String
+      userIdFromProvider: String
+   }
+
+   extend type Mutation {
+      createUser(input: NewUserInput): UserType
+      createUserSession(input: UserSessionInput): SessionType
+      refreshUserSession(sessionId: ID!): SessionType
    }
 `;
 
