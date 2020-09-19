@@ -9,7 +9,7 @@ const FacebookLoginBtn = ({ classes = '' }) => {
    const allClasses = 'cursor-pointer ' + classes;
    return (
       <div className={allClasses} onClick={loginWithFacebook}>
-         <img src="/img/facebookLoginBtn.png" />
+         <img src="/img/facebookLoginBtn.png" alt="login with Facebook" />
       </div>
    );
 };

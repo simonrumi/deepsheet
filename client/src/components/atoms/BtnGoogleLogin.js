@@ -9,7 +9,7 @@ const GoogleLoginBtn = ({ classes = '' }) => {
    const allClasses = 'cursor-pointer ' + classes;
    return (
       <div className={allClasses} onClick={loginWithGoogle}>
-         <img src="/img/btn_google_signin_dark_normal_web@2x.png" />
+         <img src="/img/btn_google_signin_dark_normal_web@2x.png" alt="login with Google" />
       </div>
    );
 };
