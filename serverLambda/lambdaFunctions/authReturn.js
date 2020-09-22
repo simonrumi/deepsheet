@@ -1,18 +1,14 @@
-import { isNothing } from './helpers';
+// note that authReturn is needed for the Facebook auth process only. Google auth doesn't need it
 
-const axios = require('axios').default;
 const keys = require('../config/keys');
 const dbConnector = require('./dbConnector');
-const { findUser, getFacebookToken, applyAuthSession } = require('./helpers/userHelpers');
-
-const standardAuthError = {
-   statusCode: 401,
-   body: JSON.stringify({
-      error: 'authentication failed...bummer',
-   }),
-};
+const { findOrCreateUser, applyAuthSession, standardAuthError, makeCookie } = require('./helpers/userHelpers');
+const { getFacebookToken, getFbUserId } = require('./helpers/facebookAuthHelpers');
+const { AUTH_PROVIDER_FACEBOOK } = require('../constants');
 
 export async function handler(event, context, callback) {
+   console.log('started authReturn handler, got event', event);
+
    // for some reason we need to have this line here, in order for the findUser() call to work
    // even though we are not directly using the db connection it returns
    await dbConnector();
@@ -37,30 +33,15 @@ export async function handler(event, context, callback) {
 
    if (access_token) {
       try {
-         const basicUserInfo = await axios.get(
-            `https://graph.facebook.com/me?fields=id,name,email&access_token=${access_token}`
-         );
-         const { id, name, email } = basicUserInfo.data;
-
-         // is this user in db already?
-         const user = await findUser({ email, userIdFromProvider: id });
-
-         if (isNothing(user)) {
-            // TODO create a new user here
-         }
-         const access = {
+         const userIdFromProvider = await getFbUserId(access_token);
+         console.log('in authReturn.js AUTH_PROVIDER_FACEBOOK is', AUTH_PROVIDER_FACEBOOK);
+         const user = await findOrCreateUser({
+            userIdFromProvider,
+            provider: AUTH_PROVIDER_FACEBOOK,
             token: access_token,
-            tokenProvider: 'facebook',
-            userIdFromProvider: id,
-            tokenType: token_type,
-            tokenExpires: expires_in,
-         };
-         const session = await applyAuthSession(user, access);
-
-         const cookieStr = encodeURIComponent('id=' + user._id + ';session=' + session._id);
-         const maxAge = 60 * 60 * 24 * 30; // i.e. set cookie to expire after 30 days
-         const cookie = 'deepdeepsheet=' + cookieStr + '; Max-Age=' + maxAge;
-
+         });
+         const session = await applyAuthSession(user);
+         const cookie = makeCookie(user._id, session._id);
          return {
             statusCode: 302,
             headers: {
@@ -70,17 +51,9 @@ export async function handler(event, context, callback) {
                // 'Access-Control-Allow-Origin': 'https://www.facebook.com', //'http://localhost:3000', '*'
                // 'Access-Control-Allow-Methods': '*', // 'OPTIONS, POST, GET',
             },
-            body: JSON.stringify({
-               access_token,
-               token_type,
-               expires_in,
-               id,
-               name,
-               email,
-            }),
          };
       } catch (err) {
-         console.log('Error getting basicUserInfo:', err);
+         console.log('AuthReturn has error either getting basicUserInfo, or finding user, or creating user:', err);
          return standardAuthError;
       }
    }

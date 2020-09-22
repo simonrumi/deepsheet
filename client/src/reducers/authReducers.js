@@ -1,4 +1,4 @@
-import { PROMPT_LOGIN, LOGGED_IN } from '../actions/authTypes';
+import { PROMPT_LOGIN, LOGGED_IN, LOGGED_OUT } from '../actions/authTypes';
 
 const authReducer = (state = {}, action) => {
    switch (action.type) {
@@ -6,7 +6,10 @@ const authReducer = (state = {}, action) => {
          return { ...state, isLoggedIn: false, showLoginModal: true };
 
       case LOGGED_IN:
-         return { ...state, isLoggedIn: true, showLoginModal: false };
+         return { isLoggedIn: true, showLoginModal: false };
+
+      case LOGGED_OUT:
+         return { ...state, isLoggedIn: false, showLoginModal: true, error: action.payload };
 
       default:
          return state;

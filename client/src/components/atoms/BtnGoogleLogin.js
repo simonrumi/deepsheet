@@ -1,17 +1,85 @@
-import React from 'react';
+import React, { Component } from 'react';
+import { connect } from 'react-redux';
+import { GoogleLogin /* GoogleLogout */ } from 'react-google-login';
+import axios from 'axios';
+import { loggedIn, loggedOut } from '../../actions/authActions';
 import { GOOGLE_AUTH_URL } from '../../constants';
 
-const loginWithGoogle = () => {
-   window.location.href = GOOGLE_AUTH_URL;
-};
+const GOOGLE_CLIENT_ID = '761528077812-aiufet2eu5rloejs76hqffber30r31kp.apps.googleusercontent.com';
 
-const GoogleLoginBtn = ({ classes = '' }) => {
-   const allClasses = 'cursor-pointer ' + classes;
-   return (
-      <div className={allClasses} onClick={loginWithGoogle}>
-         <img src="/img/btn_google_signin_dark_normal_web@2x.png" alt="login with Google" />
-      </div>
-   );
-};
+class GoogleLoginBtn extends Component {
+   constructor(props) {
+      super(props);
+      this.googleLogin = this.googleLogin.bind(this);
+      this.handleGoogleLoginFailure = this.handleGoogleLoginFailure.bind(this);
+      this.googleLogout = this.googleLogout.bind(this);
+      this.handleGoogleLogoutFailure = this.handleGoogleLogoutFailure.bind(this);
+   }
 
-export default GoogleLoginBtn;
+   async googleLogin(response) {
+      if (response.accessToken) {
+         console.log('logged in with google, got response', response);
+         const googleIdToken = response.tokenObj.id_token;
+         console.log('googleIdToken', googleIdToken);
+
+         try {
+            const googleResponse = await axios.post(GOOGLE_AUTH_URL, { googleIdToken });
+            console.log('in googleLogin, got googleResponse.data.cookie', googleResponse.data.cookie);
+            loggedIn();
+            // **** NEXT do something to get sheet
+
+            // if (isSomething(document.cookie)) {
+
+            // }
+            const ddsCookie = decodeURIComponent(googleResponse.data.cookie);
+            document.cookie = ddsCookie;
+         } catch (err) {
+            console.log('error trying to get auth confirmation from backend', err);
+            loggedOut(err);
+         }
+      }
+   }
+
+   googleLogout(response) {
+      // this.setState(state => ({
+      //   isLogined: false,
+      //   accessToken: ''
+      // }));
+      console.log('logged out');
+   }
+
+   handleGoogleLoginFailure(response) {
+      console.log('Failed to log in...response:', response);
+   }
+
+   handleGoogleLogoutFailure(response) {
+      console.log('Failed to log out');
+   }
+
+   render() {
+      const allClasses = 'cursor-pointer ' + this.props.classes;
+      return (
+         <div className={allClasses}>
+            <GoogleLogin
+               clientId={GOOGLE_CLIENT_ID}
+               buttonText="Login with Google"
+               onSuccess={this.googleLogin}
+               onFailure={this.handleGoogleLoginFailure}
+               cookiePolicy={'single_host_origin'}
+               responseType="code,token"
+               theme="dark"
+               className="w-full"
+            />
+         </div>
+      );
+   }
+}
+
+function mapStateToProps(state, ownProps) {
+   return {
+      state: state,
+      classes: ownProps.classes,
+   };
+}
+
+export default connect(mapStateToProps, {})(GoogleLoginBtn);

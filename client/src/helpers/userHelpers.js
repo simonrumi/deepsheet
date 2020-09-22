@@ -18,10 +18,12 @@ export const getUserInfoFromCookie = () => {
 
    const getValueFromCookie = regex => R.pipe(regex.exec.bind(regex), maybeGetFirstCapturedGroup);
 
-   const userIdRegex = new RegExp(/id=([^;]*)/);
+   // user id is preceeded by I_ and ends with _
+   const userIdRegex = new RegExp(/I_([^_]*)/);
    const userId = getValueFromCookie(userIdRegex)(ddsCookie);
 
-   const sessionIdRegex = new RegExp(/session=(.*)/);
+   // session id is preceeded by S_
+   const sessionIdRegex = new RegExp(/S_(.*)/);
    const sessionId = getValueFromCookie(sessionIdRegex)(ddsCookie);
 
    return { userId, sessionId };

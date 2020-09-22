@@ -6,11 +6,10 @@ const SheetModel = mongoose.model('sheet');
 require('./models/UserModel');
 const UserModel = mongoose.model('user');
 require('./models/SessionModel');
-const SessionModel = mongoose.model('session');
-const { isSomething, arrayContainsSomething } = require('./helpers');
+// const SessionModel = mongoose.model('session');
+const { isSomething /* arrayContainsSomething */ } = require('./helpers');
 const { getAllSheets, createNewSheet } = require('./helpers/sheetHelpers');
 const { updateCells, deleteSubsheetId, findCellByRowAndColumn } = require('./helpers/updateCellsHelpers');
-const { validateNewUser, makeAuthCall } = require('./helpers/userHelpers');
 const { DEFAULT_ROWS, DEFAULT_COLUMNS, DEFAULT_TITLE, DEFAULT_SUMMARY_CELL } = require('../constants');
 const { AuthenticationError } = require('apollo-server-lambda');
 
@@ -171,22 +170,22 @@ module.exports = db => ({
          }
       },
 
-      createUser: async (parent, args, context) => {
-         const { isValid, error } = await validateNewUser(args.input);
-         if (!isValid) {
-            return error;
-         }
-         try {
-            const newUser = await new UserModel(args.input).save();
-            return newUser;
-         } catch (err) {
-            console.log('Error creating user:', err);
-            return err;
-         }
-      },
+      // createUser: async (parent, args, context) => {
+      //    const { isValid, error } = await validateNewUser(args.input);
+      //    if (!isValid) {
+      //       return error;
+      //    }
+      //    try {
+      //       const newUser = await new UserModel(args.input).save();
+      //       return newUser;
+      //    } catch (err) {
+      //       console.log('Error creating user:', err);
+      //       return err;
+      //    }
+      // },
 
       // note that we haven't ended up using this because sessions are handled by authReturn.js which is talking directly to mongodb
-      createUserSession: async (parent, args, context) => {
+      /* createUserSession: async (parent, args, context) => {
          const { userId, email, userIdFromProvider } = args.input;
 
          const createSession = async () => {
@@ -206,10 +205,10 @@ module.exports = db => ({
          };
 
          return R.ifElse(arrayContainsSomething, createSession, returnError)([userId, email, userIdFromProvider]);
-      },
+      }, */
 
       // note that we haven't ended up using this because sessions are handled by authReturn.js which is talking directly to mongodb
-      refreshUserSession: async (parent, args, context) => {
+      /* refreshUserSession: async (parent, args, context) => {
          try {
             console.log('refreshUserSession got args', args);
             const currentSession = await SessionModel.findById(args.sessionId);
@@ -225,6 +224,6 @@ module.exports = db => ({
             console.log('error refreshing session', err);
             return err;
          }
-      },
+      }, */
    },
 });

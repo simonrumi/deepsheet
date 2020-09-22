@@ -1,99 +1,57 @@
 const R = require('ramda');
-const axios = require('axios');
 const { isSomething, isNothing, arrayContainsSomething } = require('.');
-const keys = require('../../config/keys');
+
 const mongoose = require('mongoose');
 require('../models/UserModel');
 const UserModel = mongoose.model('user');
 require('../models/SessionModel');
 const SessionModel = mongoose.model('session');
 
-const makeAuthCall = async pendingAction => {
-   console.log('makeAuthCall got pendingAction', pendingAction);
-   const facebookEndpoint =
-      'https://www.facebook.com/v8.0/dialog/oauth?' +
-      `client_id=${keys.facebookClientID}` +
-      `&redirect_uri=${keys.authReturnURI}` +
-      `&state=${keys.facebookStateCheck}` +
-      `&response_type=code,granted_scopes` +
-      `&scope=email`;
-
-   // redirect to facebook login page
-   // 307:
-   // Wikipedia says: "307 Temporary Redirect (since HTTP/1.1)
-   // In this case, the request should be repeated with another URI; however, future requests should still use the original URI."
-   // 303:
-   // MDN says "The HyperText Transfer Protocol (HTTP) 303 See Other redirect status response code indicates that
-   // the redirects don't link to the newly uploaded resources, but to another page
-   // (such as a confirmation page or an upload progress page).
-   // This response code is usually sent back as a result of PUT or POST.
-   // The method used to display this redirected page is always GET.""
-   // 302: (used by Passport)
-   // MDN says: "The HyperText Transfer Protocol (HTTP) 302 Found redirect status response code indicates
-   // that the resource requested has been temporarily moved to the URL given by the Location header.
-   // ...It is therefore recommended to set the 302 code only as a response for GET or HEAD methods"
-   return {
-      statusCode: 302,
-      headers: {
-         Location: facebookEndpoint,
-         'Access-Control-Allow-Headers': '*',
-         'Access-Control-Allow-Origin': '*', //'https://www.facebook.com', //'http://localhost:3000', '*'
-         'Access-Control-Allow-Methods': '*', // 'OPTIONS, POST, GET',
-      },
-      body: null, // this causes a warning to be thrown, saying we should have a body, but we're redirecting, so we have no use for a body
-   };
+const makeCookie = (userId, sessionId) => {
+   // const cookieStr = encodeURIComponent('id=' + userId + ';session=' + sessionId);
+   const cookieStr = encodeURIComponent('I_' + userId + '_S_' + sessionId);
+   const maxAge = 60 * 60 * 24 * 30; // i.e. set cookie to expire after 30 days
+   return 'deepdeepsheet=' + cookieStr + '; Max-Age=' + maxAge;
 };
 
-const findUser = async ({ email, userIdFromProvider }) => {
-   if (isSomething(email)) {
-      const userEmailSearch = await UserModel.findOne({ email });
-      if (isSomething(userEmailSearch)) {
-         return userEmailSearch;
-      }
-   }
+const standardAuthError = {
+   statusCode: 401,
+   body: JSON.stringify({
+      error: 'authentication failed...bummer',
+   }),
+};
+
+const findUser = async ({ userIdFromProvider, provider }) => {
    if (isSomething(userIdFromProvider)) {
-      const userIdFromProviderSearch = await UserModel.findOne({
-         'access.userIdFromProvider': userIdFromProvider,
-      });
-      if (isSomething(userIdFromProviderSearch)) {
-         return userIdFromProviderSearch;
+      console.log('findUser got userIdFromProvider', userIdFromProvider, 'provider', provider, 'about to try findOne');
+
+      try {
+         const existingUser = await UserModel.findOne({
+            userIdFromProvider: userIdFromProvider.toString(),
+            provider,
+         });
+         console.log('findUser got existingUser', existingUser);
+         if (isSomething(existingUser)) {
+            return existingUser;
+         }
+      } catch (err) {
+         console.log('error finding user with userIdFromProvider', userIdFromProvider, 'error:', err);
+         return null;
       }
    }
-   return Promise.resolve(null);
+   console.log('findUser found nothing so returning null');
+   return null;
 };
 
-const validateNewUser = async user => {
-   const { email, access } = user;
-   if (isNothing(email) && !R.has('userIdFromProvider', access)) {
-      return {
-         isValid: false,
-         error: new Error('must supply email or id to create a new user'),
-      };
-   }
-   const existingUser = await findUser({ email, userIdFromProvider: access.userIdFromProvider });
+const findOrCreateUser = async ({ userIdFromProvider, provider, token }) => {
+   console.log('findOrCreateUser got userIdFromProvider', userIdFromProvider, 'provider', provider, 'token', token);
+   const existingUser = await findUser({ userIdFromProvider, provider });
+   console.log('findOrCreateUser got existingUser', existingUser);
    if (isSomething(existingUser)) {
-      return {
-         isValid: false,
-         error: new Error('user already exists'),
-      };
+      return existingUser;
    }
-   return { isValid: true, error: null };
-};
-
-const getFacebookToken = async code => {
-   const fbAccessTokenEndpoint =
-      'https://graph.facebook.com/v8.0/oauth/access_token?' +
-      `client_id=${keys.facebookClientID}` +
-      `&redirect_uri=${keys.authReturnURI}` +
-      `&client_secret=${keys.facebookClientSecret}` +
-      `&code=${code}`;
-   try {
-      const fbAccessRes = await axios.get(fbAccessTokenEndpoint);
-      return { error: null, ...fbAccessRes.data };
-   } catch (err) {
-      console.log('Error getting fb access token:', err);
-      return { token_error: err };
-   }
+   const newUser = await createUser({ userIdFromProvider, provider, token });
+   return newUser;
 };
 
 const createSession = async () => {
@@ -126,10 +84,12 @@ const getSession = async user => {
       try {
          const session = await refreshSession(user.session); //// "could not find session to refresh" here - shouldn't an error be thrown??
          if (session) {
+            console.log('getSession refreshed session and got session', session);
             return session;
          }
       } catch (err) {
-         throw new Error('could not refresh session: ' + err);
+         console.log('waring could not refresh session:', err);
+         // however will continue and try to create a new session
       }
    }
    try {
@@ -140,13 +100,12 @@ const getSession = async user => {
    }
 };
 
-const applyAuthSession = async (user, access) => {
+const applyAuthSession = async user => {
    // note: should be guaranteed to have a user and an accessToken at this point
-   console.log('applyAuthSession got user', user, 'access', access);
+   console.log('applyAuthSession got user', user);
    const session = await getSession(user);
    console.log('applyAuthSession, got session', session);
    user.session = session._id;
-   user.access = access;
    console.log('applyAuthSession, user obj to be saved is', user);
    await user.save();
    return session;
@@ -166,15 +125,18 @@ const getUserInfoFromReq = reqHeaders => {
 
    const getValueFromCookie = regex => R.pipe(regex.exec.bind(regex), maybeGetFirstCapturedGroup);
 
-   const userIdRegex = new RegExp(/id=([^;]*)/);
+   // user id is preceeded by I_ and ends with _
+   const userIdRegex = new RegExp(/I_([^_]*)/);
    const userId = getValueFromCookie(userIdRegex)(ddsCookie);
 
-   const sessionIdRegex = new RegExp(/session=(.*)/);
+   // session id is preceeded by S_
+   const sessionIdRegex = new RegExp(/S_(.*)/);
    const sessionId = getValueFromCookie(sessionIdRegex)(ddsCookie);
 
    return { userId, sessionId };
 };
 
+// graphql uses this to make sure it is ok to run queries
 const validateUserSession = async reqHeaders => {
    const { userId, sessionId } = getUserInfoFromReq(reqHeaders);
    console.log('validateUserSession got userId', userId, 'sessionId', sessionId);
@@ -187,15 +149,34 @@ const validateUserSession = async reqHeaders => {
    // see if the session in the user obj matches the session from the context
    // note that we can't test with double equals like this
    // user.session !== sessionId
-   // because one is a string and the other is something else I think
+   // because one is a string and the other is something else (I think)
    if (isNothing(user.session) || user.session != sessionId) {
       console.log('session is not current, user is not authorized');
       return false;
-
-      // if not, then user needs to be re-authorized - pull that stuff out of auth.js and put into
-      // userHelpers so we can call from here as well as auth.js
    }
+   await refreshSession(user.session);
    return true;
 };
 
-module.exports = { makeAuthCall, findUser, validateNewUser, getFacebookToken, applyAuthSession, validateUserSession };
+const createUser = async userDetails => {
+   console.log('createUser got userDetails', userDetails);
+   try {
+      const userArr = await UserModel.create([userDetails]);
+      console.log('createUser created', userArr[0]);
+      if (!arrayContainsSomething(userArr)) {
+         throw new Error('error creating user - db returned nothing');
+      }
+      return userArr[0];
+   } catch (err) {
+      console.log('error creating user:', err);
+      throw new Error('error creating user: ' + err);
+   }
+};
+
+module.exports = {
+   makeCookie,
+   standardAuthError,
+   applyAuthSession,
+   validateUserSession,
+   findOrCreateUser,
+};

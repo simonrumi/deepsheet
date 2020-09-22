@@ -1,5 +1,7 @@
 const { gql } = require('apollo-server-lambda');
 
+// this is out of date and not used ....can delete??
+
 const UserType = gql`
    type AccessType {
       token: String
