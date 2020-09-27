@@ -3,9 +3,8 @@ import { connect } from 'react-redux';
 import { GoogleLogin /* GoogleLogout */ } from 'react-google-login';
 import axios from 'axios';
 import { loggedIn, loggedOut } from '../../actions/authActions';
-import { GOOGLE_AUTH_URL } from '../../constants';
-
-const GOOGLE_CLIENT_ID = '761528077812-aiufet2eu5rloejs76hqffber30r31kp.apps.googleusercontent.com';
+import { updatedSheetId } from '../../actions/fetchSheetActions';
+import { GOOGLE_AUTH_URL, GOOGLE_CLIENT_ID } from '../../constants';
 
 class GoogleLoginBtn extends Component {
    constructor(props) {
@@ -25,17 +24,18 @@ class GoogleLoginBtn extends Component {
          try {
             const googleResponse = await axios.post(GOOGLE_AUTH_URL, { googleIdToken });
             console.log('in googleLogin, got googleResponse.data.cookie', googleResponse.data.cookie);
-            loggedIn();
-            // **** NEXT do something to get sheet
-
-            // if (isSomething(document.cookie)) {
-
-            // }
             const ddsCookie = decodeURIComponent(googleResponse.data.cookie);
             document.cookie = ddsCookie;
          } catch (err) {
-            console.log('error trying to get auth confirmation from backend', err);
+            console.error('error trying to get auth confirmation from backend', err);
             loggedOut(err);
+         }
+         loggedIn();
+         try {
+            await updatedSheetId();
+            console.log('BtnGoogleLogin called updatedSheetId');
+         } catch (err) {
+            console.error('error trying to create sheet', err);
          }
       }
    }

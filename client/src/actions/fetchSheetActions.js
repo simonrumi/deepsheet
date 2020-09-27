@@ -6,8 +6,8 @@ export const updatedSheetId = sheetId => {
    managedStore.store.dispatch({ type: UPDATED_SHEET_ID, payload: sheetId });
 };
 
-export const fetchingSheet = sheetId => {
-   managedStore.store.dispatch({ type: FETCHING_SHEET, payload: sheetId });
+export const fetchingSheet = ({ sheetId, userId }) => {
+   managedStore.store.dispatch({ type: FETCHING_SHEET, payload: { sheetId, userId } });
 };
 
 export const fetchedSheet = sheet => {

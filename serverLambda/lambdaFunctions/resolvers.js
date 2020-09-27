@@ -6,8 +6,7 @@ const SheetModel = mongoose.model('sheet');
 require('./models/UserModel');
 const UserModel = mongoose.model('user');
 require('./models/SessionModel');
-// const SessionModel = mongoose.model('session');
-const { isSomething /* arrayContainsSomething */ } = require('./helpers');
+const { isSomething, isNothing } = require('./helpers');
 const { getAllSheets, createNewSheet } = require('./helpers/sheetHelpers');
 const { updateCells, deleteSubsheetId, findCellByRowAndColumn } = require('./helpers/updateCellsHelpers');
 const { DEFAULT_ROWS, DEFAULT_COLUMNS, DEFAULT_TITLE, DEFAULT_SUMMARY_CELL } = require('../constants');
@@ -16,11 +15,34 @@ const { AuthenticationError } = require('apollo-server-lambda');
 module.exports = db => ({
    Query: {
       sheet: async (parent, args, context) => {
+         console.log('running sheet query with args', args);
          try {
-            const sheetResult = SheetModel.findById(args.sheetId);
+            const sheetResult = await SheetModel.findById(args.sheetId);
             return sheetResult;
          } catch (err) {
             console.log('Error finding sheet:', err);
+            return err;
+         }
+      },
+
+      sheetByUserId: async (parent, args, context) => {
+         console.log('running sheetByUserId query with args', args);
+         try {
+            const user = await UserModel.findById(args.userId);
+            if (isNothing(user)) {
+               return new Error('no user found');
+            }
+            console.log('sheetByUserId got user', user);
+            const sheetId = user.sheets[0];
+            console.log('sheetByUserId got sheetId', sheetId);
+            if (isNothing(sheetId)) {
+               return new Error('no sheet found for user. TODO need to create sheet in this case');
+            }
+            const sheetResult = await SheetModel.findOne(sheetId);
+            console.log('sheetByUserId got sheet', sheetResult);
+            return sheetResult;
+         } catch (err) {
+            console.log('Error finding sheet by user id:', err);
             return err;
          }
       },

@@ -11,7 +11,7 @@ import {
    deletedSheets,
    deleteSheetsError,
 } from '../actions/sheetsActions';
-import { sheetQuery, sheetsQuery } from '../queries/sheetQueries';
+import { sheetQuery, sheetsQuery, sheetByUserIdQuery } from '../queries/sheetQueries';
 import { deleteSheetsMutation } from '../queries/sheetMutations';
 import titleMutation from '../queries/titleMutation';
 import { isSomething, arrayContainsSomething } from '../helpers';
@@ -25,10 +25,30 @@ import {
 } from '../helpers/dataStructureHelpers';
 
 export const fetchSheet = async sheetId => {
-   const sheet = sheetQuery(sheetId)
-      .then(res => res.data.sheet)
-      .catch(err => console.error('error in sheetServices.fetchSheet', err));
-   return sheet;
+   console.log('fetchSheet called with sheetId', sheetId);
+   // console.log('...but temporarily returning null to make sure sheetQuery is never called');
+   // return null;
+   try {
+      const response = await sheetQuery(sheetId);
+      return response.data.sheet;
+   } catch (err) {
+      console.error('error in sheetServices.fetchSheet', err);
+   }
+   // const sheet = sheetQuery(sheetId)
+   //    .then(res => res.data.sheet)
+   //    .catch(err => console.error('error in sheetServices.fetchSheet', err));
+   // return sheet;
+};
+
+export const fetchSheetByUserId = async userId => {
+   console.log('fetchSheetByUserId got userId', userId);
+   try {
+      const sheetResponse = await sheetByUserIdQuery(userId);
+      console.log('sheetServices.js fetchSheetByUserId got sheetResponse.data', sheetResponse.data);
+      return sheetResponse?.data?.sheetByUserId;
+   } catch (err) {
+      throw new Error('error fetching sheet by user id: ' + err);
+   }
 };
 
 export const fetchSheets = async () => {

@@ -28,17 +28,6 @@ import FilterModal from './organisms/FilterModal';
 import LoginModal from './organisms/LoginModal';
 
 class Sheet extends Component {
-   componentDidMount() {
-      R.ifElse(
-         // if sheetId isn't null
-         isSomething,
-         // trigger the action to load the sheet
-         this.props.updatedSheetId,
-         // otherswise create a new sheet
-         R.thunkify(this.props.createdSheet)({})
-      )(this.props.sheetId);
-   }
-
    renderEmptyEndCell = cellKey => (
       <Cell blankCell={true} cellKey={cellKey} classes={'border-r'} key={cellKey + '_endCell'} />
    );
@@ -78,7 +67,7 @@ class Sheet extends Component {
    };
 
    mayberRenderLogin = state => {
-      console.log('Sheet.js maybeRenderLogin got state', state);
+      console.log('Sheet.js maybeRenderLogin got state', state, 'stateIsLoggedIn(state)', stateIsLoggedIn(state));
       if (!stateIsLoggedIn(state)) {
          return <LoginModal />;
       }
@@ -143,7 +132,7 @@ function mapStateToProps(state) {
       sheet: state.sheet,
       showFilterModal: state.filterModal.showFilterModal,
       cellKeys: state.cellKeys,
-      sheetId: state.sheetId, // if no existing sheetId in the store, this will be the DEFAULT_SHEET_ID
+      sheetId: state.sheetId,
    };
 }
 export default connect(mapStateToProps, { updatedSheetId, createdSheet })(Sheet);

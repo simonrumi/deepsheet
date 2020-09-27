@@ -43,6 +43,7 @@ const SheetType = gql`
 
    extend type Query {
       sheet(sheetId: ID!): SheetType
+      sheetByUserId(userId: ID!): SheetType
       sheets: [SheetType]
 
       # subsheetId and text are part of the CellContentType above

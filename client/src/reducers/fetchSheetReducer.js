@@ -1,16 +1,22 @@
 import { UPDATED_SHEET_ID, FETCHING_SHEET, FETCHED_SHEET, FETCH_SHEET_ERROR } from '../actions/fetchSheetTypes';
 import { POSTING_CREATE_SHEET, COMPLETED_CREATE_SHEET, SHEET_CREATION_FAILED } from '../actions/sheetTypes';
 import { DEFAULT_SHEET_ID } from '../constants';
+import { isNothing } from '../helpers';
 
 const fetchSheetReducer = (state = DEFAULT_SHEET_ID, action) => {
    switch (action.type) {
       case UPDATED_SHEET_ID:
          console.log('fetchSheetReducer got UPDATED_SHEET_ID with action.payload', action.payload);
+         if (isNothing(action.payload)) {
+            return null;
+         }
          return action.payload;
 
       case FETCHING_SHEET:
+         const { sheetId, userId } = action.payload;
          return {
-            sheetId: action.payload,
+            sheetId,
+            userId,
             isCallingDb: true,
             errorMessage: null,
          };

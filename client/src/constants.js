@@ -3,6 +3,7 @@ export const DEFAULT_SHEET_ID = null; // expecting to trigger making a new sheet
 export const GRAPHQL_URL = '/.netlify/functions/graphql';
 export const FACEBOOK_AUTH_URL = '/.netlify/functions/auth?provider=facebook';
 export const GOOGLE_AUTH_URL = '/.netlify/functions/auth?provider=google';
+export const GOOGLE_CLIENT_ID = '761528077812-aiufet2eu5rloejs76hqffber30r31kp.apps.googleusercontent.com';
 
 export const ROW_AXIS = 'row';
 export const COLUMN_AXIS = 'column';

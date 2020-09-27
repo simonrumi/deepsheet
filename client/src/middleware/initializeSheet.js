@@ -1,16 +1,16 @@
 import * as R from 'ramda';
 import { UPDATED_SHEET_ID } from '../actions/fetchSheetTypes';
 import { COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
-import { fetchSheet } from '../services/sheetServices';
+import { fetchSheet, fetchSheetByUserId } from '../services/sheetServices';
 import { updatedCellKeys } from '../actions/cellActions';
-import { createdSheet } from '../actions/sheetActions';
 import { fetchedSheet, fetchingSheet, fetchSheetError } from '../actions/fetchSheetActions';
 import { clearedFocus } from '../actions/focusActions';
 import { menuHidden } from '../actions/menuActions';
 import { createCellReducers, populateCellsInStore } from '../reducers/cellReducers';
-import { isSomething, isNothing } from '../helpers';
+import { isSomething } from '../helpers';
 import { applyFilters } from '../helpers/visibilityHelpers';
 import { dbMetadata, dbCells } from '../helpers/dataStructureHelpers';
+import { getUserInfoFromCookie } from '../helpers/userHelpers';
 
 /***** ordering cells by row then column */
 const filterToCurrentRow = R.curry((rowIndex, cells) => R.filter(cell => cell.row === rowIndex)(cells));
@@ -48,11 +48,17 @@ const initializeCells = sheet => {
    }
 };
 
-const runFetchSheet = async (store, sheetId) => {
-   fetchingSheet(sheetId);
+const runFetchFunctionForId = async ({ sheetId, userId }) => {
+   return sheetId ? await fetchSheet(sheetId) : await fetchSheetByUserId(userId);
+};
+
+const runFetchSheet = async ({ store, sheetId, userId }) => {
+   console.log('runFetchSheet got sheetId', sheetId, 'and userId', userId);
+   fetchingSheet({ sheetId, userId });
+   console.log('runFetchSheet after calling fetchingSheet({sheetId, userId}), state is', store.getState());
    try {
-      const sheet = await fetchSheet(sheetId);
-      console.log('iniitializeSheet.runFetchSheet got sheet', sheet);
+      const sheet = await runFetchFunctionForId({ sheetId, userId });
+      console.log('iniitializeSheet.runFetchFunctionForId got sheet', sheet);
       // if sheet has some data then dispatch the fetchedSheet action
       R.when(
          isSomething,
@@ -66,20 +72,16 @@ const runFetchSheet = async (store, sheetId) => {
    }
 };
 
-const getOrCreateSheet = async (store, sheetId) => {
-   if (isNothing(sheetId)) {
-      const sheet = await createdSheet({});
-      console.log('initializeSheet.getOrCreateSheet createdSheet', sheet);
-      return sheet;
-   }
-   return await runFetchSheet(store, sheetId);
+const getOrFindSheet = async (store, sheetId) => {
+   const { userId } = sheetId ? { userId: null } : getUserInfoFromCookie();
+   return await runFetchSheet({ store, sheetId, userId });
 };
 
 export default store => next => async action => {
    switch (action.type) {
       case UPDATED_SHEET_ID:
          console.log('initializeSheet got UPDATED_SHEET_ID with action.payload', action.payload);
-         await getOrCreateSheet(store, action.payload);
+         await getOrFindSheet(store, action.payload);
          break;
 
       case COMPLETED_CREATE_SHEET:

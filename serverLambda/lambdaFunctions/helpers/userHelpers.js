@@ -65,13 +65,17 @@ const createSession = async () => {
 };
 
 const refreshSession = async sessionId => {
+   console.log('refreshSession got sessionId', sessionId);
    try {
       const currentSession = await SessionModel.findById(sessionId);
+      console.log('refreshSession got currentSession', currentSession);
       if (currentSession) {
          currentSession.lastAccessed = Date.now();
          const refreshsedSession = await currentSession.save();
+         console.log('refreshSession returning refreshsedSession', refreshsedSession);
          return refreshsedSession;
       }
+      console.log('refreshSession got no currentSession so returning null');
       return null;
    } catch (err) {
       console.log('Error refreshing session', err);
@@ -136,8 +140,11 @@ const getUserInfoFromReq = reqHeaders => {
    return { userId, sessionId };
 };
 
+// TODO BUG validateSession seems to be working fine, but for some reason we are returning error related to sheetByUserIdQuery
+
 // graphql uses this to make sure it is ok to run queries
 const validateUserSession = async reqHeaders => {
+   console.log('validateUserSession got reqHeaders', reqHeaders);
    const { userId, sessionId } = getUserInfoFromReq(reqHeaders);
    console.log('validateUserSession got userId', userId, 'sessionId', sessionId);
    if (isNothing(userId) || isNothing(sessionId)) {
