@@ -1,5 +1,5 @@
 import * as R from 'ramda';
-import { UPDATED_SHEET_ID } from '../actions/fetchSheetTypes';
+import { TRIGGERED_FETCH_SHEET } from '../actions/fetchSheetTypes';
 import { COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
 import { fetchSheet, fetchSheetByUserId } from '../services/sheetServices';
 import { updatedCellKeys } from '../actions/cellActions';
@@ -79,8 +79,8 @@ const getOrFindSheet = async (store, sheetId) => {
 
 export default store => next => async action => {
    switch (action.type) {
-      case UPDATED_SHEET_ID:
-         console.log('initializeSheet got UPDATED_SHEET_ID with action.payload', action.payload);
+      case TRIGGERED_FETCH_SHEET:
+         console.log('initializeSheet got TRIGGERED_FETCH_SHEET with action.payload', action.payload);
          await getOrFindSheet(store, action.payload);
          break;
 

@@ -199,7 +199,7 @@ export const stateChangedCells = subObjectGetterSetter(stateCellDbUpdatesLens, '
 /************************************************ STATE OTHER **********************************************/
 
 // get the sheet's id. Will never set this, only retrieve it, as it is mongodb that generates this.
-const stateSheetIdLens = R.lensProp('sheetId');
+const stateSheetIdLens = R.lensPath(['sheetId', 'sheetId']);
 export const stateSheetId = R.view(stateSheetIdLens); // use: stateSheetId(stateObj);
 
 const stateFocusLens = R.lensProp('focus'); // there's a property called focus which is used to track which UI element currently has focus

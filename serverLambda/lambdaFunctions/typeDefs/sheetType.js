@@ -26,6 +26,8 @@ const SheetType = gql`
    }
 
    type SheetMetadataType {
+      created: String
+      lastModified: String
       totalRows: Int
       totalColumns: Int
       parentSheetId: ID
@@ -34,8 +36,19 @@ const SheetType = gql`
       rowFilters: [SheetFilterType]
    }
 
+   type SheetCollaboratorType {
+      collaborator: ID
+      permissions: Int
+   }
+
+   type SheetUsersType {
+      owner: ID!
+      collaborators: [SheetCollaboratorType]
+   }
+
    type SheetType {
       id: ID!
+      users: SheetUsersType
       metadata: SheetMetadataType!
       title: String
       cells: [SheetCellType]

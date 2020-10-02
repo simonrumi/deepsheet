@@ -3,17 +3,19 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { DndProvider } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
-import { updatedSheetId } from '../actions/fetchSheetActions';
-import { createdSheet } from '../actions/sheetActions';
+import { triggeredFetchSheet } from '../actions/fetchSheetActions';
+// import { createdSheet } from '../actions/sheetActions';
+import { loggedIn } from '../actions/authActions';
 
 import { nothing, isSomething } from '../helpers';
-import { stateTotalRows, stateTotalColumns, stateIsLoggedIn } from '../helpers/dataStructureHelpers';
+import { stateTotalRows, stateTotalColumns, stateIsLoggedIn, stateSheetId } from '../helpers/dataStructureHelpers';
 import {
    shouldShowRow,
    isFirstColumn,
    isLastVisibleItemInAxis,
    getRequiredNumItemsForAxis,
 } from '../helpers/visibilityHelpers';
+import { getUserInfoFromCookie } from '../helpers/userHelpers';
 import { stateRowVisibility } from '../helpers/dataStructureHelpers';
 import { ROW_AXIS, COLUMN_AXIS, THIN_COLUMN, ROW_HEIGHT } from '../constants';
 
@@ -66,9 +68,23 @@ class Sheet extends Component {
       }
    };
 
+   /// TODO nEXT BUG : if we are logged in wiht a user, we are not getting a sheet
+   // also - why do we need UPDATE_SHEET_ID as well as all the FETCHING_SHEET_ID stuff ....might be necessary...check itout
+
    mayberRenderLogin = state => {
-      console.log('Sheet.js maybeRenderLogin got state', state, 'stateIsLoggedIn(state)', stateIsLoggedIn(state));
+      console.log('rendering Sheet...mabybeRenderLogin got state', state);
       if (!stateIsLoggedIn(state)) {
+         const { userId, sessionId } = getUserInfoFromCookie();
+         if (userId && sessionId) {
+            loggedIn();
+            if (!stateSheetId(state)) {
+               console.log(
+                  'Sheet.js maybeRenderLogin ....have userId but no sheetId so need to get sheet by userId, so calling triggeredFetchSheet'
+               );
+               triggeredFetchSheet();
+            }
+            return null;
+         }
          return <LoginModal />;
       }
       return null;
@@ -135,4 +151,6 @@ function mapStateToProps(state) {
       sheetId: state.sheetId,
    };
 }
-export default connect(mapStateToProps, { updatedSheetId, createdSheet })(Sheet);
+export default connect(mapStateToProps, {
+   triggeredFetchSheet /*createdSheet */,
+})(Sheet);

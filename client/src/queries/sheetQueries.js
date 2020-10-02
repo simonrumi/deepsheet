@@ -23,8 +23,17 @@ const SHEET_QUERY = gql`
    query SheetQuery($sheetId: ID!) {
       sheet(sheetId: $sheetId) {
          id
+         users {
+            owner
+            collaborators {
+               collaborator
+               permissions
+            }
+         }
          title
          metadata {
+            created
+            lastModified
             totalRows
             totalColumns
             parentSheetId
@@ -60,48 +69,4 @@ export const sheetQuery = async sheetId => {
       variables: { sheetId },
       fetchPolicy: 'network-only', // in other words, every time a different sheet is loaded, we're getting it from the network, not the cache. Otherwise cache might show old version of sheet
    });
-};
-
-const SHEET_BY_USER_ID_QUERY = gql`
-   query SheetByUserIdQuery($userId: ID!) {
-      sheetByUserId(userId: $userId) {
-         id
-         title
-         metadata {
-            totalRows
-            totalColumns
-            parentSheetId
-            columnFilters {
-               index
-               filterExpression
-               caseSensitive
-               regex
-            }
-            rowFilters {
-               index
-               filterExpression
-               caseSensitive
-               regex
-            }
-         }
-         cells {
-            row
-            column
-            content {
-               text
-               subsheetId
-            }
-            visible
-         }
-      }
-   }
-`;
-
-export const sheetByUserIdQuery = async userId => {
-   const result = await apolloClient.query({
-      query: SHEET_BY_USER_ID_QUERY,
-      variables: { userId },
-      fetchPolicy: 'network-only', // in other words, every time a different sheet is loaded, we're getting it from the network, not the cache. Otherwise cache might show old version of sheet
-   });
-   return result;
 };

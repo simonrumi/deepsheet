@@ -1,5 +1,3 @@
-export const DEFAULT_SHEET_ID = null; // expecting to trigger making a new sheet //'5ef8d279e80b425d0863c709'; // used by UPDATED_SHEET_ID
-
 export const GRAPHQL_URL = '/.netlify/functions/graphql';
 export const FACEBOOK_AUTH_URL = '/.netlify/functions/auth?provider=facebook';
 export const GOOGLE_AUTH_URL = '/.netlify/functions/auth?provider=google';

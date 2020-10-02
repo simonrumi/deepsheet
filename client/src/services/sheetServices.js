@@ -1,6 +1,6 @@
 import * as R from 'ramda';
 import managedStore from '../store';
-import { updatedSheetId } from '../actions/fetchSheetActions';
+import { triggeredFetchSheet } from '../actions/fetchSheetActions';
 import { updatedCells } from '../actions/cellActions';
 import { updatedMetadata } from '../actions/metadataActions';
 import {
@@ -11,8 +11,8 @@ import {
    deletedSheets,
    deleteSheetsError,
 } from '../actions/sheetsActions';
-import { sheetQuery, sheetsQuery, sheetByUserIdQuery } from '../queries/sheetQueries';
-import { deleteSheetsMutation } from '../queries/sheetMutations';
+import { sheetQuery, sheetsQuery } from '../queries/sheetQueries';
+import { deleteSheetsMutation, sheetByUserIdMutation, createSheetMutation } from '../queries/sheetMutations';
 import titleMutation from '../queries/titleMutation';
 import { isSomething, arrayContainsSomething } from '../helpers';
 import { getSaveableCellData } from '../helpers/cellHelpers';
@@ -22,30 +22,31 @@ import {
    stateSheetId,
    stateMetadataIsStale,
    saveableStateMetadata,
+   cellText,
+   cellSubsheetIdSetter,
+   dbSheetId,
 } from '../helpers/dataStructureHelpers';
+
+// TODO DONE (hopefully) update mutations and queries on client ...multiple tasks here presumably
+
+// TODO return the response.data.thing for each query/mutation so the consumer doesn;t have to know that path
 
 export const fetchSheet = async sheetId => {
    console.log('fetchSheet called with sheetId', sheetId);
-   // console.log('...but temporarily returning null to make sure sheetQuery is never called');
-   // return null;
    try {
       const response = await sheetQuery(sheetId);
       return response.data.sheet;
    } catch (err) {
       console.error('error in sheetServices.fetchSheet', err);
    }
-   // const sheet = sheetQuery(sheetId)
-   //    .then(res => res.data.sheet)
-   //    .catch(err => console.error('error in sheetServices.fetchSheet', err));
-   // return sheet;
 };
 
 export const fetchSheetByUserId = async userId => {
    console.log('fetchSheetByUserId got userId', userId);
    try {
-      const sheetResponse = await sheetByUserIdQuery(userId);
-      console.log('sheetServices.js fetchSheetByUserId got sheetResponse.data', sheetResponse.data);
-      return sheetResponse?.data?.sheetByUserId;
+      const sheetByUserId = await sheetByUserIdMutation(userId);
+      console.log('sheetServices.js fetchSheetByUserId got sheetByUserId', sheetByUserId);
+      return sheetByUserId;
    } catch (err) {
       throw new Error('error fetching sheet by user id: ' + err);
    }
@@ -61,6 +62,32 @@ export const fetchSheets = async () => {
       console.error('error fetching sheets:', err);
       fetchSheetsError(err);
    }
+};
+
+const saveParentSheetData = async (parentSheetCell, parentSheetId, newSheet) => {
+   const savableParentSheetCell = R.pipe(
+      getSaveableCellData,
+      R.pipe(dbSheetId, cellSubsheetIdSetter)(newSheet)
+   )(parentSheetCell);
+   await updatedCells({ sheetId: parentSheetId, updatedCells: [savableParentSheetCell] });
+};
+
+export const createNewSheet = async ({ userId, rows, columns, title, parentSheetId, summaryCell, parentSheetCell }) => {
+   // note calling function must wrap createNewSheet in a try-catch block since we're not doing that here
+   const summaryCellText = cellText(parentSheetCell);
+   const response = await createSheetMutation({
+      userId,
+      rows,
+      columns,
+      title,
+      parentSheetId,
+      summaryCell,
+      summaryCellText,
+   });
+   if (isSomething(parentSheetId)) {
+      await saveParentSheetData(parentSheetCell, parentSheetId, response.data.createSheet); //note that "createSheet" is the name of the mutation in sheetMutation.js
+   }
+   return response;
 };
 
 export const deleteSheets = async sheetIds => {
@@ -133,7 +160,7 @@ export const loadSheet = R.curry(async (state, sheetId) => {
    const newCombinedReducers = managedStore.store.reducerManager.removeMany(managedStore.state.cellKeys);
    managedStore.store.replaceReducer(newCombinedReducers);
    // then get the new sheet
-   updatedSheetId(sheetId);
+   triggeredFetchSheet(sheetId);
 });
 
 /****

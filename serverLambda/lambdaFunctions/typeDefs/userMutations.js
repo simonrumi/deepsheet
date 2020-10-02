@@ -24,7 +24,6 @@ const UserMutations = gql`
 
    input UserSessionInput {
       userId: ID
-      email: String
       userIdFromProvider: String
    }
 

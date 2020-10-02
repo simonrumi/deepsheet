@@ -1,9 +1,9 @@
 import managedStore from '../store';
-import { UPDATED_SHEET_ID, FETCHING_SHEET, FETCHED_SHEET, FETCH_SHEET_ERROR } from './fetchSheetTypes';
+import { TRIGGERED_FETCH_SHEET, FETCHING_SHEET, FETCHED_SHEET, FETCH_SHEET_ERROR } from './fetchSheetTypes';
 
 /* single sheet */
-export const updatedSheetId = sheetId => {
-   managedStore.store.dispatch({ type: UPDATED_SHEET_ID, payload: sheetId });
+export const triggeredFetchSheet = sheetId => {
+   managedStore.store.dispatch({ type: TRIGGERED_FETCH_SHEET, payload: sheetId });
 };
 
 export const fetchingSheet = ({ sheetId, userId }) => {

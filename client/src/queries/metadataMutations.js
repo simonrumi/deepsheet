@@ -22,6 +22,8 @@ const UPDATE_METATDATA_MUTATION = gql`
             columnFilters: $columnFilters
          }
       ) {
+         created
+         lastModified
          totalRows
          totalColumns
          parentSheetId

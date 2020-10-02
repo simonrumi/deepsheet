@@ -1,5 +1,5 @@
 import { POSTING_UPDATED_CELLS } from '../actions/cellTypes';
-import { UPDATED_SHEET_ID } from '../actions/fetchSheetTypes';
+import { TRIGGERED_FETCH_SHEET } from '../actions/fetchSheetTypes';
 import { POSTING_UPDATED_METADATA } from '../actions/metadataTypes';
 import { FETCHING_SHEETS } from '../actions/sheetsTypes';
 import { POSTING_CREATE_SHEET } from '../actions/sheetTypes';
@@ -10,7 +10,7 @@ import { promptLogin, loggedIn } from '../actions/authActions';
 export default store => next => async action => {
    switch (action.type) {
       case POSTING_UPDATED_CELLS:
-      case UPDATED_SHEET_ID:
+      case TRIGGERED_FETCH_SHEET:
       case POSTING_UPDATED_METADATA:
       case FETCHING_SHEETS:
       case POSTING_CREATE_SHEET:

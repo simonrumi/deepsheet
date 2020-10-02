@@ -12,6 +12,7 @@ import { createdSheet } from '../../actions/sheetActions';
 import { loadSheet, saveAllUpdates, fetchSheets, deleteSheets } from '../../services/sheetServices';
 import { isSomething, arrayContainsSomething } from '../../helpers';
 import { buildSheetsTree, getSheetIdsFromNode, removeSheetFromParent } from '../../helpers/sheetsHelpers';
+import { getUserInfoFromCookie } from '../../helpers/userHelpers';
 import {
    stateIsStale,
    stateIsCallingDb,
@@ -144,9 +145,7 @@ class Menu extends Component {
       return <div className="p-2 text-grey-blue">{menuSaveText()}</div>;
    }
 
-   handleNewSheet() {
-      this.props.createdSheet({});
-   }
+   handleNewSheet = R.pipe(getUserInfoFromCookie, this.props.createdSheet);
 
    renderHamburgerOrMenu() {
       if (stateShowMenu(this.props.state)) {

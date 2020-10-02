@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { GoogleLogin /* GoogleLogout */ } from 'react-google-login';
 import axios from 'axios';
 import { loggedIn, loggedOut } from '../../actions/authActions';
-import { updatedSheetId } from '../../actions/fetchSheetActions';
+import { triggeredFetchSheet } from '../../actions/fetchSheetActions';
 import { GOOGLE_AUTH_URL, GOOGLE_CLIENT_ID } from '../../constants';
 
 class GoogleLoginBtn extends Component {
@@ -32,8 +32,8 @@ class GoogleLoginBtn extends Component {
          }
          loggedIn();
          try {
-            await updatedSheetId();
-            console.log('BtnGoogleLogin called updatedSheetId');
+            await triggeredFetchSheet();
+            console.log('BtnGoogleLogin called triggeredFetchSheet');
          } catch (err) {
             console.error('error trying to create sheet', err);
          }

@@ -50,6 +50,7 @@ const SheetMutations = gql`
    }
 
    input NewSheetInput {
+      userId: ID!
       rows: Int
       columns: Int
       title: String
@@ -65,6 +66,7 @@ const SheetMutations = gql`
       updateCells(input: UpdateCellsInput): SheetType
       deleteSubsheetId(input: UpdateSubsheetIdInput): SheetCellType
       deleteSheets(ids: [ID]): [SheetType]
+      sheetByUserId(userId: ID!): SheetType
    }
 `;
 

@@ -2,6 +2,7 @@ const R = require('ramda');
 const { isSomething, isNothing, arrayContainsSomething } = require('.');
 
 const mongoose = require('mongoose');
+const { MongoNetworkError } = require('mongodb');
 require('../models/UserModel');
 const UserModel = mongoose.model('user');
 require('../models/SessionModel');
@@ -144,15 +145,15 @@ const getUserInfoFromReq = reqHeaders => {
 
 // graphql uses this to make sure it is ok to run queries
 const validateUserSession = async reqHeaders => {
-   console.log('validateUserSession got reqHeaders', reqHeaders);
+   // console.log('validateUserSession got reqHeaders', reqHeaders);
    const { userId, sessionId } = getUserInfoFromReq(reqHeaders);
-   console.log('validateUserSession got userId', userId, 'sessionId', sessionId);
+   // console.log('validateUserSession got userId', userId, 'sessionId', sessionId);
    if (isNothing(userId) || isNothing(sessionId)) {
       console.log('no user or session, so need to do login process');
       return false;
    }
    const user = await UserModel.findById(userId);
-   console.log('found user', user);
+   // console.log('found user', user);
    // see if the session in the user obj matches the session from the context
    // note that we can't test with double equals like this
    // user.session !== sessionId
@@ -180,10 +181,37 @@ const createUser = async userDetails => {
    }
 };
 
+const addSheetToUser = async ({ user, userId, sheetId }) => {
+   console.log('started addSheetToUser, got user', user, 'userId', userId, 'sheetId', sheetId);
+   if (isNothing(user) && isNothing(userId)) {
+      throw new Error('must supply either a user or a userId when adding a sheet');
+   }
+   if (isNothing(user)) {
+      user = await UserModel.findById(userId);
+      console.log('userHelpers addSheetToUser found user from userId', user);
+      if (isNothing(user)) {
+         throw new Error('Error adding sheet to user: no user found');
+      }
+   }
+   const newSheets =
+      isSomething(user.sheets) && arrayContainsSomething(user.sheets) ? R.append(sheetId, user.sheets) : [sheetId];
+   try {
+      const updatedUser = await UserModel.findOneAndUpdate(
+         { _id: user._id },
+         { sheets: newSheets },
+         { returnOriginal: false, useFindAndModify: false }
+      );
+      return updatedUser;
+   } catch (err) {
+      throw new Error('error adding sheet to user', err);
+   }
+};
+
 module.exports = {
    makeCookie,
    standardAuthError,
    applyAuthSession,
    validateUserSession,
    findOrCreateUser,
+   addSheetToUser,
 };

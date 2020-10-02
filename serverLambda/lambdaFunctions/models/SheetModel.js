@@ -7,7 +7,18 @@ const { isSomething } = require('../helpers');
 
 const sheetSchema = new Schema(
    {
+      users: {
+         owner: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+         collaborators: [
+            {
+               collaborator: { type: Schema.Types.ObjectId, ref: 'User' },
+               permissions: { type: Number },
+            },
+         ],
+      },
       metadata: {
+         created: { type: Date, default: Date.now },
+         lastModified: { type: Date, default: Date.now },
          totalRows: { type: Number, required: true, default: 10 },
          totalColumns: { type: Number, required: true, default: 5 },
          parentSheetId: { type: Schema.Types.ObjectId, ref: 'Sheet' },

@@ -8,9 +8,11 @@ const UserModel = mongoose.model('user');
 require('./models/SessionModel');
 const { isSomething, isNothing } = require('./helpers');
 const { getAllSheets, createNewSheet } = require('./helpers/sheetHelpers');
+const { addSheetToUser } = require('./helpers/userHelpers');
 const { updateCells, deleteSubsheetId, findCellByRowAndColumn } = require('./helpers/updateCellsHelpers');
-const { DEFAULT_ROWS, DEFAULT_COLUMNS, DEFAULT_TITLE, DEFAULT_SUMMARY_CELL } = require('../constants');
 const { AuthenticationError } = require('apollo-server-lambda');
+
+console.log('TODO in resolvers.js must authorize before each mutation and query!!!');
 
 module.exports = db => ({
    Query: {
@@ -21,28 +23,6 @@ module.exports = db => ({
             return sheetResult;
          } catch (err) {
             console.log('Error finding sheet:', err);
-            return err;
-         }
-      },
-
-      sheetByUserId: async (parent, args, context) => {
-         console.log('running sheetByUserId query with args', args);
-         try {
-            const user = await UserModel.findById(args.userId);
-            if (isNothing(user)) {
-               return new Error('no user found');
-            }
-            console.log('sheetByUserId got user', user);
-            const sheetId = user.sheets[0];
-            console.log('sheetByUserId got sheetId', sheetId);
-            if (isNothing(sheetId)) {
-               return new Error('no sheet found for user. TODO need to create sheet in this case');
-            }
-            const sheetResult = await SheetModel.findOne(sheetId);
-            console.log('sheetByUserId got sheet', sheetResult);
-            return sheetResult;
-         } catch (err) {
-            console.log('Error finding sheet by user id:', err);
             return err;
          }
       },
@@ -89,30 +69,46 @@ module.exports = db => ({
    Mutation: {
       createSheet: async (parent, args, context) => {
          console.log('createSheet resolver got context', context);
-         if (!context.isAuthorized) {
-            // ***********TOOD NEXT This doesn;t work:
-            // return await makeAuthCall({ action: 'createSheet', data: args.input });
-            // because how do we redirect from this mutation?
-            // .....so watch S Grider's videos to see how he routes people to login flow
-            // might need to do it on the client, based on some auth cookie
+         if (!context.isAuthorized || isNothing(args.input.userId)) {
             return new AuthenticationError('User must log in first');
          }
-         const { rows, columns, title, parentSheetId, summaryCell, summaryCellText } = args.input;
-         const defaultSheet = createNewSheet({
-            totalRows: rows || DEFAULT_ROWS,
-            totalColumns: columns || DEFAULT_COLUMNS,
-            title: title || DEFAULT_TITLE,
-            parentSheetId: parentSheetId || null,
-            summaryCell: summaryCell || DEFAULT_SUMMARY_CELL,
-            summaryCellText: summaryCellText || '',
-         });
+         const defaultSheet = createNewSheet(args.input);
+         console.log('createSheet created defaultSheet', defaultSheet);
          try {
             const newSheet = await new SheetModel(defaultSheet).save();
+            console.log('saved defaultSheet as newSheet', newSheet);
+            await addSheetToUser({ userId: args.input.userId, sheetId: newSheet._id });
+            console.log('added sheet to user');
             return newSheet;
             // for some reason doing the above in a single line like this doesn't work...don't be tempted:
             // return await new SheetModel(defaultSheet).save();
          } catch (err) {
             console.log('Error creating sheet:', err);
+            return err;
+         }
+      },
+
+      sheetByUserId: async (parent, args, context) => {
+         console.log('running sheetByUserId query/mutation with args', args);
+         if (!context.isAuthorized || isNothing(args.userId)) {
+            return new AuthenticationError('User must log in first');
+         }
+         try {
+            const user = await UserModel.findById(args.userId);
+            if (isNothing(user)) {
+               return new Error('no user found');
+            }
+            const sheetId = user.sheets[0];
+            if (isNothing(sheetId)) {
+               const defaultSheet = createNewSheet(args);
+               const newSheet = await new SheetModel(defaultSheet).save();
+               await addSheetToUser({ user, sheetId: newSheet._id });
+               return newSheet;
+            }
+            const sheetResult = await SheetModel.findOne(sheetId);
+            return sheetResult;
+         } catch (err) {
+            console.log('Error finding sheet by user id:', err);
             return err;
          }
       },
@@ -191,23 +187,25 @@ module.exports = db => ({
             return err;
          }
       },
+   },
+});
 
-      // createUser: async (parent, args, context) => {
-      //    const { isValid, error } = await validateNewUser(args.input);
-      //    if (!isValid) {
-      //       return error;
-      //    }
-      //    try {
-      //       const newUser = await new UserModel(args.input).save();
-      //       return newUser;
-      //    } catch (err) {
-      //       console.log('Error creating user:', err);
-      //       return err;
-      //    }
-      // },
+// createUser: async (parent, args, context) => {
+//    const { isValid, error } = await validateNewUser(args.input);
+//    if (!isValid) {
+//       return error;
+//    }
+//    try {
+//       const newUser = await new UserModel(args.input).save();
+//       return newUser;
+//    } catch (err) {
+//       console.log('Error creating user:', err);
+//       return err;
+//    }
+// },
 
-      // note that we haven't ended up using this because sessions are handled by authReturn.js which is talking directly to mongodb
-      /* createUserSession: async (parent, args, context) => {
+// note that we haven't ended up using this because sessions are handled by authReturn.js which is talking directly to mongodb
+/* createUserSession: async (parent, args, context) => {
          const { userId, email, userIdFromProvider } = args.input;
 
          const createSession = async () => {
@@ -229,8 +227,8 @@ module.exports = db => ({
          return R.ifElse(arrayContainsSomething, createSession, returnError)([userId, email, userIdFromProvider]);
       }, */
 
-      // note that we haven't ended up using this because sessions are handled by authReturn.js which is talking directly to mongodb
-      /* refreshUserSession: async (parent, args, context) => {
+// note that we haven't ended up using this because sessions are handled by authReturn.js which is talking directly to mongodb
+/* refreshUserSession: async (parent, args, context) => {
          try {
             console.log('refreshUserSession got args', args);
             const currentSession = await SessionModel.findById(args.sessionId);
@@ -247,5 +245,3 @@ module.exports = db => ({
             return err;
          }
       }, */
-   },
-});

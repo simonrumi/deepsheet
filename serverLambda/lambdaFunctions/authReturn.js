@@ -34,7 +34,6 @@ export async function handler(event, context, callback) {
    if (access_token) {
       try {
          const userIdFromProvider = await getFbUserId(access_token);
-         console.log('in authReturn.js AUTH_PROVIDER_FACEBOOK is', AUTH_PROVIDER_FACEBOOK);
          const user = await findOrCreateUser({
             userIdFromProvider,
             provider: AUTH_PROVIDER_FACEBOOK,
