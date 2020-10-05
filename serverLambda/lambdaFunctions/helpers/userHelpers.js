@@ -2,14 +2,15 @@ const R = require('ramda');
 const { isSomething, isNothing, arrayContainsSomething } = require('.');
 
 const mongoose = require('mongoose');
-const { MongoNetworkError } = require('mongodb');
 require('../models/UserModel');
 const UserModel = mongoose.model('user');
 require('../models/SessionModel');
 const SessionModel = mongoose.model('session');
 
 const makeCookie = (userId, sessionId) => {
-   // const cookieStr = encodeURIComponent('id=' + userId + ';session=' + sessionId);
+   if (isNothing(userId) || isNothing(sessionId)) {
+      throw new Error('must have a userId and sessionId to make a cookie');
+   }
    const cookieStr = encodeURIComponent('I_' + userId + '_S_' + sessionId);
    const maxAge = 60 * 60 * 24 * 30; // i.e. set cookie to expire after 30 days
    return 'deepdeepsheet=' + cookieStr + '; Max-Age=' + maxAge;
@@ -24,14 +25,11 @@ const standardAuthError = {
 
 const findUser = async ({ userIdFromProvider, provider }) => {
    if (isSomething(userIdFromProvider)) {
-      console.log('findUser got userIdFromProvider', userIdFromProvider, 'provider', provider, 'about to try findOne');
-
       try {
          const existingUser = await UserModel.findOne({
             userIdFromProvider: userIdFromProvider.toString(),
             provider,
          });
-         console.log('findUser got existingUser', existingUser);
          if (isSomething(existingUser)) {
             return existingUser;
          }
@@ -141,19 +139,14 @@ const getUserInfoFromReq = reqHeaders => {
    return { userId, sessionId };
 };
 
-// TODO BUG validateSession seems to be working fine, but for some reason we are returning error related to sheetByUserIdQuery
-
 // graphql uses this to make sure it is ok to run queries
 const validateUserSession = async reqHeaders => {
-   // console.log('validateUserSession got reqHeaders', reqHeaders);
    const { userId, sessionId } = getUserInfoFromReq(reqHeaders);
-   // console.log('validateUserSession got userId', userId, 'sessionId', sessionId);
    if (isNothing(userId) || isNothing(sessionId)) {
       console.log('no user or session, so need to do login process');
       return false;
    }
    const user = await UserModel.findById(userId);
-   // console.log('found user', user);
    // see if the session in the user obj matches the session from the context
    // note that we can't test with double equals like this
    // user.session !== sessionId
@@ -213,5 +206,6 @@ module.exports = {
    applyAuthSession,
    validateUserSession,
    findOrCreateUser,
+   findUser,
    addSheetToUser,
 };

@@ -21,6 +21,12 @@
    },
    "scripts": {
       "lambda": "netlify-lambda serve lambdaFunctions",
-      "build:lambda": "netlify-lambda build lambdaFunctions --config webpack.functions.js"
+      "build:lambda": "netlify-lambda build lambdaFunctions --config webpack.functions.js",
+      "test": "mocha ./lambdaFunctions/__tests__/**/*test.js"
+   },
+   "devDependencies": {
+      "chai": "^4.2.0",
+      "mocha": "^8.1.3",
+      "sinon": "^9.1.0"
    }
 }

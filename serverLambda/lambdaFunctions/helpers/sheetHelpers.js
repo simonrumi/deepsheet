@@ -26,9 +26,8 @@ const createNewSheet = ({
    summaryCellText = '',
    userId,
 }) => {
-   console.log('createNewSheet got userId', userId);
    if (isNothing(userId)) {
-      return new Error('must supply a userId when creating a sheet');
+      throw new Error('must supply a userId when creating a sheet');
    }
    const cells = forLoopReduce(
       (cellsAccumulator, rowIndex) => {
