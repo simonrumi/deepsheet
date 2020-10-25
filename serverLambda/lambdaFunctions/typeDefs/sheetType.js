@@ -27,7 +27,7 @@ const SheetType = gql`
 
    type SheetMetadataType {
       created: String
-      lastModified: String
+      lastUpdated: String
       totalRows: Int
       totalColumns: Int
       parentSheetId: ID
@@ -55,9 +55,9 @@ const SheetType = gql`
    }
 
    extend type Query {
-      sheet(sheetId: ID!): SheetType
+      sheet(sheetId: ID!, userId: ID!): SheetType
       sheetByUserId(userId: ID!): SheetType
-      sheets: [SheetType]
+      sheets(userId: ID!): [SheetType]
 
       # subsheetId and text are part of the CellContentType above
       # these queries ask for no params, but they are called when the sheet is being built,

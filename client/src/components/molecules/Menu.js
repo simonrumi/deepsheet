@@ -39,7 +39,8 @@ class Menu extends Component {
    async handleSheetDelete(node) {
       await removeSheetFromParent(node);
       const sheetIds = getSheetIdsFromNode(node);
-      await deleteSheets(sheetIds);
+      const { userId } = getUserInfoFromCookie();
+      await deleteSheets(sheetIds, userId);
       if (stateParentSheetId(node.sheet) === stateSheetId(this.props.state)) {
          await loadSheet(this.props.state, stateSheetId(this.props.state));
       }
@@ -109,7 +110,6 @@ class Menu extends Component {
    }
 
    async handleFetchSheets() {
-      console.log('Menu.handleFetchSheets will need to send user id eventually');
       await this.props.fetchSheets();
    }
 

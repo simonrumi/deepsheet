@@ -15,9 +15,8 @@ const titleMutation = async (id, title) => {
       mutation: TITLE_MUTATION,
       variables: { id, title },
    });
-   console.log('titleMutation result', result);
    // previously did return await apolloClient.mutate() ...but this might have been the cause of the title update not working the first time around, so leave like this
-   return result;
+   return result.data.changeTitle; // "changeTitle" comes from the mutation above
 };
 
 export default titleMutation;

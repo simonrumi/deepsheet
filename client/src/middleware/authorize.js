@@ -5,7 +5,8 @@ import { FETCHING_SHEETS } from '../actions/sheetsTypes';
 import { POSTING_CREATE_SHEET } from '../actions/sheetTypes';
 import { POSTING_UPDATED_TITLE } from '../actions/titleTypes';
 import { getUserInfoFromCookie } from '../helpers/userHelpers';
-import { promptLogin, loggedIn } from '../actions/authActions';
+import { promptLogin } from '../actions/authActions';
+import { stateIsLoggedIn } from '../helpers/dataStructureHelpers';
 
 export default store => next => async action => {
    switch (action.type) {
@@ -15,13 +16,17 @@ export default store => next => async action => {
       case FETCHING_SHEETS:
       case POSTING_CREATE_SHEET:
       case POSTING_UPDATED_TITLE:
+         const isLoggedIn = stateIsLoggedIn(store.getState());
+         if (isLoggedIn === false) {
+            // note that we don't use !isLoggedIn because we want to ignore the case where it is undefined, 
+            // which probably means we haven't yet figured out whether we're logged in or not
+            promptLogin();
+            return next(action);
+         }
          const { userId, sessionId } = getUserInfoFromCookie();
          if (!userId || !sessionId) {
             promptLogin();
-         } else {
-            loggedIn();
          }
-         console.log('authorize.js got userId', userId, 'sessionId', sessionId);
          break;
 
       default:

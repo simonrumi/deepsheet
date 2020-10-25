@@ -63,7 +63,6 @@ const compareCellRow = (cell1, cell2) => {
    return cell1.row > cell2.row ? 1 : -1;
 };
 
-// TODO mabye move to cellHelpers
 const getCellsInColumn = state =>
    R.reduce(
       (accumulator, cellKey) => {

@@ -5,8 +5,8 @@ const SheetMutations = gql`
       sheetId: ID!
       row: Int!
       column: Int!
-      subsheetId: ID
       text: String
+      subsheetId: ID!
    }
 
    input CellContentInput {
@@ -22,9 +22,9 @@ const SheetMutations = gql`
    }
 
    input UpdateCellsInput {
-      "id of the sheet"
-      id: ID!
+      sheetId: ID!
       cells: [CellInput]
+      userId: ID!
    }
 
    input SheetFilterInput {
@@ -65,7 +65,8 @@ const SheetMutations = gql`
       updateMetadata(input: UpdateMetadataInput): SheetMetadataType
       updateCells(input: UpdateCellsInput): SheetType
       deleteSubsheetId(input: UpdateSubsheetIdInput): SheetCellType
-      deleteSheets(ids: [ID]): [SheetType]
+      deleteSheet(sheetId: ID!, userId: ID!): [SheetType]
+      deleteSheets(ids: [ID], userId: ID!): [SheetType]
       sheetByUserId(userId: ID!): SheetType
    }
 `;

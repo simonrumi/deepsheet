@@ -7,6 +7,7 @@ import { createReducerManager } from '../reducers/reducerManager';
 import { staticReducers } from '../reducers';
 import preprocess from '../middleware/preprocess';
 import authorize from '../middleware/authorize';
+import dbOperations from '../middleware/dbOperations';
 import initializeSheet from '../middleware/initializeSheet';
 import filterSheet from '../middleware/filterSheet';
 import orderSheet from '../middleware/orderSheet';
@@ -28,7 +29,7 @@ class ManagedStore {
       const reducerManager = createReducerManager(staticReducers);
       this._store = createStore(
          reducerManager.reduce,
-         applyMiddleware(reduxThunk, preprocess, authorize, initializeSheet, orderSheet, filterSheet) //tried reduxThunk at the end, and at the start, unsure which is best
+         applyMiddleware(reduxThunk, preprocess, authorize, dbOperations, initializeSheet, orderSheet, filterSheet) //tried reduxThunk at the end, and at the start, unsure which is best
       );
       this._store.reducerManager = reducerManager;
    }

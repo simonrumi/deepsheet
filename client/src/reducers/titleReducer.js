@@ -39,6 +39,7 @@ const titleReducer = (state = {}, action) => {
          return { ...state, isEditingTitle: action.payload };
 
       case POSTING_UPDATED_TITLE:
+         console.log('titleReducer got POSTING_UPDATED_TITLE action');
          return {
             text: state.text,
             isEditingTitle: true,
@@ -50,6 +51,7 @@ const titleReducer = (state = {}, action) => {
          };
 
       case COMPLETED_TITLE_UPDATE:
+         console.log('titleReducer got COMPLETED_TITLE_UPDATE action');
          return {
             text: action.payload.text,
             isEditingTitle: false,
@@ -57,10 +59,11 @@ const titleReducer = (state = {}, action) => {
             isStale: false,
             needsUpdate: false,
             errorMessage: null,
-            lastUpdated: action.payload.timestamp,
+            lastUpdated: action.payload.lastUpdated,
          };
 
       case TITLE_UPDATE_FAILED:
+         console.log('titleReducer got TITLE_UPDATE_FAILED action');
          return {
             text: action.payload.text,
             isEditingTitle: true,

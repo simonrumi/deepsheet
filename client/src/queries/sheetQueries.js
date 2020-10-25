@@ -2,8 +2,8 @@ import { gql } from 'apollo-boost';
 import apolloClient from '../services/apolloClient';
 
 const SHEETS_QUERY = gql`
-   query FetchSheets {
-      sheets {
+   query FetchSheets($userId: ID!) {
+      sheets(userId: $userId) {
          id
          title
          metadata {
@@ -13,15 +13,17 @@ const SHEETS_QUERY = gql`
    }
 `;
 
-export const sheetsQuery = async () => {
+export const sheetsQuery = async userId => {
    return await apolloClient.query({
       query: SHEETS_QUERY,
+      variables: { userId },
+      fetchPolicy: 'network-only', // every time sheets are loaded, we're getting it from the network, not the cache.
    });
 };
 
 const SHEET_QUERY = gql`
-   query SheetQuery($sheetId: ID!) {
-      sheet(sheetId: $sheetId) {
+   query SheetQuery($sheetId: ID!, $userId: ID!) {
+      sheet(sheetId: $sheetId, userId: $userId) {
          id
          users {
             owner
@@ -33,7 +35,7 @@ const SHEET_QUERY = gql`
          title
          metadata {
             created
-            lastModified
+            lastUpdated
             totalRows
             totalColumns
             parentSheetId
@@ -63,10 +65,10 @@ const SHEET_QUERY = gql`
    }
 `;
 
-export const sheetQuery = async sheetId => {
+export const sheetQuery = async (sheetId, userId) => {
    return await apolloClient.query({
       query: SHEET_QUERY,
-      variables: { sheetId },
+      variables: { sheetId, userId },
       fetchPolicy: 'network-only', // in other words, every time a different sheet is loaded, we're getting it from the network, not the cache. Otherwise cache might show old version of sheet
    });
 };

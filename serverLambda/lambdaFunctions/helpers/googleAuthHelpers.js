@@ -6,7 +6,7 @@ const dbConnector = require('../dbConnector');
 
 const makeGoogleAuthCall = async (event, context) => {
    await dbConnector();
-   const client = new OAuth2Client(keys.googleClientID); // keys.googleClientSecret, keys.authReturnURI  - probably don't need these because we already have been through auth flow and have a token to verify
+   const client = new OAuth2Client(keys.googleClientID);
    const googleIdToken = JSON.parse(event.body)?.googleIdToken;
 
    try {

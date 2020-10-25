@@ -17,13 +17,9 @@ class GoogleLoginBtn extends Component {
 
    async googleLogin(response) {
       if (response.accessToken) {
-         console.log('logged in with google, got response', response);
          const googleIdToken = response.tokenObj.id_token;
-         console.log('googleIdToken', googleIdToken);
-
          try {
             const googleResponse = await axios.post(GOOGLE_AUTH_URL, { googleIdToken });
-            console.log('in googleLogin, got googleResponse.data.cookie', googleResponse.data.cookie);
             const ddsCookie = decodeURIComponent(googleResponse.data.cookie);
             document.cookie = ddsCookie;
          } catch (err) {
@@ -33,7 +29,6 @@ class GoogleLoginBtn extends Component {
          loggedIn();
          try {
             await triggeredFetchSheet();
-            console.log('BtnGoogleLogin called triggeredFetchSheet');
          } catch (err) {
             console.error('error trying to create sheet', err);
          }

@@ -4,8 +4,6 @@ import { connect } from 'react-redux';
 import { DndProvider } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 import { triggeredFetchSheet } from '../actions/fetchSheetActions';
-// import { createdSheet } from '../actions/sheetActions';
-import { loggedIn } from '../actions/authActions';
 
 import { nothing, isSomething } from '../helpers';
 import { stateTotalRows, stateTotalColumns, stateIsLoggedIn, stateSheetId } from '../helpers/dataStructureHelpers';
@@ -28,6 +26,7 @@ import LastRow from './organisms/LastRow';
 import Cell from './molecules/Cell';
 import FilterModal from './organisms/FilterModal';
 import LoginModal from './organisms/LoginModal';
+import managedStore from  '../store';
 
 class Sheet extends Component {
    renderEmptyEndCell = cellKey => (
@@ -38,9 +37,8 @@ class Sheet extends Component {
       R.ifElse(
          isLastVisibleItemInAxis(
             COLUMN_AXIS, // we are rendering a row, so need to check if this is the last visible column in the row
-            stateTotalColumns(this.props.state),
-            // this.props.sheet
-            this.props.state
+            stateTotalColumns(managedStore.state),
+            managedStore.state
          ),
          this.renderEmptyEndCell,
          nothing
@@ -56,36 +54,26 @@ class Sheet extends Component {
       return [this.maybeRowHeader(cellKey), this.renderCell(cellKey), this.maybeEmptyEndCell(cellKey)];
    };
 
-   maybeCell = state => R.ifElse(shouldShowRow(stateRowVisibility(state)), this.renderCellAndMaybeEdges, nothing);
+   maybeCell = () => R.ifElse(shouldShowRow(stateRowVisibility(managedStore.state)), this.renderCellAndMaybeEdges, nothing);
 
    renderCells = () => {
-      if (isSomething(stateTotalRows(this.props.state)) && this.props.cellKeys && this.props.cellKeys.length > 0) {
+      if (isSomething(stateTotalRows(managedStore.state)) && this.props.cellKeys && this.props.cellKeys.length > 0) {
          return R.pipe(
-            R.map(cellKey => this.maybeCell(this.props.state)(cellKey)),
+            R.map(cellKey => this.maybeCell(managedStore.state)(cellKey)), // R.map(cellKey => this.maybeCell(this.props.st*te)(cellKey)),
             R.prepend(<ColumnHeaders key="columnHeaders" />),
             R.append(<LastRow key="lastRow" />)
          )(this.props.cellKeys);
       }
    };
 
-   /// TODO nEXT BUG : if we are logged in wiht a user, we are not getting a sheet
-   // also - why do we need UPDATE_SHEET_ID as well as all the FETCHING_SHEET_ID stuff ....might be necessary...check itout
-
-   mayberRenderLogin = state => {
-      console.log('rendering Sheet...mabybeRenderLogin got state', state);
-      if (!stateIsLoggedIn(state)) {
-         const { userId, sessionId } = getUserInfoFromCookie();
-         if (userId && sessionId) {
-            loggedIn();
-            if (!stateSheetId(state)) {
-               console.log(
-                  'Sheet.js maybeRenderLogin ....have userId but no sheetId so need to get sheet by userId, so calling triggeredFetchSheet'
-               );
-               triggeredFetchSheet();
-            }
-            return null;
-         }
+   maybeRenderLogin = () => {
+      const { userId, sessionId } = getUserInfoFromCookie();
+     if (stateIsLoggedIn(managedStore.state) === false || !userId || !sessionId) {
          return <LoginModal />;
+      }
+      
+      if (!stateSheetId(managedStore.state)) {
+         triggeredFetchSheet();
       }
       return null;
    };
@@ -113,8 +101,9 @@ class Sheet extends Component {
       };
    }
 
-   renderGridSizingStyle = state =>
-      this.getGridSizingStyle(R.map(getRequiredNumItemsForAxis(R.__, state), [ROW_AXIS, COLUMN_AXIS]));
+   // TODO this function might be getting the wrong info
+   renderGridSizingStyle = () =>
+      this.getGridSizingStyle(R.map(getRequiredNumItemsForAxis(R.__, managedStore.state), [ROW_AXIS, COLUMN_AXIS]));
 
    maybeRenderFilterModal = showFilterModal => (showFilterModal ? <FilterModal /> : null);
 
@@ -131,9 +120,9 @@ class Sheet extends Component {
             <Header />
             <Editor cellContent="" />
             {this.maybeRenderFilterModal(this.props.showFilterModal)}
-            {this.mayberRenderLogin(this.props.state)}
+            {this.maybeRenderLogin(/* this.props.st*te */)}
             <DndProvider backend={HTML5Backend}>
-               <div className="grid-container pt-1" style={this.renderGridSizingStyle(this.props.state)}>
+               <div className="grid-container pt-1" style={this.renderGridSizingStyle(/* this.props.st*te */)}>
                   {this.renderCells()}
                </div>
             </DndProvider>
@@ -144,7 +133,6 @@ class Sheet extends Component {
 
 function mapStateToProps(state) {
    return {
-      state,
       sheet: state.sheet,
       showFilterModal: state.filterModal.showFilterModal,
       cellKeys: state.cellKeys,
@@ -152,5 +140,5 @@ function mapStateToProps(state) {
    };
 }
 export default connect(mapStateToProps, {
-   triggeredFetchSheet /*createdSheet */,
+   triggeredFetchSheet,
 })(Sheet);

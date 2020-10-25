@@ -131,6 +131,7 @@ const metadataReducer = (state = {}, action) => {
          };
 
       case POSTING_UPDATED_METADATA:
+         console.log('reducer got POSTING_UPDATED_METADATA action', action);
          return {
             ...state,
             isCallingDb: true,
@@ -140,6 +141,7 @@ const metadataReducer = (state = {}, action) => {
          };
 
       case COMPLETED_SAVE_METADATA:
+         console.log('reducer got COMPLETED_SAVE_METADATA action', action);
          return {
             ...state,
             isCallingDb: false,

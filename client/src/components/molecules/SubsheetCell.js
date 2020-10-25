@@ -5,7 +5,14 @@ import { loadSheet } from '../../services/sheetServices';
 import { menuHidden } from '../../actions/menuActions';
 import { deleteSubsheetId } from '../../actions/cellActions';
 import { focusedCell, clearedFocus } from '../../actions/focusActions';
-import { cellColumn, cellRow, cellText, cellIsCallingDb, stateSheetId } from '../../helpers/dataStructureHelpers';
+import {
+   cellColumn,
+   cellRow,
+   cellText,
+   cellIsCallingDb,
+   stateSheetId,
+   cellSubsheetId,
+} from '../../helpers/dataStructureHelpers';
 import { isCellFocused } from '../../helpers/cellHelpers';
 import IconDownToSubsheet from '../atoms/IconDownToSubsheet';
 import IconUnlinkSubsheet from '../atoms/IconUnlinkSubsheet';
@@ -25,7 +32,8 @@ class SubsheetCell extends Component {
       const row = cellRow(this.props.cell);
       const column = cellColumn(this.props.cell);
       const text = cellText(this.props.cell);
-      await R.pipe(stateSheetId, deleteSubsheetId(row, column, text))(this.props.state);
+      const subsheetId = cellSubsheetId(this.props.cell);
+      await R.pipe(stateSheetId, deleteSubsheetId(row, column, text, subsheetId))(this.props.state);
       clearedFocus();
    }
 

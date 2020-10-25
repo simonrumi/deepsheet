@@ -12,7 +12,7 @@ import {
 } from './moveAxis';
 import { ROW_AXIS } from '../constants';
 
-console.log('TODO moving rows & columns needs work: restict movement & show spinner');
+//TODO moving rows & columns needs work: restict movement & show spinner
 
 const makeNewCellsFromMap = (rowUpdateMapping, state) => {
    const getCellFromState = R.pipe(createCellKey, R.prop(R.__, state));

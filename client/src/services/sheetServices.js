@@ -7,34 +7,33 @@ import {
    fetchingSheets,
    fetchedSheets,
    fetchSheetsError,
+   deletingSheet,
+   deletedSheet,
+   deleteSheetError,
    deletingSheets,
    deletedSheets,
    deleteSheetsError,
 } from '../actions/sheetsActions';
 import { sheetQuery, sheetsQuery } from '../queries/sheetQueries';
-import { deleteSheetsMutation, sheetByUserIdMutation, createSheetMutation } from '../queries/sheetMutations';
+import { deleteSheetsMutation, deleteSheetMutation, sheetByUserIdMutation } from '../queries/sheetMutations';
 import titleMutation from '../queries/titleMutation';
 import { isSomething, arrayContainsSomething } from '../helpers';
 import { getSaveableCellData } from '../helpers/cellHelpers';
+import { getUserInfoFromCookie } from '../helpers/userHelpers';
 import {
    stateChangedCells,
    stateCell,
    stateSheetId,
    stateMetadataIsStale,
    saveableStateMetadata,
-   cellText,
-   cellSubsheetIdSetter,
-   dbSheetId,
 } from '../helpers/dataStructureHelpers';
-
-// TODO DONE (hopefully) update mutations and queries on client ...multiple tasks here presumably
 
 // TODO return the response.data.thing for each query/mutation so the consumer doesn;t have to know that path
 
-export const fetchSheet = async sheetId => {
-   console.log('fetchSheet called with sheetId', sheetId);
+export const fetchSheet = async (sheetId, userId) => {
+   userId = userId || getUserInfoFromCookie();
    try {
-      const response = await sheetQuery(sheetId);
+      const response = await sheetQuery(sheetId, userId);
       return response.data.sheet;
    } catch (err) {
       console.error('error in sheetServices.fetchSheet', err);
@@ -42,10 +41,8 @@ export const fetchSheet = async sheetId => {
 };
 
 export const fetchSheetByUserId = async userId => {
-   console.log('fetchSheetByUserId got userId', userId);
    try {
       const sheetByUserId = await sheetByUserIdMutation(userId);
-      console.log('sheetServices.js fetchSheetByUserId got sheetByUserId', sheetByUserId);
       return sheetByUserId;
    } catch (err) {
       throw new Error('error fetching sheet by user id: ' + err);
@@ -53,10 +50,10 @@ export const fetchSheetByUserId = async userId => {
 };
 
 export const fetchSheets = async () => {
+   const { userId } = getUserInfoFromCookie();
    fetchingSheets();
    try {
-      const response = await sheetsQuery();
-      console.log('sheetQueries.js fetchSheets got response from sheetsQuery', response);
+      const response = await sheetsQuery(userId);
       fetchedSheets(response.data.sheets);
    } catch (err) {
       console.error('error fetching sheets:', err);
@@ -64,41 +61,26 @@ export const fetchSheets = async () => {
    }
 };
 
-const saveParentSheetData = async (parentSheetCell, parentSheetId, newSheet) => {
-   const savableParentSheetCell = R.pipe(
-      getSaveableCellData,
-      R.pipe(dbSheetId, cellSubsheetIdSetter)(newSheet)
-   )(parentSheetCell);
-   await updatedCells({ sheetId: parentSheetId, updatedCells: [savableParentSheetCell] });
-};
-
-export const createNewSheet = async ({ userId, rows, columns, title, parentSheetId, summaryCell, parentSheetCell }) => {
-   // note calling function must wrap createNewSheet in a try-catch block since we're not doing that here
-   const summaryCellText = cellText(parentSheetCell);
-   const response = await createSheetMutation({
-      userId,
-      rows,
-      columns,
-      title,
-      parentSheetId,
-      summaryCell,
-      summaryCellText,
-   });
-   if (isSomething(parentSheetId)) {
-      await saveParentSheetData(parentSheetCell, parentSheetId, response.data.createSheet); //note that "createSheet" is the name of the mutation in sheetMutation.js
-   }
-   return response;
-};
-
-export const deleteSheets = async sheetIds => {
+export const deleteSheets = async (sheetIds, userId) => {
    deletingSheets();
-   console.log('deleteSheets got sheetIds', sheetIds);
    try {
-      const newSheets = await deleteSheetsMutation(sheetIds);
-      deletedSheets(newSheets);
+      const remainingSheets = await deleteSheetsMutation(sheetIds, userId);
+      deletedSheets(remainingSheets);
+      // TODO - if the deleted sheet is the current sheet then load a new sheet
    } catch (err) {
       console.error('error deleting sheets:', err);
       deleteSheetsError(err);
+   }
+};
+
+export const deleteSheet = async (sheetId, userId) => {
+   deletingSheet();
+   try {
+      const remainingSheets = await deleteSheetMutation(sheetId, userId);
+      deletedSheet(remainingSheets);
+   } catch (err) {
+      console.error('error deleting sheet:', err);
+      deleteSheetError(err);
    }
 };
 
@@ -123,7 +105,7 @@ export const saveCellUpdates = async state => {
    const sheetId = stateSheetId(state);
    if (changedCells) {
       try {
-         await updatedCells({ sheetId, updatedCells: changedCells });
+         await updatedCells({ sheetId, cells: changedCells });
       } catch (err) {
          console.error('Error updating cells in db', err);
          throw new Error('Error updating cells in db', err);
@@ -134,7 +116,6 @@ export const saveCellUpdates = async state => {
 const getChangedMetadata = state => (stateMetadataIsStale(state) ? saveableStateMetadata(state) : null);
 
 export const saveMetadataUpdates = async state => {
-   console.log('TODO sheetServices.saveMetadataUpdates is saving all the metadata not just the changed parts');
    const changedMetadata = getChangedMetadata(state);
    if (changedMetadata) {
       try {

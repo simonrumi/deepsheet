@@ -11,9 +11,9 @@ class ModalBackground extends Component {
    }
 
    // see notes in filterSheet.js addNewFilter() on how this pattern works
-   createClasses = () =>
+   createClasses = modalVisible =>
       R.useWith(R.ifElse, [R.thunkify(R.not), R.thunkify(R.concat(R.__, ' hidden')), R.thunkify(R.identity)])(
-         this.props.modalVisible,
+         modalVisible,
          this.BASE_CLASSES,
          this.BASE_CLASSES
       )();

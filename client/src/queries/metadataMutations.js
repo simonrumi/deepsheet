@@ -23,7 +23,7 @@ const UPDATE_METATDATA_MUTATION = gql`
          }
       ) {
          created
-         lastModified
+         lastUpdated
          totalRows
          totalColumns
          parentSheetId
@@ -56,7 +56,7 @@ export const updateMetadataMutation = async ({
    rowFilters,
    columnFilters,
 }) => {
-   const result = await apolloClient.mutate({
+   const response = await apolloClient.mutate({
       mutation: UPDATE_METATDATA_MUTATION,
       variables: {
          id,
@@ -68,7 +68,7 @@ export const updateMetadataMutation = async ({
          columnFilters,
       },
    });
-   return result;
+   return response.data.updateMetadata; // "updateMetadata" is from the mutation above
 };
 
 /**

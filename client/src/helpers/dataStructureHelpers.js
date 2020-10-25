@@ -1,7 +1,7 @@
 import * as R from 'ramda';
 import { isSomething, isNothing } from './index';
 
-console.log('dataStructureHelpers TODO: use createGetter instead of createGetterSetter for all state data');
+// TODO: use createGetter instead of createGetterSetter for all state data
 
 /************************************************ GENERAL STUFF **********************************************/
 
@@ -201,6 +201,10 @@ export const stateChangedCells = subObjectGetterSetter(stateCellDbUpdatesLens, '
 // get the sheet's id. Will never set this, only retrieve it, as it is mongodb that generates this.
 const stateSheetIdLens = R.lensPath(['sheetId', 'sheetId']);
 export const stateSheetId = R.view(stateSheetIdLens); // use: stateSheetId(stateObj);
+const stateSheetIsCallingDbLens = R.lensPath(['sheetId', 'isCallingDb']);
+export const stateSheetIsCallingDb = R.view(stateSheetIsCallingDbLens); // use: stateSheetIsCallingDb(stateObj);
+const stateSheetErrorMessageLens = R.lensPath(['sheetId', 'errorMessage']);
+export const stateSheetErrorMessage = R.view(stateSheetErrorMessageLens); // use: stateSheetErrorMessage(stateObj);
 
 const stateFocusLens = R.lensProp('focus'); // there's a property called focus which is used to track which UI element currently has focus
 export const stateFocus = (state, element) =>

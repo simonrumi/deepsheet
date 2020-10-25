@@ -5,11 +5,10 @@ import { isNothing } from '../helpers';
 const fetchSheetReducer = (state = null, action) => {
    switch (action.type) {
       case TRIGGERED_FETCH_SHEET:
-         console.log('fetchSheetReducer got TRIGGERED_FETCH_SHEET with action.payload', action.payload);
          if (isNothing(action.payload)) {
-            return state;
+            return {...state, errorMessage: null };
          }
-         return { ...state, sheetId: action.payload };
+         return { ...state, sheetId: action.payload, errorMessage: null };
 
       case FETCHING_SHEET:
          const { sheetId, userId } = action.payload;

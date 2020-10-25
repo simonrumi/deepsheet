@@ -7,9 +7,15 @@ import { fetchedSheet, fetchingSheet, fetchSheetError } from '../actions/fetchSh
 import { clearedFocus } from '../actions/focusActions';
 import { menuHidden } from '../actions/menuActions';
 import { createCellReducers, populateCellsInStore } from '../reducers/cellReducers';
-import { isSomething } from '../helpers';
+import { isNothing, isSomething } from '../helpers';
 import { applyFilters } from '../helpers/visibilityHelpers';
-import { dbMetadata, dbCells } from '../helpers/dataStructureHelpers';
+import {
+   dbMetadata,
+   dbCells,
+   stateIsLoggedIn,
+   stateSheetIsCallingDb,
+   stateSheetErrorMessage,
+} from '../helpers/dataStructureHelpers';
 import { getUserInfoFromCookie } from '../helpers/userHelpers';
 
 /***** ordering cells by row then column */
@@ -49,38 +55,51 @@ const initializeCells = sheet => {
 };
 
 const runFetchFunctionForId = async ({ sheetId, userId }) => {
-   return sheetId ? await fetchSheet(sheetId) : await fetchSheetByUserId(userId);
+   if (isNothing(userId)) {
+      throw new Error('userId needed');
+   }
+   return sheetId ? await fetchSheet(sheetId, userId) : await fetchSheetByUserId(userId);
 };
 
 const runFetchSheet = async ({ store, sheetId, userId }) => {
-   console.log('runFetchSheet got sheetId', sheetId, 'and userId', userId);
+   if (stateIsLoggedIn(store.getState()) === false) {
+      fetchSheetError('Must log in before fetching a sheet');
+      return {};
+   }
    fetchingSheet({ sheetId, userId });
-   console.log('runFetchSheet after calling fetchingSheet({sheetId, userId}), state is', store.getState());
    try {
       const sheet = await runFetchFunctionForId({ sheetId, userId });
-      console.log('iniitializeSheet.runFetchFunctionForId got sheet', sheet);
       // if sheet has some data then dispatch the fetchedSheet action
       R.when(
          isSomething,
          // note that R.juxt applies the argument sheet to all fns in its array
-         R.juxt([R.pipe(fetchedSheet, store.dispatch), R.pipe(menuHidden, store.dispatch), initializeCells])
+         R.juxt([
+            R.pipe(fetchedSheet, store.dispatch), 
+            R.pipe(menuHidden, store.dispatch), 
+            initializeCells
+         ])
       )(sheet);
    } catch (err) {
-      console.error('failed to fetchSheet', err);
       fetchSheetError(err);
-      return {};
    }
 };
 
 const getOrFindSheet = async (store, sheetId) => {
-   const { userId } = sheetId ? { userId: null } : getUserInfoFromCookie();
+   const { userId } = getUserInfoFromCookie();
    return await runFetchSheet({ store, sheetId, userId });
 };
 
 export default store => next => async action => {
    switch (action.type) {
       case TRIGGERED_FETCH_SHEET:
-         console.log('initializeSheet got TRIGGERED_FETCH_SHEET with action.payload', action.payload);
+         const state = store.getState();
+         if (
+            stateIsLoggedIn(state) === false ||
+            stateSheetIsCallingDb(state) ||
+            /status code 401/.test(stateSheetErrorMessage(state))
+         ) {
+            return null;
+         }
          await getOrFindSheet(store, action.payload);
          break;
 

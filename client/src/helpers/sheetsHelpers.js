@@ -4,17 +4,18 @@ import { stateParentSheetId, cellSubsheetIdSetter, cellSubsheetId, dbCells } fro
 import { fetchSheet } from '../services/sheetServices';
 import { updateCellsMutation } from '../queries/cellMutations';
 
-/* Here's what a node in the tree looks like
+/* Here's what a node in the tree of sheets looks like
    node = { 
-   sheet: {
-      id,
-      title,
-      metadata: {
-         parentSheetId
-      }
-   },
-   children: [node1, node2, etc],
-} */
+      sheet: {
+         id,
+         title,
+         metadata: {
+            parentSheetId
+         }
+      },
+      children: [node1, node2, etc],
+   } 
+*/
 
 const createNode = sheet => ({ sheet, children: [] });
 

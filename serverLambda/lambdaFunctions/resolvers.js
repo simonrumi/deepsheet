@@ -7,19 +7,16 @@ require('./models/UserModel');
 const UserModel = mongoose.model('user');
 require('./models/SessionModel');
 const { isSomething, isNothing } = require('./helpers');
-const { getAllSheets, createNewSheet } = require('./helpers/sheetHelpers');
-const { addSheetToUser } = require('./helpers/userHelpers');
+const { getAllSheetsForUser, createNewSheet } = require('./helpers/sheetHelpers');
+const { addSheetToUser, checkAuthorization } = require('./helpers/userHelpers');
 const { updateCells, deleteSubsheetId, findCellByRowAndColumn } = require('./helpers/updateCellsHelpers');
 const { AuthenticationError } = require('apollo-server-lambda');
-
-console.log('TODO in resolvers.js must authorize before each mutation and query!!!');
 
 module.exports = db => ({
    Query: {
       sheet: async (parent, args, context) => {
-         console.log('running sheet query with args', args);
          try {
-            const sheetResult = await SheetModel.findById(args.sheetId);
+            const sheetResult = await SheetModel.findOne({ _id: args.sheetId, 'users.owner': args.userId });
             return sheetResult;
          } catch (err) {
             console.log('Error finding sheet:', err);
@@ -28,7 +25,7 @@ module.exports = db => ({
       },
 
       sheets: async (parent, args, context) => {
-         return await getAllSheets();
+         return await getAllSheetsForUser(args.userId);
       },
 
       subsheetId: async (parent, args, context) => {
@@ -68,31 +65,25 @@ module.exports = db => ({
 
    Mutation: {
       createSheet: async (parent, args, context) => {
-         console.log('createSheet resolver got context', context);
-         if (!context.isAuthorized || isNothing(args.input.userId)) {
-            return new AuthenticationError('User must log in first');
-         }
-         const defaultSheet = createNewSheet(args.input);
-         console.log('createSheet created defaultSheet', defaultSheet);
+         const sheetObj = createNewSheet(args.input);
          try {
-            const newSheet = await new SheetModel(defaultSheet).save();
-            console.log('saved defaultSheet as newSheet', newSheet);
-            await addSheetToUser({ userId: args.input.userId, sheetId: newSheet._id });
-            console.log('added sheet to user');
+            const newSheet = await new SheetModel(sheetObj).save();
+            try {
+               await addSheetToUser({ userId: args.input.userId, sheetId: newSheet._id });
+            } catch (err) {
+               console.log('After creating new sheet, was not able to add sheet to user');
+               await SheetModel.deleteOne({ _id: newSheet._id }); // maybe this also throws an error, if so we'll have an orphaned sheet...not the end of the world
+               return err;
+            }
             return newSheet;
-            // for some reason doing the above in a single line like this doesn't work...don't be tempted:
-            // return await new SheetModel(defaultSheet).save();
          } catch (err) {
             console.log('Error creating sheet:', err);
             return err;
          }
       },
 
+      // TODO update this to get the most recently modified sheet of that user
       sheetByUserId: async (parent, args, context) => {
-         console.log('running sheetByUserId query/mutation with args', args);
-         if (!context.isAuthorized || isNothing(args.userId)) {
-            return new AuthenticationError('User must log in first');
-         }
          try {
             const user = await UserModel.findById(args.userId);
             if (isNothing(user)) {
@@ -151,9 +142,9 @@ module.exports = db => ({
       },
 
       updateCells: async (parent, args, context) => {
-         const { id, cells } = args.input;
+         const { sheetId, cells, userId } = args.input;
          try {
-            const sheetDoc = await SheetModel.findById(id);
+            const sheetDoc = await SheetModel.findById(sheetId);
             const updatedCells = updateCells(sheetDoc.cells, cells);
             sheetDoc.cells = updatedCells;
             return await sheetDoc.save();
@@ -163,25 +154,52 @@ module.exports = db => ({
          }
       },
 
+      // TODO should give user the option to delete the whole subsheet also
+      /* This is to remove a cell's connection to a subsheet, while preserving the text in the cell from the subsheet */
       deleteSubsheetId: async (parent, args, context) => {
-         const { sheetId, row, column, text } = args.input;
+         const { sheetId, row, column, text, subsheetId } = args.input;
          try {
+            // remove the subsheetId from the cell which links to it
             const sheetDoc = await SheetModel.findById(sheetId);
             const updatedCells = deleteSubsheetId(sheetDoc.cells, row, column, text);
             sheetDoc.cells = updatedCells;
             await sheetDoc.save();
+
+            // remove the reference to the parent from the subsheet
+            const subsheetDoc = await SheetModel.findById(subsheetId);
+            subsheetDoc.metadata.parentSheetId = null;
+            await subsheetDoc.save();
+
+            // return the cell that has had the subsheet unlinked from it
             const cell = findCellByRowAndColumn(row, column, sheetDoc.cells);
-            return { cell };
+            return cell;
          } catch (err) {
             console.log('Error deleting subsheet id:', err);
             return err;
          }
       },
 
-      deleteSheets: async (parent, args, context) => {
+      // not used so far
+      deleteSheet: async (parent, args, context) => {
          try {
-            await SheetModel.deleteMany({ _id: { $in: args.ids } });
-            return getAllSheets();
+            const sheetToDelete = SheetModel.findById(args.sheetId);
+            if (sheetToDelete.users.owner !== args.userId) {
+               return new AuthenticationError('sheets can only be deleted by their owner');
+            }
+            await SheetModel.deleteOne({ _id: args.sheetId });
+            return getAllSheetsForUser(args.userId);
+         } catch (err) {
+            console.log('Error deleting sheet', err);
+            return err;
+         }
+      },
+
+      deleteSheets: async (parent, args, context) => {
+         const sheetIdsToDelete = args.ids;
+         try {
+            await SheetModel.deleteMany({ _id: { $in: sheetIdsToDelete } }); // delete the sheets
+            await UserModel.updateMany({}, { $pullAll: { sheets: sheetIdsToDelete } }); // remove the deleted sheets from all the users
+            return getAllSheetsForUser(args.userId);
          } catch (err) {
             console.log('Error deleting sheets id:', err);
             return err;
@@ -211,7 +229,6 @@ module.exports = db => ({
          const createSession = async () => {
             try {
                const newSession = await new SessionModel().save();
-               console.log('created session', newSession);
                return newSession;
             } catch (err) {
                console.log('Error creating session:', err);
@@ -230,13 +247,11 @@ module.exports = db => ({
 // note that we haven't ended up using this because sessions are handled by authReturn.js which is talking directly to mongodb
 /* refreshUserSession: async (parent, args, context) => {
          try {
-            console.log('refreshUserSession got args', args);
             const currentSession = await SessionModel.findById(args.sessionId);
             console.log('refreshUserSession got currentSession', currentSession);
             if (currentSession) {
                currentSession.lastAccessed = Date.now();
                const refreshsedSession = await currentSession.save();
-               console.log('refreshsedSession is', refreshsedSession);
                return refreshsedSession;
             }
             return null; // will need to create a new session in this case

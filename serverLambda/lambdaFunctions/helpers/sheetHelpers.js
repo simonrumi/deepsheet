@@ -29,6 +29,11 @@ const createNewSheet = ({
    if (isNothing(userId)) {
       throw new Error('must supply a userId when creating a sheet');
    }
+   // need to make sure defaults are set here also, because the defaults above will only be set if the object keys are not present
+   const totalRows = rows || DEFAULT_ROWS;
+   const totalColumns = columns || DEFAULT_COLUMNS;
+   summaryCell = summaryCell || DEFAULT_SUMMARY_CELL;
+   title = title || DEFAULT_TITLE;
    const cells = forLoopReduce(
       (cellsAccumulator, rowIndex) => {
          const rowOfCells = forLoopReduce(
@@ -40,12 +45,12 @@ const createNewSheet = ({
                return R.append(cell, rowAccumulator);
             },
             [],
-            columns
+            totalColumns
          );
          return R.concat(cellsAccumulator, rowOfCells);
       },
       [],
-      rows
+      totalRows
    );
    return {
       users: {
@@ -55,9 +60,9 @@ const createNewSheet = ({
       title,
       metadata: {
          created: Date.now(),
-         lastModified: Date.now(),
-         totalRows: rows,
-         totalColumns: columns,
+         lastUpdated: Date.now(),
+         totalRows,
+         totalColumns,
          parentSheetId,
          summaryCell,
       },
@@ -68,14 +73,14 @@ const createNewSheet = ({
    };
 };
 
-const getAllSheets = async () => {
-   console.log('will need to updated sheetHelpers.getAllSheets to get sheets only for a user');
+const getAllSheetsForUser = async userId => {
    try {
-      return await SheetModel.find({});
+      const allSheets = await SheetModel.find({ 'users.owner': userId });
+      return allSheets;
    } catch (err) {
       console.log('Error returning all sheets', err);
       return err;
    }
 };
 
-module.exports = { createNewSheet, getAllSheets };
+module.exports = { createNewSheet, getAllSheetsForUser };

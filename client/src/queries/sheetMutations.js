@@ -33,7 +33,7 @@ const CREATE_SHEET_MUTATION = gql`
          title
          metadata {
             created
-            lastModified
+            lastUpdated
             totalRows
             totalColumns
             parentSheetId
@@ -76,16 +76,17 @@ export const createSheetMutation = async ({
    summaryCell,
    summaryCellText,
 }) => {
-   const result = await apolloClient.mutate({
+   const response = await apolloClient.mutate({
       mutation: CREATE_SHEET_MUTATION,
       variables: { userId, rows, columns, title, parentSheetId, summaryCell, summaryCellText },
    });
-   return result;
+   return response.data.createSheet; // "createSheet" comes from mutation above
 };
 
-const DELETE_SHEETS_MUTATION = gql`
-   mutation DeleteSheets($ids: [ID]) {
-      deleteSheets(ids: $ids) {
+/* single sheet deletion */
+const DELETE_SHEET_MUTATION = gql`
+   mutation DeleteSheets($sheetId: ID!, $userId: ID!) {
+      deleteSheets(sheetId: $sheetId, userId: $userId) {
          id
          title
          metadata {
@@ -95,10 +96,31 @@ const DELETE_SHEETS_MUTATION = gql`
    }
 `;
 
-export const deleteSheetsMutation = async ids => {
+export const deleteSheetMutation = async (sheetId, userId) => {
+   const result = await apolloClient.mutate({
+      mutation: DELETE_SHEET_MUTATION,
+      variables: { sheetId, userId },
+   });
+   return result.data.deleteSheet;
+};
+
+/* multiple sheets deletion */
+const DELETE_SHEETS_MUTATION = gql`
+   mutation DeleteSheets($ids: [ID], $userId: ID!) {
+      deleteSheets(ids: $ids, userId: $userId) {
+         id
+         title
+         metadata {
+            parentSheetId
+         }
+      }
+   }
+`;
+
+export const deleteSheetsMutation = async (ids, userId) => {
    const result = await apolloClient.mutate({
       mutation: DELETE_SHEETS_MUTATION,
-      variables: { ids },
+      variables: { ids, userId },
    });
    return result.data.deleteSheets;
 };
@@ -117,7 +139,7 @@ const SHEET_BY_USER_ID_MUTATION = gql`
          title
          metadata {
             created
-            lastModified
+            lastUpdated
             totalRows
             totalColumns
             parentSheetId

@@ -85,7 +85,7 @@ const refreshSession = async sessionId => {
 const getSession = async user => {
    if (isSomething(user.session)) {
       try {
-         const session = await refreshSession(user.session); //// "could not find session to refresh" here - shouldn't an error be thrown??
+         const session = await refreshSession(user.session);
          if (session) {
             console.log('getSession refreshed session and got session', session);
             return session;
@@ -97,6 +97,7 @@ const getSession = async user => {
    }
    try {
       const session = await createSession();
+      console.log('getSession created new session', session);
       return session;
    } catch (err) {
       throw new Error('could not create new session' + err);
@@ -142,21 +143,27 @@ const getUserInfoFromReq = reqHeaders => {
 // graphql uses this to make sure it is ok to run queries
 const validateUserSession = async reqHeaders => {
    const { userId, sessionId } = getUserInfoFromReq(reqHeaders);
+   console.log('validateUserSession got userId', userId, 'sessionId', sessionId);
    if (isNothing(userId) || isNothing(sessionId)) {
       console.log('no user or session, so need to do login process');
       return false;
    }
-   const user = await UserModel.findById(userId);
-   // see if the session in the user obj matches the session from the context
-   // note that we can't test with double equals like this
-   // user.session !== sessionId
-   // because one is a string and the other is something else (I think)
-   if (isNothing(user.session) || user.session != sessionId) {
-      console.log('session is not current, user is not authorized');
+   try {
+      const user = await UserModel.findById(userId);
+      // see if the session in the user obj matches the session from the context
+      // note that we can't test with double equals like this
+      // user.session !== sessionId
+      // because one is a string and the other is something else (I think)
+      if (isNothing(user.session) || user.session != sessionId) {
+         console.log('session is not current, user is not authorized');
+         return false;
+      }
+      const refreshedSession = await refreshSession(user.session);
+      return isSomething(refreshedSession); // ***** REVERT THIS!!!
+   } catch (err) {
+      console.log('error validating user session', err);
       return false;
    }
-   await refreshSession(user.session);
-   return true;
 };
 
 const createUser = async userDetails => {

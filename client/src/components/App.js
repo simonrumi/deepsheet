@@ -6,7 +6,7 @@ import Sheet from './Sheet';
 import ModalBackground from './atoms/ModalBackground';
 import Footer from './molecules/Footer';
 
-console.warn('TODO: need to change whitelist of IP addresses for mongodb');
+// TODO: need to change whitelist of IP addresses for mongodb
 
 const App = props => {
    logState(props.state);

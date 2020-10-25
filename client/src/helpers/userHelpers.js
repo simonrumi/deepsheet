@@ -1,5 +1,6 @@
 import * as R from 'ramda';
 import { isSomething, arrayContainsSomething } from '.';
+import { promptLogin } from '../actions/authActions';
 
 // note that this is pretty much the same as helpers/userHelpers.js/getUserInfoFromReq in server code
 export const getUserInfoFromCookie = () => {
@@ -27,4 +28,12 @@ export const getUserInfoFromCookie = () => {
    const sessionId = getValueFromCookie(sessionIdRegex)(ddsCookie);
 
    return { userId, sessionId };
+};
+
+export const maybeDealWith401Error = err => {
+   if (/status code 401/.test(err)) {
+      promptLogin();
+   } else {
+      console.error('maybeDealWith401Error got non-401 error:', err);
+   }
 };

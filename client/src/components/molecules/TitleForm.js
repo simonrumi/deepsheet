@@ -3,6 +3,7 @@ import { Field, reduxForm, SubmissionError } from 'redux-form';
 import { connect } from 'react-redux';
 import { updatedTitle, titleEditCancelled } from '../../actions/titleActions';
 import { isSomething } from '../../helpers';
+import { stateSheetId } from '../../helpers/dataStructureHelpers';
 import Button from '../atoms/Button';
 import TextInput from './TextInput';
 import ErrorText from '../atoms/ErrorText';
@@ -19,7 +20,7 @@ export class TitleForm extends Component {
          this.props.updatedTitle({
             text: formValues.title,
             isEditingTitle: false,
-            sheetId: this.props.sheetId,
+            sheetId: stateSheetId(this.props.state),
          });
       } catch (err) {
          console.error('TitleForm.submitNewTitle - error updating title', err);
@@ -90,8 +91,8 @@ const reduxTitleForm = reduxForm({
 
 const mapStateToProps = (state, ownProps) => {
    return {
+      state,
       sheetId: state.sheetId,
-      title: state.title,
       updateTitleError: state.title.errorMessage,
       initialValues: { title: ownProps.title },
    };

@@ -76,8 +76,10 @@ export const getTotalForAxis = R.curry(
 );
 
 export const getRequiredNumItemsForAxis = (axis, state) => {
-   const visibleItems = R.converge(R.subtract, [getTotalForAxis, getNumHiddenItemsForAxis])(axis, state);
-
+   const visibleItems = R.converge(
+      R.subtract, 
+      [getTotalForAxis, getNumHiddenItemsForAxis]
+   )(axis, state);
    if (typeof visibleItems === 'number') {
       return visibleItems;
    }

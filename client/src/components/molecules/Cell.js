@@ -11,6 +11,7 @@ import { cellSubsheetId, stateSheetId, cellRow, cellColumn, cellText } from '../
 import managedStore from '../../store';
 import SubsheetCell from './SubsheetCell';
 import IconNewDoc from '../atoms/IconNewDoc';
+import { getUserInfoFromCookie } from '../../helpers/userHelpers';
 
 class Cell extends Component {
    constructor(props) {
@@ -31,7 +32,8 @@ class Cell extends Component {
       const parentSheetId = stateSheetId(this.props.state);
       const summaryCell = null; // this would be to tell which cell in the new sheet is the summary cell. Default is 0,0  - probably never will set this in advance
       const parentSheetCell = this.props.cell;
-      this.props.createdSheet({ rows, columns, title, parentSheetId, summaryCell, parentSheetCell });
+      const { userId } = getUserInfoFromCookie();
+      this.props.createdSheet({ rows, columns, title, parentSheetId, summaryCell, parentSheetCell, userId });
    }
 
    renderIconNewDoc() {
