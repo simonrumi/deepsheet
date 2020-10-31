@@ -28,6 +28,7 @@ const logState = state => {
       return;
    }
    const stateKeys = [
+      'auth',
       'sheetId',
       'sheets',
       'metadata',

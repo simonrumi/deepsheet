@@ -85,13 +85,13 @@ export default store => next => async action => {
 
    switch (action.type) {
       case UPDATED_ROW_ORDER:
-         const [newRowCells, newRowFilters, newRowVisibility /* rowsHaveChanged */] = maybeMoveAxis(
+         const [newRowCells, newRowFilters, newRowVisibility] = maybeMoveAxis(
             'rowMoved',
             'rowMovedTo',
             moveRow,
             store
          );
-
+         console.log('orderSheet UPDATED_ROW_ORDER got newRowVisibility', newRowVisibility);
          // Note: if moveRow() returns an array then we get an error when trying to runCellDispatches() on it.
          // Instead here moveRow() returns an object which we convert to an array with R.values() ...and it works fine
          // same approached used with moveColumn()
@@ -103,12 +103,13 @@ export default store => next => async action => {
          break;
 
       case UPDATED_COLUMN_ORDER:
-         const [newColumnCells, newColumnFilters, newColumnVisibility /* columnsHaveChanged */] = maybeMoveAxis(
+         const [newColumnCells, newColumnFilters, newColumnVisibility] = maybeMoveAxis(
             'columnMoved',
             'columnMovedTo',
             moveColumn,
             store
          );
+         console.log('orderSheet UPDATED_COLUMN_ORDER got newColumnVisibility', newColumnVisibility);
          runCellDispatches(R.values(newColumnCells));
          runIfSomething(replacedColumnFilters, newColumnFilters);
          runIfSomething(replacedColumnVisibility, newColumnVisibility);
@@ -117,6 +118,7 @@ export default store => next => async action => {
 
       case SORTED_AXIS:
          const { updatedCells = [], updatedVisibility = {}, updatedFilters = {} } = sortAxis(store.getState());
+         console.log('orderSheet SORTED_AXIS got updatedVisibility', updatedVisibility);
          runIfSomething(replacedRowVisibility, updatedVisibility[ROW_AXIS]);
          runIfSomething(replacedColumnVisibility, updatedVisibility[COLUMN_AXIS]);
          runIfSomething(replacedRowFilters, updatedFilters[ROW_AXIS]);

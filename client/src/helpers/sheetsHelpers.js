@@ -114,6 +114,8 @@ export const removeSheetFromParent = async node => {
       return null;
    }
    const parentCells = await getCellsFromSheet(parentId);
+
+   // TODO - need to catch error from updateCellsMutation either here or in whatever calls this
    await R.reduce(
       async (accumulator, parentCell) => {
          if (cellSubsheetId(parentCell) === sheetId) {

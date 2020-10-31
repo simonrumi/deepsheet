@@ -77,10 +77,11 @@ export const cellReducerFactory = (rowNum, colNum) => {
    };
 };
 
-export const cellKeyReducer = (state = {}, action) => {
+export const cellKeyReducer = (state = [], action) => {
    switch (action.type) {
       case UPDATED_CELL_KEYS:
          return action.payload;
+
       default:
          return state;
    }

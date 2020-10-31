@@ -8,7 +8,9 @@ export const isString = R.pipe(R.type, R.equals('String'));
 export const isObject = R.pipe(R.type, R.equals('Object'));
 
 // like R.hasPath but returns either the thing at the given path or null
-export const maybeHasPath = (path, obj) => (R.isNil(obj) ? null : R.hasPath(path, obj) ? R.path(path, obj) : null);
+export const maybeHasPath = R.curry((path, obj) =>
+   R.isNil(obj) ? null : R.hasPath(path, obj) ? R.path(path, obj) : null
+);
 
 const makeArr = length => new Array(length);
 export const mapWithIndex = R.addIndex(R.map);

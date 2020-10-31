@@ -7,7 +7,7 @@ import {
    arrayContainsSomething,
    getObjectFromArrayByKeyValue,
 } from './index';
-import { updatedFilter } from '../actions';
+import { updatedFilter, replacedRowVisibility, replacedColumnVisibility } from '../actions';
 import {
    stateMetadataProp,
    dbRowFilters,
@@ -62,7 +62,11 @@ const numHiddenItems = R.reduce(
    R.__
 );
 
-const getNumHiddenItemsForAxis = R.pipe(getVisibilityForAxis, R.values, numHiddenItems);
+const getNumHiddenItemsForAxis = R.pipe(
+   getVisibilityForAxis,
+   R.values, 
+   numHiddenItems,
+);
 
 const pluralizeTail = R.pipe(R.tail, R.toLower, R.concat(R.__, 's'));
 
@@ -75,16 +79,10 @@ export const getTotalForAxis = R.curry(
    (axis, state) => stateMetadataProp(state, createTotalsKey(axis)) || 0 //returning 0 if the totalsKey is bogus)
 );
 
-export const getRequiredNumItemsForAxis = (axis, state) => {
-   const visibleItems = R.converge(
+export const getRequiredNumItemsForAxis = (axis, state) => R.converge(
       R.subtract, 
       [getTotalForAxis, getNumHiddenItemsForAxis]
    )(axis, state);
-   if (typeof visibleItems === 'number') {
-      return visibleItems;
-   }
-   return visibleItems;
-};
 
 /****
  * row visibility, for use by Sheet.js
@@ -159,7 +157,6 @@ export const isLastVisibleItemInAxis = R.curry((axis, totalInAxis, state, cellKe
    )(state);
 });
 
-// TOOD  consolidatethe 2 maps into 1 function
 const mapWithUpdatedFilter = axis =>
    R.map(filter => {
       const isInitializingSheet = true;
@@ -180,3 +177,10 @@ export const applyFilters = sheet => {
    R.pipe(dbRowFilters, mapWithUpdatedFilter(ROW_AXIS))(sheet);
    R.pipe(dbColumnFilters, mapWithUpdatedFilter(COLUMN_AXIS))(sheet);
 };
+
+
+export const initializeAxesVisibility = () => {
+   console.log('initializeAxesVisibility about to call replacedRowVisibility & replacedColumnVisibility');
+   replacedRowVisibility([]);
+   replacedColumnVisibility([]);
+} 

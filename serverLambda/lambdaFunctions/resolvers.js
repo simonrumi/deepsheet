@@ -12,6 +12,8 @@ const { addSheetToUser, checkAuthorization } = require('./helpers/userHelpers');
 const { updateCells, deleteSubsheetId, findCellByRowAndColumn } = require('./helpers/updateCellsHelpers');
 const { AuthenticationError } = require('apollo-server-lambda');
 
+// important TODO - before all mutations make sure the user is the owner of the sheet!
+
 module.exports = db => ({
    Query: {
       sheet: async (parent, args, context) => {

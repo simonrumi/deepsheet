@@ -43,7 +43,11 @@ const metadataReducer = (state = {}, action) => {
          return maybeHasPath(['payload', 'metadata'], action);
 
       case COMPLETED_CREATE_SHEET:
-         return maybeHasPath(['payload', 'sheet', 'metadata'], action);
+         return R.pipe(
+            maybeHasPath(['payload', 'sheet', 'metadata']),
+            R.assoc('columnVisibility', []),
+            R.assoc('rowVisibility', []),
+          )(action)
 
       case HAS_CHANGED_METADATA: {
          return { ...state, isStale: true };
@@ -131,7 +135,6 @@ const metadataReducer = (state = {}, action) => {
          };
 
       case POSTING_UPDATED_METADATA:
-         console.log('reducer got POSTING_UPDATED_METADATA action', action);
          return {
             ...state,
             isCallingDb: true,
@@ -141,7 +144,6 @@ const metadataReducer = (state = {}, action) => {
          };
 
       case COMPLETED_SAVE_METADATA:
-         console.log('reducer got COMPLETED_SAVE_METADATA action', action);
          return {
             ...state,
             isCallingDb: false,

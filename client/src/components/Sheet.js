@@ -6,7 +6,15 @@ import HTML5Backend from 'react-dnd-html5-backend';
 import { triggeredFetchSheet } from '../actions/fetchSheetActions';
 
 import { nothing, isSomething } from '../helpers';
-import { stateTotalRows, stateTotalColumns, stateIsLoggedIn, stateSheetId } from '../helpers/dataStructureHelpers';
+import {
+   stateTotalRows,
+   stateTotalColumns,
+   stateIsLoggedIn,
+   stateShowLoginModal,
+   stateSheetId,
+   stateShowFilterModal, 
+   stateSheetIsCallingDb, stateMetadata, stateColumnVisibility
+} from '../helpers/dataStructureHelpers';
 import {
    shouldShowRow,
    isFirstColumn,
@@ -54,12 +62,19 @@ class Sheet extends Component {
       return [this.maybeRowHeader(cellKey), this.renderCell(cellKey), this.maybeEmptyEndCell(cellKey)];
    };
 
-   maybeCell = () => R.ifElse(shouldShowRow(stateRowVisibility(managedStore.state)), this.renderCellAndMaybeEdges, nothing);
+   maybeCell = () =>
+      R.ifElse(shouldShowRow(stateRowVisibility(managedStore.state)), this.renderCellAndMaybeEdges, nothing);
+
+   isVisibilityCalcutated = () => stateColumnVisibility(managedStore.state) && stateRowVisibility(managedStore.state);
 
    renderCells = () => {
-      if (isSomething(stateTotalRows(managedStore.state)) && this.props.cellKeys && this.props.cellKeys.length > 0) {
+      if (
+         this.isVisibilityCalcutated() &&
+         isSomething(stateTotalRows(managedStore.state)) &&
+         this.props.cellKeys?.length > 0
+      ) {
          return R.pipe(
-            R.map(cellKey => this.maybeCell(managedStore.state)(cellKey)), // R.map(cellKey => this.maybeCell(this.props.st*te)(cellKey)),
+            R.map(cellKey => this.maybeCell(managedStore.state)(cellKey)),
             R.prepend(<ColumnHeaders key="columnHeaders" />),
             R.append(<LastRow key="lastRow" />)
          )(this.props.cellKeys);
@@ -68,10 +83,9 @@ class Sheet extends Component {
 
    maybeRenderLogin = () => {
       const { userId, sessionId } = getUserInfoFromCookie();
-     if (stateIsLoggedIn(managedStore.state) === false || !userId || !sessionId) {
+      if (this.props.stateShowLoginModal || stateIsLoggedIn(managedStore.state) === false || !userId || !sessionId) {
          return <LoginModal />;
       }
-      
       if (!stateSheetId(managedStore.state)) {
          triggeredFetchSheet();
       }
@@ -88,8 +102,6 @@ class Sheet extends Component {
       };
    };
 
-   createColumnHeaderSpan = colNum => 'span ' + (colNum + 3); //need 3 extra columns for the 2 row header cols on the left and the column adder on the right
-
    // TODO this will need to be manipulated to create different sized columns and rows
    // to see the reason for using minmax see https://css-tricks.com/preventing-a-grid-blowout/
    getGridSizingStyle([numRows, numCols]) {
@@ -101,14 +113,19 @@ class Sheet extends Component {
       };
    }
 
-   // TODO this function might be getting the wrong info
-   renderGridSizingStyle = () =>
-      this.getGridSizingStyle(R.map(getRequiredNumItemsForAxis(R.__, managedStore.state), [ROW_AXIS, COLUMN_AXIS]));
+   renderGridSizingStyle = () => {
+      if (!this.isVisibilityCalcutated()) {
+         return null;
+      }
+      return this.getGridSizingStyle(
+         R.map(getRequiredNumItemsForAxis(R.__, managedStore.state), [ROW_AXIS, COLUMN_AXIS])
+      );
+   };
 
    maybeRenderFilterModal = showFilterModal => (showFilterModal ? <FilterModal /> : null);
 
    render() {
-      if (this.props.sheetId && this.props.sheetId.isCallingDb) {
+      if (this.props.sheetIsCallingDb) {
          return (
             <div className="m-auto max-w-md">
                <LoadingIcon />
@@ -120,9 +137,9 @@ class Sheet extends Component {
             <Header />
             <Editor cellContent="" />
             {this.maybeRenderFilterModal(this.props.showFilterModal)}
-            {this.maybeRenderLogin(/* this.props.st*te */)}
+            {this.maybeRenderLogin()}
             <DndProvider backend={HTML5Backend}>
-               <div className="grid-container pt-1" style={this.renderGridSizingStyle(/* this.props.st*te */)}>
+               <div className="grid-container pt-1" style={this.renderGridSizingStyle()}>
                   {this.renderCells()}
                </div>
             </DndProvider>
@@ -134,9 +151,12 @@ class Sheet extends Component {
 function mapStateToProps(state) {
    return {
       sheet: state.sheet,
-      showFilterModal: state.filterModal.showFilterModal,
+      showFilterModal: stateShowFilterModal(state),
+      showLoginModal: stateShowLoginModal(state),
       cellKeys: state.cellKeys,
-      sheetId: state.sheetId,
+      sheetId: stateSheetId(state), //maybe need this to trigger updating the sheet when the sheetId object changes
+      sheetIsCallingDb: stateSheetIsCallingDb(state),
+      metadata: stateMetadata(state) // this is here so that sheet will update whenever metadata is changed
    };
 }
 export default connect(mapStateToProps, {

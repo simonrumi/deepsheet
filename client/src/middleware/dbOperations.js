@@ -22,6 +22,7 @@ import { createSheetMutation } from '../queries/sheetMutations';
 import { isSomething } from '../helpers';
 import { getUserInfoFromCookie } from '../helpers/userHelpers';
 import { getSaveableCellData } from '../helpers/cellHelpers';
+import { initializeAxesVisibility } from '../helpers/visibilityHelpers';
 import { cellText, cellSubsheetIdSetter, dbSheetId } from '../helpers/dataStructureHelpers';
 
 // note that services/sheetServices.js has a bunch of db operations in it as well.

@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import * as R from 'ramda';
-import { updatedEditor, setEditorRef } from '../../actions/editorActions';
+import { updatedEditor } from '../../actions/editorActions';
 import { updatedCellBeingEdited, hasChangedCell } from '../../actions/cellActions';
 import { isSomething, isNothing } from '../../helpers';
 import EditorInput from '../atoms/EditorInput';
@@ -70,6 +70,5 @@ const mapStateToProps = (state, ownProps) => {
 export default connect(mapStateToProps, {
    updatedEditor,
    updatedCellBeingEdited,
-   setEditorRef,
    hasChangedCell,
 })(Editor);

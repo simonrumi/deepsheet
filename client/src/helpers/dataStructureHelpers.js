@@ -91,25 +91,25 @@ export const stateMetadataProp = R.curry((stateObj, propName) =>
 // use (other functions below are similar):
 // stateTotalRows(state) //returns value for totalRows
 // stateTotalRows(state, 12) // sets 12 as the value for totalRows
-export const stateTotalRows = subObjectGetterSetter(stateMetadataLens, 'totalRows');
-export const stateTotalColumns = subObjectGetterSetter(stateMetadataLens, 'totalColumns');
-export const stateParentSheetId = subObjectGetterSetter(stateMetadataLens, 'parentSheetId');
-export const stateColumnVisibility = subObjectGetterSetter(stateMetadataLens, 'columnVisibility');
-export const stateRowVisibility = subObjectGetterSetter(stateMetadataLens, 'rowVisibility');
-export const stateColumnFilters = subObjectGetterSetter(stateMetadataLens, 'columnFilters');
-export const stateRowFilters = subObjectGetterSetter(stateMetadataLens, 'rowFilters');
-export const stateRowMoved = subObjectGetterSetter(stateMetadataLens, 'rowMoved');
-export const stateRowMovedTo = subObjectGetterSetter(stateMetadataLens, 'rowMovedTo');
-export const stateColumnMoved = subObjectGetterSetter(stateMetadataLens, 'columnMoved');
-export const stateColumnMovedTo = subObjectGetterSetter(stateMetadataLens, 'columnMovedTo');
-export const stateRowSortByIndex = subObjectGetterSetter(stateMetadataLens, 'rowSortByIndex');
-export const stateRowSortDirection = subObjectGetterSetter(stateMetadataLens, 'rowSortDirection');
-export const stateColumnSortByIndex = subObjectGetterSetter(stateMetadataLens, 'columnSortByIndex');
-export const stateColumnSortDirection = subObjectGetterSetter(stateMetadataLens, 'columnSortDirection');
-export const stateMetadataIsStale = subObjectGetterSetter(stateMetadataLens, 'isStale');
-export const stateMetadataIsCallingDb = subObjectGetterSetter(stateMetadataLens, 'isCallingDb');
-export const stateMetadataErrorMessage = subObjectGetterSetter(stateMetadataLens, 'errorMessage');
-export const stateMetadataLastUpdated = subObjectGetterSetter(stateMetadataLens, 'lastUpdated');
+export const stateTotalRows = subObjectGetter(stateMetadataLens, 'totalRows');
+export const stateTotalColumns = subObjectGetter(stateMetadataLens, 'totalColumns');
+export const stateParentSheetId = subObjectGetter(stateMetadataLens, 'parentSheetId');
+export const stateColumnVisibility = subObjectGetter(stateMetadataLens, 'columnVisibility');
+export const stateRowVisibility = subObjectGetter(stateMetadataLens, 'rowVisibility');
+export const stateColumnFilters = subObjectGetter(stateMetadataLens, 'columnFilters');
+export const stateRowFilters = subObjectGetter(stateMetadataLens, 'rowFilters');
+export const stateRowMoved = subObjectGetter(stateMetadataLens, 'rowMoved');
+export const stateRowMovedTo = subObjectGetter(stateMetadataLens, 'rowMovedTo');
+export const stateColumnMoved = subObjectGetter(stateMetadataLens, 'columnMoved');
+export const stateColumnMovedTo = subObjectGetter(stateMetadataLens, 'columnMovedTo');
+export const stateRowSortByIndex = subObjectGetter(stateMetadataLens, 'rowSortByIndex');
+export const stateRowSortDirection = subObjectGetter(stateMetadataLens, 'rowSortDirection');
+export const stateColumnSortByIndex = subObjectGetter(stateMetadataLens, 'columnSortByIndex');
+export const stateColumnSortDirection = subObjectGetter(stateMetadataLens, 'columnSortDirection');
+export const stateMetadataIsStale = subObjectGetter(stateMetadataLens, 'isStale');
+export const stateMetadataIsCallingDb = subObjectGetter(stateMetadataLens, 'isCallingDb');
+export const stateMetadataErrorMessage = subObjectGetter(stateMetadataLens, 'errorMessage');
+export const stateMetadataLastUpdated = subObjectGetter(stateMetadataLens, 'lastUpdated');
 
 /************************************************ STATE FILTER MODAL **********************************************/
 const stateFilterModalLens = R.lensProp('filterModal');

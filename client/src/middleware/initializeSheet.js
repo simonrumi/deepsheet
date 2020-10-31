@@ -8,7 +8,7 @@ import { clearedFocus } from '../actions/focusActions';
 import { menuHidden } from '../actions/menuActions';
 import { createCellReducers, populateCellsInStore } from '../reducers/cellReducers';
 import { isNothing, isSomething } from '../helpers';
-import { applyFilters } from '../helpers/visibilityHelpers';
+import { applyFilters, initializeAxesVisibility } from '../helpers/visibilityHelpers';
 import {
    dbMetadata,
    dbCells,
@@ -44,6 +44,7 @@ const createCellKeys = R.map(cell => 'cell_' + cell.row + '_' + cell.column);
 
 const initializeCells = sheet => {
    if (isSomething(dbMetadata(sheet))) {
+      initializeAxesVisibility();
       createCellReducers(sheet);
       populateCellsInStore(sheet);
       R.pipe(dbCells, orderCells, createCellKeys, updatedCellKeys)(sheet);
