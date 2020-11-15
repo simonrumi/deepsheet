@@ -39,7 +39,19 @@ const DELETE_SUBSHEET_ID_MUTATION = gql`
    }
 `;
 
-export const deleteSubsheetIdMutation = async ({ sheetId, row, column, text, subsheetId }) => {
+/* data looks like this:
+{
+   row, 
+   column, 
+   content: {
+      text, 
+      subsheetId
+   },
+   sheetId, 
+} */
+export const deleteSubsheetIdMutation = async data => {
+   const { sheetId, row, column, content } = data;
+   const { text, subsheetId } = content;
    const result = await apolloClient.mutate({
       mutation: DELETE_SUBSHEET_ID_MUTATION,
       variables: { sheetId, row, column, text, subsheetId },

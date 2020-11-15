@@ -39,6 +39,10 @@ const SHEET_QUERY = gql`
             totalRows
             totalColumns
             parentSheetId
+            summaryCell {
+               row
+               column
+            }
             columnFilters {
                index
                filterExpression
@@ -66,9 +70,11 @@ const SHEET_QUERY = gql`
 `;
 
 export const sheetQuery = async (sheetId, userId) => {
-   return await apolloClient.query({
+   const sheetResult = await apolloClient.query({
       query: SHEET_QUERY,
       variables: { sheetId, userId },
       fetchPolicy: 'network-only', // in other words, every time a different sheet is loaded, we're getting it from the network, not the cache. Otherwise cache might show old version of sheet
    });
+   console.log('sheetQueries got sheet', sheetResult);
+   return sheetResult;
 };

@@ -1,5 +1,4 @@
 import * as R from 'ramda';
-import { ROW_AXIS, COLUMN_AXIS } from '../constants';
 
 export const nothing = () => null;
 
@@ -37,13 +36,16 @@ export const forLoopReduce = (fn, initialVal, length) =>
 export const isNothing = R.either(R.isNil, R.isEmpty);
 export const isSomething = R.pipe(isNothing, R.not);
 export const arrayContainsSomething = R.reduce((accumulator, arrItem) => accumulator || isSomething(arrItem), false);
-// export const arrayContainsSomething = R.reduce((accumulator, arrItem) => accumulator && isSomething(arrItem), true);
 
 // use like this:
 // runIfSomething(myFn, thingToTest, extraParameters)
 // if the thingToTest exists and is not empty, myFn will run, having the thingToTest and extraParameters passed to it
-export const runIfSomething = (fn, thing, ...args) =>
-   R.when(R.both(R.pipe(R.isNil, R.not), R.pipe(R.isEmpty, R.not)), R.thunkify(fn)(thing, ...args), thing);
+export const runIfSomething = (fn, thing, ...args) => 
+   R.when(
+      isSomething, 
+      R.thunkify(fn)(thing, ...args), 
+      thing
+   );
 
 export const capitalizeFirst = R.pipe(R.head, R.toUpper);
 
@@ -95,25 +97,3 @@ export const indexToColumnLetter = index => {
 export const indexToRowNumber = index => {
    return parseInt(index, 10) + 1;
 };
-
-export const extractRowColFromCellKey = str => {
-   // expecting a string like some_prefix_2_3
-   //where 2 & 3 are the row and column numbers respectively
-   const regex = new RegExp(/.*_(\d+)_(\d+)$/);
-   const matchArr = regex.exec(str);
-   if (!matchArr || matchArr.length < 3) {
-      return;
-   }
-   const row = parseInt(matchArr[1]);
-   const column = parseInt(matchArr[2]);
-   const rowColObj = {};
-   rowColObj[ROW_AXIS] = row;
-   rowColObj[COLUMN_AXIS] = column;
-   return rowColObj;
-};
-
-// impure function to help with debugging
-export const trace = R.curry((tag, x) => {
-   console.log(tag, x);
-   return x;
-});

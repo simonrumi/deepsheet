@@ -1,6 +1,6 @@
 import * as R from 'ramda';
+import managedStore from  '../store';
 import {
-   extractRowColFromCellKey,
    capitalizeFirst,
    isNothing,
    isSomething,
@@ -15,10 +15,13 @@ import {
    filterFilterExpression,
    filterCaseSensitive,
    filterRegex,
-   filterIndex,
+   filterIndex, 
+   cellRow, 
+   cellColumn,
+   stateColumnVisibility,
+   stateRowVisibility,
 } from './dataStructureHelpers';
 import { ROW_AXIS, COLUMN_AXIS } from '../constants';
-//import * as RWrap from './ramdaWrappers'; // use this for debugging only
 
 // not for use in by any functions here, just for export
 export const getAxisFilterName = axis => R.concat(axis, 'Filters');
@@ -87,12 +90,12 @@ export const getRequiredNumItemsForAxis = (axis, state) => R.converge(
 /****
  * row visibility, for use by Sheet.js
  *****/
-export const shouldShowRow = R.curry((rowVisibility, cellKey) => {
+export const shouldShowRow = R.curry((rowVisibility, cell) => {
    if (isNothing(rowVisibility) || !arrayContainsSomething(rowVisibility)) {
       return true;
    }
-   const rowColObj = extractRowColFromCellKey(cellKey);
-   const rowVisibilityObj = getObjectFromArrayByKeyValue('index', rowColObj.row, rowVisibility);
+   const row = cellRow(cell);
+   const rowVisibilityObj = getObjectFromArrayByKeyValue('index', row, rowVisibility);
    return isSomething(rowVisibilityObj) ? rowVisibilityObj.isVisible : true;
 });
 
@@ -111,12 +114,7 @@ export const shouldShowColumn = R.curry((colVisibilityArr, colIndex) => {
 });
 
 /* isFirstColumn for use by Sheet.js */
-export const isFirstColumn = cellKey => /.*_0$/.test(cellKey); //the cellKey should end with _0 indicating the first column
-
-export const isLastColumn = R.curry((totalColumns, cellKey) => {
-   const { column } = extractRowColFromCellKey(cellKey);
-   return column === totalColumns - 1;
-});
+export const isFirstColumn = cell => cell?.column === 0;
 
 export const getAxisVisibilityName = axis => R.concat(axis, 'Visibility'); // will be "rowVisibility" or "columnVisibility"
 
@@ -129,13 +127,13 @@ const findHighestVisibleItem = R.curry((currentIndex, visibilityArr) => {
    return findHighestVisibleItem(currentIndex - 1, visibilityArr);
 });
 
-const getAxisIndex = R.curry((axis, cellKey) => R.prop(axis, extractRowColFromCellKey(cellKey)));
+const getAxisIndex = R.curry((axis, cell) => axis === ROW_AXIS ? cellRow(cell) : cellColumn(cell));
 
 const arrayIsNothing = array => isNothing(array) || !arrayContainsSomething(array);
 
 const getVisibilityArr = R.curry((axis, state) => R.pipe(getAxisVisibilityName, stateMetadataProp(state))(axis));
 
-export const isLastVisibleItemInAxis = R.curry((axis, totalInAxis, state, cellKey) => {
+export const isLastVisibleItemInAxis = R.curry((axis, totalInAxis, state, cell) => {   
    const endIndex = totalInAxis - 1;
    return R.ifElse(
       // if the visiblity object is empty
@@ -145,14 +143,14 @@ export const isLastVisibleItemInAxis = R.curry((axis, totalInAxis, state, cellKe
       ),
       // then compare the index of the last item to the current index
       R.pipe(
-         R.thunkify(getAxisIndex)(axis, cellKey), // ignores sheet parameter sent to it
+         R.thunkify(getAxisIndex)(axis, cell), // ignores sheet parameter sent to it
          R.equals(endIndex) // receives axis index
       ),
       // else find the index of the highest visible item and compare that to the current index
       R.pipe(
          getVisibilityArr(axis), //receives state
          findHighestVisibleItem(endIndex), // receives visibilityArr
-         R.equals(getAxisIndex(axis, cellKey)) // receives highest visible's index
+         R.equals(getAxisIndex(axis, cell)) // receives highest visible's index
       )
    )(state);
 });
@@ -173,14 +171,37 @@ const mapWithUpdatedFilter = axis =>
       );
    });
 
+const isAxisItemVisible = (visibilityGetterFn, axisIndex) => R.pipe(
+   visibilityGetterFn,
+   R.ifElse(
+      arrayContainsSomething,
+      R.pipe(
+         getObjectFromArrayByKeyValue('index', axisIndex),
+         R.prop('isVisible')
+      ),
+      R.T
+   )
+)(managedStore.state);
+
+export const isCellVisible = cell => {
+   const columnVisible = isAxisItemVisible(stateColumnVisibility, cell.column);
+   const rowVisible = isAxisItemVisible(stateRowVisibility, cell.row);
+   return columnVisible && rowVisible;
+}
+
+
 export const applyFilters = sheet => {
-   R.pipe(dbRowFilters, mapWithUpdatedFilter(ROW_AXIS))(sheet);
-   R.pipe(dbColumnFilters, mapWithUpdatedFilter(COLUMN_AXIS))(sheet);
+   const rowFilters = dbRowFilters(sheet);
+   const columnFilters = dbColumnFilters(sheet);
+   mapWithUpdatedFilter(ROW_AXIS)(rowFilters);
+   mapWithUpdatedFilter(COLUMN_AXIS)(columnFilters);
 };
 
-
 export const initializeAxesVisibility = () => {
-   console.log('initializeAxesVisibility about to call replacedRowVisibility & replacedColumnVisibility');
    replacedRowVisibility([]);
    replacedColumnVisibility([]);
 } 
+
+export const isVisibilityCalcutated = () => 
+   stateColumnVisibility(managedStore.state) 
+   && stateRowVisibility(managedStore.state);

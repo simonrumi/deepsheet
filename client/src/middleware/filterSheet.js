@@ -7,10 +7,12 @@ import {
    HIDE_FILTERED,
    CLEAR_ALL_FILTERS,
 } from '../actions/types';
-import { updatedColumnFilters, updatedRowFilters, hasChangedMetadata, toggledShowFilterModal } from '../actions';
+import { updatedColumnFilters, updatedRowFilters, toggledShowFilterModal } from '../actions';
+import { hasChangedMetadata, } from '../actions/metadataActions';
 import { updatedCell } from '../actions/cellActions';
 import { getObjectFromArrayByKeyValue, isNothing, arrayContainsSomething, forLoopMap } from '../helpers';
 import { getTotalForAxis, getAxisVisibilityName } from '../helpers/visibilityHelpers';
+import { getCellFromStore, getAllCells } from '../helpers/cellHelpers';
 import { stateMetadataProp } from '../helpers/dataStructureHelpers';
 
 /* these are used by multiple functions below */
@@ -72,19 +74,14 @@ const isCellShownByFilter = R.curry((cell, filter, axisOfFilter) => {
    return regex.test(cell.content.text);
 });
 
-const createCellKey = (axis, itemIndex, otherAxisIndex) => {
-   const rowIndex = axis === ROW_AXIS ? itemIndex : otherAxisIndex;
-   const colIndex = axis === COLUMN_AXIS ? itemIndex : otherAxisIndex;
-   return 'cell_' + rowIndex + '_' + colIndex;
-};
+const getRowAndColumn = (axis, itemIndex, otherAxisIndex) =>
+   axis === ROW_AXIS ? { row: itemIndex, column: otherAxisIndex } : { row: otherAxisIndex, column: itemIndex };
 
-const getCellFromDataAndCellKey = R.curry((data, cellKey) => R.prop(cellKey, getStateFromData(data)));
-
-const getCellsInAxisItem = R.curry((data, axis, itemIndex, filters) => {
+const getCellsInAxisItem = R.curry((data, axis, itemIndex, _) => {
    const totalInOtherAxis = getTotalForAxis(getOtherAxis(axis), getStateFromData(data));
    return forLoopMap(otherAxisIndex => {
-      const cellKey = createCellKey(axis, itemIndex, otherAxisIndex);
-      return getCellFromDataAndCellKey(data, cellKey);
+      const { row, column } = getRowAndColumn(axis, itemIndex, otherAxisIndex);
+      return getCellFromStore({row, column, state: getStateFromData(data)});
    }, totalInOtherAxis);
 });
 
@@ -109,13 +106,10 @@ const getVisibilityForCellsInAxisItem = (data, axis, itemIndex) => {
       // return true
       R.T,
       // else check the cells in the axis item (e.g. cells in row 1) against the filters in the opposite axis (e.g. all columnFilters)
-      otherAxisFilters =>
-         R.pipe(getCellsInAxisItem, checkCellsAgainstFilters(axis, otherAxisFilters))(
-            data,
-            axis,
-            itemIndex,
-            otherAxisFilters
-         )
+      otherAxisFilters => R.pipe(
+         getCellsInAxisItem,
+         checkCellsAgainstFilters(axis, otherAxisFilters),
+      )(data, axis, itemIndex, otherAxisFilters)
    )(otherAxisFilters); // note otherAxisFilters obj is given to all 3 ifElse Fns - condition, onTrue and onFalse
 };
 
@@ -142,7 +136,6 @@ const filterAxes = data => {
 };
 /***** end filterAxes and related functions *****/
 
-// const getAxisVisibilityByIndex = (axis, axisIndex, sheet) => {
 const getAxisVisibilityByIndex = (axis, axisIndex, state) => {
    const visibilityObj = R.pipe(
       getAxisVisibilityName,
@@ -152,47 +145,38 @@ const getAxisVisibilityByIndex = (axis, axisIndex, state) => {
    return visibilityObj ? visibilityObj.isVisible : true; // if there's no visibilityObj then we should show the Axis Item, so return true
 };
 
-// const getCellVisibilityForAxis = R.curry((cell, axis, sheet) => {
 const getCellVisibilityForAxis = R.curry((cell, axis, state) => {
    const otherAxis = getOtherAxis(axis);
    const otherAxisIndex = cell[otherAxis];
-   // return getAxisVisibilityByIndex(otherAxis, otherAxisIndex, sheet);
    return getAxisVisibilityByIndex(otherAxis, otherAxisIndex, state);
 });
-
-const getCellVisibilityFnsFromCell = cell => R.map(getCellVisibilityForAxis(cell), [ROW_AXIS, COLUMN_AXIS]);
-
-const getCellFromData = R.curry((data, cellKey) => R.pipe(getStateFromData, R.prop(cellKey))(data));
 
 // this returns an aray of 2 functions, one for each axis, which take the data as an argument and return something like
 // {index: 0, isVisible: true}
 // this array is used by the reduce function in setVisibilityForCell() below
-const getCellVisibilityFns = R.pipe(getCellFromData, getCellVisibilityFnsFromCell);
+const getCellVisibilityFnsFromCell = cell => R.map(getCellVisibilityForAxis(cell), [ROW_AXIS, COLUMN_AXIS]);
 
 // every cell is going to be run through this function
-const setVisibilityForCell = (data, cellKey) => {
-   // const sheet = getSheetFromData(data);
+const setVisibilityForCell = (data, cell) => {
    const state = getStateFromData(data);
    const newCellVisibility = R.reduce(
-      // (accumulator, visibilityFn) => visibilityFn(sheet) && accumulator,
       (accumulator, visibilityFn) => visibilityFn(state) && accumulator,
       true,
-      getCellVisibilityFns(data, cellKey)
+      getCellVisibilityFnsFromCell(cell)
    );
-   const cell = getCellFromData(data, cellKey);
    R.when(
       newVisibility => newVisibility !== cell.visible,
       newVisibility => updatedCell({ ...cell, visible: newVisibility })
    )(newCellVisibility);
 };
 
-const getCellKeysFromData = R.pipe(getStateFromData, R.prop('cellKeys'));
+const getCellsFromData = R.pipe(getStateFromData, getAllCells);
 
 const filterCells = data => {
-   const cellKeys = getCellKeysFromData(data);
-   R.map(cellKey => {
-      return setVisibilityForCell(data, cellKey);
-   }, cellKeys);
+   const cells = getCellsFromData(data);
+   R.map(cell => {
+      return setVisibilityForCell(data, cell);
+   }, cells);
 };
 /**** end filterCells and related functions ******/
 

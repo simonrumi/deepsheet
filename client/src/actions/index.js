@@ -2,7 +2,6 @@ import * as R from 'ramda';
 import managedStore from '../store';
 
 import {
-   HAS_CHANGED_METADATA,
    TOGGLED_SHOW_FILTER_MODAL,
    UPDATED_FILTER,
    UPDATED_COLUMN_FILTERS,
@@ -30,13 +29,6 @@ import {
 
 // TODO: continue to split up the actions & types
 // could separate out filters and visilibity stuff
-
-// TODO EASY definitely move this one to metadataACtions
-export const hasChangedMetadata = () => {
-   managedStore.store.dispatch({
-      type: HAS_CHANGED_METADATA,
-   });
-};
 
 export const updatedColumnFilters = newColumnFilter => {
    managedStore.store.dispatch({
@@ -106,7 +98,6 @@ export const updatedTotalRows = newTotalRows => {
 };
 
 export const updatedColumnVisibility = newVisibility => {
-   console.log('actions.index UPDATED_COLUMN_VISIBILITY with newVisibility', newVisibility);
    managedStore.store.dispatch({
       type: UPDATED_COLUMN_VISIBILITY,
       payload: newVisibility,
@@ -114,7 +105,6 @@ export const updatedColumnVisibility = newVisibility => {
 };
 
 export const replacedColumnVisibility = newVisibility => {
-   console.log('actions.index REPLACED_COLUMN_VISIBILITY with newVisibility', newVisibility);
    managedStore.store.dispatch({
       type: REPLACED_COLUMN_VISIBILITY,
       payload: newVisibility,
@@ -122,7 +112,6 @@ export const replacedColumnVisibility = newVisibility => {
 };
 
 export const updatedRowVisibility = newVisibility => {
-   console.log('actions.index UPDATED_ROW_VISIBILITY with newVisibility', newVisibility);
    managedStore.store.dispatch({
       type: UPDATED_ROW_VISIBILITY,
       payload: newVisibility,
@@ -130,7 +119,6 @@ export const updatedRowVisibility = newVisibility => {
 };
 
 export const replacedRowVisibility = newVisibility => {
-   console.log('actions.index REPLACED_ROW_VISIBILITY with newVisibility', newVisibility);
    managedStore.store.dispatch({
       type: REPLACED_ROW_VISIBILITY,
       payload: newVisibility,

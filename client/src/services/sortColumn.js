@@ -1,35 +1,42 @@
-/* this file is very similar to sortRow.js but making these functions generalized to handle either columns or rows
+/**
+ * this file is very similar to sortRow.js but making these functions generalized to handle either columns or rows
  * would make the functions hard to understand, so leaving as is
- */
+ **/
 
 import * as R from 'ramda';
-import { extractRowColFromCellKey, forLoopReduce } from '../helpers';
+import { forLoopReduce } from '../helpers';
 import { createNewAxisVisibility, createNewAxisFilters } from '../helpers/sortHelpers';
+import { getAllCells } from '../helpers/cellHelpers';
 import {
    stateRowVisibility,
    stateRowFilters,
    stateColumnSortDirection,
    stateColumnSortByIndex,
+   cellColumn,
+   cellRow,
 } from '../helpers/dataStructureHelpers';
 import { SORT_INCREASING, ROW_AXIS } from '../constants';
 import { compareCellContent, compareCellContentDecreasing } from './sortAxis';
 
 const updateCellsPerRowMap = R.curry((state, mapOfChangedRows) =>
    R.reduce(
-      (accumulator, cellKey) => {
-         const { row } = extractRowColFromCellKey(cellKey);
+      (accumulator, cell) => {
+         const row = cellRow(cell);
          // the mapOfChangedRows is an array of arrays. Each sub-array is like, e.g. [2,3]
          // where 2 is the original row index and 3 is the index it is moving to
          const currentRowMapping = R.find(mappingPair => mappingPair[0] === row)(mapOfChangedRows);
          if (currentRowMapping) {
             // take the cell at the old row and give it the new row index
-            const newCell = { ...state[cellKey], row: currentRowMapping[1] };
+            const newCell = { 
+               ...cell, 
+               row: currentRowMapping[1] 
+            };
             return [...accumulator, newCell];
          }
          return accumulator;
       },
       [],
-      state.cellKeys
+      getAllCells(state)
    )
 );
 
@@ -65,12 +72,11 @@ const compareCellRow = (cell1, cell2) => {
 
 const getCellsInColumn = state =>
    R.reduce(
-      (accumulator, cellKey) => {
-         const { column } = extractRowColFromCellKey(cellKey);
-         return column === stateColumnSortByIndex(state) ? [...accumulator, state[cellKey]] : accumulator;
+      (accumulator, cell) => {
+         return cellColumn(cell) === stateColumnSortByIndex(state) ? [...accumulator, cell] : accumulator;
       },
       [],
-      state.cellKeys
+      getAllCells(state)
    );
 
 export default state =>
@@ -79,5 +85,5 @@ export default state =>
       R.sort(compareCellRow),
       R.sort(columnSortFunc(state)),
       createMapOfChangedRows,
-      createNewCellArrayAndRowVisibilityAndRowFilters(state)
+      createNewCellArrayAndRowVisibilityAndRowFilters(state),
    )(state);

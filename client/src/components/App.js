@@ -1,7 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import * as R from 'ramda';
-
 import Sheet from './Sheet';
 import ModalBackground from './atoms/ModalBackground';
 import Footer from './molecules/Footer';
@@ -24,12 +23,10 @@ const App = props => {
 };
 
 const logState = state => {
-   if (R.keys(state.cellKeys).length === 0) {
-      return;
-   }
    const stateKeys = [
       'auth',
-      'sheetId',
+      'cellKeys',
+      'sheet',
       'sheets',
       'metadata',
       'editor',
@@ -37,7 +34,6 @@ const logState = state => {
       'title',
       'form',
       'filterModal',
-      'cellKeys',
       'cellDbUpdates',
       'menu',
       'focus',
@@ -51,15 +47,12 @@ const logState = state => {
       {},
       stateKeys
    );
-   const cellsObj = R.reduce(
-      (acc, key) => {
-         acc[key] = state[key];
-         return acc;
-      },
-      {},
-      state.cellKeys
-   );
-   const fullStateObj = { ...baseStateObj, ...cellsObj };
+   const cellReducersArr = R.map(
+      cellKey => R.assoc(cellKey, state[cellKey], {})
+   )(state.cellKeys)
+
+   // note that the cellReducers are logged as being in an array called cellReducers, but in the store every cell reducer is stored at the top level
+   const fullStateObj = R.mergeAll([baseStateObj, { cellReducers: cellReducersArr }]);
    console.log(fullStateObj);
 };
 

@@ -7,7 +7,7 @@ const { getFacebookToken, getFbUserId } = require('./helpers/facebookAuthHelpers
 const { AUTH_PROVIDER_FACEBOOK } = require('../constants');
 
 export async function handler(event, context, callback) {
-   console.log('started authReturn handler, got event', event);
+   // console.log('started authReturn handler, got event', event);
 
    // for some reason we need to have this line here, in order for the findUser() call to work
    // even though we are not directly using the db connection it returns
@@ -32,6 +32,7 @@ export async function handler(event, context, callback) {
    }
 
    if (access_token) {
+      console.log('TODO - Set-Cookie with Secure flag....somehow');
       try {
          const userIdFromProvider = await getFbUserId(access_token);
          const user = await findOrCreateUser({

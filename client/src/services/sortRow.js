@@ -2,28 +2,31 @@
  * would make the functions hard to understand, so leaving as is
  */
 import * as R from 'ramda';
-import { extractRowColFromCellKey, forLoopReduce } from '../helpers';
+import { forLoopReduce } from '../helpers';
 import { createNewAxisVisibility, createNewAxisFilters } from '../helpers/sortHelpers';
+import { getAllCells } from '../helpers/cellHelpers';
 import {
    stateColumnVisibility,
    stateColumnFilters,
    stateRowSortByIndex,
    stateRowSortDirection,
+   cellRow,
+   cellColumn
 } from '../helpers/dataStructureHelpers';
 import { SORT_INCREASING, COLUMN_AXIS } from '../constants';
 import { compareCellContent, compareCellContentDecreasing } from './sortAxis';
 
 const updateCellsPerColumnMap = R.curry((state, mapOfChangedColumns) =>
    R.reduce(
-      (accumulator, cellKey) => {
-         const { column } = extractRowColFromCellKey(cellKey);
+      (accumulator, cell) => {
+         const column = cellColumn(cell);
          // the mapOfChangedColumns is an array of arrays. Each sub-array is like, e.g. [2,3]
          // where 2 is the original column index and 3 is the index it is moving to
          const currentColumnMapping = R.find(mappingPair => mappingPair[0] === column)(mapOfChangedColumns);
          if (currentColumnMapping) {
             // take the cell at the old column and give it the new column index
             const newCell = {
-               ...state[cellKey],
+               ...cell,
                column: currentColumnMapping[1],
             };
             return [...accumulator, newCell];
@@ -31,7 +34,7 @@ const updateCellsPerColumnMap = R.curry((state, mapOfChangedColumns) =>
          return accumulator;
       },
       [],
-      state.cellKeys
+      getAllCells(state)
    )
 );
 
@@ -71,12 +74,11 @@ const compareCellColumn = (cell1, cell2) => {
 
 const getCellsInRow = state =>
    R.reduce(
-      (accumulator, cellKey) => {
-         const { row } = extractRowColFromCellKey(cellKey);
-         return row === stateRowSortByIndex(state) ? [...accumulator, state[cellKey]] : accumulator;
+      (accumulator, cell) => {
+         return cellRow(cell) === stateRowSortByIndex(state) ? [...accumulator, cell] : accumulator;
       },
       [],
-      state.cellKeys
+      getAllCells(state)
    );
 
 export default state =>

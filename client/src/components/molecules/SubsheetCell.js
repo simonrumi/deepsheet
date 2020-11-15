@@ -1,6 +1,5 @@
-import React, { Component } from 'react';
+import React from 'react';
 import * as R from 'ramda';
-import { connect } from 'react-redux';
 import { loadSheet } from '../../services/sheetServices';
 import { menuHidden } from '../../actions/menuActions';
 import { deleteSubsheetId } from '../../actions/cellActions';
@@ -17,35 +16,31 @@ import { isCellFocused } from '../../helpers/cellHelpers';
 import IconDownToSubsheet from '../atoms/IconDownToSubsheet';
 import IconUnlinkSubsheet from '../atoms/IconUnlinkSubsheet';
 import IconLoading from '../atoms/IconLoading';
+import managedStore from '../../store';
 
-class SubsheetCell extends Component {
-   constructor(props) {
-      super(props);
-      this.onCellClick = this.onCellClick.bind(this);
-      this.renderIcons = this.renderIcons.bind(this);
-      this.renderIconDownToSubsheet = this.renderIconDownToSubsheet.bind(this);
-      this.renderIconUnlinkSubsheet = this.renderIconUnlinkSubsheet.bind(this);
-      this.unlinkSubsheet = this.unlinkSubsheet.bind(this);
-   }
+const SubsheetCell = props => {
+   const subsheetId = cellSubsheetId(props.cell);
 
-   async unlinkSubsheet() {
-      const row = cellRow(this.props.cell);
-      const column = cellColumn(this.props.cell);
-      const text = cellText(this.props.cell);
-      const subsheetId = cellSubsheetId(this.props.cell);
-      await R.pipe(stateSheetId, deleteSubsheetId(row, column, text, subsheetId))(this.props.state);
+   const unlinkSubsheet = async () => {
+      const row = cellRow(props.cell);
+      const column = cellColumn(props.cell);
+      const text = cellText(props.cell);
+      await R.pipe(
+         stateSheetId, 
+         deleteSubsheetId(row, column, text, subsheetId)
+      )(managedStore.state);
       clearedFocus();
    }
 
-   renderIconUnlinkSubsheet() {
+   const renderIconUnlinkSubsheet = () => {
       /* onMouseDown is fired before onBlur, whereas onClick is after onBlur. 
          Since the Editor may have the focus when a cell is clicked, clicking on IconNewDoc will cause
          the Editor's onBlur to fire...but we need to call another action before the onBlur,
          hence the use of onMouseDown */
-      return <IconUnlinkSubsheet classes="w-4 flex-1" onMouseDownFn={this.unlinkSubsheet} />;
+      return <IconUnlinkSubsheet classes="w-4 flex-1" onMouseDownFn={unlinkSubsheet} />;
    }
 
-   renderIconDownToSubsheet() {
+   const renderIconDownToSubsheet = () => {
       /* onMouseDown is fired before onBlur, whereas onClick is after onBlur. 
          Since the Editor may have the focus when a cell is clicked, clicking on IconNewDoc will cause
          the Editor's onBlur to fire...but we need to call another action before the onBlur,
@@ -54,14 +49,14 @@ class SubsheetCell extends Component {
          <IconDownToSubsheet
             classes="w-4 flex-1 mr-2"
             onMouseDownFn={() => {
-               loadSheet(this.props.state, this.props.subsheetId);
+               loadSheet(managedStore.state, subsheetId);
             }}
          />
       );
    }
 
-   renderIcons(cellHasFocus) {
-      if (cellIsCallingDb(this.props.cell)) {
+   const renderIcons = cellHasFocus => {
+      if (cellIsCallingDb(props.cell)) {
          return (
             <div className="relative w-full">
                <div className="absolute bottom-4 left-0 z-10 min-w-full flex justify-start">
@@ -74,8 +69,8 @@ class SubsheetCell extends Component {
          return (
             <div className="relative w-full">
                <div className="absolute bottom-4 left-0 z-10 min-w-full flex justify-start">
-                  {this.renderIconDownToSubsheet()}
-                  {this.renderIconUnlinkSubsheet()}
+                  {renderIconDownToSubsheet()}
+                  {renderIconUnlinkSubsheet()}
                </div>
             </div>
          );
@@ -83,27 +78,27 @@ class SubsheetCell extends Component {
       return null;
    }
 
-   onCellClick(evt) {
+   const onCellClick = evt => {
       evt.preventDefault();
-      this.props.focusedCell(this.props.cell);
-      this.props.menuHidden(); // in case the menu was showing, hide it
+      focusedCell(props.cell);
+      menuHidden(); // in case the menu was showing, hide it
    }
 
-   innerDivClassNames = cellHasFocus => {
+   const innerDivClassNames = cellHasFocus => {
       const cellBaseClasses = 'm-px p-px ';
       const borderClasses = cellHasFocus ? 'border-2 border-subdued-blue' : 'border border-burnt-orange';
       return cellBaseClasses + borderClasses;
    };
 
-   render() {
-      const cellHasFocus = isCellFocused(this.props.cell, this.props.state);
+   const renderSubsheetCell = () => {
+      const cellHasFocus = isCellFocused(props.cell, managedStore.state);
       return (
          <div
             className="grid-item grid items-stretch cursor-pointer border-t border-l"
-            onClick={evt => this.onCellClick(evt)}>
-            <div className={this.innerDivClassNames(cellHasFocus)}>
-               {this.renderIcons(cellHasFocus)}
-               {this.props.subContent}
+            onClick={evt => onCellClick(evt)}>
+            <div className={innerDivClassNames(cellHasFocus)}>
+               {renderIcons(cellHasFocus)}
+               {cellText(props.cell)}
             </div>
          </div>
       );
@@ -111,16 +106,11 @@ class SubsheetCell extends Component {
       // while these classes create a 1x1 grid that takes up the full space within that:
       // grid items-stretch
       // In the inner div there is the text, with m-px giving a 1px margin so its orange border is a little separated from the outer div's grey border
-   }
-}
-
-function mapStateToProps(state, ownProps) {
-   return {
-      state,
-      subContent: ownProps.cell.content.text,
-      subsheetId: ownProps.cell.content.subsheetId,
-      cell: ownProps.cell,
    };
+
+   // Note that we're not using redux's useSelector() hook in here, 
+   // instead we're relying having this component re-rendered whenever the parent Cell component is rerendered
+   return renderSubsheetCell();
 }
 
-export default connect(mapStateToProps, { menuHidden, focusedCell, deleteSubsheetId })(SubsheetCell);
+export default SubsheetCell;

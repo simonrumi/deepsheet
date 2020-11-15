@@ -1,7 +1,6 @@
 // reminder: thunk is used when reducers need to make async calls, because redux normally dispatches actions
 // immediately. with thunk you can do the dispatch when you're ready
 import reduxThunk from 'redux-thunk';
-
 import { createStore, applyMiddleware } from 'redux';
 import { createReducerManager } from '../reducers/reducerManager';
 import { staticReducers } from '../reducers';
@@ -29,7 +28,15 @@ class ManagedStore {
       const reducerManager = createReducerManager(staticReducers);
       this._store = createStore(
          reducerManager.reduce,
-         applyMiddleware(reduxThunk, preprocess, authorize, dbOperations, initializeSheet, orderSheet, filterSheet) //tried reduxThunk at the end, and at the start, unsure which is best
+         applyMiddleware(
+            reduxThunk, 
+            preprocess, 
+            authorize, 
+            dbOperations, 
+            initializeSheet, 
+            orderSheet, 
+            filterSheet
+         ) //tried reduxThunk at the end, and at the start, unsure which is best
       );
       this._store.reducerManager = reducerManager;
    }

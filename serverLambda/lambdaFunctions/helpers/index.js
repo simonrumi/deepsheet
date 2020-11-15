@@ -4,6 +4,16 @@ const isNothing = R.either(R.isNil, R.isEmpty);
 const isSomething = R.pipe(isNothing, R.not);
 const arrayContainsSomething = R.reduce((accumulator, arrItem) => accumulator || isSomething(arrItem), false);
 
+// use like this:
+// runIfSomething(myFn, thingToTest, extraParameters)
+// if the thingToTest exists and is not empty, myFn will run, having the thingToTest and extraParameters passed to it
+const runIfSomething = (fn, thing, ...args) => 
+   R.when(
+      isSomething, 
+      R.thunkify(fn)(thing, ...args), 
+      thing
+   );
+
 const makeArr = length => new Array(length);
 const mapWithIndex = R.addIndex(R.map);
 
@@ -24,6 +34,7 @@ module.exports = {
    isNothing,
    isSomething,
    arrayContainsSomething,
+   runIfSomething,
    forLoopMap,
    forLoopReduce,
 };

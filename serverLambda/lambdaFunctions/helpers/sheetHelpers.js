@@ -83,4 +83,18 @@ const getAllSheetsForUser = async userId => {
    }
 };
 
-module.exports = { createNewSheet, getAllSheetsForUser };
+const getLatestSheet = async sheetIds => {
+   try {
+      const latestSheet = await SheetModel.find({ _id: { $in: sheetIds } })
+         .sort({ 'metadata.lastUpdated': -1 })
+         .limit(1)
+         .exec();
+      return latestSheet[0];   
+
+   } catch (err) {
+      console.log('Error getting latest sheet', err);
+      return err;
+   }
+}
+
+module.exports = { createNewSheet, getAllSheetsForUser, getLatestSheet };

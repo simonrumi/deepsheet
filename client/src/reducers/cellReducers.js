@@ -1,104 +1,150 @@
 import * as R from 'ramda';
 import managedStore from '../store';
-import { extractRowColFromCellKey, isSomething, isNothing } from '../helpers';
-import { dbTotalRows, dbTotalColumns, dbCells } from '../helpers/dataStructureHelpers';
-import { ROW_AXIS, COLUMN_AXIS } from '../constants';
-import { updatedCell } from '../actions/cellActions';
+import { isSomething, isNothing } from '../helpers';
+import { createUpdatedCellState, createCellKey } from '../helpers/cellHelpers';
+import { dbCells } from '../helpers/dataStructureHelpers';
+import { updatedCell, addedCellKeys } from '../actions/cellActions';
 import {
-   UPDATED_CELL_KEYS,
-   UPDATED_CELL_,
-   UPDATED_CONTENT_OF_CELL_,
+   UPDATED_CELL,
+   UPDATED_CONTENT_OF_CELL,
    POSTING_UPDATED_CELLS,
    COMPLETED_SAVE_CELLS,
    CELLS_UPDATE_FAILED,
    HAS_CHANGED_CELL,
-   COMPLETED_SAVE_CELL_,
+   COMPLETED_SAVE_CELL,
    HAS_ADDED_CELL,
-   POSTING_DELETE_SUBSHEET_ID_,
-   COMPLETED_DELETE_SUBSHEET_ID_,
-   DELETE_SUBSHEET_ID_FAILED_,
+   POSTING_DELETE_SUBSHEET_ID,
+   COMPLETED_DELETE_SUBSHEET_ID,
+   DELETE_SUBSHEET_ID_FAILED,
+   ADDED_CELL_KEYS,
+   REMOVED_CELL_KEYS,
+   CLEARED_ALL_CELL_KEYS,
 } from '../actions/cellTypes';
-import { FETCHED_SHEET } from '../actions/fetchSheetTypes';
+import { FETCHED_SHEET } from '../actions/sheetTypes';
 import { COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
 
-export const createCellReducers = sheet => {
-   const store = managedStore.store;
-   const cellReducers = {};
-   if (!store || !store.reducerManager) {
-      console.error('ERROR: generateCellReducers failed as there was no store.reducerManager');
-      return;
-   }
-   for (let row = 0; row < dbTotalRows(sheet); row++) {
-      for (let col = 0; col < dbTotalColumns(sheet); col++) {
-         cellReducers['cell_' + row + '_' + col] = cellReducerFactory(row, col);
-      }
-   }
-   const combineNewReducers = store.reducerManager.addMany(cellReducers);
-   store.replaceReducer(combineNewReducers);
-};
-
-export const cellReducerFactory = (rowNum, colNum) => {
-   return (state = {}, action) => {
+const cellReducerFactory = (cell, sheetId) => 
+   (state = {}, action) => {
       if (!action || !action.type) {
          return state;
       }
-      const numsFromType = extractRowColFromCellKey(action.type);
-      if (numsFromType && numsFromType[ROW_AXIS] === rowNum && numsFromType[COLUMN_AXIS] === colNum) {
-         const hasUpdatedCell = new RegExp(`^${UPDATED_CELL_}`, 'ig');
-         if (hasUpdatedCell.test(action.type)) {
-            return action.payload;
-         }
-         const hasUpdatedContent = new RegExp(`^${UPDATED_CONTENT_OF_CELL_}`, 'ig');
-         if (hasUpdatedContent.test(action.type)) {
+      const payloadCell = action.payload;
+      if (isNothing(payloadCell) || payloadCell.row !== cell.row || payloadCell.column !== cell.column) {
+         return state;
+      }
+
+      switch (action.type) {
+         case UPDATED_CELL:
+            return { ...state, ...payloadCell };
+   
+         case UPDATED_CONTENT_OF_CELL:
+            return { ...state, ...payloadCell, isStale: true };
+   
+         case COMPLETED_SAVE_CELL:
+            console.log('cell Reducer got COMPLETED_SAVE_CELL, state was', state, 'payloadCell', payloadCell);
+            return createUpdatedCellState(payloadCell, state, sheetId);
+         
+         case POSTING_DELETE_SUBSHEET_ID:
+            /* action.payload looks like this:
+            {
+               row, 
+               column, 
+               content: {
+                  text, 
+                  subsheetId
+               },
+               sheetId, 
+            } */
             return {
                ...state,
-               content: action.payload.content,
-               isStale: action.payload.isStale,
+               ...R.dissoc('sheetId', action.payload),
+               isStale: true,
+               isCallingDb: true,
             };
-         }
-         const completedSaveCell = new RegExp(`^${COMPLETED_SAVE_CELL_}`, 'ig');
-         if (completedSaveCell.test(action.type)) {
-            return { ...state, isStale: false };
-         }
-         const postingDeleteSubsheetId = new RegExp(`^${POSTING_DELETE_SUBSHEET_ID_}`, 'ig');
-         if (postingDeleteSubsheetId.test(action.type)) {
-            return { ...state, isCallingDb: true, isStale: true };
-         }
-         const completedDeleteSubsheetId = new RegExp(`^${COMPLETED_DELETE_SUBSHEET_ID_}`, 'ig');
-         if (completedDeleteSubsheetId.test(action.type)) {
-            return { ...state, content: action.payload.cell.content, isCallingDb: false, isStale: false };
-         }
-         const deleteSubsheetIdFailed = new RegExp(`^${DELETE_SUBSHEET_ID_FAILED_}`, 'ig');
-         if (deleteSubsheetIdFailed.test(action.type)) {
-            return { ...state, isCallingDb: false, isStale: true };
-         }
+   
+         case COMPLETED_DELETE_SUBSHEET_ID:
+            return { ...state, ...payloadCell, isStale: false, isCallingDb: false  };
+   
+         case DELETE_SUBSHEET_ID_FAILED:
+            return { ...state, ...payloadCell, isStale: true, isCallingDb: false  };
+   
+         default:
+            return state;
       }
-      return state;
-   };
-};
-
-export const cellKeyReducer = (state = [], action) => {
-   switch (action.type) {
-      case UPDATED_CELL_KEYS:
-         return action.payload;
-
-      default:
-         return state;
    }
+
+const cellReducerCreator = thunkifiedCreatorFunc => {
+   const store = managedStore.store;
+   if (!store || !store.reducerManager) {
+      console.error('ERROR: createCellReducers failed as there was no reducerManager');
+      return;
+   }
+   const cellReducers = thunkifiedCreatorFunc();
+   const combineNewReducers = store.reducerManager.addMany(cellReducers);
+   store.replaceReducer(combineNewReducers);
+}
+
+export const createCellReducers = sheet => {
+   const thunkifiedCreatorFunc = R.thunkify(
+      R.pipe(
+         dbCells,
+         R.reduce(
+            (accumulator, cell) => {
+               const cellReducer = cellReducerFactory(cell, sheet.id);
+               const cellKey = createCellKey(cell.row, cell.column);
+               accumulator[cellKey] = cellReducer;
+               return accumulator;
+            },
+            {}
+         )
+      )
+   )(sheet);
+   cellReducerCreator(thunkifiedCreatorFunc);
 };
 
-export const populateCellsInStore = sheet => R.forEach(cell => updatedCell(cell), dbCells(sheet));
+export const addCellReducers = (cells, sheetId) => {
+   const thunkifiedCreatorFunc = R.thunkify(
+      R.reduce(
+         (accumulator, cell) => {
+            const cellReducer = cellReducerFactory(cell, sheetId);
+            const cellKey = createCellKey(cell.row, cell.column);
+            accumulator[cellKey] = cellReducer;
+            return accumulator;
+         },
+         {}
+      )
+   )(cells);
+   cellReducerCreator(thunkifiedCreatorFunc);
+}
+
+export const populateCellsInStore = sheet => R.forEach(
+   cell => {
+      updatedCell(cell);
+      R.pipe(
+         createCellKey,
+         addedCellKeys
+      )(cell.row, cell.column);
+   }, 
+   dbCells(sheet)
+);
 
 export const cellDbUpdatesReducer = (state = {}, action) => {
    switch (action.type) {
       case COMPLETED_CREATE_SHEET:
-      case FETCHED_SHEET:
          return {
             ...state,
             isCallingDb: false,
             isStale: false,
             errorMessage: null,
             lastUpdated: Date.now(),
+         };
+
+      case FETCHED_SHEET:
+         return {
+            ...state,
+            isCallingDb: false,
+            isStale: false,
+            errorMessage: null,
          };
 
       case POSTING_UPDATED_CELLS:
@@ -149,3 +195,20 @@ export const cellDbUpdatesReducer = (state = {}, action) => {
          return state;
    }
 };
+
+export const cellKeysReducer = (state = [], action) => {
+   switch (action.type) {
+      case ADDED_CELL_KEYS:
+         return action.payload instanceof Array ? R.concat(state, action.payload) : R.append(action.payload, state);
+
+      case REMOVED_CELL_KEYS:
+         return action.payload instanceof Array ? R.without(action.payload, state) : R.without([action.payload], state);
+
+      case CLEARED_ALL_CELL_KEYS:
+         return [];
+
+      default:
+         return state;
+
+   }
+}

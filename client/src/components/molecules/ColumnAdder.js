@@ -11,7 +11,7 @@ class ColumnAdder extends Component {
             <div className="flex items-center px-2 py-1">
                <IconAdd
                   classes={'flex-1 h-3 w-3'}
-                  onClickFn={() => insertNewColumn(this.props.cellKeys, this.props.state)}
+                  onClickFn={insertNewColumn}
                />
             </div>
          </div>
@@ -21,9 +21,6 @@ class ColumnAdder extends Component {
 
 function mapStateToProps(state, ownProps) {
    return {
-      state,
-      sheet: state.sheet,
-      cellKeys: state.cellKeys,
       classes: ownProps.classes,
    };
 }

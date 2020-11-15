@@ -3,18 +3,18 @@ import { connect } from 'react-redux';
 import * as R from 'ramda';
 import { DragSource } from 'react-dnd';
 import { ItemTypes } from '../../constants';
-import { indexToRowNumber, extractRowColFromCellKey, isSomething, isNothing } from '../../helpers';
-import { stateRowFilters } from '../../helpers/dataStructureHelpers';
+import { indexToRowNumber, isSomething, isNothing } from '../../helpers';
+import { cellRow, stateRowFilters } from '../../helpers/dataStructureHelpers';
 import { toggledShowFilterModal, rowMoved } from '../../actions';
 import IconFilter from '../atoms/IconFilter';
 
 const dragSourceSpec = {
    beginDrag: (props, monitor, component) => {
-      const { row } = extractRowColFromCellKey(props.cellKey);
+      const row = cellRow(props.cell);
       return { rowIndex: row };
    },
    endDrag: (props, monitor, component) => {
-      const { row } = extractRowColFromCellKey(props.cellKey);
+      const row = cellRow(props.cell)
       rowMoved(row);
       return { rowIndex: row };
    },
@@ -50,7 +50,7 @@ class RowHeaderDetail extends Component {
    };
 
    render() {
-      const { row } = extractRowColFromCellKey(this.props.cellKey);
+      const row = cellRow(this.props.cell);
       const rowNum = indexToRowNumber(row);
 
       // These props are injected by React DnD, as defined by your `collect` function above:
@@ -77,9 +77,9 @@ class RowHeaderDetail extends Component {
 
 function mapStateToProps(state, ownProps) {
    return {
-      state,
+      state,  // TODO remove this so it doesnt' update every time the state updates - just used in one place - stateRowFilters
       showFilterModal: state.showFilterModal,
-      cellKey: ownProps.cellKey,
+      cell: ownProps.cell,
       sheet: state.sheet,
    };
 }

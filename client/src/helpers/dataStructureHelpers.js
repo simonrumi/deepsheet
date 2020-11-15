@@ -1,5 +1,5 @@
 import * as R from 'ramda';
-import { isSomething, isNothing } from './index';
+import { isSomething } from './index';
 
 // TODO: use createGetter instead of createGetterSetter for all state data
 
@@ -87,10 +87,9 @@ export const stateMetadataProp = R.curry((stateObj, propName) =>
    subObjectGetterSetter(stateMetadataLens, propName)(stateObj)
 );
 
-// get/set values from the state structure
+// get values from the state structure
 // use (other functions below are similar):
 // stateTotalRows(state) //returns value for totalRows
-// stateTotalRows(state, 12) // sets 12 as the value for totalRows
 export const stateTotalRows = subObjectGetter(stateMetadataLens, 'totalRows');
 export const stateTotalColumns = subObjectGetter(stateMetadataLens, 'totalColumns');
 export const stateParentSheetId = subObjectGetter(stateMetadataLens, 'parentSheetId');
@@ -122,45 +121,13 @@ const stateAuthLens = R.lensProp('auth');
 export const stateIsLoggedIn = subObjectGetter(stateAuthLens, 'isLoggedIn');
 export const stateShowLoginModal = subObjectGetter(stateAuthLens, 'showLoginModal');
 
-/************************************************ STATE CELL **********************************************/
+/************************************************ STATE CELLS **********************************************/
+export const stateCellKeys = state => state.cellKeys;
 
-/**** get/set values from the state's cell structure ****/
-const getStateCellLens = (row, column) => {
-   const cellName = 'cell_' + row + '_' + column;
-   return R.lensProp(cellName);
-};
-export const stateCell = (row, column, state, cellData) => {
-   const stateCellLens = getStateCellLens(row, column);
-   return isSomething(cellData) ? R.set(stateCellLens, cellData, state) : R.view(stateCellLens, state);
-};
-
-/* export const stateCellIsHighlighted = (row, column, state, isHighlightedNew) => {
-   const isHighlightedLens = R.lensPath(['cell_' + row + '_' + column, 'isHighlighted']);
-   // note using R.isNil because only want to test if it is null or undefined
-   return R.isNil(isHighlightedNew)
-      ? R.view(isHighlightedLens, state)
-      : R.set(isHighlightedLens, isHighlightedNew, state);
-}; */
-
-export const getStateCellSubsheetId = R.curry((cell, state) => {
-   if (isNothing(cell)) {
-      return null;
-   }
-   const cellName = 'cell_' + cell.row + '_' + cell.column;
-   const subsheetIdLens = R.lensPath([cellName, 'content', 'subsheetId']);
-   return R.view(subsheetIdLens, state);
-});
-
-export const getStateCellText = (cell, state) => {
-   if (isNothing(cell)) {
-      return null;
-   }
-   const cellName = 'cell_' + cell.row + '_' + cell.column;
-   const textLens = R.lensPath([cellName, 'content', 'text']);
-   return R.view(textLens, state);
-};
-
-/*** get and values for the cell itself - note that getters and setters are separate fns so that the setter can be curried ***/
+/*** 
+ * get values for the cell itself - note that getters and setters are separate fns so that the setter can be curried. 
+ * The setters are going to be used on copies of the cell that will be updated in the state via actions
+***/
 const cellRowLens = R.lensProp('row');
 export const cellRow = cell => R.view(cellRowLens, cell);
 export const cellRowSetter = R.curry((newRow, cell) => R.set(cellRowLens, newRow, cell));
@@ -190,25 +157,26 @@ export const cellIsStale = cell => R.view(cellIsStaleLens, cell);
 export const cellIsStaleSetter = R.curry((value, cell) => R.set(cellIsStaleLens, value, cell));
 
 const stateCellDbUpdatesLens = R.lensProp('cellDbUpdates');
-export const stateCellDbUpdatesIsCallingDb = subObjectGetterSetter(stateCellDbUpdatesLens, 'isCallingDb');
-export const stateCellDbUpdatesErrorMessage = subObjectGetterSetter(stateCellDbUpdatesLens, 'errorMessage');
-export const stateCellDbUpdatesIsStale = subObjectGetterSetter(stateCellDbUpdatesLens, 'isStale');
-export const stateCellDbUpdatesLastUpdated = subObjectGetterSetter(stateCellDbUpdatesLens, 'lastUpdated');
-export const stateChangedCells = subObjectGetterSetter(stateCellDbUpdatesLens, 'changedCells');
+export const stateCellDbUpdatesIsCallingDb = subObjectGetter(stateCellDbUpdatesLens, 'isCallingDb');
+export const stateCellDbUpdatesErrorMessage = subObjectGetter(stateCellDbUpdatesLens, 'errorMessage');
+export const stateCellDbUpdatesIsStale = subObjectGetter(stateCellDbUpdatesLens, 'isStale');
+export const stateCellDbUpdatesLastUpdated = subObjectGetter(stateCellDbUpdatesLens, 'lastUpdated');
+export const stateChangedCells = subObjectGetter(stateCellDbUpdatesLens, 'changedCells');
 
 /************************************************ STATE OTHER **********************************************/
 
 // get the sheet's id. Will never set this, only retrieve it, as it is mongodb that generates this.
-const stateSheetIdLens = R.lensPath(['sheetId', 'sheetId']);
+const stateSheetIdLens = R.lensPath(['sheet', 'sheetId']);
 export const stateSheetId = R.view(stateSheetIdLens); // use: stateSheetId(stateObj);
-const stateSheetIsCallingDbLens = R.lensPath(['sheetId', 'isCallingDb']);
+const stateSheetIsCallingDbLens = R.lensPath(['sheet', 'isCallingDb']);
 export const stateSheetIsCallingDb = R.view(stateSheetIsCallingDbLens); // use: stateSheetIsCallingDb(stateObj);
-const stateSheetErrorMessageLens = R.lensPath(['sheetId', 'errorMessage']);
+const stateSheetErrorMessageLens = R.lensPath(['sheet', 'errorMessage']);
 export const stateSheetErrorMessage = R.view(stateSheetErrorMessageLens); // use: stateSheetErrorMessage(stateObj);
+const stateSheetCellsLoadedLens = R.lensPath(['sheet', 'cellsLoaded']);
+export const stateSheetCellsLoaded = R.view(stateSheetCellsLoadedLens); // use: stateSheetCellsLoaded(stateObj);
 
 const stateFocusLens = R.lensProp('focus'); // there's a property called focus which is used to track which UI element currently has focus
-export const stateFocus = (state, element) =>
-   isSomething(element) ? R.set(stateFocusLens, element, state) : R.view(stateFocusLens, state);
+export const stateFocus = state => R.view(stateFocusLens, state);
 
 const stateTitleLens = R.lensProp('title');
 export const stateTitleIsCallingDb = subObjectGetterSetter(stateTitleLens, 'isCallingDb');

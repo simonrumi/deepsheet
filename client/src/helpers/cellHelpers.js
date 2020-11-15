@@ -1,4 +1,5 @@
 import * as R from 'ramda';
+import managedStore from '../store';
 import { indexToColumnLetter, indexToRowNumber, isSomething } from './index';
 import {
    cellRow,
@@ -12,6 +13,7 @@ import {
    cellSubsheetIdSetter,
    cellVisibleSetter,
    stateFocus,
+   stateCellKeys,
 } from './dataStructureHelpers';
 import { THIN_COLUMN } from '../constants';
 
@@ -62,3 +64,63 @@ export const isCellFocused = (cell, state) => {
       currentlyFocused.cell.column === cell.column
    );
 };
+
+export const getCellFromStore = ({row, column, state}) => R.pipe(
+   createCellKey,
+   R.prop(R.__, state)
+)(row, column);
+
+export const clearCells = state => R.pipe(
+      stateCellKeys,
+      managedStore.store.reducerManager.removeMany
+   )(state);
+
+export const getAllCells = state =>  R.pipe(
+      stateCellKeys,
+      R.map(cellKey => state[cellKey])
+   )(state);
+
+// when the cell reducer needs to update the cell, this creates the new state that the reducer returns
+export const createUpdatedCellState = (payloadCell, state, sheetId) => {
+   if (R.equals(sheetId, payloadCell.sheetId)) {
+      return R.pipe(
+            R.dissoc('sheetId'),
+            R.append(R.__, [state]),
+            R.append({isStale: false}), // at this point we have an array like [state, payloadCellWithoutSheetId, {isStale: false}]
+            R.mergeAll //....so we merge all that to make the updated state
+         )(payloadCell);
+   }
+   return state;
+}
+
+/***** ordering cells by row then column */
+const filterToCurrentRow = R.curry((rowIndex, cells) => R.filter(cell => cell.row === rowIndex)(cells));
+const sortByColumns = R.sortBy(cell => cell.column);
+
+export const orderCells = cells => {
+   const buildSortedArr = (unsortedCells, sortedCells = [], currentRow = 0) => {
+      const cellsSortedSoFar = R.pipe(
+         filterToCurrentRow,
+         sortByColumns,
+         R.concat(sortedCells)
+      )(currentRow, unsortedCells);
+      return cellsSortedSoFar.length === cells.length
+         ? cellsSortedSoFar
+         : buildSortedArr(unsortedCells, cellsSortedSoFar, currentRow + 1);
+   };
+   return R.pipe(
+      R.sortBy(cell => cell.row),
+      buildSortedArr
+   )(cells);
+};
+/********/
+
+const getAllCellReducerNames = R.map(cell => createCellKey(cell.row, cell.column))
+
+export const removeAllCellReducers = () => R.pipe(
+      managedStore.store.getState,
+      getAllCells,
+      getAllCellReducerNames,
+      managedStore.store.reducerManager.removeMany,
+      managedStore.store.replaceReducer,
+   )();

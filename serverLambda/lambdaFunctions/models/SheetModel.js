@@ -57,18 +57,4 @@ sheetSchema.statics.getSummaryCellContent = async function (id) {
    return '';
 };
 
-sheetSchema.statics.updateTitle = async function (id, title) {
-   return this.findByIdAndUpdate(
-      { _id: id },
-      { title: title },
-      { useFindAndModify: false }, //got a mongoose warning saying this must be set
-      function (err, result) {
-         if (err) {
-            console.log('error in updateTitle', err);
-         }
-         return result;
-      }
-   );
-};
-
 mongoose.model('sheet', sheetSchema);

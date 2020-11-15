@@ -1,8 +1,9 @@
-import { TRIGGERED_FETCH_SHEET, FETCHING_SHEET, FETCHED_SHEET, FETCH_SHEET_ERROR } from '../actions/fetchSheetTypes';
+import { TRIGGERED_FETCH_SHEET, FETCHING_SHEET, FETCHED_SHEET, FETCH_SHEET_ERROR } from '../actions/sheetTypes';
 import { POSTING_CREATE_SHEET, COMPLETED_CREATE_SHEET, SHEET_CREATION_FAILED } from '../actions/sheetTypes';
+import { CELLS_LOADED } from '../actions/cellTypes';
 import { isNothing } from '../helpers';
 
-const fetchSheetReducer = (state = null, action) => {
+const sheetReducer = (state = null, action) => {
    switch (action.type) {
       case TRIGGERED_FETCH_SHEET:
          if (isNothing(action.payload)) {
@@ -52,9 +53,15 @@ const fetchSheetReducer = (state = null, action) => {
             errorMessage: action.payload,
          };
 
+      case CELLS_LOADED:
+         return {
+            ...state,
+            cellsLoaded: true
+         }
+
       default:
          return state;
    }
 };
 
-export default fetchSheetReducer;
+export default sheetReducer;

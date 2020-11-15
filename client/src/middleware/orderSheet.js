@@ -8,16 +8,16 @@ import {
    COLUMN_MOVED_TO,
    SORTED_AXIS,
 } from '../actions/types';
-import { UPDATED_CELL_ } from '../actions/cellTypes';
+import { UPDATED_CELL } from '../actions/cellTypes';
 import { ROW_AXIS, COLUMN_AXIS } from '../constants';
 import {
    replacedRowFilters,
    replacedColumnFilters,
    replacedRowVisibility,
    replacedColumnVisibility,
-   hasChangedMetadata,
    clearedSortOptions,
 } from '../actions';
+import { hasChangedMetadata, } from '../actions/metadataActions';
 import moveRow from '../services/moveRow';
 import moveColumn from '../services/moveColumn';
 import sortAxis from '../services/sortAxis';
@@ -45,18 +45,14 @@ export default store => next => async action => {
       });
    };
 
-   const runCellDispatches = async updatedCells => {
-      await R.map(async cell => {
+   const runCellDispatches = updatedCells => {
+      R.map(cell => {
          hasChangedCell({
             row: cell.row,
             column: cell.column,
          });
-
-         const promisedDispatch = await store.dispatch({
-            type: UPDATED_CELL_ + cell.row + '_' + cell.column,
-            payload: cell,
-         });
-         return promisedDispatch;
+         store.dispatch({ type: UPDATED_CELL, payload: cell });
+         return null; // returning something to avoid console warning..really we just want to run the dispatch function multiple times
       })(updatedCells);
       // force clearMoveData to run on the next tick, otherwise move data is cleared before move is completed
       //so move doesn't actually happen. async-awaits didn't work, but leaving in here anyway, just in case
@@ -67,14 +63,11 @@ export default store => next => async action => {
       R.ifElse(
          R.allPass([
             // axisMoved must be present in sheet
-            // R.pipe(R.path(['sheet', axisMoved]), R.isNil, R.not),
             R.pipe(stateMetadataProp(R.__, axisMoved), isSomething),
             // axisMovedTo must be present in sheet
-            // R.pipe(R.path(['sheet', axisMovedTo]), R.isNil, R.not),
             R.pipe(stateMetadataProp(R.__, axisMovedTo), isSomething),
             // axisMoved and axisMovedTo values can't be equal
             R.pipe(
-               // state => R.equals(R.path(['sheet', axisMoved], state), R.path(['sheet', axisMovedTo], state)),
                state => R.equals(stateMetadataProp(state, axisMoved), stateMetadataProp(state, axisMovedTo)),
                R.not
             ),
@@ -91,7 +84,6 @@ export default store => next => async action => {
             moveRow,
             store
          );
-         console.log('orderSheet UPDATED_ROW_ORDER got newRowVisibility', newRowVisibility);
          // Note: if moveRow() returns an array then we get an error when trying to runCellDispatches() on it.
          // Instead here moveRow() returns an object which we convert to an array with R.values() ...and it works fine
          // same approached used with moveColumn()
@@ -109,7 +101,6 @@ export default store => next => async action => {
             moveColumn,
             store
          );
-         console.log('orderSheet UPDATED_COLUMN_ORDER got newColumnVisibility', newColumnVisibility);
          runCellDispatches(R.values(newColumnCells));
          runIfSomething(replacedColumnFilters, newColumnFilters);
          runIfSomething(replacedColumnVisibility, newColumnVisibility);
@@ -118,7 +109,6 @@ export default store => next => async action => {
 
       case SORTED_AXIS:
          const { updatedCells = [], updatedVisibility = {}, updatedFilters = {} } = sortAxis(store.getState());
-         console.log('orderSheet SORTED_AXIS got updatedVisibility', updatedVisibility);
          runIfSomething(replacedRowVisibility, updatedVisibility[ROW_AXIS]);
          runIfSomething(replacedColumnVisibility, updatedVisibility[COLUMN_AXIS]);
          runIfSomething(replacedRowFilters, updatedFilters[ROW_AXIS]);

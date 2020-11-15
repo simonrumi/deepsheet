@@ -3,91 +3,77 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { DndProvider } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
-import { triggeredFetchSheet } from '../actions/fetchSheetActions';
-
-import { nothing, isSomething } from '../helpers';
+import { triggeredFetchSheet } from '../actions/sheetActions';
+import { isNothing } from '../helpers';
 import {
-   stateTotalRows,
-   stateTotalColumns,
    stateIsLoggedIn,
    stateShowLoginModal,
    stateSheetId,
-   stateShowFilterModal, 
-   stateSheetIsCallingDb, stateMetadata, stateColumnVisibility
+   stateShowFilterModal,
+   stateSheetIsCallingDb,
+   stateMetadata,
+   stateSheetCellsLoaded,
+   stateSheetErrorMessage,
 } from '../helpers/dataStructureHelpers';
 import {
-   shouldShowRow,
-   isFirstColumn,
-   isLastVisibleItemInAxis,
    getRequiredNumItemsForAxis,
+   isVisibilityCalcutated,
 } from '../helpers/visibilityHelpers';
 import { getUserInfoFromCookie } from '../helpers/userHelpers';
-import { stateRowVisibility } from '../helpers/dataStructureHelpers';
 import { ROW_AXIS, COLUMN_AXIS, THIN_COLUMN, ROW_HEIGHT } from '../constants';
-
 import LoadingIcon from './atoms/IconLoading';
 import Header from './Header';
 import Editor from './organisms/Editor';
-import ColumnHeaders from './organisms/ColumnHeaders';
-import RowHeader from './organisms/RowHeader';
-import LastRow from './organisms/LastRow';
-import Cell from './molecules/Cell';
+import Cells from './Cells';
 import FilterModal from './organisms/FilterModal';
 import LoginModal from './organisms/LoginModal';
 import managedStore from  '../store';
 
+// TODO BUG NEXT - updating when the session has expired is not handled - need to log user in then complete action
+
+console.log('TODO: XSS defence: validate all the user input - must avoid having javascript entered into a cell, for example');
+// XSS attacks are when javascript is entered into fields and then executed by the app
+// must avoid this by escaping or URL encoding on both client and server
+// URL encode or escape content being sent from front end
+/// ...this works because if a user enters this into a form field
+/// "while(1)"
+// if executed like javascript it causes an infinite loop, but if escaped
+// "while\(1\)" 
+/// it is not valid javascript any longer 
+//
+// validator is a library that has a lot of sanitization functions in it for input
+//
+// NoSQL Map is a tool tht can test for SQL injection vulnerablitities
+
+// other ways to prevent XSS
+// whitelist allowed input
+// blacklist disallowed input (not as thorough or restrictive sa whitelisting)
+// standardize format for various kinds of data - e.g. urls always in the form https://www.mydomain.com (as oppsoed to http://mydomain.com)
+
+// to check npm packages for security issues, use nsp. (a cli tool from node)
+// there is also snyk ...more detailed upgrade info, but might cost
+
+// disallow older browsers which could have security vulnerabilities
+// and/or do all these things
+// https://moduscreate.com/blog/simple-security-lambda-edge/
+
+// make sure to assign a new session id on each login. This is to avoid trick where hacker uses someone else's session id to pretend to be that user
+
 class Sheet extends Component {
-   renderEmptyEndCell = cellKey => (
-      <Cell blankCell={true} cellKey={cellKey} classes={'border-r'} key={cellKey + '_endCell'} />
-   );
-
-   maybeEmptyEndCell = cellKey =>
-      R.ifElse(
-         isLastVisibleItemInAxis(
-            COLUMN_AXIS, // we are rendering a row, so need to check if this is the last visible column in the row
-            stateTotalColumns(managedStore.state),
-            managedStore.state
-         ),
-         this.renderEmptyEndCell,
-         nothing
-      )(cellKey);
-
-   renderRowHeader = cellKey => <RowHeader cellKey={cellKey} blankCell={false} key={'row_header_' + cellKey} />;
-
-   renderCell = cellKey => <Cell cellKey={cellKey} blankCell={false} key={cellKey} />;
-
-   maybeRowHeader = R.ifElse(isFirstColumn, this.renderRowHeader, nothing);
-
-   renderCellAndMaybeEdges = cellKey => {
-      return [this.maybeRowHeader(cellKey), this.renderCell(cellKey), this.maybeEmptyEndCell(cellKey)];
-   };
-
-   maybeCell = () =>
-      R.ifElse(shouldShowRow(stateRowVisibility(managedStore.state)), this.renderCellAndMaybeEdges, nothing);
-
-   isVisibilityCalcutated = () => stateColumnVisibility(managedStore.state) && stateRowVisibility(managedStore.state);
-
-   renderCells = () => {
-      if (
-         this.isVisibilityCalcutated() &&
-         isSomething(stateTotalRows(managedStore.state)) &&
-         this.props.cellKeys?.length > 0
-      ) {
-         return R.pipe(
-            R.map(cellKey => this.maybeCell(managedStore.state)(cellKey)),
-            R.prepend(<ColumnHeaders key="columnHeaders" />),
-            R.append(<LastRow key="lastRow" />)
-         )(this.props.cellKeys);
-      }
-   };
-
-   maybeRenderLogin = () => {
+   maybeRenderLoginOrFetchSheet = () => {
       const { userId, sessionId } = getUserInfoFromCookie();
       if (this.props.stateShowLoginModal || stateIsLoggedIn(managedStore.state) === false || !userId || !sessionId) {
          return <LoginModal />;
       }
       if (!stateSheetId(managedStore.state)) {
-         triggeredFetchSheet();
+         return R.ifElse(
+            R.pipe(
+               stateSheetErrorMessage,
+               isNothing
+            ),
+            () => triggeredFetchSheet(), // fetch the sheet if there is no sheetId and no sheet error message
+            state => <div>{stateSheetErrorMessage(state)}</div> // show the sheet error message if there's no sheetId
+         )(managedStore.state);
       }
       return null;
    };
@@ -114,7 +100,7 @@ class Sheet extends Component {
    }
 
    renderGridSizingStyle = () => {
-      if (!this.isVisibilityCalcutated()) {
+      if (!isVisibilityCalcutated()) {
          return null;
       }
       return this.getGridSizingStyle(
@@ -137,10 +123,10 @@ class Sheet extends Component {
             <Header />
             <Editor cellContent="" />
             {this.maybeRenderFilterModal(this.props.showFilterModal)}
-            {this.maybeRenderLogin()}
+            {this.maybeRenderLoginOrFetchSheet()}
             <DndProvider backend={HTML5Backend}>
                <div className="grid-container pt-1" style={this.renderGridSizingStyle()}>
-                  {this.renderCells()}
+                  <Cells /> 
                </div>
             </DndProvider>
          </div>
@@ -150,13 +136,12 @@ class Sheet extends Component {
 
 function mapStateToProps(state) {
    return {
-      sheet: state.sheet,
       showFilterModal: stateShowFilterModal(state),
       showLoginModal: stateShowLoginModal(state),
-      cellKeys: state.cellKeys,
-      sheetId: stateSheetId(state), //maybe need this to trigger updating the sheet when the sheetId object changes
+      sheetId: stateSheetId(state), // need this to trigger updating the sheet when the sheetId object changes
       sheetIsCallingDb: stateSheetIsCallingDb(state),
-      metadata: stateMetadata(state) // this is here so that sheet will update whenever metadata is changed
+      metadata: stateMetadata(state), // this is here so that sheet will update whenever metadata is changed
+      cellsLoaded: stateSheetCellsLoaded(state) // this is here so that sheet will update when the cells are loaded after fetching a new sheet
    };
 }
 export default connect(mapStateToProps, {

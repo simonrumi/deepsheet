@@ -14,10 +14,8 @@ const makeGoogleAuthCall = async (event, context) => {
          idToken: googleIdToken,
          audience: keys.googleClientID,
       });
-      console.log('got this ticket from call to client.verifyIdToken', ticket);
 
       const payload = ticket.getPayload();
-      console.log('payload received after verifying google id token', payload);
       const user = await findOrCreateUser({
          userIdFromProvider: payload['sub'],
          provider: AUTH_PROVIDER_GOOGLE,
@@ -25,7 +23,6 @@ const makeGoogleAuthCall = async (event, context) => {
       });
       const session = await applyAuthSession(user);
       const cookie = makeCookie(user._id, session._id);
-      console.log('makeGoogleAuthCall made cookie', cookie);
       return {
          statusCode: 200,
          headers: {

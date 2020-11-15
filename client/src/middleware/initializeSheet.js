@@ -1,14 +1,14 @@
 import * as R from 'ramda';
-import { TRIGGERED_FETCH_SHEET } from '../actions/fetchSheetTypes';
-import { COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
+import { TRIGGERED_FETCH_SHEET, COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
 import { fetchSheet, fetchSheetByUserId } from '../services/sheetServices';
-import { updatedCellKeys } from '../actions/cellActions';
-import { fetchedSheet, fetchingSheet, fetchSheetError } from '../actions/fetchSheetActions';
+import { fetchedSheet, fetchingSheet, fetchSheetError } from '../actions/sheetActions';
+import { cellsLoaded, clearedAllCellKeys } from '../actions/cellActions';
 import { clearedFocus } from '../actions/focusActions';
 import { menuHidden } from '../actions/menuActions';
 import { createCellReducers, populateCellsInStore } from '../reducers/cellReducers';
-import { isNothing, isSomething } from '../helpers';
+import { isNothing, isSomething, arrayContainsSomething } from '../helpers';
 import { applyFilters, initializeAxesVisibility } from '../helpers/visibilityHelpers';
+import { removeAllCellReducers, clearCells } from '../helpers/cellHelpers';
 import {
    dbMetadata,
    dbCells,
@@ -18,40 +18,15 @@ import {
 } from '../helpers/dataStructureHelpers';
 import { getUserInfoFromCookie } from '../helpers/userHelpers';
 
-/***** ordering cells by row then column */
-const filterToCurrentRow = R.curry((rowIndex, cells) => R.filter(cell => cell.row === rowIndex)(cells));
-const sortByColumns = R.sortBy(cell => cell.column);
-
-const orderCells = cells => {
-   const buildSortedArr = (unsortedCells, sortedCells = [], currentRow = 0) => {
-      const cellsSortedSoFar = R.pipe(
-         filterToCurrentRow,
-         sortByColumns,
-         R.concat(sortedCells)
-      )(currentRow, unsortedCells);
-      return cellsSortedSoFar.length === cells.length
-         ? cellsSortedSoFar
-         : buildSortedArr(unsortedCells, cellsSortedSoFar, currentRow + 1);
-   };
-   return R.pipe(
-      R.sortBy(cell => cell.row),
-      buildSortedArr
-   )(cells);
-};
-/********/
-
-const createCellKeys = R.map(cell => 'cell_' + cell.row + '_' + cell.column);
-
 const initializeCells = sheet => {
-   if (isSomething(dbMetadata(sheet))) {
+   if (isSomething(dbMetadata(sheet)) && isSomething(dbCells(sheet)) && arrayContainsSomething(dbCells(sheet))) {
       initializeAxesVisibility();
       createCellReducers(sheet);
       populateCellsInStore(sheet);
-      R.pipe(dbCells, orderCells, createCellKeys, updatedCellKeys)(sheet);
       applyFilters(sheet);
       clearedFocus();
    } else {
-      console.warn('WARNING: App.render.initializeCells had no data to operate on');
+      console.warn('WARNING: Missing Data');
    }
 };
 
@@ -69,17 +44,22 @@ const runFetchSheet = async ({ store, sheetId, userId }) => {
    }
    fetchingSheet({ sheetId, userId });
    try {
+      console.log('initializeSheet runFetchSheet got sheetId', sheetId, 'userId', userId);
       const sheet = await runFetchFunctionForId({ sheetId, userId });
+      console.log('initializeSheet runFetchSheet got sheet', sheet);
       // if sheet has some data then dispatch the fetchedSheet action
-      R.when(
-         isSomething,
-         // note that R.juxt applies the argument sheet to all fns in its array
-         R.juxt([
-            R.pipe(fetchedSheet, store.dispatch), 
-            R.pipe(menuHidden, store.dispatch), 
-            initializeCells
-         ])
-      )(sheet);
+      return isNothing(sheet) 
+         ? null 
+         : R.when(
+            isSomething,
+            // note that R.juxt applies the argument sheet to all fns in its array
+            R.juxt([
+               R.pipe(fetchedSheet, store.dispatch), 
+               R.pipe(menuHidden, store.dispatch), 
+               initializeCells,
+               cellsLoaded,
+            ])
+         )(sheet);
    } catch (err) {
       fetchSheetError(err);
    }
@@ -87,12 +67,14 @@ const runFetchSheet = async ({ store, sheetId, userId }) => {
 
 const getOrFindSheet = async (store, sheetId) => {
    const { userId } = getUserInfoFromCookie();
+   console.log('initializeSheet getOrFindSheet got sheetId', sheetId, 'userId', userId);
    return await runFetchSheet({ store, sheetId, userId });
 };
 
 export default store => next => async action => {
    switch (action.type) {
       case TRIGGERED_FETCH_SHEET:
+         console.log('initializeSheet TRIGGERED_FETCH_SHEET');
          const state = store.getState();
          if (
             stateIsLoggedIn(state) === false ||
@@ -101,12 +83,22 @@ export default store => next => async action => {
          ) {
             return null;
          }
-         await getOrFindSheet(store, action.payload);
+         const sheetResult = await getOrFindSheet(store, action.payload);
+         console.log('initialize sheet sheetResult', sheetResult);
+         if (isNothing(sheetResult)) {
+            fetchSheetError('No sheet found');
+            return null;
+         }
          break;
 
       case COMPLETED_CREATE_SHEET:
+         // clear out any previous cells and cell reducers before loading the new cells. removeAllCellReducers() must run before clearCells() 
+         removeAllCellReducers();
+         clearCells(store.getState());
+         clearedAllCellKeys();
          initializeCells(action.payload.sheet);
-         break;
+         next(action); // finish with this action before we fire the next
+         return;
 
       default:
    }

@@ -1,13 +1,16 @@
 import * as R from 'ramda';
 import managedStore from '../store';
 import {
-   UPDATED_CELL_,
-   UPDATED_CONTENT_OF_CELL_,
-   UPDATED_CELL_KEYS,
+   UPDATED_CELL,
+   UPDATED_CONTENT_OF_CELL,
    POSTING_UPDATED_CELLS,
    HAS_ADDED_CELL,
    HAS_CHANGED_CELL,
-   POSTING_DELETE_SUBSHEET_ID_,
+   POSTING_DELETE_SUBSHEET_ID,
+   CELLS_LOADED,
+   ADDED_CELL_KEYS,
+   REMOVED_CELL_KEYS,
+   CLEARED_ALL_CELL_KEYS,
 } from './cellTypes';
 import { isNothing } from '../helpers';
 
@@ -16,19 +19,15 @@ export const updatedCell = cell => {
       console.warn('WARNING: updatedCell could not create an action. It received', cell);
       return;
    }
+
    managedStore.store.dispatch({
-      type: UPDATED_CELL_ + cell.row + '_' + cell.column,
+      type: UPDATED_CELL,
       payload: cell,
    });
 };
 
 export const updatedCellBeingEdited = cell => {
-   const updateCellType = UPDATED_CONTENT_OF_CELL_ + cell.row + '_' + cell.column;
-   managedStore.store.dispatch({ type: updateCellType, payload: cell });
-};
-
-export const updatedCellKeys = keys => {
-   managedStore.store.dispatch({ type: UPDATED_CELL_KEYS, payload: keys });
+   managedStore.store.dispatch({ type: UPDATED_CONTENT_OF_CELL, payload: cell }); 
 };
 
 export const updatedCells = async ({ sheetId, cells }) => {
@@ -36,9 +35,18 @@ export const updatedCells = async ({ sheetId, cells }) => {
 };
 
 export const deleteSubsheetId = R.curry(async (row, column, text, subsheetId, sheetId) => {
+   console.log('cellActions deleteSubsheetId dispatching POSTING_DELETE_SUBSHEET_ID');
    managedStore.store.dispatch({
-      type: POSTING_DELETE_SUBSHEET_ID_ + row + '_' + column,
-      payload: { row, column, text, sheetId, subsheetId },
+      type: POSTING_DELETE_SUBSHEET_ID,
+      payload: {
+         row, 
+         column, 
+         content: {
+            text, 
+            subsheetId
+         },
+         sheetId, 
+      }
    });
 });
 
@@ -55,3 +63,29 @@ export const hasAddedCell = cellCoordinates => {
       payload: cellCoordinates,
    });
 };
+
+export const cellsLoaded = () => {
+   managedStore.store.dispatch({
+      type: CELLS_LOADED,
+   });
+}
+
+export const addedCellKeys = cellKey => {
+   managedStore.store.dispatch({
+      type: ADDED_CELL_KEYS,
+      payload: cellKey
+   });
+}
+
+export const removedCellKeys = cellKey => {
+   managedStore.store.dispatch({
+      type: REMOVED_CELL_KEYS,
+      payload: cellKey
+   });
+}
+
+export const clearedAllCellKeys = () => {
+   managedStore.store.dispatch({
+      type: CLEARED_ALL_CELL_KEYS,
+   });
+}

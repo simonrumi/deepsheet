@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { GoogleLogin /* GoogleLogout */ } from 'react-google-login';
 import axios from 'axios';
 import { loggedIn, loggedOut } from '../../actions/authActions';
-import { triggeredFetchSheet } from '../../actions/fetchSheetActions';
+import { triggeredFetchSheet } from '../../actions/sheetActions';
 import { GOOGLE_AUTH_URL, GOOGLE_CLIENT_ID } from '../../constants';
 
 class GoogleLoginBtn extends Component {

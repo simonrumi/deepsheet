@@ -61,7 +61,6 @@ const withAuth = func => async (event, context) => {
          const context = args[1];
          try {
             const isAuthorized = await validateUserSession(event.headers);
-            console.log('authMiddleware, isAuthorized', isAuthorized);
             if (!isAuthorized && AUTH_ON) {
                return standardAuthError;
             }

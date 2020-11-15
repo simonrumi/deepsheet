@@ -6,13 +6,17 @@ const SheetModel = mongoose.model('sheet');
 require('./models/UserModel');
 const UserModel = mongoose.model('user');
 require('./models/SessionModel');
-const { isSomething, isNothing } = require('./helpers');
-const { getAllSheetsForUser, createNewSheet } = require('./helpers/sheetHelpers');
-const { addSheetToUser, checkAuthorization } = require('./helpers/userHelpers');
-const { updateCells, deleteSubsheetId, findCellByRowAndColumn } = require('./helpers/updateCellsHelpers');
+const { isSomething, isNothing, arrayContainsSomething, runIfSomething } = require('./helpers');
+const { getAllSheetsForUser, createNewSheet, getLatestSheet } = require('./helpers/sheetHelpers');
+const { addSheetToUser } = require('./helpers/userHelpers');
+const {
+   updateAndAddCells,
+   deleteSubsheetId,
+   findCellByRowAndColumn,
+   maybeGetUpdatedSummaryCell,
+   updateSubsheetCellContent,
+} = require('./helpers/updateCellsHelpers');
 const { AuthenticationError } = require('apollo-server-lambda');
-
-// important TODO - before all mutations make sure the user is the owner of the sheet!
 
 module.exports = db => ({
    Query: {
@@ -65,6 +69,7 @@ module.exports = db => ({
       },
    },
 
+   // TODO check userId is owner of the sheet before making any mutations. In future will have to check that non-owners have write permission 
    Mutation: {
       createSheet: async (parent, args, context) => {
          const sheetObj = createNewSheet(args.input);
@@ -84,21 +89,20 @@ module.exports = db => ({
          }
       },
 
-      // TODO update this to get the most recently modified sheet of that user
       sheetByUserId: async (parent, args, context) => {
          try {
             const user = await UserModel.findById(args.userId);
             if (isNothing(user)) {
                return new Error('no user found');
             }
-            const sheetId = user.sheets[0];
-            if (isNothing(sheetId)) {
+            if (isNothing(user.sheets) || !arrayContainsSomething(user.sheets)) {
                const defaultSheet = createNewSheet(args);
                const newSheet = await new SheetModel(defaultSheet).save();
                await addSheetToUser({ user, sheetId: newSheet._id });
                return newSheet;
             }
-            const sheetResult = await SheetModel.findOne(sheetId);
+            // const sheetResult = await SheetModel.findOne(sheetId);
+            const sheetResult = await getLatestSheet(user.sheets);
             return sheetResult;
          } catch (err) {
             console.log('Error finding sheet by user id:', err);
@@ -108,7 +112,11 @@ module.exports = db => ({
 
       changeTitle: async (parent, { id, title }, context) => {
          try {
-            return await SheetModel.updateTitle(id, title);
+            const sheetDoc = await SheetModel.findById(id);
+            sheetDoc.title = title;
+            sheetDoc.metadata.lastUpdated = new Date();
+            const savedSheet = await sheetDoc.save();
+            return savedSheet;
          } catch (err) {
             console.log('Error updating title:', err);
             return err;
@@ -117,6 +125,7 @@ module.exports = db => ({
 
       updateMetadata: async (parent, args, context) => {
          try {
+            // args.input has all the metadata fields (see below) plus the sheet's id
             const sheetDoc = await SheetModel.findById(args.input.id);
             const newMetadata = R.mergeAll([
                sheetDoc.toObject().metadata, //toObject() gets rid of any weird props included from mongoose
@@ -133,6 +142,7 @@ module.exports = db => ({
                   ],
                   args.input
                ),
+               { lastUpdated: new Date() }
             ]);
             sheetDoc.metadata = newMetadata;
             const savedSheet = await sheetDoc.save();
@@ -147,8 +157,27 @@ module.exports = db => ({
          const { sheetId, cells, userId } = args.input;
          try {
             const sheetDoc = await SheetModel.findById(sheetId);
-            const updatedCells = updateCells(sheetDoc.cells, cells);
+            if (sheetDoc.users.owner != userId) {
+               return new Error('User not authorized to update sheet');
+            }
+            const updatedCells = updateAndAddCells(sheetDoc.cells, cells);
+            const updatedSummaryCell = maybeGetUpdatedSummaryCell(sheetDoc, updatedCells);
+            if (isSomething(updatedSummaryCell)) {
+               const parentSheetId = sheetDoc.metadata.parentSheetId;
+               if (parentSheetId) {
+                  const parentSheetDoc = await SheetModel.findById(parentSheetId);
+                  const updatedParentCells = runIfSomething(
+                     updateSubsheetCellContent, // fn to run
+                     parentSheetDoc, // only run fn if this is not empty
+                     updatedSummaryCell, sheetId // additional parameters for updateSubsheetCellContent
+                  );
+                  parentSheetDoc.cells = updatedParentCells;
+                  parentSheetDoc.metadata.lastUpdated = new Date();
+                  await parentSheetDoc.save();
+               }
+            }
             sheetDoc.cells = updatedCells;
+            sheetDoc.metadata.lastUpdated = new Date();
             return await sheetDoc.save();
          } catch (err) {
             console.log('Error updating cells:', err);
@@ -165,6 +194,7 @@ module.exports = db => ({
             const sheetDoc = await SheetModel.findById(sheetId);
             const updatedCells = deleteSubsheetId(sheetDoc.cells, row, column, text);
             sheetDoc.cells = updatedCells;
+            sheetDoc.metadata.lastUpdated = new Date();
             await sheetDoc.save();
 
             // remove the reference to the parent from the subsheet

@@ -38,14 +38,11 @@ const findUser = async ({ userIdFromProvider, provider }) => {
          return null;
       }
    }
-   console.log('findUser found nothing so returning null');
    return null;
 };
 
 const findOrCreateUser = async ({ userIdFromProvider, provider, token }) => {
-   console.log('findOrCreateUser got userIdFromProvider', userIdFromProvider, 'provider', provider, 'token', token);
    const existingUser = await findUser({ userIdFromProvider, provider });
-   console.log('findOrCreateUser got existingUser', existingUser);
    if (isSomething(existingUser)) {
       return existingUser;
    }
@@ -64,17 +61,13 @@ const createSession = async () => {
 };
 
 const refreshSession = async sessionId => {
-   console.log('refreshSession got sessionId', sessionId);
    try {
       const currentSession = await SessionModel.findById(sessionId);
-      console.log('refreshSession got currentSession', currentSession);
       if (currentSession) {
          currentSession.lastAccessed = Date.now();
          const refreshsedSession = await currentSession.save();
-         console.log('refreshSession returning refreshsedSession', refreshsedSession);
          return refreshsedSession;
       }
-      console.log('refreshSession got no currentSession so returning null');
       return null;
    } catch (err) {
       console.log('Error refreshing session', err);
@@ -87,7 +80,6 @@ const getSession = async user => {
       try {
          const session = await refreshSession(user.session);
          if (session) {
-            console.log('getSession refreshed session and got session', session);
             return session;
          }
       } catch (err) {
@@ -97,7 +89,6 @@ const getSession = async user => {
    }
    try {
       const session = await createSession();
-      console.log('getSession created new session', session);
       return session;
    } catch (err) {
       throw new Error('could not create new session' + err);
@@ -106,11 +97,8 @@ const getSession = async user => {
 
 const applyAuthSession = async user => {
    // note: should be guaranteed to have a user and an accessToken at this point
-   console.log('applyAuthSession got user', user);
    const session = await getSession(user);
-   console.log('applyAuthSession, got session', session);
    user.session = session._id;
-   console.log('applyAuthSession, user obj to be saved is', user);
    await user.save();
    return session;
 };
@@ -143,9 +131,7 @@ const getUserInfoFromReq = reqHeaders => {
 // graphql uses this to make sure it is ok to run queries
 const validateUserSession = async reqHeaders => {
    const { userId, sessionId } = getUserInfoFromReq(reqHeaders);
-   console.log('validateUserSession got userId', userId, 'sessionId', sessionId);
    if (isNothing(userId) || isNothing(sessionId)) {
-      console.log('no user or session, so need to do login process');
       return false;
    }
    try {
@@ -167,10 +153,8 @@ const validateUserSession = async reqHeaders => {
 };
 
 const createUser = async userDetails => {
-   console.log('createUser got userDetails', userDetails);
    try {
       const userArr = await UserModel.create([userDetails]);
-      console.log('createUser created', userArr[0]);
       if (!arrayContainsSomething(userArr)) {
          throw new Error('error creating user - db returned nothing');
       }
@@ -182,13 +166,11 @@ const createUser = async userDetails => {
 };
 
 const addSheetToUser = async ({ user, userId, sheetId }) => {
-   console.log('started addSheetToUser, got user', user, 'userId', userId, 'sheetId', sheetId);
    if (isNothing(user) && isNothing(userId)) {
       throw new Error('must supply either a user or a userId when adding a sheet');
    }
    if (isNothing(user)) {
       user = await UserModel.findById(userId);
-      console.log('userHelpers addSheetToUser found user from userId', user);
       if (isNothing(user)) {
          throw new Error('Error adding sheet to user: no user found');
       }

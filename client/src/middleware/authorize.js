@@ -1,5 +1,5 @@
 import { POSTING_UPDATED_CELLS } from '../actions/cellTypes';
-import { TRIGGERED_FETCH_SHEET } from '../actions/fetchSheetTypes';
+import { TRIGGERED_FETCH_SHEET } from '../actions/sheetTypes';
 import { POSTING_UPDATED_METADATA } from '../actions/metadataTypes';
 import { FETCHING_SHEETS } from '../actions/sheetsTypes';
 import { POSTING_CREATE_SHEET } from '../actions/sheetTypes';

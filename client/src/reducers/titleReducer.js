@@ -5,7 +5,7 @@ import {
    TITLE_UPDATE_FAILED,
    TITLE_EDIT_CANCELLED,
 } from '../actions/titleTypes';
-import { FETCHED_SHEET } from '../actions/fetchSheetTypes';
+import { FETCHED_SHEET } from '../actions/sheetTypes';
 import { COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
 import { isSomething } from '../helpers';
 

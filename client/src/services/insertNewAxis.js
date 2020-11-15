@@ -1,20 +1,19 @@
 import * as R from 'ramda';
 import managedStore from '../store';
-import { cellReducerFactory } from '../reducers/cellReducers';
 import { updatedCell, hasAddedCell } from '../actions/cellActions';
 import { isSomething } from '../helpers';
-
-// returns copy of cellReducers with and added cellReducer
-export const addOneCellReducer = (cellKey, row, column, cellReducers = {}) =>
-   R.pipe(cellReducerFactory, R.assoc(cellKey, R.__, cellReducers))(row, column);
+import { createCellKey } from '../helpers/cellHelpers';
 
 export const addNewCellsToStore = cells => R.map(cell => updatedCell(cell), cells);
 
+export const createUpdatesForNewCellKeys = newCells => R.map(newCell => createCellKey(newCell.row, newCell.column), newCells);
+
 export const addNewCellsToCellDbUpdates = R.map(cell => {
    hasAddedCell({ row: cell.row, column: cell.column });
-   return null; // don;t need to return anything, but adding this to clear a warning in the console
+   return null; // don't need to return anything, but adding this to clear a warning in the console
 });
 
+// TODO this doesn't seem to be used - you'd think it was needed when adding new rows and columns...but if not, remove it
 export const addManyCellReducersToStore = cellReducers => {
    const combineNewReducers = managedStore.store.reducerManager.addMany(cellReducers);
    managedStore.store.replaceReducer(combineNewReducers);

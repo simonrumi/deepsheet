@@ -1,11 +1,11 @@
 const R = require('ramda');
-const { isSomething, isNothing } = require('./index');
+const { isSomething, isNothing, arrayContainsSomething } = require('./index');
 
 const findCellByRowAndColumn = R.curry((row, column, cellsArr) => {
    return R.find(cell => R.propEq('row', row, cell) && R.propEq('column', column, cell))(cellsArr);
 });
 
-const updateCells = (originalCells, updatedCells) => {
+const updateAndAddCells = (originalCells, updatedCells) => {
    const originalCellsUpdated = R.map(cell => {
       const updatedCell = findCellByRowAndColumn(cell.row, cell.column, updatedCells);
       return isSomething(updatedCell) ? updatedCell : cell;
@@ -20,8 +20,8 @@ const updateCells = (originalCells, updatedCells) => {
          ? R.concat(originalCellsUpdated, newCells)
          : originalCellsUpdated
       : isSomething(newCells)
-      ? newCells
-      : null;
+         ? newCells
+         : null;
 };
 
 const deleteSubsheetId = (originalCells, row, column, text = '') =>
@@ -33,4 +33,23 @@ const deleteSubsheetId = (originalCells, row, column, text = '') =>
       return cell;
    })(originalCells);
 
-module.exports = { findCellByRowAndColumn, updateCells, deleteSubsheetId };
+const maybeGetUpdatedSummaryCell = (sheet, updatedCells) => {
+   const { row, column } = sheet.metadata.summaryCell;
+   const updatedSummaryCell = R.filter(cell => cell.row === row && cell.column === column, updatedCells);
+   return arrayContainsSomething(updatedSummaryCell) ? updatedSummaryCell[0] : null;
+}
+
+const updateSubsheetCellContent = (parentSheet, updatedSubsheetSummaryCell, sheetId) => R.map(
+      parentCell => parentCell.content.subsheetId == sheetId
+            ? { ...parentCell, content: { ...parentCell.content, text: updatedSubsheetSummaryCell?.content?.text } }
+            : parentCell,
+      parentSheet.cells
+   );
+
+module.exports = {
+   findCellByRowAndColumn,
+   updateAndAddCells,
+   deleteSubsheetId,
+   maybeGetUpdatedSummaryCell,
+   updateSubsheetCellContent,
+};

@@ -10,7 +10,7 @@ class RowAdder extends Component {
             <div className="flex items-center px-2 py-2">
                <IconAdd
                   classes={'flex-1 h-3 w-3'}
-                  onClickFn={() => insertNewRow(this.props.cellKeys, this.props.state)}
+                  onClickFn={insertNewRow}
                />
             </div>
          </div>
@@ -20,8 +20,6 @@ class RowAdder extends Component {
 
 function mapStateToProps(state, ownProps) {
    return {
-      state,
-      cellKeys: state.cellKeys,
       classes: ownProps.classes,
    };
 }

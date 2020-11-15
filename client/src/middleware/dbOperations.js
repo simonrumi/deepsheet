@@ -3,16 +3,16 @@ import managedStore from '../store';
 import { POSTING_UPDATED_TITLE, COMPLETED_TITLE_UPDATE, TITLE_UPDATE_FAILED } from '../actions/titleTypes';
 import { POSTING_CREATE_SHEET, COMPLETED_CREATE_SHEET, SHEET_CREATION_FAILED } from '../actions/sheetTypes';
 import { POSTING_UPDATED_METADATA, COMPLETED_SAVE_METADATA, METADATA_UPDATE_FAILED } from '../actions/metadataTypes';
-import { TRIGGERED_FETCH_SHEET } from '../actions/fetchSheetTypes';
+import { TRIGGERED_FETCH_SHEET } from '../actions/sheetTypes';
 import { FETCHING_SHEETS } from '../actions/sheetsTypes';
 import {
    POSTING_UPDATED_CELLS,
    COMPLETED_SAVE_CELLS,
-   COMPLETED_SAVE_CELL_,
+   COMPLETED_SAVE_CELL,
    CELLS_UPDATE_FAILED,
-   POSTING_DELETE_SUBSHEET_ID_,
-   COMPLETED_DELETE_SUBSHEET_ID_,
-   DELETE_SUBSHEET_ID_FAILED_,
+   POSTING_DELETE_SUBSHEET_ID,
+   COMPLETED_DELETE_SUBSHEET_ID,
+   DELETE_SUBSHEET_ID_FAILED,
 } from '../actions/cellTypes';
 import { updatedCells } from '../actions/cellActions';
 import { updateTitleInDB } from '../services/sheetServices';
@@ -54,33 +54,6 @@ const createNewSheet = async ({ userId, rows, columns, title, parentSheetId, sum
 };
 
 export default store => next => async action => {
-   // TODO need to handle cell types with embedded row & col numbers separately for the moment, until...
-   // ....need to refactor the state setup for cells, then can put this stuff into the switch statement
-   const postingDeleteSubsheetId = new RegExp(`^${POSTING_DELETE_SUBSHEET_ID_}`, 'ig');
-   if (postingDeleteSubsheetId.test(action.type)) {
-      next(action); // get this action to the reducer before we do the next steps
-      const { row, column, text, sheetId, subsheetId } = action.payload;
-      try {
-         const response = await deleteSubsheetIdMutation({ sheetId, row, column, text, subsheetId });
-         managedStore.store.dispatch({
-            type: COMPLETED_DELETE_SUBSHEET_ID_ + row + '_' + column,
-            payload: {
-               cell: response,
-            },
-         });
-      } catch (err) {
-         console.error('Error deleting subsheetId:', err);
-         managedStore.store.dispatch({
-            type: DELETE_SUBSHEET_ID_FAILED_ + row + '_' + column,
-            payload: {
-               errorMessage:
-                  'did not successfully delete the subsheetId of cell ' + row + ',' + column + 'in the db. err:' + err,
-            },
-         });
-      }
-      return;
-   }
-
    switch (action.type) {
       case POSTING_UPDATED_TITLE:
          next(action); // get this action to the reducer before we do the next steps
@@ -149,6 +122,12 @@ export default store => next => async action => {
                ...action.payload, // contains sheetId, cells
                userId,
             });
+            console.log(
+               'dbOperations, case POSTING_UPDATED_CELLS about to dispatch COMPLETED_SAVE_CELLS with updatedCells',
+               response,
+               'for sheetId',
+               action.payload.sheetId
+            );
             managedStore.store.dispatch({
                type: COMPLETED_SAVE_CELLS,
                payload: {
@@ -157,9 +136,18 @@ export default store => next => async action => {
                },
             });
             R.map(cell => {
-               const type = COMPLETED_SAVE_CELL_ + cell.row + '_' + cell.column;
-               managedStore.store.dispatch({ type });
-               return null; // no return value needed, putting here to stop a warning from showing in the console
+               // TODO - to fix BUG need to pass the sheetId in the COMPLETED_SAVE_CELL action and then somehow check it in the reducer before making the update
+               console.log(
+                  'dbOperations, case POSTING_UPDATED_CELLS about to dispatch COMPLETED_SAVE_CELL with cell',
+                  cell,
+                  'and we know the sheetId is',
+                  action.payload.sheetId
+               );
+               managedStore.store.dispatch({
+                  type: COMPLETED_SAVE_CELL,
+                  payload: { ...cell, sheetId: action.payload.sheetId },
+               });
+               return null; // no return value needed - putting here to stop a warning from showing in the console
             })(action.payload.cells);
          } catch (err) {
             console.error('did not successfully update the cells in the db: err:', err);
@@ -170,14 +158,30 @@ export default store => next => async action => {
          }
          break;
 
+      case POSTING_DELETE_SUBSHEET_ID:
+         next(action); // get this action to the reducer before we do the next steps, so the UI can display "waiting" state
+         try {
+            const response = await deleteSubsheetIdMutation(action.payload); // action.payload contains { row, column, text, sheetId, subsheetId }
+            managedStore.store.dispatch({
+               type: COMPLETED_DELETE_SUBSHEET_ID,
+               payload: response,
+            });
+         } catch (err) {
+            console.error('Error deleting subsheetId:', err);
+            managedStore.store.dispatch({
+               type: DELETE_SUBSHEET_ID_FAILED,
+               payload: {
+                  ...action.payload,
+                  errorMessage:
+                     'did not successfully delete the subsheetId of a cell in the db. err:' + err,
+               },
+            });
+         }
+         break;
+
       case TRIGGERED_FETCH_SHEET:
          next(action); // get this action to the reducer before we do the next steps, so the UI can display "waiting" state
          break;
-      // remember: for importing a db operation
-      // make sure to get data sent in POSTING_ action
-      // next(action) first
-      // update the response from the mutation so we don't have to do response.data.someMutationName
-      // put break at the end!
 
       case FETCHING_SHEETS:
          next(action); // get this action to the reducer before we do the next steps, so the UI can display "waiting" state

@@ -5,62 +5,56 @@
  * seem worthwhile generalizing them further.
  **/
 import * as R from 'ramda';
-import { updatedTotalRows, updatedRowVisibility, hasChangedMetadata } from '../actions';
-import { updatedCellKeys } from '../actions/cellActions';
-import { createCellKey } from '../helpers/cellHelpers';
+import managedStore from '../store';
+import { updatedTotalRows, updatedRowVisibility, } from '../actions';
+import { addedCellKeys } from '../actions/cellActions';
+import { hasChangedMetadata, } from '../actions/metadataActions';
 import { shouldShowColumn } from '../helpers/visibilityHelpers';
 import {
-   addOneCellReducer,
    addNewCellsToStore,
    addNewCellsToCellDbUpdates,
-   addManyCellReducersToStore,
    maybeAddAxisVisibilityEntry,
+   createUpdatesForNewCellKeys,
 } from './insertNewAxis';
 import {
    stateTotalColumns,
    stateTotalRows,
    stateColumnVisibility,
    stateRowVisibility,
-   // stateMetadata,
 } from '../helpers/dataStructureHelpers';
+import { addCellReducers } from '../reducers/cellReducers';
 
-const makeNewCell = (rowIndex, columnIndex, columnVisibility) => {
-   return {
+const makeNewRowCell = (rowIndex, columnIndex, columnVisibility) => {
+   const partialCell = {
       row: rowIndex,
       column: columnIndex,
       content: { text: '', subsheetId: null },
-      visible: shouldShowColumn(columnVisibility, columnIndex),
       isStale: true,
-   };
+   }
+   return R.pipe(
+      shouldShowColumn,
+      R.assoc('visible', R.__, partialCell)
+   )(columnVisibility, columnIndex);
+
 };
 
-const addOneCell = (rowIndex, columnIndex, columnVisibility, updates) => {
-   const cellKey = createCellKey(rowIndex, columnIndex);
-   const cellKeys = R.append(cellKey, updates.cellKeys);
-   const cellReducers = addOneCellReducer(cellKey, rowIndex, columnIndex, updates.cellReducers);
-   const cell = makeNewCell(rowIndex, columnIndex, columnVisibility);
-   const cells = R.append(cell, updates.cells);
-   return { cellReducers, cellKeys, cells };
-};
+const addOneCell = (rowIndex, columnIndex, columnVisibility, cells) => R.pipe(
+      makeNewRowCell,
+      R.append(R.__, cells),
+   )(rowIndex, columnIndex, columnVisibility);
 
 const createUpdatesForNewCells = (
-   updates, //contains { cellReducers, cellKeys, cells }
+   cells,
    columnVisibility,
    rowIndex,
    totalColumns,
    columnIndex = 0
 ) => {
    if (totalColumns === columnIndex) {
-      return updates;
+      return cells;
    }
-   console.log(
-      'insertNewRow.createUpdatesForNewCells got rowIndex',
-      rowIndex,
-      'adding One Cell for columnIndex',
-      columnIndex
-   );
    return createUpdatesForNewCells(
-      addOneCell(rowIndex, columnIndex, columnVisibility, updates),
+      addOneCell(rowIndex, columnIndex, columnVisibility, cells),
       columnVisibility,
       rowIndex,
       totalColumns,
@@ -68,23 +62,26 @@ const createUpdatesForNewCells = (
    );
 };
 
-const insertNewRow = (cellKeys, state) => {
-   const totalRows = stateTotalRows(state);
-   console.log('insertNewRow got stateTotalRows(state)', totalRows);
-   const totalColumns = stateTotalColumns(state);
-   const rowVisibility = stateRowVisibility(state);
-   const columnVisibility = stateColumnVisibility(state);
-   const updates = createUpdatesForNewCells(
-      { cellKeys: cellKeys, cellReducers: {}, cells: [] },
+const insertNewRow = () => {
+   const totalRows = stateTotalRows(managedStore.state);
+   const rowVisibility = stateRowVisibility(managedStore.state);
+   const columnVisibility = stateColumnVisibility(managedStore.state);
+   const updatedCells = createUpdatesForNewCells(
+      [], // initial value for updatedCells
       columnVisibility,
-      totalRows,
-      totalColumns
-   ); // totalRows, being the count of existing rows, will give us the index of the next row
-   updatedCellKeys(updates.cellKeys);
-   addManyCellReducersToStore(updates.cellReducers);
-   maybeAddAxisVisibilityEntry(totalRows, rowVisibility, updatedRowVisibility);
-   addNewCellsToStore(updates.cells);
-   addNewCellsToCellDbUpdates(updates.cells);
+      totalRows, // being the count of existing rows, this gives us the index of the next row
+      stateTotalColumns(managedStore.state)
+   );
+   const updatedCellKeys = createUpdatesForNewCellKeys(updatedCells);
+   maybeAddAxisVisibilityEntry(
+      totalRows, 
+      rowVisibility, 
+      updatedRowVisibility
+   );
+   addCellReducers(updatedCells);
+   addedCellKeys(updatedCellKeys);
+   addNewCellsToStore(updatedCells);
+   addNewCellsToCellDbUpdates(updatedCells);
    updatedTotalRows(totalRows + 1);
    hasChangedMetadata();
 };

@@ -2,16 +2,15 @@ import * as R from 'ramda';
 import { reducer as reduxFormReducer } from 'redux-form';
 import { removeObjectFromArrayByKeyValue, isSomething, maybeHasPath } from '../helpers';
 import { updatedAxisFilters } from '../helpers/visibilityHelpers';
-import { cellKeyReducer, cellDbUpdatesReducer } from './cellReducers';
+import { cellDbUpdatesReducer, cellKeysReducer } from './cellReducers';
 import { focusReducer } from './focusReducer';
 import titleReducer from './titleReducer';
-import fetchSheetReducer from './fetchSheetReducer';
+import sheetReducer from './sheetReducer';
 import sheetsReducer from './sheetsReducer';
 import menuReducer from './menuReducer';
 import { editorReducer, editorRefReducer } from './editorReducers';
 import authReducer from './authReducers';
 import {
-   HAS_CHANGED_METADATA,
    TOGGLED_SHOW_FILTER_MODAL,
    UPDATED_COLUMN_VISIBILITY,
    REPLACED_COLUMN_VISIBILITY,
@@ -32,8 +31,9 @@ import {
    UPDATED_SORT_OPTIONS,
    CLEARED_SORT_OPTIONS,
 } from '../actions/types';
+import { HAS_CHANGED_METADATA, } from '../actions/metadataTypes';
 import { TITLE_EDIT_CANCELLED } from '../actions/titleTypes';
-import { FETCHED_SHEET } from '../actions/fetchSheetTypes';
+import { FETCHED_SHEET } from '../actions/sheetTypes';
 import { POSTING_UPDATED_METADATA, COMPLETED_SAVE_METADATA, METADATA_UPDATE_FAILED } from '../actions/metadataTypes';
 import { COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
 
@@ -181,7 +181,7 @@ export const filterModalReducer = (state = { showFilterModal: false }, action) =
 };
 
 export const staticReducers = {
-   sheetId: fetchSheetReducer,
+   sheet: sheetReducer,
    sheets: sheetsReducer,
    metadata: metadataReducer,
    editorRef: editorRefReducer,
@@ -198,8 +198,8 @@ export const staticReducers = {
       },
    }),
    filterModal: filterModalReducer,
-   cellKeys: cellKeyReducer,
    cellDbUpdates: cellDbUpdatesReducer,
+   cellKeys: cellKeysReducer,
    menu: menuReducer,
    focus: focusReducer,
    auth: authReducer,
