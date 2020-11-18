@@ -11,6 +11,10 @@ module.exports = {
             'burnt-orange': '#B87B32',
             'vibrant-burnt-orange': '#E69A3E',
             'light-light-orange-transparent': 'rgba(255, 230, 199, 0.5)',
+            'pale-purple': '#A588B8',
+            'vibrant-purple': '#A23EE6',
+            'pale-yellow': '#D9D9A0',
+            'vibrant-yellow': '#E6E63E'
          },
          inset: {
             4: '4px',

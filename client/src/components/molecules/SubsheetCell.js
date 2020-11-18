@@ -86,7 +86,7 @@ const SubsheetCell = props => {
 
    const innerDivClassNames = cellHasFocus => {
       const cellBaseClasses = 'm-px p-px ';
-      const borderClasses = cellHasFocus ? 'border-2 border-subdued-blue' : 'border border-burnt-orange';
+      const borderClasses = cellHasFocus ? 'border-2 border-subdued-blue' : 'border border-pale-yellow';
       return cellBaseClasses + borderClasses;
    };
 

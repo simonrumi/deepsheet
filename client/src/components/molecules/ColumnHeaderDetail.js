@@ -5,7 +5,9 @@ import { ItemTypes } from '../../constants';
 import { indexToColumnLetter, isSomething, arrayContainsSomething, getObjectFromArrayByKeyValue } from '../../helpers';
 import { stateColumnFilters } from '../../helpers/dataStructureHelpers';
 import { toggledShowFilterModal, columnMoved } from '../../actions';
+import { updatedFrozenColumns } from '../../actions/metadataActions';
 import IconFilter from '../atoms/IconFilter';
+import SnowflakeIcon from '../atoms/IconSnowflake';
 
 const dragSourceSpec = {
    beginDrag: (props, monitor, component) => {
@@ -51,6 +53,11 @@ class ColumnHeaderDetail extends Component {
       return connectDragSource(
          <div className="flex w-full h-full cursor-col-resize">
             <div className="w-3/4 text-center self-center text-grey-blue">{columnLetter}</div>
+            <SnowflakeIcon
+               classes="pt-1 pl-1 pb-1 w-1/4"
+               switchedOn={this.props.frozen}
+               onClickFn={() => updatedFrozenColumns([{ index: this.props.index, isFrozen: !this.props.frozen }])}
+            />
             <IconFilter
                classes="pt-1 w-1/4"
                height="65%"
@@ -69,6 +76,7 @@ function mapStateToProps(state, ownProps) {
       showFilterModal: state.showFilterModal,
       index: ownProps.index,
       columnFilters: stateColumnFilters(state),
+      frozen: ownProps.frozen
    };
 }
 

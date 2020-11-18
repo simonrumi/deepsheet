@@ -136,13 +136,6 @@ export default store => next => async action => {
                },
             });
             R.map(cell => {
-               // TODO - to fix BUG need to pass the sheetId in the COMPLETED_SAVE_CELL action and then somehow check it in the reducer before making the update
-               console.log(
-                  'dbOperations, case POSTING_UPDATED_CELLS about to dispatch COMPLETED_SAVE_CELL with cell',
-                  cell,
-                  'and we know the sheetId is',
-                  action.payload.sheetId
-               );
                managedStore.store.dispatch({
                   type: COMPLETED_SAVE_CELL,
                   payload: { ...cell, sheetId: action.payload.sheetId },

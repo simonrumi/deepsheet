@@ -1,7 +1,7 @@
 import * as R from 'ramda';
 import { reducer as reduxFormReducer } from 'redux-form';
 import { removeObjectFromArrayByKeyValue, isSomething, maybeHasPath } from '../helpers';
-import { updatedAxisFilters } from '../helpers/visibilityHelpers';
+import { updatedAxisFilters, updateOrAddPayloadToState } from '../helpers/visibilityHelpers';
 import { cellDbUpdatesReducer, cellKeysReducer } from './cellReducers';
 import { focusReducer } from './focusReducer';
 import titleReducer from './titleReducer';
@@ -34,7 +34,13 @@ import {
 import { HAS_CHANGED_METADATA, } from '../actions/metadataTypes';
 import { TITLE_EDIT_CANCELLED } from '../actions/titleTypes';
 import { FETCHED_SHEET } from '../actions/sheetTypes';
-import { POSTING_UPDATED_METADATA, COMPLETED_SAVE_METADATA, METADATA_UPDATE_FAILED } from '../actions/metadataTypes';
+import { 
+   POSTING_UPDATED_METADATA, 
+   COMPLETED_SAVE_METADATA, 
+   METADATA_UPDATE_FAILED, 
+   UPDATED_FROZEN_ROWS, 
+   UPDATED_FROZEN_COLUMNS 
+} from '../actions/metadataTypes';
 import { COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
 
 const metadataReducer = (state = {}, action) => {
@@ -132,6 +138,20 @@ const metadataReducer = (state = {}, action) => {
             rowSortDirection: null,
             columnSortByIndex: null,
             columnSortDirection: null,
+         };
+
+      case UPDATED_FROZEN_ROWS:
+         const frozenRows = updateOrAddPayloadToState(action.payload, state.frozenRows);
+         return {
+            ...state, 
+            frozenRows
+         }
+
+      case UPDATED_FROZEN_COLUMNS:
+         const frozenColumns = updateOrAddPayloadToState(action.payload, state.frozenColumns);
+         return {
+            ...state,
+            frozenColumns
          };
 
       case POSTING_UPDATED_METADATA:

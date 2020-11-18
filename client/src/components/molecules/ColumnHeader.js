@@ -1,14 +1,17 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { toggledShowFilterModal } from '../../actions';
+import { stateFrozenColumns } from '../../helpers/dataStructureHelpers';
+import { getObjectFromArrayByKeyValue } from '../../helpers';
 import ColumnHeaderDetail from './ColumnHeaderDetail';
 import ColumnDropTarget from './ColumnDropTarget';
 
 class ColumnHeader extends Component {
    render() {
+      const columnFrozen = getObjectFromArrayByKeyValue('index', this.props.index, this.props.frozenColumns);
       return (
          <div className="flex flex-row justify-between w-full h-full border-t border-l p-0">
-            <ColumnHeaderDetail index={this.props.index} />
+            <ColumnHeaderDetail index={this.props.index} frozen={columnFrozen?.isFrozen || false} />
             <ColumnDropTarget
                key={'columnDropTarget_' + this.props.index}
                columnIndex={this.props.index}
@@ -24,6 +27,7 @@ function mapStateToProps(state, ownProps) {
       showFilterModal: state.showFilterModal,
       index: ownProps.index,
       classes: ownProps.classes,
+      frozenColumns: stateFrozenColumns(state),
    };
 }
 

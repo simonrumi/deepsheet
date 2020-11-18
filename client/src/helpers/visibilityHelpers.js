@@ -205,3 +205,16 @@ export const initializeAxesVisibility = () => {
 export const isVisibilityCalcutated = () => 
    stateColumnVisibility(managedStore.state) 
    && stateRowVisibility(managedStore.state);
+
+export const updateOrAddPayloadToState = (payload, state) => {
+   const filterState = R.filter(stateVal =>
+      R.pipe(
+         R.find(payloadVal => payloadVal.index === stateVal.index), // if the state has an entry with the same index as payloadVal (an updated frozen row)
+         isNothing // filter that entry out of the state
+      )(payload)
+   );
+   return R.pipe(
+      filterState, 
+      R.concat(payload) // concat the added or updated frozen rows (from the payload) with the filtered state
+   )(state || []); 
+}

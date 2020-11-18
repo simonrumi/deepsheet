@@ -4,7 +4,7 @@
  **/
 
 import * as R from 'ramda';
-import { forLoopReduce } from '../helpers';
+import { forLoopReduce, getObjectFromArrayByKeyValue, isSomething } from '../helpers';
 import { createNewAxisVisibility, createNewAxisFilters } from '../helpers/sortHelpers';
 import { getAllCells } from '../helpers/cellHelpers';
 import {
@@ -14,6 +14,7 @@ import {
    stateColumnSortByIndex,
    cellColumn,
    cellRow,
+   stateFrozenRows
 } from '../helpers/dataStructureHelpers';
 import { SORT_INCREASING, ROW_AXIS } from '../constants';
 import { compareCellContent, compareCellContentDecreasing } from './sortAxis';
@@ -48,24 +49,57 @@ const createNewCellArrayAndRowVisibilityAndRowFilters = R.curry((state, mapOfCha
    };
 });
 
-const createMapOfChangedRows = newCellOrder =>
-   forLoopReduce(
+const createMapOfChangedRows = newCellOrder => {
+   return forLoopReduce(
       (accumulator, index) => {
          if (index !== newCellOrder[index].row) {
-            return [...accumulator, [newCellOrder[index].row, index]];
+            return [...accumulator, [newCellOrder[index].row, index]]; // adds a tuple with the [original row index, new row index] 
          }
          return accumulator;
       },
       [],
       newCellOrder.length
    );
+}
 
 const columnSortFunc = state =>
    stateColumnSortDirection(state) === SORT_INCREASING ? compareCellContent : compareCellContentDecreasing;
 
+const columnSort = R.curry((state, cellArrays) => {
+   const sortedMoveableCells = R.sort(columnSortFunc(state), cellArrays.moveableCells);
+   const sortedCells = R.reduce(
+      (accumulator, frozenCell) =>
+         R.insert(
+            frozenCell.row, // index to insert at
+            frozenCell, // element to insert
+            accumulator // list to insert into
+         ),
+      sortedMoveableCells, // initial list
+      cellArrays.frozenCells
+   );
+   return sortedCells;
+}); 
+
+const separateFrozenCells = R.curry((state, cellsInColumn) => {
+   const frozenRows = stateFrozenRows(state);
+   return R.reduce(
+      (accumulator, cell) => {
+         const frozen = getObjectFromArrayByKeyValue('index', cell.row, frozenRows);
+         if (isSomething(frozen) && frozen.isFrozen) {
+            accumulator.frozenCells = R.append(cell, accumulator.frozenCells);
+            return accumulator
+         }
+         accumulator.moveableCells = R.append(cell, accumulator.moveableCells);
+         return accumulator
+      },
+      {moveableCells: [], frozenCells: []},
+      cellsInColumn
+   );
+})
+
 const compareCellRow = (cell1, cell2) => {
    if (cell1.row === cell2.row) {
-      return 0;
+      return 0; 
    }
    return cell1.row > cell2.row ? 1 : -1;
 };
@@ -83,7 +117,8 @@ export default state =>
    R.pipe(
       getCellsInColumn,
       R.sort(compareCellRow),
-      R.sort(columnSortFunc(state)),
+      separateFrozenCells(state),
+      columnSort(state),
       createMapOfChangedRows,
       createNewCellArrayAndRowVisibilityAndRowFilters(state),
    )(state);

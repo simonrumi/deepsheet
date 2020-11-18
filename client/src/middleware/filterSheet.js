@@ -228,7 +228,6 @@ export default store => next => async action => {
    switch (action.type) {
       case HIDE_FILTERED:
          const { filterOptions, isInitializingSheet } = action.payload;
-         // TODO handle case where no sheet data returned from db
          hideFiltered(filterOptions, store);
          if (!isInitializingSheet) {
             hasChangedMetadata();

@@ -2,11 +2,14 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import * as R from 'ramda';
 import { DragSource } from 'react-dnd';
+import managedStore from '../../store';
 import { ItemTypes } from '../../constants';
 import { indexToRowNumber, isSomething, isNothing } from '../../helpers';
 import { cellRow, stateRowFilters } from '../../helpers/dataStructureHelpers';
 import { toggledShowFilterModal, rowMoved } from '../../actions';
+import { updatedFrozenRows } from '../../actions/metadataActions';
 import IconFilter from '../atoms/IconFilter';
+import SnowflakeIcon from '../atoms/IconSnowflake';
 
 const dragSourceSpec = {
    beginDrag: (props, monitor, component) => {
@@ -57,19 +60,26 @@ class RowHeaderDetail extends Component {
       const { connectDragSource } = this.props;
 
       return connectDragSource(
-         <div className="flex w-full h-full cursor-row-resize">
-            <div key={'rowNum_' + row} className="w-2/4 text-center self-center text-grey-blue">
-               {rowNum}
-            </div>
-            <IconFilter
-               key={'iconFilter_' + row}
-               classes={'w-2/4 text-center'}
-               height="100%"
-               width="100%"
-               fitlerEngaged={this.isFilterEngaged(row, stateRowFilters(this.props.state))}
-               onClickFn={() => this.showFilterModalForRow(row)}
-               testId={'row' + rowNum}
+         <div className="flex flex-col w-full h-full justify-evenly">
+            <SnowflakeIcon
+               classes="w-1/2 mt-1 ml-4"
+               switchedOn={this.props.frozen}
+               onClickFn={() => updatedFrozenRows([{ index: row, isFrozen: !this.props.frozen }])}
             />
+            <div className="flex cursor-row-resize">
+               <div key={'rowNum_' + row} className="w-2/4 text-center self-center text-grey-blue">
+                  {rowNum}
+               </div>
+               <IconFilter
+                  key={'iconFilter_' + row}
+                  classes={'w-2/4 text-center'}
+                  height="100%"
+                  width="100%"
+                  fitlerEngaged={this.isFilterEngaged(row, stateRowFilters(managedStore.state))}
+                  onClickFn={() => this.showFilterModalForRow(row)}
+                  testId={'row' + rowNum}
+               />
+            </div>
          </div>
       );
    }
@@ -77,10 +87,9 @@ class RowHeaderDetail extends Component {
 
 function mapStateToProps(state, ownProps) {
    return {
-      state,  // TODO remove this so it doesnt' update every time the state updates - just used in one place - stateRowFilters
       showFilterModal: state.showFilterModal,
       cell: ownProps.cell,
-      sheet: state.sheet,
+      frozen: ownProps.frozen
    };
 }
 

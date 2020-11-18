@@ -1,8 +1,10 @@
-/* this file is very similar to sortColumn.js but making these functions generalized to handle either columns or rows
+/** 
+ * this file is very similar to sortColumn.js but making these functions generalized to handle either columns or rows
  * would make the functions hard to understand, so leaving as is
- */
+ **/
+
 import * as R from 'ramda';
-import { forLoopReduce } from '../helpers';
+import { forLoopReduce, getObjectFromArrayByKeyValue, isSomething } from '../helpers';
 import { createNewAxisVisibility, createNewAxisFilters } from '../helpers/sortHelpers';
 import { getAllCells } from '../helpers/cellHelpers';
 import {
@@ -11,7 +13,8 @@ import {
    stateRowSortByIndex,
    stateRowSortDirection,
    cellRow,
-   cellColumn
+   cellColumn,
+   stateFrozenColumns
 } from '../helpers/dataStructureHelpers';
 import { SORT_INCREASING, COLUMN_AXIS } from '../constants';
 import { compareCellContent, compareCellContentDecreasing } from './sortAxis';
@@ -65,6 +68,39 @@ const createMapOfChangedColumns = newCellOrder =>
 const rowSortFunc = state =>
    stateRowSortDirection(state) === SORT_INCREASING ? compareCellContent : compareCellContentDecreasing;
 
+const rowSort = R.curry((state, cellArrays) => {
+   const sortedMoveableCells = R.sort(rowSortFunc(state), cellArrays.moveableCells);
+   const sortedCells = R.reduce(
+      (accumulator, frozenCell) =>
+         R.insert(
+            frozenCell.column, // index to insert at
+            frozenCell, // element to insert
+            accumulator // list to insert into
+         ),
+      sortedMoveableCells, // initial list
+      cellArrays.frozenCells
+   );
+   return sortedCells;
+}); 
+   
+const separateFrozenCells = R.curry((state, cellsInRow) => {
+   const frozenColumns = stateFrozenColumns(state);
+   return R.reduce(
+      (accumulator, cell) => {
+         const frozen = getObjectFromArrayByKeyValue('index', cell.column, frozenColumns);
+         if (isSomething(frozen) && frozen.isFrozen) {
+            accumulator.frozenCells = R.append(cell, accumulator.frozenCells);
+            return accumulator
+         }
+         accumulator.moveableCells = R.append(cell, accumulator.moveableCells);
+         return accumulator
+      },
+      {moveableCells: [], frozenCells: []},
+      cellsInRow
+   );
+})
+
+
 const compareCellColumn = (cell1, cell2) => {
    if (cell1.column === cell2.column) {
       return 0;
@@ -85,7 +121,8 @@ export default state =>
    R.pipe(
       getCellsInRow,
       R.sort(compareCellColumn),
-      R.sort(rowSortFunc(state)),
+      separateFrozenCells(state),
+      rowSort(state),
       createMapOfChangedColumns,
       createNewCellArrayAndColumnVisibilityAndColumnFilters(state)
    )(state);

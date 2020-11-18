@@ -109,6 +109,8 @@ export const stateMetadataIsStale = subObjectGetter(stateMetadataLens, 'isStale'
 export const stateMetadataIsCallingDb = subObjectGetter(stateMetadataLens, 'isCallingDb');
 export const stateMetadataErrorMessage = subObjectGetter(stateMetadataLens, 'errorMessage');
 export const stateMetadataLastUpdated = subObjectGetter(stateMetadataLens, 'lastUpdated');
+export const stateFrozenRows = subObjectGetter(stateMetadataLens, 'frozenRows');
+export const stateFrozenColumns = subObjectGetter(stateMetadataLens, 'frozenColumns');
 
 /************************************************ STATE FILTER MODAL **********************************************/
 const stateFilterModalLens = R.lensProp('filterModal');

@@ -176,6 +176,3 @@ export const sheetByUserIdMutation = async userId => {
    });
    return result.data.sheetByUserId;
 };
-
-
-/// TODO delete subsheet id not working
