@@ -1,4 +1,5 @@
 import * as R from 'ramda';
+import managedStore from '../store';
 import { ROW_AXIS, COLUMN_AXIS } from '../constants';
 import {
    REPLACED_COLUMN_VISIBILITY,
@@ -10,10 +11,10 @@ import {
 import { updatedColumnFilters, updatedRowFilters, toggledShowFilterModal } from '../actions';
 import { hasChangedMetadata, } from '../actions/metadataActions';
 import { updatedCell } from '../actions/cellActions';
-import { getObjectFromArrayByKeyValue, isNothing, arrayContainsSomething, forLoopMap } from '../helpers';
+import { getObjectFromArrayByKeyValue, isNothing, isSomething, arrayContainsSomething, forLoopMap } from '../helpers';
 import { getTotalForAxis, getAxisVisibilityName } from '../helpers/visibilityHelpers';
 import { getCellFromStore, getAllCells } from '../helpers/cellHelpers';
-import { stateMetadataProp } from '../helpers/dataStructureHelpers';
+import { stateMetadataProp, stateFrozenRows, stateFrozenColumns } from '../helpers/dataStructureHelpers';
 
 /* these are used by multiple functions below */
 const getAxis = data =>
@@ -77,14 +78,6 @@ const isCellShownByFilter = R.curry((cell, filter, axisOfFilter) => {
 const getRowAndColumn = (axis, itemIndex, otherAxisIndex) =>
    axis === ROW_AXIS ? { row: itemIndex, column: otherAxisIndex } : { row: otherAxisIndex, column: itemIndex };
 
-const getCellsInAxisItem = R.curry((data, axis, itemIndex, _) => {
-   const totalInOtherAxis = getTotalForAxis(getOtherAxis(axis), getStateFromData(data));
-   return forLoopMap(otherAxisIndex => {
-      const { row, column } = getRowAndColumn(axis, itemIndex, otherAxisIndex);
-      return getCellFromStore({row, column, state: getStateFromData(data)});
-   }, totalInOtherAxis);
-});
-
 const checkCellsAgainstFilters = R.curry((axis, otherAxisFilters, cellsInAxisItem) => {
    return R.reduce((cellAccumulator, cell) => {
       return (
@@ -98,7 +91,29 @@ const checkCellsAgainstFilters = R.curry((axis, otherAxisFilters, cellsInAxisIte
    }, true)(cellsInAxisItem);
 });
 
+const getCellsInAxisItem = R.curry((data, axis, itemIndex, _) => {
+   const totalInOtherAxis = getTotalForAxis(getOtherAxis(axis), getStateFromData(data));
+   return forLoopMap(otherAxisIndex => {
+      const { row, column } = getRowAndColumn(axis, itemIndex, otherAxisIndex);
+      return getCellFromStore({row, column, state: getStateFromData(data)});
+   }, totalInOtherAxis);
+});
+
+const getAxisFreezes = axis => axis === ROW_AXIS ? stateFrozenRows(managedStore.state) : stateFrozenColumns(managedStore.state);
+
+const isAxisItemFrozen = (axis, itemIndex) => {
+   const axisFreezes = getAxisFreezes(axis);
+   const frozen = getObjectFromArrayByKeyValue('index', itemIndex, axisFreezes);
+   if (isSomething(frozen) && frozen.isFrozen) {
+      return true;
+   }
+   return false;
+};
+
 const getVisibilityForCellsInAxisItem = (data, axis, itemIndex) => {
+   if (isAxisItemFrozen(axis, itemIndex)) {
+      return true;
+   }
    const otherAxisFilters = getFilters(getOtherAxis(axis), getStateFromData(data));
    return R.ifElse(
       // if there are no filters

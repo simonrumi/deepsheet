@@ -41,7 +41,6 @@ const cellReducerFactory = (cell, sheetId) =>
             return { ...state, ...payloadCell, isStale: true };
    
          case COMPLETED_SAVE_CELL:
-            console.log('cell Reducer got COMPLETED_SAVE_CELL, state was', state, 'payloadCell', payloadCell);
             return createUpdatedCellState(payloadCell, state, sheetId);
          
          case POSTING_DELETE_SUBSHEET_ID:
