@@ -5,8 +5,9 @@ import { DragSource } from 'react-dnd';
 import managedStore from '../../store';
 import { ItemTypes } from '../../constants';
 import { indexToRowNumber, isSomething, isNothing } from '../../helpers';
-import { cellRow, stateRowFilters } from '../../helpers/dataStructureHelpers';
+import { cellRow, stateRowFilters, stateShowFilterModal } from '../../helpers/dataStructureHelpers';
 import { toggledShowFilterModal, rowMoved } from '../../actions';
+import { startedUndoableAction, completedUndoableAction } from '../../actions/undoActions';
 import { updatedFrozenRows } from '../../actions/metadataActions';
 import IconFilter from '../atoms/IconFilter';
 import SnowflakeIcon from '../atoms/IconSnowflake';
@@ -37,6 +38,7 @@ class RowHeaderDetail extends Component {
       super(props);
       this.showFilterModalForRow = this.showFilterModalForRow.bind(this);
       this.isFilterEngaged = this.isFilterEngaged.bind(this);
+      this.toggleFreeze = this.toggleFreeze.bind(this);
    }
 
    showFilterModalForRow = rowIndex => this.props.toggledShowFilterModal(rowIndex, null);
@@ -52,6 +54,12 @@ class RowHeaderDetail extends Component {
       )(rowFilters);
    };
 
+   toggleFreeze = () => {
+      startedUndoableAction();
+      updatedFrozenRows([{ index: this.props.cell.row, isFrozen: !this.props.frozen }]);
+      completedUndoableAction('toggled freeze for row ' + this.props.index);
+   }
+
    render() {
       const row = cellRow(this.props.cell);
       const rowNum = indexToRowNumber(row);
@@ -64,7 +72,7 @@ class RowHeaderDetail extends Component {
             <SnowflakeIcon
                classes="w-1/2 mt-1 ml-4"
                switchedOn={this.props.frozen}
-               onClickFn={() => updatedFrozenRows([{ index: row, isFrozen: !this.props.frozen }])}
+               onClickFn={this.toggleFreeze}
             />
             <div className="flex cursor-row-resize">
                <div key={'rowNum_' + row} className="w-2/4 text-center self-center text-grey-blue">
@@ -87,7 +95,7 @@ class RowHeaderDetail extends Component {
 
 function mapStateToProps(state, ownProps) {
    return {
-      showFilterModal: state.showFilterModal,
+      showFilterModal: stateShowFilterModal(state),
       cell: ownProps.cell,
       frozen: ownProps.frozen
    };

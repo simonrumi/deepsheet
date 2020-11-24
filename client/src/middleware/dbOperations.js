@@ -122,12 +122,6 @@ export default store => next => async action => {
                ...action.payload, // contains sheetId, cells
                userId,
             });
-            console.log(
-               'dbOperations, case POSTING_UPDATED_CELLS about to dispatch COMPLETED_SAVE_CELLS with updatedCells',
-               response,
-               'for sheetId',
-               action.payload.sheetId
-            );
             managedStore.store.dispatch({
                type: COMPLETED_SAVE_CELLS,
                payload: {

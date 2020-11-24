@@ -1,20 +1,28 @@
 import React from 'react';
 import * as R from 'ramda';
+import managedStore from '../../store';
 import { connect } from 'react-redux';
 import { openedTitleEditor } from '../../actions/titleActions';
 import { menuHidden } from '../../actions/menuActions';
+import { undid, redid } from '../../actions/undoActions';
 import { loadSheet, saveAllUpdates } from '../../services/sheetServices';
+import { arrayContainsSomething } from '../../helpers';
 import {
    stateParentSheetId,
    stateIsStale,
    stateIsCallingDb,
    stateErrorMessages,
+   stateTitleText,
+   statePast,
+   stateFuture,
 } from '../../helpers/dataStructureHelpers';
 import Heading from '../atoms/Heading';
 import IconEdit from '../atoms/IconEdit';
 import IconUpArrow from '../atoms/IconUpArrow';
 import SaveIcon from '../atoms/IconSave';
 import LoadingIcon from '../atoms/IconLoading';
+import UndoIcon from '../atoms/IconUndo';
+import RedoIcon from '../atoms/IconRedo';
 
 class SheetHeader extends React.Component {
    constructor(props) {
@@ -25,17 +33,17 @@ class SheetHeader extends React.Component {
    }
 
    async handleSave() {
-      await this.props.saveAllUpdates(this.props.state);
+      await this.props.saveAllUpdates(managedStore.state);
    }
 
    renderUpArrow() {
-      if (stateParentSheetId(this.props.state)) {
+      if (stateParentSheetId(managedStore.state)) {
          return (
             <IconUpArrow
                height="1.5em"
                width="1.5em"
                classes="pl-2"
-               onClickFn={() => R.pipe(stateParentSheetId, loadSheet(this.props.state))(this.props.state)}
+               onClickFn={() => R.pipe(stateParentSheetId, loadSheet(managedStore.state))(managedStore.state)}
                data-testid="titleUpArrow"
             />
          );
@@ -44,21 +52,33 @@ class SheetHeader extends React.Component {
    }
 
    renderSaveIcon() {
-      if (stateIsCallingDb(this.props.state)) {
+      if (this.props.isCallingDb) {
          return <LoadingIcon height="2em" width="2em" classes="pr-2" />;
       }
-      if (stateIsStale(this.props.state)) {
-         const classes = stateErrorMessages(this.props.state) ? 'pr-2 text-burnt-orange ' : 'pr-2 ';
+      if (this.props.isStale) {
+         const classes = stateErrorMessages(managedStore.state) ? 'pr-2 text-burnt-orange ' : 'pr-2 ';
          return <SaveIcon height="1.5em" width="1.5em" classes={classes} onClickFn={this.handleSave} />;
       }
+   }
+
+   renderUndoRedoIcons() {
+      const undoClasses = arrayContainsSomething(this.props.past) ? 'text-subdued-blue hover:text-vibrant-blue pr-2' : 'text-grey-blue pr-2';
+      const redoClasses = arrayContainsSomething(this.props.future) ? 'text-subdued-blue hover:text-vibrant-blue' : 'text-grey-blue';
+      return (
+         <div className="flex items-center justify-between pr-2">
+            <UndoIcon height="1.5em" width="1.5em" classes={undoClasses} onClickFn={undid} />
+            <RedoIcon height="1.5em" width="1.5em" classes={redoClasses} onClickFn={redid} />
+         </div>
+      );
    }
 
    render() {
       return (
          <div className="flex items-center justify-between px-2 py-1" onClick={this.props.menuHidden} key="SheetHeader">
-            <Heading text={this.props.title.text} classes="pr-2" />
+            <Heading text={this.props.title} classes="pr-2" />
             <div className="flex items-end justify-between">
                {this.renderSaveIcon()}
+               {this.renderUndoRedoIcons()}
                <IconEdit height="1.5em" width="1.5em" onClickFn={() => this.props.openedTitleEditor(true)} />
                {this.renderUpArrow()}
             </div>
@@ -69,8 +89,11 @@ class SheetHeader extends React.Component {
 
 function mapStateToProps(state) {
    return {
-      state,
-      title: state.title,
+      title: stateTitleText(state),
+      past: statePast(state),
+      future: stateFuture(state),
+      isStale: stateIsStale(state),
+      isCallingDb: stateIsCallingDb(state),
    };
 }
 

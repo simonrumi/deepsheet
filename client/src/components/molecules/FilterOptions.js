@@ -7,7 +7,13 @@ import Checkbox from './Checkbox';
 import Button from '../atoms/Button';
 import { clearedAllFilters, updatedFilter } from '../../actions';
 import { isSomething, getObjectFromArrayByKeyValue } from '../../helpers';
-import { stateRowFilters, stateColumnFilters } from '../../helpers/dataStructureHelpers';
+import {
+   stateRowFilters,
+   stateColumnFilters,
+   stateFilterRowIndex,
+   stateFilterColumnIndex,
+   stateShowFilterModal,
+} from '../../helpers/dataStructureHelpers';
 
 class FilterOptions extends Component {
    constructor(props) {
@@ -22,15 +28,18 @@ class FilterOptions extends Component {
          regex: formValues.regex,
          showFilterModal: false,
          rowIndex: this.props.rowIndex,
-         colIndex: this.props.colIndex,
+         columnIndex: this.props.columnIndex,
       });
    };
 
    renderRegexCheckbox = formProps => <Checkbox formProps={formProps} testId="regexCheckbox" />;
 
-   renderFilterInput = formProps => (
-      <TextInput formProps={formProps} testId="filterInput" placeholder="placeholder value here" />
-   );
+   renderFilterInput = formProps => {
+      console.log('FilterOptions.renderFilterInput got formProps', formProps); // TODO BUG - this line not even getting called when values entered into the form
+      return (
+         <TextInput formProps={formProps} testId="filterInput" placeholder="placeholder value here" />
+      );
+   }
 
    renderCaseSensitiveCheckbox = formProps => <Checkbox formProps={formProps} testId="caseSensitiveCheckbox" />;
 
@@ -79,6 +88,7 @@ class FilterOptions extends Component {
 const validateForm = formValues => {
    const errors = {};
    // add error checking here, object keys should be the same as the Field names
+   console.log('TODO: filterOptions.js validateForm() should make sure there is no executable code being entered');
    return errors;
 };
 
@@ -90,13 +100,13 @@ const filterForm = reduxForm({
 const getInitialFilterValues = state => {
    const existingColumnFilter = getObjectFromArrayByKeyValue(
       'index',
-      state.filterModal.colIndex,
+      stateFilterColumnIndex(state),
       stateColumnFilters(state)
    );
    if (isSomething(existingColumnFilter)) {
       return existingColumnFilter;
    }
-   const existingRowFilter = getObjectFromArrayByKeyValue('index', state.filterModal.rowIndex, stateRowFilters(state));
+   const existingRowFilter = getObjectFromArrayByKeyValue('index', stateFilterRowIndex(state), stateRowFilters(state));
    if (isSomething(existingRowFilter)) {
       return existingRowFilter;
    }
@@ -105,10 +115,10 @@ const getInitialFilterValues = state => {
 
 function mapStateToProps(state, ownProps) {
    return {
-      showFilterModal: state.filterModal.showFilterModal,
-      rowIndex: state.filterModal.rowIndex,
-      colIndex: state.filterModal.colIndex,
-      initialValues: getInitialFilterValues(state),
+      showFilterModal: stateShowFilterModal(state),
+      rowIndex: stateFilterRowIndex(state),
+      columnIndex: stateFilterColumnIndex(state),
+      initialValues: getInitialFilterValues(state), // TODO not using this????
    };
 }
 

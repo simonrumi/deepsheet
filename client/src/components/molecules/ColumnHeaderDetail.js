@@ -3,8 +3,9 @@ import { connect } from 'react-redux';
 import { DragSource } from 'react-dnd';
 import { ItemTypes } from '../../constants';
 import { indexToColumnLetter, isSomething, arrayContainsSomething, getObjectFromArrayByKeyValue } from '../../helpers';
-import { stateColumnFilters } from '../../helpers/dataStructureHelpers';
+import { stateColumnFilters, stateShowFilterModal } from '../../helpers/dataStructureHelpers';
 import { toggledShowFilterModal, columnMoved } from '../../actions';
+import { startedUndoableAction, completedUndoableAction } from '../../actions/undoActions';
 import { updatedFrozenColumns } from '../../actions/metadataActions';
 import IconFilter from '../atoms/IconFilter';
 import SnowflakeIcon from '../atoms/IconSnowflake';
@@ -32,17 +33,24 @@ class ColumnHeaderDetail extends Component {
    constructor(props) {
       super(props);
       this.showFilterModalForColumn = this.showFilterModalForColumn.bind(this);
+      this.toggleFreeze = this.toggleFreeze.bind(this);
    }
 
    showFilterModalForColumn = () => this.props.toggledShowFilterModal(null, this.props.index);
 
    isFilterEngaged = (columnFilters, columnIndex) => {
-      if (isSomething(columnFilters) && arrayContainsSomething(columnFilters)) {
+      if (arrayContainsSomething(columnFilters)) {
          const filterAtColumnIndex = getObjectFromArrayByKeyValue('index', columnIndex, columnFilters);
          return isSomething(filterAtColumnIndex) && isSomething(filterAtColumnIndex.filterExpression);
       }
       return false;
    };
+
+   toggleFreeze = () => {
+      startedUndoableAction();
+      updatedFrozenColumns([{ index: this.props.index, isFrozen: !this.props.frozen }]);
+      completedUndoableAction('toggled freeze for column ' + this.props.index);
+   }
 
    render() {
       const columnLetter = indexToColumnLetter(this.props.index);
@@ -56,7 +64,7 @@ class ColumnHeaderDetail extends Component {
             <SnowflakeIcon
                classes="pt-1 pl-1 pb-1 w-1/4"
                switchedOn={this.props.frozen}
-               onClickFn={() => updatedFrozenColumns([{ index: this.props.index, isFrozen: !this.props.frozen }])}
+               onClickFn={this.toggleFreeze}
             />
             <IconFilter
                classes="pt-1 w-1/4"
@@ -73,7 +81,7 @@ class ColumnHeaderDetail extends Component {
 
 function mapStateToProps(state, ownProps) {
    return {
-      showFilterModal: state.showFilterModal,
+      showFilterModal: stateShowFilterModal(state),
       index: ownProps.index,
       columnFilters: stateColumnFilters(state),
       frozen: ownProps.frozen

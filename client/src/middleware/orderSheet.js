@@ -7,7 +7,7 @@ import {
    COLUMN_MOVED,
    COLUMN_MOVED_TO,
    SORTED_AXIS,
-} from '../actions/types';
+} from '../actions/metadataTypes';
 import { UPDATED_CELL } from '../actions/cellTypes';
 import { ROW_AXIS, COLUMN_AXIS } from '../constants';
 import {
@@ -18,6 +18,7 @@ import {
    clearedSortOptions,
 } from '../actions';
 import { hasChangedMetadata, } from '../actions/metadataActions';
+import { completedUndoableAction } from '../actions/undoActions';
 import moveRow from '../services/moveRow';
 import moveColumn from '../services/moveColumn';
 import sortAxis from '../services/sortAxis';
@@ -115,6 +116,7 @@ export default store => next => async action => {
          runIfSomething(replacedColumnFilters, updatedFilters[COLUMN_AXIS]);
          runCellDispatches(updatedCells);
          clearedSortOptions();
+         completedUndoableAction();
          break;
 
       default:

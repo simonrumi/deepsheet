@@ -4,6 +4,8 @@ import * as R from 'ramda';
 import { updatedEditor } from '../../actions/editorActions';
 import { updatedCellBeingEdited, hasChangedCell } from '../../actions/cellActions';
 import { isSomething, isNothing } from '../../helpers';
+import { stateEditor, stateEditorContent, stateEditorRow, stateEditorColumn, stateEditorRef } from '../../helpers/dataStructureHelpers';
+import { completedUndoableAction } from '../../actions/undoActions'; 
 import EditorInput from '../atoms/EditorInput';
 
 class Editor extends Component {
@@ -14,6 +16,7 @@ class Editor extends Component {
    }
 
    handleBlur = () => {
+      completedUndoableAction('ended editing cell at row ' + this.props.editorRow + ', column ' + this.props.editorColumn);
       //this must happen 1 tick later so that clicking on the newDoc icon will get registered
       window.setTimeout(() => {
          this.props.updatedEditor({});
@@ -24,16 +27,16 @@ class Editor extends Component {
    handleChange = event => {
       event.preventDefault();
       const newCellData = {
-         row: this.props.editor.row,
-         column: this.props.editor.column,
+         row: this.props.editorRow,
+         column: this.props.editorColumn,
          content: { text: event.target.value },
          isStale: true,
       };
       this.props.updatedEditor(newCellData);
       this.props.updatedCellBeingEdited(newCellData);
       this.props.hasChangedCell({
-         row: this.props.editor.row,
-         column: this.props.editor.column,
+         row: this.props.editorRow,
+         column: this.props.editorColumn,
       });
    };
 
@@ -45,14 +48,14 @@ class Editor extends Component {
       const value = R.cond([
          [isNothing, () => ''],
          [isSomething, R.prop('text')],
-      ])(this.props.editor.content);
+      ])(this.props.editorContent);
 
       return (
          <EditorInput
             classes={this.renderClasses()}
             value={value}
             handleChange={this.handleChange}
-            disabled={this.props.editor.content ? false : true}
+            disabled={this.props.editorContent ? false : true}
             handleBlur={this.handleBlur}
          />
       );
@@ -61,9 +64,11 @@ class Editor extends Component {
 
 const mapStateToProps = (state, ownProps) => {
    return {
-      state,
-      editor: state.editor,
-      editorRef: state.editorRef,
+      editor: stateEditor(state),
+      editorContent: stateEditorContent(state),
+      editorRow: stateEditorRow(state),
+      editorColumn: stateEditorColumn(state),
+      editorRef: stateEditorRef(state),
    };
 };
 

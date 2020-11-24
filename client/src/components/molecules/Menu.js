@@ -49,7 +49,7 @@ class Menu extends Component {
    displayChildren(basicClasses, hoverClasses, children) {
       const childrenList = R.map(childNode => {
          const grandChildrenList =
-            isSomething(childNode.children) && arrayContainsSomething(childNode.children)
+            arrayContainsSomething(childNode.children)
                ? this.displayChildren(basicClasses, hoverClasses, childNode.children)
                : null;
          return (
@@ -86,7 +86,7 @@ class Menu extends Component {
       const basicClasses = 'pl-2 pt-2 text-subdued-blue';
       const hoverClasses = 'hover:text-vibrant-blue cursor-pointer';
       const sheetsArr = stateSheets(this.props.state);
-      if (isSomething(sheetsArr) && arrayContainsSomething(sheetsArr)) {
+      if (arrayContainsSomething(sheetsArr)) {
          const sheetsTree = buildSheetsTree(sheetsArr);
          const sheetList = R.map(node => (
             <li key={node.sheet.id} className={'ml-2 ' + basicClasses}>

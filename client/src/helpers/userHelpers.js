@@ -8,7 +8,7 @@ export const getUserInfoFromCookie = () => {
    // 'someOtherCo=somecookie; deepdeepsheet=id%3D5f5d304159645625d49b2f0c%3Bsession%3D5f5d304159645625d49b2f0c; another=session%239etc'
 
    const maybeGetFirstCapturedGroup = captureArr =>
-      isSomething(captureArr) && arrayContainsSomething(captureArr) && isSomething(captureArr[1]) ? captureArr[1] : '';
+      arrayContainsSomething(captureArr) && isSomething(captureArr[1]) ? captureArr[1] : '';
 
    const allCookiesRegex = new RegExp(/deepdeepsheet=([^ ;]*)/);
    const ddsCookie = R.pipe(

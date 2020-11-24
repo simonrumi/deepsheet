@@ -1,9 +1,8 @@
 import * as R from 'ramda';
 import managedStore from '../store';
-
+import { COMPLETED_SAVE_UPDATES, TOGGLED_SHOW_FILTER_MODAL, } from './types';
 import {
-   TOGGLED_SHOW_FILTER_MODAL,
-   UPDATED_FILTER,
+   UPDATED_FILTER, 
    UPDATED_COLUMN_FILTERS,
    REPLACED_COLUMN_FILTERS,
    UPDATED_ROW_FILTERS,
@@ -25,10 +24,15 @@ import {
    UPDATED_SORT_OPTIONS,
    SORTED_AXIS,
    CLEARED_SORT_OPTIONS,
-} from './types';
+} from './metadataTypes';
 
-// TODO: continue to split up the actions & types
-// could separate out filters and visilibity stuff
+// TODO: move all the metadata actions to their own file 
+
+export const completedSaveUpdates = () => {
+   managedStore.store.dispatch({
+      type: COMPLETED_SAVE_UPDATES,
+   });
+};
 
 export const updatedColumnFilters = newColumnFilter => {
    managedStore.store.dispatch({

@@ -7,7 +7,7 @@ import {
    RESET_VISIBLITY,
    HIDE_FILTERED,
    CLEAR_ALL_FILTERS,
-} from '../actions/types';
+} from '../actions/metadataTypes';
 import { updatedColumnFilters, updatedRowFilters, toggledShowFilterModal } from '../actions';
 import { hasChangedMetadata, } from '../actions/metadataActions';
 import { updatedCell } from '../actions/cellActions';
@@ -210,6 +210,7 @@ const getNewFilter = data =>
 // Encasing all that is R.useWtih which takes the 3 parameters passed to it, and passes one param to each function
 // in the array, then each of the 3 functions in the array are used by R.ifElse
 const addNewFilter = data => {
+   console.log('filterSheet.js: TODO there is a getState from data function which will need to be adjusted. data is', data);
    const newFilter = getNewFilter(data);
    R.useWith(R.ifElse, [
       R.thunkify(R.equals(ROW_AXIS)),

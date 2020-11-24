@@ -1,13 +1,14 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { stateTitleText, stateTitleIsEditingTitle } from '../helpers/dataStructureHelpers';
 import SheetHeader from './molecules/SheetHeader';
 import TitleForm from './molecules/TitleForm';
 import Menu from './molecules/Menu';
 
 export class Header extends Component {
    renderTitleOrTitleForm() {
-      if (this.props.title.isEditingTitle) {
-         return <TitleForm onSubmit={this.editTitle} title={this.props.title.text} />;
+      if (this.props.isEditingTitle) {
+         return <TitleForm onSubmit={this.editTitle} title={this.props.titleText} />;
       }
       return <SheetHeader />;
    }
@@ -26,8 +27,8 @@ export class Header extends Component {
 
 function mapStateToProps(state) {
    return {
-      sheet: state.sheet,
-      title: state.title,
+      isEditingTitle: stateTitleIsEditingTitle(state),
+      titleText: stateTitleText(state),
    };
 }
 

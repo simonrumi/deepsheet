@@ -35,7 +35,13 @@ export const forLoopReduce = (fn, initialVal, length) =>
 
 export const isNothing = R.either(R.isNil, R.isEmpty);
 export const isSomething = R.pipe(isNothing, R.not);
-export const arrayContainsSomething = R.reduce((accumulator, arrItem) => accumulator || isSomething(arrItem), false);
+export const arrayContainsSomething = arr => 
+   isSomething(arr) && 
+   R.reduce(
+      (accumulator, arrItem) => accumulator || isSomething(arrItem), 
+      false,
+      arr
+   );
 
 // use like this:
 // runIfSomething(myFn, thingToTest, extraParameters)

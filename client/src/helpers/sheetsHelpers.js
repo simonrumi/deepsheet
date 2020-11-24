@@ -22,7 +22,7 @@ const createNode = sheet => ({ sheet, children: [] });
 const addChildNode = (parent, child) => ({ ...parent, children: R.append(child, parent.children) });
 
 const removeChildNode = (parent, childToRemove) => {
-   if (isSomething(parent.children) && arrayContainsSomething(parent.children)) {
+   if (arrayContainsSomething(parent.children)) {
       const newChildren = R.filter(child => !(child.sheet.id === childToRemove.sheet.id), parent.children);
       return { ...parent, children: newChildren };
    }

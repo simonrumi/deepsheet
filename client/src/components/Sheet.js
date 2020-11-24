@@ -99,13 +99,17 @@ class Sheet extends Component {
       };
    }
 
+   // TODO BUG - this is getting called too early....or at least not getting called again after getRequiredNumItemsForAxis returns a value 
+   // re-drawing the page when stateTotalRows and stateTotalColumns updated didn't work 
+   // ideally the cellsLoaded() action would fire after the totalRows and totalColumns were updated
    renderGridSizingStyle = () => {
       if (!isVisibilityCalcutated()) {
          return null;
       }
-      return this.getGridSizingStyle(
+      const returnVal = this.getGridSizingStyle(
          R.map(getRequiredNumItemsForAxis(R.__, managedStore.state), [ROW_AXIS, COLUMN_AXIS])
       );
+      return returnVal;
    };
 
    maybeRenderFilterModal = showFilterModal => (showFilterModal ? <FilterModal /> : null);
@@ -138,10 +142,11 @@ function mapStateToProps(state) {
    return {
       showFilterModal: stateShowFilterModal(state),
       showLoginModal: stateShowLoginModal(state),
-      sheetId: stateSheetId(state), // need this to trigger updating the sheet when the sheetId object changes
       sheetIsCallingDb: stateSheetIsCallingDb(state),
-      metadata: stateMetadata(state), // this is here so that sheet will update whenever metadata is changed
-      cellsLoaded: stateSheetCellsLoaded(state) // this is here so that sheet will update when the cells are loaded after fetching a new sheet
+      // these are all here just as triggers to cause the Sheet to rerender when there are changes:
+      sheetId: stateSheetId(state),
+      metadata: stateMetadata(state),
+      cellsLoaded: stateSheetCellsLoaded(state),
    };
 }
 export default connect(mapStateToProps, {

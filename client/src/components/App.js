@@ -22,23 +22,24 @@ const App = props => {
    );
 };
 
-const logState = state => {
-   const stateKeys = [
-      'auth',
-      'cellKeys',
-      'sheet',
-      'sheets',
-      'metadata',
-      'editor',
-      'editorRef',
-      'title',
-      'form',
-      'filterModal',
-      'cellDbUpdates',
-      'menu',
-      'focus',
-   ];
+const stateKeys = [
+   'auth',
+   'cellKeys',
+   'sheet',
+   'sheets',
+   'metadata',
+   'editor',
+   'editorRef',
+   'title',
+   'form',
+   'filterModal',
+   'cellDbUpdates',
+   'menu',
+   'focus',
+];
 
+const logState = wrappedState => {
+   const state = wrappedState.present;
    const baseStateObj = R.reduce(
       (acc, key) => {
          acc[key] = state[key];
@@ -54,6 +55,7 @@ const logState = state => {
    // note that the cellReducers are logged as being in an array called cellReducers, but in the store every cell reducer is stored at the top level
    const fullStateObj = R.mergeAll([baseStateObj, { cellReducers: cellReducersArr }]);
    console.log(fullStateObj);
+   console.log('past:', wrappedState.past, 'future:', wrappedState.future);
 };
 
 function mapStateToProps(state) {

@@ -9,6 +9,7 @@ import {
    cellColumn,
    stateRowVisibility, 
    stateSheetCellsLoaded,
+   statePresent
 } from '../helpers/dataStructureHelpers';
 import {
    shouldShowRow,
@@ -33,7 +34,7 @@ R.ifElse(
    isLastVisibleItemInAxis(
       COLUMN_AXIS, // we are rendering a row, so need to check if this is the last visible column in the row
       stateTotalColumns(managedStore.state),
-      managedStore.state
+      statePresent(managedStore.state)
    ),
    renderEmptyEndCell,
    nothing
@@ -53,12 +54,11 @@ const renderCellAndMaybeEdges = cell => {
    ];
 };
 
-const maybeCell = () =>
-   R.ifElse(
-      shouldShowRow(stateRowVisibility(managedStore.state)), 
+const maybeCell = (state, cell) => R.ifElse(
+      shouldShowRow(stateRowVisibility(state)), 
       renderCellAndMaybeEdges, 
       nothing
-   );
+   )(cell);
 
 const renderCells = cells => {
    if (
@@ -68,7 +68,7 @@ const renderCells = cells => {
    ) {
       return R.pipe(
          orderCells,
-         R.map(cell => maybeCell(managedStore.state)(cell)),
+         R.map(cell => maybeCell(managedStore.state, cell)),
          R.prepend(<ColumnHeaders key="columnHeaders" />),
          R.append(<LastRow key="lastRow" />)
       )(cells);
@@ -80,7 +80,7 @@ const Cells = () => {
    useSelector(state => stateSheetCellsLoaded(state));
    return R.pipe(
       getAllCells,
-      renderCells
+      renderCells,
    )(managedStore.state)
 }
 export default Cells;

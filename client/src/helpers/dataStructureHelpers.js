@@ -31,6 +31,15 @@ const subObjectGetter = (lens, propName) => {
    return createGetter(fullPathLens);
 };
 
+// the "present" object wraps all the stuff in the state
+const presentLens = R.lensProp('present');
+export const statePresent = R.view(presentLens);
+const pastLens = R.lensProp('past');
+export const statePast = R.view(pastLens);
+const futureLens = R.lensProp('future');
+export const stateFuture = R.view(futureLens);
+
+
 /************************************************ DB **********************************************/
 
 /*** get/set values from the db metadata structure ***/
@@ -75,17 +84,20 @@ export const filterIndex = createGetterSetter(filterIndexLens);
  * (rather it makes a copy), still these setters will not be used for updating the state,
  * since we have the reducer system for that. The getters will be used, however
  ***/
-const stateMetadataLens = R.lensProp('metadata');
+const metadataLens = R.lensProp('metadata');
+const stateMetadataLens = R.compose(presentLens, metadataLens);
 export const stateMetadata = R.view(stateMetadataLens);
 export const saveableStateMetadata = R.pipe(
    stateMetadata,
-   R.pick(['totalRows', 'totalColumns', 'parentSheetId', 'summaryCell', 'columnFilters', 'rowFilters'])
+   R.pick(['totalRows', 'totalColumns', 'parentSheetId', 'summaryCell', 'columnFilters', 'rowFilters']) // TODO add freezing of rows & cols
 );
 
 // get any top level property from the state's metadata
-export const stateMetadataProp = R.curry((stateObj, propName) =>
-   subObjectGetterSetter(stateMetadataLens, propName)(stateObj)
-);
+export const stateMetadataProp = R.curry((stateObj, propName) => {
+   const propLens = R.lensProp(propName);
+   const propInMetadataLens = R.compose(stateMetadataLens, propLens);
+   return R.view(propInMetadataLens, stateObj); // TODO could turn this into a pipe
+});
 
 // get values from the state structure
 // use (other functions below are similar):
@@ -113,18 +125,32 @@ export const stateFrozenRows = subObjectGetter(stateMetadataLens, 'frozenRows');
 export const stateFrozenColumns = subObjectGetter(stateMetadataLens, 'frozenColumns');
 
 /************************************************ STATE FILTER MODAL **********************************************/
-const stateFilterModalLens = R.lensProp('filterModal');
+const filterModalLens = R.lensProp('filterModal');
+const stateFilterModalLens = R.compose(presentLens, filterModalLens);
 export const stateShowFilterModal = subObjectGetter(stateFilterModalLens, 'showFilterModal');
 export const stateFilterColumnIndex = subObjectGetter(stateFilterModalLens, 'colIndex');
 export const stateFilterRowIndex = subObjectGetter(stateFilterModalLens, 'rowIndex');
 
 /************************************************ STATE AUTH **********************************************/
-const stateAuthLens = R.lensProp('auth');
+const authLens = R.lensProp('auth');
+const stateAuthLens = R.compose(presentLens, authLens);
 export const stateIsLoggedIn = subObjectGetter(stateAuthLens, 'isLoggedIn');
 export const stateShowLoginModal = subObjectGetter(stateAuthLens, 'showLoginModal');
 
 /************************************************ STATE CELLS **********************************************/
-export const stateCellKeys = state => state.cellKeys;
+const cellKeysLens = R.lensProp('cellKeys');
+const stateCellKeysLens = R.compose(presentLens, cellKeysLens);
+export const stateCellKeys = R.view(stateCellKeysLens);
+
+export const stateCell = R.curry((state, cellKey) =>
+   R.view(
+      R.compose(
+         presentLens,
+         R.lensProp(cellKey)
+      ),
+      state
+   )
+);
 
 /*** 
  * get values for the cell itself - note that getters and setters are separate fns so that the setter can be curried. 
@@ -158,7 +184,8 @@ const cellIsStaleLens = R.lensProp('isStale');
 export const cellIsStale = cell => R.view(cellIsStaleLens, cell);
 export const cellIsStaleSetter = R.curry((value, cell) => R.set(cellIsStaleLens, value, cell));
 
-const stateCellDbUpdatesLens = R.lensProp('cellDbUpdates');
+const cellDbUpdatesLens = R.lensProp('cellDbUpdates');
+const stateCellDbUpdatesLens = R.compose(presentLens, cellDbUpdatesLens);
 export const stateCellDbUpdatesIsCallingDb = subObjectGetter(stateCellDbUpdatesLens, 'isCallingDb');
 export const stateCellDbUpdatesErrorMessage = subObjectGetter(stateCellDbUpdatesLens, 'errorMessage');
 export const stateCellDbUpdatesIsStale = subObjectGetter(stateCellDbUpdatesLens, 'isStale');
@@ -167,37 +194,58 @@ export const stateChangedCells = subObjectGetter(stateCellDbUpdatesLens, 'change
 
 /************************************************ STATE OTHER **********************************************/
 
-// get the sheet's id. Will never set this, only retrieve it, as it is mongodb that generates this.
-const stateSheetIdLens = R.lensPath(['sheet', 'sheetId']);
-export const stateSheetId = R.view(stateSheetIdLens); // use: stateSheetId(stateObj);
-const stateSheetIsCallingDbLens = R.lensPath(['sheet', 'isCallingDb']);
-export const stateSheetIsCallingDb = R.view(stateSheetIsCallingDbLens); // use: stateSheetIsCallingDb(stateObj);
-const stateSheetErrorMessageLens = R.lensPath(['sheet', 'errorMessage']);
-export const stateSheetErrorMessage = R.view(stateSheetErrorMessageLens); // use: stateSheetErrorMessage(stateObj);
-const stateSheetCellsLoadedLens = R.lensPath(['sheet', 'cellsLoaded']);
-export const stateSheetCellsLoaded = R.view(stateSheetCellsLoadedLens); // use: stateSheetCellsLoaded(stateObj);
+const sheetLens = R.lensProp('sheet');
+const stateSheetLens = R.compose(presentLens, sheetLens);
 
-const stateFocusLens = R.lensProp('focus'); // there's a property called focus which is used to track which UI element currently has focus
-export const stateFocus = state => R.view(stateFocusLens, state);
+const sheetIdLens = R.lensProp('sheetId');
+const stateSheetIdLens = R.compose(stateSheetLens, sheetIdLens);
+export const stateSheetId = R.view(stateSheetIdLens);
 
-const stateTitleLens = R.lensProp('title');
-export const stateTitleIsCallingDb = subObjectGetterSetter(stateTitleLens, 'isCallingDb');
-export const stateTitleIsEditingTitle = subObjectGetterSetter(stateTitleLens, 'isEditingTitle');
-export const stateTitleIsStale = subObjectGetterSetter(stateTitleLens, 'isStale');
-export const stateTitleLastUpdated = subObjectGetterSetter(stateTitleLens, 'lastUpdated');
-export const stateTitleNeedsUpdate = subObjectGetterSetter(stateTitleLens, 'needsUpdate');
-export const stateTitleText = subObjectGetterSetter(stateTitleLens, 'text');
+const isCallingDbLens = R.lensProp('isCallingDb');
+const stateSheetIsCallingDbLens = R.compose(stateSheetLens, isCallingDbLens);
+export const stateSheetIsCallingDb = R.view(stateSheetIsCallingDbLens);
 
-const stateMenuLens = R.lensProp('menu');
-export const stateShowMenu = subObjectGetterSetter(stateMenuLens, 'showMenu');
+const errorMessageLens = R.lensProp('errorMessage');
+const stateSheetErrorMessageLens = R.compose(stateSheetLens, errorMessageLens);
+export const stateSheetErrorMessage = R.view(stateSheetErrorMessageLens);
+
+const cellsLoadedLens = R.lensProp('cellsLoaded');
+const stateSheetCellsLoadedLens = R.compose(stateSheetLens, cellsLoadedLens);
+export const stateSheetCellsLoaded = R.view(stateSheetCellsLoadedLens);
+
+const focusLens = R.lensProp('focus'); // there's a property called focus which is used to track which UI element currently has focus
+const stateFocusLens = R.compose(presentLens, focusLens);
+export const stateFocus = R.view(stateFocusLens);
+
+const titleLens = R.lensProp('title');
+const stateTitleLens = R.compose(presentLens, titleLens);
+export const stateTitleIsCallingDb = subObjectGetter(stateTitleLens, 'isCallingDb');
+export const stateTitleIsEditingTitle = subObjectGetter(stateTitleLens, 'isEditingTitle');
+export const stateTitleIsStale = subObjectGetter(stateTitleLens, 'isStale');
+export const stateTitleErrorMessage = subObjectGetter(stateTitleLens, 'errorMessage');
+export const stateTitleLastUpdated = subObjectGetter(stateTitleLens, 'lastUpdated');
+export const stateTitleNeedsUpdate = subObjectGetter(stateTitleLens, 'needsUpdate');
+export const stateTitleText = subObjectGetter(stateTitleLens, 'text');
+
+const menuLens = R.lensProp('menu');
+const stateMenuLens = R.compose(presentLens, menuLens);
+export const stateShowMenu = subObjectGetter(stateMenuLens, 'showMenu');
 
 const editorLens = R.lensProp('editor');
-export const stateEditorRow = subObjectGetterSetter(editorLens, 'row');
-export const stateEditorColumn = subObjectGetterSetter(editorLens, 'column');
+export const stateEditorLens = R.compose(presentLens, editorLens);
+export const stateEditor = R.view(stateEditorLens);
+export const stateEditorRow = subObjectGetter(stateEditorLens, 'row');
+export const stateEditorColumn = subObjectGetter(stateEditorLens, 'column');
+export const stateEditorContent = subObjectGetter(stateEditorLens, 'content');
 
-const stateSheetsLens = R.lensProp('sheets');
-export const stateSheetsIsCallingDb = subObjectGetterSetter(stateSheetsLens, 'isCallingDb');
-export const stateSheetsErrorMessage = subObjectGetterSetter(stateSheetsLens, 'errorMessage');
+const editorRefLens = R.lensProp('editorRef');
+const stateEditorRefLens = R.compose(presentLens, editorRefLens); 
+export const stateEditorRef = R.view(stateEditorRefLens);
+
+const sheetsLens = R.lensProp('sheets');
+const stateSheetsLens = R.compose(presentLens, sheetsLens);
+export const stateSheetsIsCallingDb = subObjectGetter(stateSheetsLens, 'isCallingDb');
+export const stateSheetsErrorMessage = subObjectGetter(stateSheetsLens, 'errorMessage');
 export const stateSheets = R.view(stateSheetsLens); // subObjectGetterSetter(stateSheetsLens, 'sheets');
 
 /************************************************ STATE IS_STALE  **********************************************/

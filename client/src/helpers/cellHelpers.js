@@ -14,6 +14,8 @@ import {
    cellVisibleSetter,
    stateFocus,
    stateCellKeys,
+   stateCell,
+   statePresent,
 } from './dataStructureHelpers';
 import { THIN_COLUMN } from '../constants';
 
@@ -67,7 +69,7 @@ export const isCellFocused = (cell, state) => {
 
 export const getCellFromStore = ({row, column, state}) => R.pipe(
    createCellKey,
-   R.prop(R.__, state)
+   stateCell(state)
 )(row, column);
 
 export const clearCells = state => R.pipe(
@@ -77,7 +79,7 @@ export const clearCells = state => R.pipe(
 
 export const getAllCells = state =>  R.pipe(
       stateCellKeys,
-      R.map(cellKey => state[cellKey])
+      R.map(cellKey => statePresent(state)[cellKey])
    )(state);
 
 // when the cell reducer needs to update the cell, this creates the new state that the reducer returns

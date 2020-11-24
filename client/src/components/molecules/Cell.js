@@ -5,10 +5,11 @@ import { updatedEditor } from '../../actions/editorActions';
 import { focusedCell } from '../../actions/focusActions';
 import { menuHidden } from '../../actions/menuActions';
 import { createdSheet } from '../../actions/sheetActions';
+import { startedUndoableAction } from '../../actions/undoActions';
 import { nothing, isSomething, isNothing } from '../../helpers';
 import { createClassNames, createCellId, isCellFocused, createCellKey } from '../../helpers/cellHelpers';
 import { isCellVisible } from '../../helpers/visibilityHelpers';
-import { cellSubsheetId, stateSheetId, cellRow, cellColumn, cellText } from '../../helpers/dataStructureHelpers';
+import { cellSubsheetId, stateSheetId, cellRow, cellColumn, cellText, statePresent, stateEditorRef } from '../../helpers/dataStructureHelpers';
 import SubsheetCell from './SubsheetCell';
 import IconNewDoc from '../atoms/IconNewDoc';
 import { getUserInfoFromCookie } from '../../helpers/userHelpers';
@@ -46,6 +47,7 @@ const Cell = props => {
    }
 
    const onCellClick = () => {
+      startedUndoableAction();
       focusedCell(cellReducer);
       updatedEditor(cellReducer);
       menuHidden(); // in case the menu was showing, hide it
@@ -91,9 +93,9 @@ const Cell = props => {
 
    const { row, column } = props.cell;
    const cellKey = createCellKey(row, column);
-   const cellReducer = useSelector(state => state[cellKey]);
+   const cellReducer = useSelector(state => statePresent(state)[cellKey]);
    const cellHasFocus = useSelector(state => isCellFocused(props.cell, state));
-   const editorRef = useSelector(state => state.editorRef);
+   const editorRef = useSelector(state => stateEditorRef(state));
    return renderCell(cellReducer);
 }
 

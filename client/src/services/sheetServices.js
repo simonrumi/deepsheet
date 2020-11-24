@@ -1,4 +1,5 @@
 import * as R from 'ramda';
+import { completedSaveUpdates } from '../actions';
 import { triggeredFetchSheet } from '../actions/sheetActions';
 import { updatedCells, clearedAllCellKeys } from '../actions/cellActions';
 import { clearCells } from '../helpers/cellHelpers';
@@ -30,11 +31,9 @@ import {
 // TODO return the response.data.thing for each query/mutation so the consumer doesn;t have to know that path
 
 export const fetchSheet = async (sheetId, userId) => {
-   console.log('sheetServices fetchSheet started with sheetId', sheetId, 'userId', userId);
    userId = userId || getUserInfoFromCookie();
    try {
       const response = await sheetQuery(sheetId, userId);
-      console.log('sheetServices fetchSheet got response.data.sheet', response.data.sheet);
       return response.data.sheet;
    } catch (err) {
       console.error('error in sheetServices.fetchSheet', err);
@@ -42,10 +41,8 @@ export const fetchSheet = async (sheetId, userId) => {
 };
 
 export const fetchSheetByUserId = async userId => {
-   console.log('sheetServices.fetchSheetByUserId got userId', userId);
    try {
       const sheetByUserId = await sheetByUserIdMutation(userId);
-      console.log('sheetServices.fetchSheetByUserId got sheetByUserId', sheetByUserId);
       return sheetByUserId;
    } catch (err) {
       throw new Error('error fetching sheet by user id: ' + err);
@@ -135,6 +132,7 @@ export const saveAllUpdates = async state => {
    console.log('TODO sheetServices.saveAllUpdates is calling saveMetadataUpdates & saveCellUpdates serially -- yeech!');
    await saveMetadataUpdates(state);
    await saveCellUpdates(state);
+   completedSaveUpdates(); // only gets here if there's no error thrown
 };
 
 export const loadSheet = R.curry(async (state, sheetId) => {

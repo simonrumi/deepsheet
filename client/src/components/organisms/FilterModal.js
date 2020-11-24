@@ -5,6 +5,7 @@ import { menuHidden } from '../../actions/menuActions';
 import SortOptions from '../molecules/SortOptions';
 import FilterOptions from '../molecules/FilterOptions';
 import FilterModalHeading from '../molecules/FilterModalHeading';
+import { stateShowFilterModal, stateFilterRowIndex, stateFilterColumnIndex } from '../../helpers/dataStructureHelpers';
 
 class FilterModal extends Component {
    render() {
@@ -17,7 +18,7 @@ class FilterModal extends Component {
                   classes=""
                   className="fixed z-20 top-0 mt-4 left-1/3 w-1/2 md:w-1/3 border border-solid border-grey-blue bg-white shadow-lg px-2 py-2"
                   rowIndex={this.props.rowIndex}
-                  colIndex={this.props.colIndex}
+                  colIndex={this.props.columnIndex}
                />
                <FilterOptions />
             </div>
@@ -29,9 +30,9 @@ class FilterModal extends Component {
 
 function mapStateToProps(state, ownProps) {
    return {
-      showFilterModal: state.filterModal.showFilterModal,
-      rowIndex: state.filterModal.rowIndex,
-      colIndex: state.filterModal.colIndex,
+      showFilterModal: stateShowFilterModal(state),
+      rowIndex: stateFilterRowIndex(state),
+      columnIndex: stateFilterColumnIndex(state),
    };
 }
 

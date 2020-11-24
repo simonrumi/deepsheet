@@ -10,7 +10,6 @@ import { isNothing, isSomething, arrayContainsSomething } from '../helpers';
 import { applyFilters, initializeAxesVisibility } from '../helpers/visibilityHelpers';
 import { removeAllCellReducers, clearCells } from '../helpers/cellHelpers';
 import {
-   dbMetadata,
    dbCells,
    stateIsLoggedIn,
    stateSheetIsCallingDb,
@@ -19,7 +18,7 @@ import {
 import { getUserInfoFromCookie } from '../helpers/userHelpers';
 
 const initializeCells = sheet => {
-   if (isSomething(dbMetadata(sheet)) && isSomething(dbCells(sheet)) && arrayContainsSomething(dbCells(sheet))) {
+   if (arrayContainsSomething(dbCells(sheet))) {
       initializeAxesVisibility();
       createCellReducers(sheet);
       populateCellsInStore(sheet);
@@ -44,9 +43,7 @@ const runFetchSheet = async ({ store, sheetId, userId }) => {
    }
    fetchingSheet({ sheetId, userId });
    try {
-      console.log('initializeSheet runFetchSheet got sheetId', sheetId, 'userId', userId);
       const sheet = await runFetchFunctionForId({ sheetId, userId });
-      console.log('initializeSheet runFetchSheet got sheet', sheet);
       // if sheet has some data then dispatch the fetchedSheet action
       return isNothing(sheet) 
          ? null 
@@ -67,14 +64,12 @@ const runFetchSheet = async ({ store, sheetId, userId }) => {
 
 const getOrFindSheet = async (store, sheetId) => {
    const { userId } = getUserInfoFromCookie();
-   console.log('initializeSheet getOrFindSheet got sheetId', sheetId, 'userId', userId);
    return await runFetchSheet({ store, sheetId, userId });
 };
 
 export default store => next => async action => {
    switch (action.type) {
       case TRIGGERED_FETCH_SHEET:
-         console.log('initializeSheet TRIGGERED_FETCH_SHEET');
          const state = store.getState();
          if (
             stateIsLoggedIn(state) === false ||
@@ -84,7 +79,6 @@ export default store => next => async action => {
             return null;
          }
          const sheetResult = await getOrFindSheet(store, action.payload);
-         console.log('initialize sheet sheetResult', sheetResult);
          if (isNothing(sheetResult)) {
             fetchSheetError('No sheet found');
             return null;
