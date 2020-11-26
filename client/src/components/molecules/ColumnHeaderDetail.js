@@ -47,6 +47,7 @@ class ColumnHeaderDetail extends Component {
    };
 
    toggleFreeze = () => {
+      console.log('ColumnHeaderDetail.toggleFreeze about to call startedUndoableAction');
       startedUndoableAction();
       updatedFrozenColumns([{ index: this.props.index, isFrozen: !this.props.frozen }]);
       completedUndoableAction('toggled freeze for column ' + this.props.index);

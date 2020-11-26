@@ -139,6 +139,8 @@ module.exports = db => ({
                      'rowVisibility',
                      'columnFilters',
                      'rowFilters',
+                     'frozenColumns',
+                     'frozenRows',
                   ],
                   args.input
                ),

@@ -128,7 +128,8 @@ const metadataReducer = (state = {}, action) => {
       case UPDATED_FROZEN_ROWS:
          const frozenRows = updateOrAddPayloadToState(action.payload, state.frozenRows);
          return {
-            ...state, 
+            ...state,
+            isStale: true,
             frozenRows
          }
 
@@ -136,6 +137,7 @@ const metadataReducer = (state = {}, action) => {
          const frozenColumns = updateOrAddPayloadToState(action.payload, state.frozenColumns);
          return {
             ...state,
+            isStale: true,
             frozenColumns
          };
 

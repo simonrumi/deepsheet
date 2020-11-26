@@ -20,6 +20,11 @@ const SheetType = gql`
       regex: Boolean
    }
 
+   type SheetFreezeType {
+      index: Int!
+      isFrozen: Boolean
+   }
+
    type SheetSummaryCellType {
       row: Int
       column: Int
@@ -34,6 +39,8 @@ const SheetType = gql`
       summaryCell: SheetSummaryCellType
       columnFilters: [SheetFilterType]
       rowFilters: [SheetFilterType]
+      frozenColumns: [SheetFreezeType]
+      frozenRows: [SheetFreezeType]
    }
 
    type SheetCollaboratorType {

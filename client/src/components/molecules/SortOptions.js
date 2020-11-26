@@ -2,12 +2,13 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import Button from '../atoms/Button';
 import Label from '../atoms/Label';
-import { SORT_INCREASING, SORT_DECREASING } from '../../constants';
+import { SORT_INCREASING, SORT_DECREASING, ROW_AXIS, COLUMN_AXIS } from '../../constants';
 import {
    updatedSortOptions,
    sortedAxis,
    toggledShowFilterModal,
 } from '../../actions';
+import { startedUndoableAction, completedUndoableAction } from '../../actions/undoActions';
 
 class SortOptions extends Component {
    onClickAtoZ = () => {
@@ -16,7 +17,10 @@ class SortOptions extends Component {
          columnSortByIndex: this.props.colIndex,
          sortDirection: SORT_INCREASING,
       });
+      startedUndoableAction();
       this.props.sortedAxis();
+      const axisName = this.props.rowIndex ? ROW_AXIS : COLUMN_AXIS
+      completedUndoableAction('sorted A to Z for ' + axisName + ' ' + this.props.rowIndex || this.props.columnIndex);
       this.props.toggledShowFilterModal();
    };
 
@@ -26,7 +30,10 @@ class SortOptions extends Component {
          columnSortByIndex: this.props.colIndex,
          sortDirection: SORT_DECREASING,
       });
+      startedUndoableAction();
       this.props.sortedAxis();
+      const axisName = this.props.rowIndex ? ROW_AXIS : COLUMN_AXIS
+      completedUndoableAction('sorted Z to A for ' + axisName + ' ' + this.props.rowIndex || this.props.columnIndex);
       this.props.toggledShowFilterModal();
    };
 

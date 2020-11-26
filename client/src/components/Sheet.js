@@ -99,9 +99,6 @@ class Sheet extends Component {
       };
    }
 
-   // TODO BUG - this is getting called too early....or at least not getting called again after getRequiredNumItemsForAxis returns a value 
-   // re-drawing the page when stateTotalRows and stateTotalColumns updated didn't work 
-   // ideally the cellsLoaded() action would fire after the totalRows and totalColumns were updated
    renderGridSizingStyle = () => {
       if (!isVisibilityCalcutated()) {
          return null;

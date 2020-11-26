@@ -26,6 +26,7 @@ const undoReducer = reducer => {
             }
 
          case STARTED_UNDOABLE_ACTION:
+            console.log('undoReducer STARTED_UNDOABLE_ACTION staring with state', state);
             return {
                ...state, // keep the future as is
                past: R.append(present, past), // put the current "present" at the end of the past
@@ -33,6 +34,7 @@ const undoReducer = reducer => {
             };
 
          case COMPLETED_UNDOABLE_ACTION:
+            console.log('undoReducer COMPLETED_UNDOABLE_ACTION staring with state', state);
             return {
                ...state, // keep the past as-is (see STARTED_UNDOABLE_ACTION above)
                present: reducer(present, action), // update the present

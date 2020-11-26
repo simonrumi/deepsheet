@@ -155,6 +155,14 @@ const SHEET_BY_USER_ID_MUTATION = gql`
                caseSensitive
                regex
             }
+            frozenColumns {
+               index
+               isFrozen
+            }
+            frozenRows {
+               index
+               isFrozen
+            }
          }
          cells {
             row

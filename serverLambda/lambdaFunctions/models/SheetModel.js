@@ -2,6 +2,7 @@ const R = require('ramda');
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 const FilterModel = require('./FilterModel');
+const FreezeModel = require('./FreezeModel');
 const CellModel = require('./CellModel');
 const { isSomething } = require('../helpers');
 
@@ -28,6 +29,8 @@ const sheetSchema = new Schema(
          },
          columnFilters: [FilterModel],
          rowFilters: [FilterModel],
+         frozenRows: [FreezeModel],
+         frozenColumns: [FreezeModel]
       },
       title: { type: String, requried: true, default: 'My Deep Deep Sheet' },
       cells: [CellModel],

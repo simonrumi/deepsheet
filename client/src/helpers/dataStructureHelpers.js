@@ -89,7 +89,16 @@ const stateMetadataLens = R.compose(presentLens, metadataLens);
 export const stateMetadata = R.view(stateMetadataLens);
 export const saveableStateMetadata = R.pipe(
    stateMetadata,
-   R.pick(['totalRows', 'totalColumns', 'parentSheetId', 'summaryCell', 'columnFilters', 'rowFilters']) // TODO add freezing of rows & cols
+   R.pick([
+      'totalRows', 
+      'totalColumns', 
+      'parentSheetId', 
+      'summaryCell', 
+      'columnFilters', 
+      'rowFilters',
+      'frozenColumns',
+      'frozenRows'
+   ])
 );
 
 // get any top level property from the state's metadata
@@ -123,6 +132,11 @@ export const stateMetadataErrorMessage = subObjectGetter(stateMetadataLens, 'err
 export const stateMetadataLastUpdated = subObjectGetter(stateMetadataLens, 'lastUpdated');
 export const stateFrozenRows = subObjectGetter(stateMetadataLens, 'frozenRows');
 export const stateFrozenColumns = subObjectGetter(stateMetadataLens, 'frozenColumns');
+
+/** 
+ * Sheet Metadata - if we directly have the sheet (not inside a "present" object) use these:
+*/
+export const sheetParentSheetId = subObjectGetter(metadataLens, 'parentSheetId'); 
 
 /************************************************ STATE FILTER MODAL **********************************************/
 const filterModalLens = R.lensProp('filterModal');

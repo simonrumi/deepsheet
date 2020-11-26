@@ -15,6 +15,10 @@ import {
    stateShowFilterModal,
 } from '../../helpers/dataStructureHelpers';
 
+// TODO: BUG 
+// when cancel is clicked in the form, the metadata isStale gets set...which it shouldn;t
+// perhaps first should get rid of redux-form
+
 class FilterOptions extends Component {
    constructor(props) {
       super(props);
