@@ -1,6 +1,6 @@
 import React from 'react';
 import * as R from 'ramda';
-import ErrorText from '../atoms/ErrorText';
+//import ErrorText from '../atoms/ErrorText';
 
 const TextInput = props => {
 	const { changeHandler, value = '', error = '', classes = '' } = props.props;

@@ -85,13 +85,13 @@ const TitleForm = props => {
    }
 
    // TODO fake some errors and check that they display correctly
-   const validateForm = formValues => {
+   /* const validateForm = formValues => {
       const errors = {};
       if (!formValues.title) {
          errors.title = 'please enter a title';
       }
       return errors;
-   };
+   }; */
 
    return render();
 }

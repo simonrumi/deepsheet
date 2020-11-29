@@ -9,7 +9,6 @@ import {
    cellColumn,
    stateRowVisibility, 
    stateSheetCellsLoaded,
-   statePresent
 } from '../helpers/dataStructureHelpers';
 import {
    shouldShowRow,

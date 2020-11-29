@@ -1,6 +1,6 @@
 import * as R from 'ramda';
 import { isSomething, isNothing, arrayContainsSomething } from './index';
-import { stateParentSheetId, sheetParentSheetId, cellSubsheetIdSetter, cellSubsheetId, dbCells } from './dataStructureHelpers';
+import { sheetParentSheetId, cellSubsheetIdSetter, cellSubsheetId, dbCells } from './dataStructureHelpers';
 import { fetchSheet } from '../services/sheetServices';
 import { updateCellsMutation } from '../queries/cellMutations';
 

@@ -1,4 +1,3 @@
-import * as R from 'ramda';
 import managedStore from '../store';
 import { COMPLETED_SAVE_UPDATES, } from './types';
 import { 

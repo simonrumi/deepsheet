@@ -37,7 +37,7 @@ const FilterOptions = props => {
    // rare case of using local state to track what the isStale prop was as we open the filter modal
    // this is so it can be reinstated if we cancel out of the filter modal
    const [wasStale, setWasStale] = useState(false);
-   useEffect(() => setWasStale(isStale), []); // equivalent to componentDidMount per https://medium.com/@felippenardi/how-to-do-componentdidmount-with-react-hooks-553ba39d1571
+   useEffect(isStale => setWasStale(isStale), []); // equivalent to componentDidMount per https://medium.com/@felippenardi/how-to-do-componentdidmount-with-react-hooks-553ba39d1571
 
    const handleCancel = event => {
       event.preventDefault();
@@ -84,11 +84,11 @@ const FilterOptions = props => {
                <div>
                   <TextInput props={{ changeHandler: handleChangeFilter, value: filterExpression || '' }} />
                   <div className="flex items-center px-2 py-2">
-                     <Checkbox classes="pl-0" props={{ changeHandler: handleChangeCaseSensitive, value: caseSensitive, name: 'Case sensitive' }}/>
+                     <Checkbox classes="pl-0" props={{ changeHandler: handleChangeCaseSensitive, value: caseSensitive }}/>
                      <Label label="Case sensitive" classes="pl-2" />
                   </div>
                   <div className="flex items-center px-2 py-2">
-                     <Checkbox props={{ changeHandler: handleChangeRegex, value: regex, name: 'Regular expression'}}/>
+                     <Checkbox props={{ changeHandler: handleChangeRegex, value: regex }}/>
                      <Label label="Regular expression" classes="pl-2" />
                   </div>
                   <div className="flex items-center py-2">
@@ -109,12 +109,12 @@ const FilterOptions = props => {
       );
    }
 
-   const validateForm = formValues => {
+   /* const validateForm = formValues => {
       const errors = {};
       // add error checking here, object keys should be the same as the Field names
       console.log('TODO: filterOptions.js validateForm() should make sure there is no executable code being entered');
       return errors;
-   };
+   }; */
 
    return render();
 }
