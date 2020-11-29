@@ -1,14 +1,11 @@
 import * as R from 'ramda';
 import managedStore from '../store';
-import { COMPLETED_SAVE_UPDATES, TOGGLED_SHOW_FILTER_MODAL, } from './types';
-import {
-   UPDATED_FILTER, 
+import { COMPLETED_SAVE_UPDATES, } from './types';
+import { 
    UPDATED_COLUMN_FILTERS,
    REPLACED_COLUMN_FILTERS,
    UPDATED_ROW_FILTERS,
    REPLACED_ROW_FILTERS,
-   HIDE_FILTERED,
-   CLEAR_ALL_FILTERS,
    UPDATED_TOTAL_COLUMNS,
    UPDATED_TOTAL_ROWS,
    UPDATED_COLUMN_VISIBILITY,
@@ -59,31 +56,6 @@ export const replacedRowFilters = rowFilters => {
    managedStore.store.dispatch({
       type: REPLACED_ROW_FILTERS,
       payload: rowFilters,
-   });
-};
-
-export const toggledShowFilterModal = (rowIndex, colIndex) => {
-   const showModal = !R.isNil(rowIndex) || !R.isNil(colIndex);
-   managedStore.store.dispatch({
-      type: TOGGLED_SHOW_FILTER_MODAL,
-      payload: { showModal, rowIndex, colIndex },
-   });
-};
-
-export const updatedFilter = (filterOptions, isInitializingSheet) => {
-   managedStore.store.dispatch({
-      type: UPDATED_FILTER,
-      payload: filterOptions,
-   });
-   managedStore.store.dispatch({
-      type: HIDE_FILTERED,
-      payload: { filterOptions, isInitializingSheet },
-   });
-};
-
-export const clearedAllFilters = () => {
-   managedStore.store.dispatch({
-      type: CLEAR_ALL_FILTERS,
    });
 };
 

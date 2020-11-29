@@ -14,7 +14,6 @@ export const UPDATED_ROW_FILTERS = 'updated_row_filters';
 export const REPLACED_ROW_FILTERS = 'replaced_row_filters';
 export const CLEAR_ALL_FILTERS = 'clear_all_filters';
 export const HIDE_FILTERED = 'hide_filtered';
-export const UPDATED_FILTER = 'updated_filter';
 export const RESET_VISIBLITY = 'reset_visibility';
 export const UPDATED_TOTAL_COLUMNS = 'updated_total_columns';
 export const UPDATED_TOTAL_ROWS = 'updated_total_rows';
@@ -27,5 +26,3 @@ export const CLEARED_SORT_OPTIONS = 'cleared_sort_options';
 export const UPDATED_ROW_ORDER = 'updated_row_order';
 export const UPDATED_COLUMN_ORDER = 'updated_column_order';
 export const SORTED_AXIS = 'sorted_axis';
-
-   // UPDATED_FILTER

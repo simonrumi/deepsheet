@@ -16,6 +16,13 @@ import { getUserInfoFromCookie } from '../../helpers/userHelpers';
 import managedStore from '../../store';
 
 const Cell = props => {
+   // TODO: Note that these useSelector() lines were moved to the top....previosuly at bottom...hopefully wont casue an issue
+   const { row, column } = props.cell;
+   const cellKey = createCellKey(row, column);
+   const cellReducer = useSelector(state => statePresent(state)[cellKey]);
+   const cellHasFocus = useSelector(state => isCellFocused(props.cell, state));
+   const editorRef = useSelector(state => stateEditorRef(state));
+
    const triggerCreatedSheetAction = () => {
       const rows = null;
       const columns = null;
@@ -91,11 +98,7 @@ const Cell = props => {
       ])(cellReducer);
    };
 
-   const { row, column } = props.cell;
-   const cellKey = createCellKey(row, column);
-   const cellReducer = useSelector(state => statePresent(state)[cellKey]);
-   const cellHasFocus = useSelector(state => isCellFocused(props.cell, state));
-   const editorRef = useSelector(state => stateEditorRef(state));
+   
    return renderCell(cellReducer);
 }
 

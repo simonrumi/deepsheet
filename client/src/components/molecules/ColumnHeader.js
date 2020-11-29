@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { toggledShowFilterModal } from '../../actions';
 import { stateFrozenColumns } from '../../helpers/dataStructureHelpers';
 import { getObjectFromArrayByKeyValue } from '../../helpers';
 import ColumnHeaderDetail from './ColumnHeaderDetail';
@@ -30,7 +29,11 @@ function mapStateToProps(state, ownProps) {
       frozenColumns: stateFrozenColumns(state),
    };
 }
-
-export default connect(mapStateToProps, { toggledShowFilterModal })(
+export default connect(mapStateToProps)(
    ColumnHeader
 );
+
+/* older version
+export default connect(mapStateToProps, { toggledShowFilterModal })(
+   ColumnHeader
+); */

@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-// import { toggledShowFilterModal } from '../../actions';
 
 class IconFilter extends Component {
    renderOutline = () => {

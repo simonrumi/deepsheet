@@ -7,7 +7,8 @@ import {
    arrayContainsSomething,
    getObjectFromArrayByKeyValue,
 } from './index';
-import { updatedFilter, replacedRowVisibility, replacedColumnVisibility } from '../actions';
+import { replacedRowVisibility, replacedColumnVisibility } from '../actions';
+import { updatedFilter } from '../actions/filterActions';
 import {
    stateMetadataProp,
    dbRowFilters,
@@ -20,10 +21,11 @@ import {
    cellColumn,
    stateColumnVisibility,
    stateRowVisibility,
+   stateColumnFilters,
+   stateRowFilters
 } from './dataStructureHelpers';
 import { ROW_AXIS, COLUMN_AXIS } from '../constants';
 
-// not for use in by any functions here, just for export
 export const getAxisFilterName = axis => R.concat(axis, 'Filters');
 
 /***
@@ -49,7 +51,7 @@ export const updatedAxisFilters = (payload, filterName, stateObj, filterArr) =>
    R.pipe(
       removeOldFilter(payload), // remove the existing version of the axis' filter if it exists, from the filters array
       R.concat([payload]), // add the new filter from the payload to the filters array
-      R.assoc(filterName, R.__, stateObj) // put the new filters array into the state obj
+      R.assoc(filterName, R.__, stateObj), // put the new filters array into the state obj
    )(filterArr);
 
 /****
@@ -67,7 +69,7 @@ const numHiddenItems = R.reduce(
 
 const getNumHiddenItemsForAxis = R.pipe(
    getVisibilityForAxis,
-   R.values, 
+   R.values,
    numHiddenItems,
 );
 
@@ -139,7 +141,7 @@ export const isLastVisibleItemInAxis = R.curry((axis, totalInAxis, state, cell) 
       // if the visiblity object is empty
       R.pipe(
          getVisibilityArr(axis), //receives state
-         arrayIsNothing
+         arrayIsNothing,
       ),
       // then compare the index of the last item to the current index
       R.pipe(
@@ -218,3 +220,16 @@ export const updateOrAddPayloadToState = (payload, state) => {
       R.concat(payload) // concat the added or updated frozen rows (from the payload) with the filtered state
    )(state || []); 
 }
+
+// for use by filterModalReducer
+export const getInitialFilterValues = ({ state, rowIndex, columnIndex }) => {
+   const existingColumnFilter = getObjectFromArrayByKeyValue('index', columnIndex, stateColumnFilters(state));
+   if (isSomething(existingColumnFilter)) {
+      return existingColumnFilter;
+   }
+   const existingRowFilter = getObjectFromArrayByKeyValue('index', rowIndex, stateRowFilters(state));
+   if (isSomething(existingRowFilter)) {
+      return existingRowFilter;
+   }
+   return null;
+};

@@ -8,7 +8,7 @@ import Menu from './molecules/Menu';
 export class Header extends Component {
    renderTitleOrTitleForm() {
       if (this.props.isEditingTitle) {
-         return <TitleForm onSubmit={this.editTitle} title={this.props.titleText} />;
+         return <TitleForm />;
       }
       return <SheetHeader />;
    }

@@ -17,10 +17,27 @@ const Button = ({
    onClickFn,
    label,
    buttonType = BUTTON_TYPE,
-   disabled = false,
+   disabled = R.F,
    testId,
 }) => {
+   const enabledClasses = R.cond([
+      [R.equals(SUBMIT_TYPE), R.always(R.concat(BASE_CLASSES, SUBMIT_CLASSES))],
+      [
+         R.or(R.equals(CANCEL_TYPE), R.equals(RESET_TYPE)),
+         R.always(R.concat(BASE_CLASSES, CANCEL_CLASSES)),
+      ],
+      [R.equals(BUTTON_TYPE), R.always(R.concat(BASE_CLASSES, BUTTON_CLASSES))],
+   ]);
+
    const lowerCaseButtonType = R.toLower(buttonType);
+   
+   const allClasses = (disabled, buttonType) =>
+      R.ifElse(
+         disabled,
+         R.always(R.concat(BASE_CLASSES, DISABLED_CLASSES)),
+         R.always(enabledClasses(buttonType))
+      );
+
    return (
       <div className={classes}>
          <button
@@ -28,28 +45,12 @@ const Button = ({
             onClick={onClickFn}
             type={buttonType}
             data-testid={testId}
-            disabled={disabled}
+            disabled={disabled()}
          >
             {label}
          </button>
       </div>
    );
 };
-
-const enabledClasses = R.cond([
-   [R.equals(SUBMIT_TYPE), R.always(R.concat(BASE_CLASSES, SUBMIT_CLASSES))],
-   [
-      R.or(R.equals(CANCEL_TYPE), R.equals(RESET_TYPE)),
-      R.always(R.concat(BASE_CLASSES, CANCEL_CLASSES)),
-   ],
-   [R.equals(BUTTON_TYPE), R.always(R.concat(BASE_CLASSES, BUTTON_CLASSES))],
-]);
-
-const allClasses = (disabled, buttonType) =>
-   R.ifElse(
-      R.always(disabled),
-      R.always(R.concat(BASE_CLASSES, DISABLED_CLASSES)),
-      R.always(enabledClasses(buttonType))
-   );
 
 export default Button;

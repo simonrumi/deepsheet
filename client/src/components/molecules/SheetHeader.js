@@ -73,7 +73,6 @@ class SheetHeader extends React.Component {
    }
 
    render() {
-      console.log('SheetHeader rendering, isStale:', this.props.isStale);
       return (
          <div className="flex items-center justify-between px-2 py-1" onClick={this.props.menuHidden} key="SheetHeader">
             <Heading text={this.props.title} classes="pr-2" />

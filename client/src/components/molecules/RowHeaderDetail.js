@@ -1,12 +1,14 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import managedStore from '../../store';
 import * as R from 'ramda';
 import { DragSource } from 'react-dnd';
-import managedStore from '../../store';
 import { ItemTypes } from '../../constants';
 import { indexToRowNumber, isSomething, isNothing } from '../../helpers';
 import { cellRow, stateRowFilters, stateShowFilterModal } from '../../helpers/dataStructureHelpers';
-import { toggledShowFilterModal, rowMoved } from '../../actions';
+import { getInitialFilterValues } from '../../helpers/visibilityHelpers';
+import { rowMoved } from '../../actions';
+import { toggledShowFilterModal } from '../../actions/filterActions';
 import { startedUndoableAction, completedUndoableAction } from '../../actions/undoActions';
 import { updatedFrozenRows } from '../../actions/metadataActions';
 import IconFilter from '../atoms/IconFilter';
@@ -41,7 +43,12 @@ class RowHeaderDetail extends Component {
       this.toggleFreeze = this.toggleFreeze.bind(this);
    }
 
-   showFilterModalForRow = rowIndex => this.props.toggledShowFilterModal(rowIndex, null);
+   showFilterModalForRow = rowIndex =>
+      this.props.toggledShowFilterModal(
+         rowIndex,
+         null,
+         getInitialFilterValues({ state: managedStore.state, rowIndex })
+      );
 
    isFilterEngaged = (rowIndex, rowFilters) => {
       if (isNothing(rowFilters)) {
@@ -58,7 +65,7 @@ class RowHeaderDetail extends Component {
       startedUndoableAction();
       updatedFrozenRows([{ index: this.props.cell.row, isFrozen: !this.props.frozen }]);
       completedUndoableAction('toggled freeze for row ' + this.props.index);
-   }
+   };
 
    render() {
       const row = cellRow(this.props.cell);
@@ -69,11 +76,7 @@ class RowHeaderDetail extends Component {
 
       return connectDragSource(
          <div className="flex flex-col w-full h-full justify-evenly">
-            <SnowflakeIcon
-               classes="w-1/2 mt-1 ml-4"
-               switchedOn={this.props.frozen}
-               onClickFn={this.toggleFreeze}
-            />
+            <SnowflakeIcon classes="w-1/2 mt-1 ml-4" switchedOn={this.props.frozen} onClickFn={this.toggleFreeze} />
             <div className="flex cursor-row-resize">
                <div key={'rowNum_' + row} className="w-2/4 text-center self-center text-grey-blue">
                   {rowNum}

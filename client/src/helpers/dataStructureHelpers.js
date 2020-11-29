@@ -25,11 +25,11 @@ const subObjectGetterSetter = (lens, propName) => {
 };
 
 const createGetter = lens => data => R.view(lens, data);
-const subObjectGetter = (lens, propName) => {
+const subObjectGetter = R.curry((lens, propName) => {
    const propLens = R.lensProp(propName); // e.g. propName = 'totalRows'
    const fullPathLens = R.compose(lens, propLens); // gets us to e.g. metadata.totalRows
    return createGetter(fullPathLens);
-};
+});
 
 // the "present" object wraps all the stuff in the state
 const presentLens = R.lensProp('present');
@@ -144,6 +144,10 @@ const stateFilterModalLens = R.compose(presentLens, filterModalLens);
 export const stateShowFilterModal = subObjectGetter(stateFilterModalLens, 'showFilterModal');
 export const stateFilterColumnIndex = subObjectGetter(stateFilterModalLens, 'colIndex');
 export const stateFilterRowIndex = subObjectGetter(stateFilterModalLens, 'rowIndex');
+export const stateFilterExpression = subObjectGetter(stateFilterModalLens, 'filterExpression');
+export const stateFilterCaseSensitive = subObjectGetter(stateFilterModalLens, 'caseSensitive');
+export const stateFilterRegex = subObjectGetter(stateFilterModalLens, 'regex');
+export const stateFilterIsStale = subObjectGetter(stateFilterModalLens, 'isStale');
 
 /************************************************ STATE AUTH **********************************************/
 const authLens = R.lensProp('auth');

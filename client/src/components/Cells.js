@@ -34,7 +34,7 @@ R.ifElse(
    isLastVisibleItemInAxis(
       COLUMN_AXIS, // we are rendering a row, so need to check if this is the last visible column in the row
       stateTotalColumns(managedStore.state),
-      statePresent(managedStore.state)
+      managedStore.state
    ),
    renderEmptyEndCell,
    nothing
@@ -70,7 +70,7 @@ const renderCells = cells => {
          orderCells,
          R.map(cell => maybeCell(managedStore.state, cell)),
          R.prepend(<ColumnHeaders key="columnHeaders" />),
-         R.append(<LastRow key="lastRow" />)
+         R.append(<LastRow key="lastRow" />),
       )(cells);
    }
    return null;

@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { updatedSortOptions, sortedAxis } from '../../actions';
 import { menuHidden } from '../../actions/menuActions';
 import SortOptions from '../molecules/SortOptions';
 import FilterOptions from '../molecules/FilterOptions';
@@ -36,4 +35,4 @@ function mapStateToProps(state, ownProps) {
    };
 }
 
-export default connect(mapStateToProps, { updatedSortOptions, sortedAxis, menuHidden })(FilterModal);
+export default connect(mapStateToProps, { menuHidden })(FilterModal);

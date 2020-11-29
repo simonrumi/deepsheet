@@ -1,10 +1,13 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import managedStore from '../../store';
 import { DragSource } from 'react-dnd';
 import { ItemTypes } from '../../constants';
 import { indexToColumnLetter, isSomething, arrayContainsSomething, getObjectFromArrayByKeyValue } from '../../helpers';
 import { stateColumnFilters, stateShowFilterModal } from '../../helpers/dataStructureHelpers';
-import { toggledShowFilterModal, columnMoved } from '../../actions';
+import { getInitialFilterValues } from '../../helpers/visibilityHelpers';
+import { columnMoved } from '../../actions';
+import { toggledShowFilterModal } from '../../actions/filterActions';
 import { startedUndoableAction, completedUndoableAction } from '../../actions/undoActions';
 import { updatedFrozenColumns } from '../../actions/metadataActions';
 import IconFilter from '../atoms/IconFilter';
@@ -36,7 +39,13 @@ class ColumnHeaderDetail extends Component {
       this.toggleFreeze = this.toggleFreeze.bind(this);
    }
 
-   showFilterModalForColumn = () => this.props.toggledShowFilterModal(null, this.props.index);
+   showFilterModalForColumn = () => {
+      this.props.toggledShowFilterModal(
+         null,
+         this.props.index,
+         getInitialFilterValues({ state: managedStore.state, columnIndex: this.props.index })
+      );
+   }
 
    isFilterEngaged = (columnFilters, columnIndex) => {
       if (arrayContainsSomething(columnFilters)) {
@@ -47,11 +56,10 @@ class ColumnHeaderDetail extends Component {
    };
 
    toggleFreeze = () => {
-      console.log('ColumnHeaderDetail.toggleFreeze about to call startedUndoableAction');
       startedUndoableAction();
       updatedFrozenColumns([{ index: this.props.index, isFrozen: !this.props.frozen }]);
       completedUndoableAction('toggled freeze for column ' + this.props.index);
-   }
+   };
 
    render() {
       const columnLetter = indexToColumnLetter(this.props.index);

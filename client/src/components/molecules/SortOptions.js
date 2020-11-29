@@ -6,8 +6,8 @@ import { SORT_INCREASING, SORT_DECREASING, ROW_AXIS, COLUMN_AXIS } from '../../c
 import {
    updatedSortOptions,
    sortedAxis,
-   toggledShowFilterModal,
 } from '../../actions';
+import { toggledShowFilterModal } from '../../actions/filterActions';
 import { startedUndoableAction, completedUndoableAction } from '../../actions/undoActions';
 
 class SortOptions extends Component {

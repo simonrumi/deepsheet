@@ -1,102 +1,99 @@
-import React, { Component } from 'react';
-import { Field, reduxForm, SubmissionError } from 'redux-form';
-import { connect } from 'react-redux';
-import { updatedTitle, titleEditCancelled } from '../../actions/titleActions';
+import React from 'react';
+import { useSelector } from 'react-redux';
+import { changedTitleValue, updatedTitle, titleEditCancelled } from '../../actions/titleActions';
 import { isSomething } from '../../helpers';
-import { stateSheetId, stateTitleErrorMessage } from '../../helpers/dataStructureHelpers';
+import {
+   stateSheetId,
+   stateTitleText,
+   stateTitleErrorMessage,
+   stateTitleIsCallingDb,
+   stateTitleIsStale,
+} from '../../helpers/dataStructureHelpers';
 import Button from '../atoms/Button';
 import TextInput from './TextInput';
 import ErrorText from '../atoms/ErrorText';
 
-// TODO get rid of redux form - write our own
+// TODO
+// - validation
+// - error display
+// - remove redux-form
 
-export class TitleForm extends Component {
-   constructor(props) {
-      super(props);
-      this.submitNewTitle = this.submitNewTitle.bind(this);
-   }
+const TitleForm = props => {
+   const sheetId = useSelector(state => stateSheetId(state));
+   const updateTitleError = useSelector(state => stateTitleErrorMessage(state));
+   const titleText = useSelector(state => stateTitleText(state));
+   const isCallingDb = useSelector(state => stateTitleIsCallingDb(state));
+   const isStale = useSelector(state => stateTitleIsStale(state));
 
-   submitNewTitle = formValues => {
-      console.log('submitNewTitle got formValues', formValues);
+   const submitNewTitle = event => {
+      event.preventDefault();
       try {
-         this.props.updatedTitle({
-            text: formValues.title,
+         updatedTitle({
+            text: titleText,
             isEditingTitle: false,
-            sheetId: this.props.sheetId,
+            sheetId,
          });
       } catch (err) {
          console.error('TitleForm.submitNewTitle - error updating title', err);
-         throw new SubmissionError({
+         throw new Error({
             title: 'title was not updated: ' + err,
          });
       }
    };
 
-   handleCancel = formValues => {
-      this.props.reset();
-      this.props.titleEditCancelled();
+   const handleCancel = event => {
+      event.preventDefault();
+      titleEditCancelled();
    };
 
-   renderInput = formProps => {
-      return <TextInput formProps={formProps} testId="titleInput" />;
-   };
+   const handleChange = event => {
+      event.preventDefault();
+      changedTitleValue(event.target.value);
+   }
 
-   render() {
-      // console.log('TitleForm props, most from reduxForm:', this.props);
+   const submitDisabled = () =>  !isStale || isCallingDb;
+   const cancelDisabled = () => isCallingDb;
+
+   const render = () => {
       return (
          <form
             className="flex items-start justify-between px-2 py-1"
-            onSubmit={this.props.handleSubmit(this.submitNewTitle)}
+            onSubmit={submitNewTitle}
             data-testid="titleForm">
-            <Field name="title" component={this.renderInput} />
+            <TextInput props={{ changeHandler: handleChange, value: titleText }} />
             <div className="flex flex-col">
                <div className="flex items-center">
                   <Button
                      buttonType="submit"
                      label="update"
-                     disabled={this.props.pristine || this.props.submitting}
-                     testId="titleSubmit"
+                     disabled={submitDisabled}
                   />
                   <Button
                      classes="pl-2"
                      buttonType="cancel"
                      label="cancel"
-                     disabled={this.props.submitting}
-                     onClickFn={this.handleCancel}
-                     testId="titleCancel"
+                     disabled={cancelDisabled}
+                     onClickFn={handleCancel}
                   />
                </div>
                <div>
-                  <ErrorText error={isSomething(this.props.updateTitleError) ? this.props.updateTitleError : ''} />
+                  <ErrorText error={isSomething(updateTitleError) ? updateTitleError : ''} />
                </div>
             </div>
          </form>
       );
    }
+
+   // TODO fake some errors and check that they display correctly
+   const validateForm = formValues => {
+      const errors = {};
+      if (!formValues.title) {
+         errors.title = 'please enter a title';
+      }
+      return errors;
+   };
+
+   return render();
 }
 
-const validateForm = formValues => {
-   const errors = {};
-   if (!formValues.title) {
-      errors.title = 'please enter a title';
-   }
-   return errors;
-};
-
-// reminder: reduxForm() is similar to connect()
-// once we do reduxForm()(TitleForm), we get a ton of props provided by reduxForm
-// including this.props.reset .handleSubmit, .pristine, .submitting, and others used above
-const reduxTitleForm = reduxForm({
-   form: 'titleForm', //a name for this form that shows up in the redux store
-   validate: validateForm,
-})(TitleForm);
-
-const mapStateToProps = (state, ownProps) => {
-   return {
-      sheetId: stateSheetId(state),
-      updateTitleError: stateTitleErrorMessage(state),
-      initialValues: { title: ownProps.title },
-   };
-};
-
-export default connect(mapStateToProps, { updatedTitle, titleEditCancelled })(reduxTitleForm);
+export default TitleForm;
