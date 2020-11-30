@@ -5,6 +5,7 @@ import {
    COMPLETED_TITLE_UPDATE,
    TITLE_UPDATE_FAILED,
    TITLE_EDIT_CANCELLED,
+   TITLE_ERROR_DETECTED,
 } from '../actions/titleTypes';
 import { FETCHED_SHEET } from '../actions/sheetTypes';
 import { COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
@@ -70,6 +71,12 @@ const titleReducer = (state = {}, action) => {
             errorMessage: isSomething(action.payload.errorMessage) ? action.payload.errorMessage : null,
             lastUpdated: isSomething(state.lastUpdated) ? state.lastUpdated : null,
          };
+
+      case TITLE_ERROR_DETECTED:
+         return {
+            ...state,
+            errorMessage: action.payload
+         }
 
       case TITLE_EDIT_CANCELLED:
          return {

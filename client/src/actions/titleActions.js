@@ -1,4 +1,10 @@
-import { OPENED_TITLE_EDITOR, CHANGED_TITLE_VALUE, POSTING_UPDATED_TITLE, TITLE_EDIT_CANCELLED } from './titleTypes';
+import {
+   OPENED_TITLE_EDITOR,
+   CHANGED_TITLE_VALUE,
+   POSTING_UPDATED_TITLE,
+   TITLE_EDIT_CANCELLED,
+   TITLE_ERROR_DETECTED
+} from './titleTypes';
 import managedStore from '../store';
 
 export const openedTitleEditor = isEditingTitle => {
@@ -19,3 +25,7 @@ export const updatedTitle = titleData => {
 export const titleEditCancelled = () => {
    managedStore.store.dispatch({ type: TITLE_EDIT_CANCELLED });
 };
+
+export const titleErrorDetected = error => {
+   managedStore.store.dispatch({ type: TITLE_ERROR_DETECTED, payload: error });
+}

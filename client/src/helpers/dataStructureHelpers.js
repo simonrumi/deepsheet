@@ -105,7 +105,7 @@ export const saveableStateMetadata = R.pipe(
 export const stateMetadataProp = R.curry((stateObj, propName) => {
    const propLens = R.lensProp(propName);
    const propInMetadataLens = R.compose(stateMetadataLens, propLens);
-   return R.view(propInMetadataLens, stateObj); // TODO could turn this into a pipe
+   return R.view(propInMetadataLens, stateObj);
 });
 
 // get values from the state structure
@@ -242,7 +242,6 @@ export const stateTitleIsEditingTitle = subObjectGetter(stateTitleLens, 'isEditi
 export const stateTitleIsStale = subObjectGetter(stateTitleLens, 'isStale');
 export const stateTitleErrorMessage = subObjectGetter(stateTitleLens, 'errorMessage');
 export const stateTitleLastUpdated = subObjectGetter(stateTitleLens, 'lastUpdated');
-export const stateTitleNeedsUpdate = subObjectGetter(stateTitleLens, 'needsUpdate');
 export const stateTitleText = subObjectGetter(stateTitleLens, 'text');
 
 const menuLens = R.lensProp('menu');
@@ -278,4 +277,6 @@ export const stateIsStale = state =>
 
 // return true if we have an issue with any state objects that tried to save to the db but got error messages
 export const stateErrorMessages = state =>
-   stateCellDbUpdatesErrorMessage(state) || stateTitleNeedsUpdate(state) || stateMetadataErrorMessage(state);
+   stateCellDbUpdatesErrorMessage(state) 
+      || (stateTitleIsStale(state) && !stateTitleIsCallingDb(state) && !stateTitleIsEditingTitle(state))
+      || stateMetadataErrorMessage(state);

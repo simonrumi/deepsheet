@@ -1,7 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { changedTitleValue, updatedTitle, titleEditCancelled } from '../../actions/titleActions';
-import { isSomething } from '../../helpers';
+import {
+   changedTitleValue,
+   updatedTitle,
+   titleEditCancelled,
+   titleErrorDetected,
+} from '../../actions/titleActions';
+import { isSomething, isNothing } from '../../helpers';
 import {
    stateSheetId,
    stateTitleText,
@@ -13,19 +18,36 @@ import Button from '../atoms/Button';
 import TextInput from './TextInput';
 import ErrorText from '../atoms/ErrorText';
 
-// TODO
-// - validation
-// - error display
-// - remove redux-form
-
 const TitleForm = props => {
    const sheetId = useSelector(state => stateSheetId(state));
-   const updateTitleError = useSelector(state => stateTitleErrorMessage(state));
+   const titleError = useSelector(state => stateTitleErrorMessage(state));
    const titleText = useSelector(state => stateTitleText(state));
    const isCallingDb = useSelector(state => stateTitleIsCallingDb(state));
    const isStale = useSelector(state => stateTitleIsStale(state));
 
-   const submitNewTitle = event => {
+   const [wasStale, setWasStale] = useState(false);
+   useEffect(isStale => setWasStale(isStale), []); // equivalent to componentDidMount per https://medium.com/@felippenardi/how-to-do-componentdidmount-with-react-hooks-553ba39d1571
+
+   const handleCancel = event => {
+      event.preventDefault();
+      titleEditCancelled();
+   };
+
+   const validateFormValue = text => {
+      //specifically disallow alert box code
+      if (/alert\(.*\)/.test(text)) {
+         titleErrorDetected('do not enter code');
+         return false;
+      }
+      if (isNothing(text)) {
+         titleErrorDetected('please enter a title');
+         return false;
+      }
+      titleErrorDetected('');
+      return true;
+   };
+
+   const handleSubmit = event => {
       event.preventDefault();
       try {
          updatedTitle({
@@ -34,33 +56,42 @@ const TitleForm = props => {
             sheetId,
          });
       } catch (err) {
-         console.error('TitleForm.submitNewTitle - error updating title', err);
          throw new Error({
             title: 'title was not updated: ' + err,
          });
       }
    };
 
-   const handleCancel = event => {
+   const handleBlur = event => {
       event.preventDefault();
-      titleEditCancelled();
-   };
+      // don't really need this?
+   }
 
    const handleChange = event => {
       event.preventDefault();
       changedTitleValue(event.target.value);
+      validateFormValue(event.target.value);
    }
 
-   const submitDisabled = () =>  !isStale || isCallingDb;
+   const submitDisabled = () =>  !isStale || isCallingDb || isSomething(titleError);
    const cancelDisabled = () => isCallingDb;
 
    const render = () => {
       return (
          <form
             className="flex items-start justify-between px-2 py-1"
-            onSubmit={submitNewTitle}
+            onSubmit={handleSubmit}
             data-testid="titleForm">
-            <TextInput props={{ changeHandler: handleChange, value: titleText }} />
+            <div className="flex flex-col w-full">
+               <TextInput 
+                  props={{ 
+                     changeHandler: handleChange, 
+                     value: titleText, 
+                     blurHandler: handleBlur,
+                  }} 
+               />
+               <ErrorText error={isSomething(titleError) ? titleError : ''} />
+            </div>
             <div className="flex flex-col">
                <div className="flex items-center">
                   <Button
@@ -76,22 +107,10 @@ const TitleForm = props => {
                      onClickFn={handleCancel}
                   />
                </div>
-               <div>
-                  <ErrorText error={isSomething(updateTitleError) ? updateTitleError : ''} />
-               </div>
             </div>
          </form>
       );
    }
-
-   // TODO fake some errors and check that they display correctly
-   /* const validateForm = formValues => {
-      const errors = {};
-      if (!formValues.title) {
-         errors.title = 'please enter a title';
-      }
-      return errors;
-   }; */
 
    return render();
 }

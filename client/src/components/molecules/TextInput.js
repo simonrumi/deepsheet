@@ -1,9 +1,8 @@
 import React from 'react';
 import * as R from 'ramda';
-//import ErrorText from '../atoms/ErrorText';
 
 const TextInput = props => {
-	const { changeHandler, value = '', error = '', classes = '' } = props.props;
+	const { changeHandler, blurHandler, value = '', error = '', classes = '' } = props.props;
 	const borderColor = error ? ' border-vibrant-burnt-orange' : ' border-light-light-blue';
 	const baseClasses =
 		classes +
@@ -17,6 +16,7 @@ const TextInput = props => {
 				value={value} 
 				onChange={changeHandler} 
 				error={error}
+            onBlur={blurHandler}
 			/>
 		</div>
 	);
