@@ -5,7 +5,7 @@ import { updatedEditor } from '../../actions/editorActions';
 import { updatedCellBeingEdited, hasChangedCell } from '../../actions/cellActions';
 import { isSomething, isNothing } from '../../helpers';
 import { stateEditor, stateEditorContent, stateEditorRow, stateEditorColumn, stateEditorRef } from '../../helpers/dataStructureHelpers';
-import { completedUndoableAction } from '../../actions/undoActions'; 
+import { startedUndoableAction, completedUndoableAction } from '../../actions/undoActions'; 
 import EditorInput from '../atoms/EditorInput';
 
 class Editor extends Component {
@@ -57,6 +57,7 @@ class Editor extends Component {
             handleChange={this.handleChange}
             disabled={this.props.editorContent ? false : true}
             handleBlur={this.handleBlur}
+            handleFocus={startedUndoableAction}
          />
       );
    }

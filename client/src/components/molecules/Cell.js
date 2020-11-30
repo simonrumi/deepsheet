@@ -54,7 +54,7 @@ const Cell = props => {
    }
 
    const onCellClick = () => {
-      startedUndoableAction();
+      // startedUndoableAction();
       focusedCell(cellReducer);
       updatedEditor(cellReducer);
       menuHidden(); // in case the menu was showing, hide it
@@ -98,7 +98,6 @@ const Cell = props => {
       ])(cellReducer);
    };
 
-   
    return renderCell(cellReducer);
 }
 

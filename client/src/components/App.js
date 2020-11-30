@@ -1,13 +1,33 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { connect } from 'react-redux';
 import * as R from 'ramda';
+import { undid, redid } from '../actions/undoActions';
 import Sheet from './Sheet';
 import ModalBackground from './atoms/ModalBackground';
 import Footer from './molecules/Footer';
 
 // TODO: need to change whitelist of IP addresses for mongodb
 
+const keyBindings = event => {
+   // note that metaKey detects both the command key on the Mac but also (in some browsers) the windows key.
+   // this is ok - just means that windows key + Z will also undo
+   if (event.ctrlKey || event.metaKey) {
+      // ctrl/cmd + Z
+      if (event.keyCode === 90) {
+         undid();
+      }
+      // ctrl/cmd + Y
+      if(event.keyCode === 89) {
+         redid();
+      }
+   }
+}
+
 const App = props => {
+   useEffect(() => {
+      document.addEventListener('keydown', keyBindings, false);
+   }, []);
+
    logState(props.state);
    return (
       <div>

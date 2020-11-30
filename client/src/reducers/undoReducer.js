@@ -1,6 +1,7 @@
 import * as R from 'ramda';
 import { COMPLETED_SAVE_UPDATES } from '../actions/types';
 import { UNDO, REDO, STARTED_UNDOABLE_ACTION, COMPLETED_UNDOABLE_ACTION } from '../actions/undoTypes';
+import { arrayContainsSomething } from '../helpers';
 
 const undoReducer = reducer => {
    const initialState = {
@@ -12,6 +13,9 @@ const undoReducer = reducer => {
       const { past, present, future }  = state;
       switch (action.type) {
          case UNDO:
+            if (!arrayContainsSomething(past)) {
+               return state;
+            }
             return {
                past: R.slice(0, past.length - 1, past), // take the last element from the past 
                present: R.last(past), // ...and make it the present
@@ -19,6 +23,9 @@ const undoReducer = reducer => {
             };
 
          case REDO:
+            if (!arrayContainsSomething(future)) {
+               return state;
+            }
             return {
                past: R.append(present, past), // make the present the last element of the past
                present: R.head(future), // set the present to be the first element of the future

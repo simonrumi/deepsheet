@@ -1,43 +1,31 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
+import React, { useState, useEffect } from 'react';
 import { setEditorRef } from '../../actions/editorActions';
 
-class EditorInput extends Component {
-   constructor(props) {
-      super(props);
-      this.editorInputRef = React.createRef();
-   }
+const EditorInput = props => {
+   const { classes, value, handleChange, disabled, handleBlur, handleFocus } = props;
 
-   componentDidMount() {
-      // by putting the ref property of the Editor into the store,
-      // individual cells can use the ref to cause focus to be set to the Editor,
-      // when the cell is clicked
-      this.props.setEditorRef(this.editorInputRef);
-   }
+   // by putting the ref property of the Editor into the store,
+   // individual cells can use the ref to cause focus to be set to the Editor,
+   // when the cell is clicked
+   const [editorInputRef, seteditorInputRef] = useState(React.createRef());
+   useEffect(() => setEditorRef(editorInputRef), []); // equivalent to componentDidMount per https://medium.com/@felippenardi/how-to-do-componentdidmount-with-react-hooks-553ba39d1571
 
-   render() {
+   const render = () => {
       return (
          <input
-            className={this.props.classes}
+            className={classes}
             type="text"
-            value={this.props.value}
-            onChange={this.props.handleChange}
-            onBlur={this.props.handleBlur}
-            ref={this.editorInputRef}
-            disabled={this.props.disabled}
+            value={value}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            onFocus={handleFocus}
+            ref={editorInputRef}
+            disabled={disabled}
          />
       );
    }
+
+   return render();
 }
 
-const mapStateToProps = (state, ownProps) => {
-   return {
-      classes: ownProps.classes,
-      value: ownProps.value,
-      handleChange: ownProps.handleChange,
-      disabled: ownProps.disabled,
-      handleBlur: ownProps.handleBlur,
-   };
-};
-
-export default connect(mapStateToProps, { setEditorRef })(EditorInput);
+export default EditorInput;
