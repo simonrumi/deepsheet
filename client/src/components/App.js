@@ -31,7 +31,6 @@ const stateKeys = [
    'editor',
    'editorRef',
    'title',
-   'form',
    'filterModal',
    'cellDbUpdates',
    'menu',
