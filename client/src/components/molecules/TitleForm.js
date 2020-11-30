@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useSelector } from 'react-redux';
 import {
    changedTitleValue,
@@ -24,9 +24,6 @@ const TitleForm = props => {
    const titleText = useSelector(state => stateTitleText(state));
    const isCallingDb = useSelector(state => stateTitleIsCallingDb(state));
    const isStale = useSelector(state => stateTitleIsStale(state));
-
-   const [wasStale, setWasStale] = useState(false);
-   useEffect(isStale => setWasStale(isStale), []); // equivalent to componentDidMount per https://medium.com/@felippenardi/how-to-do-componentdidmount-with-react-hooks-553ba39d1571
 
    const handleCancel = event => {
       event.preventDefault();
