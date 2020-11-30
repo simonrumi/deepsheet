@@ -25,7 +25,9 @@ export const toggledShowFilterModal = (rowIndex, colIndex, initialValues) => {
 };
 
 export const updatedFilter = (filterOptions, isInitializingSheet) => {
-   managedStore.store.dispatch({ type: TOGGLED_SHOW_FILTER_MODAL });
+   if (!isInitializingSheet) {
+      managedStore.store.dispatch({ type: TOGGLED_SHOW_FILTER_MODAL });
+   }
    managedStore.store.dispatch({
       type: HIDE_FILTERED,
       payload: { filterOptions, isInitializingSheet },

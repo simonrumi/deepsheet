@@ -171,7 +171,7 @@ const mapWithUpdatedFilter = axis =>
          },
          isInitializingSheet
       );
-   });
+   }); // this function is called with the filters array
 
 const isAxisItemVisible = (visibilityGetterFn, axisIndex) => R.pipe(
    visibilityGetterFn,

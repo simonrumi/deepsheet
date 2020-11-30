@@ -30,7 +30,9 @@ const getOtherAxis = axis => (axis === ROW_AXIS ? COLUMN_AXIS : ROW_AXIS);
 const getVisibilityActionTypeByAxis = axis =>
    axis === ROW_AXIS ? REPLACED_ROW_VISIBILITY : REPLACED_COLUMN_VISIBILITY;
 
-const getStateFromData = data => R.path(['store', 'getState'], data)();
+const getStateFromData = data => {
+   return R.path(['store', 'getState'], data)();
+}
 
 const getFilters = (axisName, state) => R.pipe(R.concat(R.__, 'Filters'), stateMetadataProp(state))(axisName);
 
@@ -211,18 +213,20 @@ const getNewFilter = data =>
 // Encasing all that is R.useWtih which takes the 3 parameters passed to it, and passes one param to each function
 // in the array, then each of the 3 functions in the array are used by R.ifElse
 const addNewFilter = data => {
-   const newFilter = getNewFilter(data);
-   R.useWith(R.ifElse, [
-      R.thunkify(R.equals(ROW_AXIS)),
-      R.thunkify(updatedRowFilters),
-      R.thunkify(updatedColumnFilters),
-   ])(getAxis(data), newFilter, newFilter)();
+   if (!data.isInitializingSheet) {
+      const newFilter = getNewFilter(data);
+      R.useWith(R.ifElse, [
+         R.thunkify(R.equals(ROW_AXIS)),
+         R.thunkify(updatedRowFilters),
+         R.thunkify(updatedColumnFilters),
+      ])(getAxis(data), newFilter, newFilter)();
+   }
    return data;
 };
 /**** end addNewFilter and related functions ******/
 
 /* getDataFromActionAndStore - creates a data object for passing to subsequent functions in hideFiltered's pipe */
-const getDataFromActionAndStore = (actionData, store) => R.mergeAll([actionData, { store }]);
+const getDataFromActionAndStore = (actionData, isInitializingSheet, store) => R.mergeAll([actionData, { store, isInitializingSheet }]);
 
 const hideFiltered = R.pipe(getDataFromActionAndStore, addNewFilter, filterAxes, filterCells);
 
@@ -237,14 +241,15 @@ const clearAllFilters = store => {
       rowIndex: null,
       colIndex: 0, //doesn't really matter which filter icon that was clicked on, so we pretend it was column A
    };
-   R.pipe(getDataFromActionAndStore, filterAxes, filterCells)(filterDataReset, store);
+   const isInitializingSheet = false;
+   R.pipe(getDataFromActionAndStore, filterAxes, filterCells)(filterDataReset, isInitializingSheet, store);
 };
 
 export default store => next => async action => {
    switch (action.type) {
       case HIDE_FILTERED:
          const { filterOptions, isInitializingSheet } = action.payload;
-         hideFiltered(filterOptions, store);
+         hideFiltered(filterOptions, isInitializingSheet, store);
          if (!isInitializingSheet) {
             hasChangedMetadata();
          }
