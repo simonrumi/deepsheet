@@ -23,7 +23,6 @@ import { getUserInfoFromCookie } from '../helpers/userHelpers';
 import { ROW_AXIS, COLUMN_AXIS, THIN_COLUMN, ROW_HEIGHT } from '../constants';
 import LoadingIcon from './atoms/IconLoading';
 import Header from './Header';
-import Editor from './organisms/Editor';
 import Cells from './Cells';
 import FilterModal from './organisms/FilterModal';
 import LoginModal from './organisms/LoginModal';
@@ -119,10 +118,10 @@ class Sheet extends Component {
             </div>
          );
       }
+
       return (
          <div className="px-1">
             <Header />
-            <Editor cellContent="" />
             {this.maybeRenderFilterModal(this.props.showFilterModal)}
             {this.maybeRenderLoginOrFetchSheet()}
             <DndProvider backend={HTML5Backend}>

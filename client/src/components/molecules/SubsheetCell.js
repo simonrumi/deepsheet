@@ -34,16 +34,16 @@ const SubsheetCell = props => {
 
    const renderIconUnlinkSubsheet = () => {
       /* onMouseDown is fired before onBlur, whereas onClick is after onBlur. 
-         Since the Editor may have the focus when a cell is clicked, clicking on IconNewDoc will cause
-         the Editor's onBlur to fire...but we need to call another action before the onBlur,
+         Since the cell editor may have the focus when a cell is clicked, clicking on IconNewDoc will cause
+         the editor's onBlur to fire...but we need to call another action before the onBlur,
          hence the use of onMouseDown */
       return <IconUnlinkSubsheet classes="w-4 flex-1" onMouseDownFn={unlinkSubsheet} />;
    }
 
    const renderIconDownToSubsheet = () => {
       /* onMouseDown is fired before onBlur, whereas onClick is after onBlur. 
-         Since the Editor may have the focus when a cell is clicked, clicking on IconNewDoc will cause
-         the Editor's onBlur to fire...but we need to call another action before the onBlur,
+         Since the editor may have the focus when a cell is clicked, clicking on IconNewDoc will cause
+         the editor's onBlur to fire...but we need to call another action before the onBlur,
          hence the use of onMouseDown */
       return (
          <IconDownToSubsheet

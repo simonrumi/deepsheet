@@ -32,6 +32,12 @@ const FilterOptions = props => {
    const regex = useSelector(state => isNothing(stateFilterRegex(state)) ? false : stateFilterRegex(state));
    const isStale = useSelector(state => stateFilterIsStale(state));
 
+// TODO - the useEffect(isStale => etc) thing below is weird and probably not the way to do things. read about 
+   // - useCallback ..but tried this, didn't seem to solve the issue, just moved the warning to useCallback instead of useEffect
+   // - custom hooks
+   // both here https://wanago.io/2019/11/18/useeffect-hook-in-react-custom-hooks/
+   //  and in the react docs
+
    // rare case of using local state to track what the isStale prop was as we open the filter modal
    // this is so it can be reinstated if we cancel out of the filter modal
    const [wasStale, setWasStale] = useState(false);

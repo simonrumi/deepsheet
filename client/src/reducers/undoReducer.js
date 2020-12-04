@@ -1,7 +1,15 @@
 import * as R from 'ramda';
 import { COMPLETED_SAVE_UPDATES } from '../actions/types';
-import { UNDO, REDO, STARTED_UNDOABLE_ACTION, COMPLETED_UNDOABLE_ACTION } from '../actions/undoTypes';
+import {
+   UNDO,
+   REDO,
+   STARTED_UNDOABLE_ACTION,
+   COMPLETED_UNDOABLE_ACTION,
+   STARTED_EDITING,
+   FINISHED_EDITING,
+} from '../actions/undoTypes';
 import { arrayContainsSomething } from '../helpers';
+import { stateOriginalValue } from '../helpers/dataStructureHelpers';
 
 const undoReducer = reducer => {
    const initialState = {
@@ -13,6 +21,7 @@ const undoReducer = reducer => {
       const { past, present, future }  = state;
       switch (action.type) {
          case UNDO:
+            console.log('undoReducer received UNDO, before undo state is', state);
             if (!arrayContainsSomething(past)) {
                return state;
             }
@@ -23,6 +32,7 @@ const undoReducer = reducer => {
             };
 
          case REDO:
+            console.log('undoReducer received REDO, before redo state is', state);
             if (!arrayContainsSomething(future)) {
                return state;
             }
@@ -33,26 +43,60 @@ const undoReducer = reducer => {
             }
 
          case STARTED_UNDOABLE_ACTION:
-            console.log('undoReducer STARTED_UNDOABLE_ACTION staring with state', state);
+            console.log('undoReducer STARTED_UNDOABLE_ACTION');
             return {
                ...state, // keep the future as is
                past: R.append(present, past), // put the current "present" at the end of the past
                present: reducer(present, action), // update the present
-            };
+            }
 
          case COMPLETED_UNDOABLE_ACTION:
-            console.log('undoReducer COMPLETED_UNDOABLE_ACTION staring with state', state);
+            console.log('undoReducer COMPLETED_UNDOABLE_ACTION');
             return {
                ...state, // keep the past as-is (see STARTED_UNDOABLE_ACTION above)
                present: reducer(present, action), // update the present
-               future: [] // blow away the future, since we're now taking a new course of action
-            };
+               future: [], // blow away the future, since we're now taking a new course of action
+            }
+
+         case STARTED_EDITING:
+            // action.payload contains just the original value
+            console.log('undoReducer STARTED_EDITING got action.payload', action.payload);
+            return {
+               ...state, // keep the past & future as is
+               present: reducer(present, action), // update the present
+               maybePast: {...present}, // this is not yet the official past
+               originalValue: action.payload // save the value we started editing for comparison when FINISHED_EDITING
+            }
+         
+         case FINISHED_EDITING:
+            /**
+            * 1. Note that action.payload contains { value, message }, which is different from what it is for STARTED_EDITING
+            * 2. Note that in CellInPLaceEditor.js, the manageBlur() function may call finishedEditing() with the payload.value of null
+            * This is to handle the situation where the user hits the esc key without ever having typed in the cell editor 
+            * (hence the value doesn't get populated)
+            * So here we need to check for the value being exactly null and treat it the same as when the original value and the payload.value are the same
+             */
+            return action.payload.value === null || R.equals(stateOriginalValue(state), action.payload.value)
+               ? {
+                  ...state, // keep the past & future as is
+                  present: reducer(present, action), // update the present
+                  maybePast: null, // reset this
+                  originalValue: null // reset this
+               }
+               : {
+                  ...state, // keep the future as is
+                  past: R.append(state.maybePast, past), // the maybePast now becomes part of the real past
+                  present: reducer(present, action), // update the present
+                  originalValue: null, //reset this
+                  maybePast: null, // reset this
+               }
 
          case COMPLETED_SAVE_UPDATES:
             return {
                ...state,
                past: [], // blow away past
-               future: [] // ...and the future, to reset the undo history after a save
+               future: [], // ...and the future, to reset the undo history after a save
+               undoableActionInProgress: false,
             }
          
          default:

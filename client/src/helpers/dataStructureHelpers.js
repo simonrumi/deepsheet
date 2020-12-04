@@ -38,7 +38,8 @@ const pastLens = R.lensProp('past');
 export const statePast = R.view(pastLens);
 const futureLens = R.lensProp('future');
 export const stateFuture = R.view(futureLens);
-
+const originalValueLens = R.lensProp('originalValue');
+export const stateOriginalValue = R.view(originalValueLens);
 
 /************************************************ DB **********************************************/
 
@@ -255,9 +256,9 @@ export const stateEditorRow = subObjectGetter(stateEditorLens, 'row');
 export const stateEditorColumn = subObjectGetter(stateEditorLens, 'column');
 export const stateEditorContent = subObjectGetter(stateEditorLens, 'content');
 
-const editorRefLens = R.lensProp('editorRef');
+/* const editorRefLens = R.lensProp('editorRef');
 const stateEditorRefLens = R.compose(presentLens, editorRefLens); 
-export const stateEditorRef = R.view(stateEditorRefLens);
+export const stateEditorRef = R.view(stateEditorRefLens); */ // TODO remove this when not needed
 
 const sheetsLens = R.lensProp('sheets');
 const stateSheetsLens = R.compose(presentLens, sheetsLens);

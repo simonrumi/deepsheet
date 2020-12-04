@@ -48,8 +48,6 @@ const stateKeys = [
    'sheet',
    'sheets',
    'metadata',
-   'editor',
-   'editorRef',
    'title',
    'filterModal',
    'cellDbUpdates',
@@ -73,8 +71,7 @@ const logState = wrappedState => {
 
    // note that the cellReducers are logged as being in an array called cellReducers, but in the store every cell reducer is stored at the top level
    const fullStateObj = R.mergeAll([baseStateObj, { cellReducers: cellReducersArr }]);
-   console.log(fullStateObj);
-   console.log('past:', wrappedState.past, 'future:', wrappedState.future);
+   console.log({ ...wrappedState, present: fullStateObj });
 };
 
 function mapStateToProps(state) {

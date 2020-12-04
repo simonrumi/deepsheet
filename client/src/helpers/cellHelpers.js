@@ -22,13 +22,6 @@ import { THIN_COLUMN } from '../constants';
 export const getCellContent = cell =>
    isSomething(cell) && isSomething(cell.content) && isSomething(cell.content.text) ? cell.content.text : '';
 
-export const createClassNames = (classes, cellHasFocus) => {
-   const cellBaseClasses = 'grid-item text-dark-dark-blue ';
-   const borderClasses = cellHasFocus ? 'border-2 border-subdued-blue ' : 'border-t border-l ';
-   const otherClasses = classes ? classes : '';
-   return cellBaseClasses + borderClasses + otherClasses;
-};
-
 export const getRowNumFromObj = obj => (R.isNil(obj) ? null : R.has('row') ? obj.row : null);
 
 export const getColNumFromObj = obj => (R.isNil(obj) ? null : R.has('column') ? obj.column : null);
