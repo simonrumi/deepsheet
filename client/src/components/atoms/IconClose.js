@@ -5,18 +5,21 @@ const IconClose = ({
    width = '100%',
    height = '100%',
    classes = '',
+   svgClasses = '',
    viewBox = '0 0 174.239 174.239',
    onClickFn,
+   onMouseDownFn
 }) => {
    const allClasses = 'text-subdued-blue hover:text-vibrant-blue cursor-pointer ' + classes;
+   const allSvgClasses = 'fill-current ' + svgClasses;
    return (
-      <div className={allClasses} onClick={onClickFn}>
+      <div className={allClasses} onClick={onClickFn} onMouseDown={onMouseDownFn}>
          <svg
             style={style}
             height={height}
             width={width}
             viewBox={viewBox}
-            className="fill-current"
+            className={allSvgClasses}
             xmlns="http://www.w3.org/2000/svg">
             <path
                d="M87.12,0C39.082,0,0,39.082,0,87.12s39.082,87.12,87.12,87.12s87.12-39.082,87.12-87.12S135.157,0,87.12,0z M87.12,159.305

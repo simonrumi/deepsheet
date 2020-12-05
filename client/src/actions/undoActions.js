@@ -15,16 +15,13 @@ export const startedUndoableAction = message => {
 };
 
 export const completedUndoableAction = message => {
-   console.log('undoActions dispatching COMPLETED_UNDOABLE_ACTION:', message);
    managedStore.store.dispatch({ type: COMPLETED_UNDOABLE_ACTION, payload: message });
 };
 
 export const startedEditing = initialValue => {
-   console.log('undoActions dispatching STARTED_EDITING:', initialValue);
    managedStore.store.dispatch({ type: STARTED_EDITING, payload: initialValue });
 };
 
 export const finishedEditing = finalValue => {
-   console.log('undoActions dispatching FINISHED_EDITING with finalValue:', finalValue);
    managedStore.store.dispatch({ type: FINISHED_EDITING, payload: finalValue });
 };

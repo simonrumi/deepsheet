@@ -256,10 +256,6 @@ export const stateEditorRow = subObjectGetter(stateEditorLens, 'row');
 export const stateEditorColumn = subObjectGetter(stateEditorLens, 'column');
 export const stateEditorContent = subObjectGetter(stateEditorLens, 'content');
 
-/* const editorRefLens = R.lensProp('editorRef');
-const stateEditorRefLens = R.compose(presentLens, editorRefLens); 
-export const stateEditorRef = R.view(stateEditorRefLens); */ // TODO remove this when not needed
-
 const sheetsLens = R.lensProp('sheets');
 const stateSheetsLens = R.compose(presentLens, sheetsLens);
 export const stateSheetsIsCallingDb = subObjectGetter(stateSheetsLens, 'isCallingDb');

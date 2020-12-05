@@ -5,19 +5,22 @@ const IconNewDoc = ({
    width = '100%',
    height = '100%',
    classes = '',
+   svgClasses = '',
    viewBox = '0 0 45.773 45.773',
    onClickFn,
    onMouseDownFn,
 }) => {
-   const allClasses = 'text-subdued-blue hover:text-vibrant-blue cursor-pointer ' + classes;
+   const allSvgClasses = 'text-subdued-blue hover:text-vibrant-blue cursor-pointer fill-current ' + svgClasses;
    return (
-      <div className={allClasses} onClick={onClickFn} onMouseDown={onMouseDownFn}>
+      <div className={classes} >
          <svg
             style={style}
             height={height}
             width={width}
             viewBox={viewBox}
-            className="fill-current"
+            className={allSvgClasses}
+            onClick={onClickFn} 
+            onMouseDown={onMouseDownFn}
             xmlns="http://www.w3.org/2000/svg">
             <path
                d="M31.199,5.754V0H7.34C5.212,0,3.513,1.759,3.513,3.888v38.05c0,2.129,1.699,3.836,3.827,3.836h31.087

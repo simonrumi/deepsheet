@@ -21,7 +21,6 @@ const undoReducer = reducer => {
       const { past, present, future }  = state;
       switch (action.type) {
          case UNDO:
-            console.log('undoReducer received UNDO, before undo state is', state);
             if (!arrayContainsSomething(past)) {
                return state;
             }
@@ -32,7 +31,6 @@ const undoReducer = reducer => {
             };
 
          case REDO:
-            console.log('undoReducer received REDO, before redo state is', state);
             if (!arrayContainsSomething(future)) {
                return state;
             }
@@ -43,7 +41,6 @@ const undoReducer = reducer => {
             }
 
          case STARTED_UNDOABLE_ACTION:
-            console.log('undoReducer STARTED_UNDOABLE_ACTION');
             return {
                ...state, // keep the future as is
                past: R.append(present, past), // put the current "present" at the end of the past
@@ -51,7 +48,6 @@ const undoReducer = reducer => {
             }
 
          case COMPLETED_UNDOABLE_ACTION:
-            console.log('undoReducer COMPLETED_UNDOABLE_ACTION');
             return {
                ...state, // keep the past as-is (see STARTED_UNDOABLE_ACTION above)
                present: reducer(present, action), // update the present
@@ -60,7 +56,6 @@ const undoReducer = reducer => {
 
          case STARTED_EDITING:
             // action.payload contains just the original value
-            console.log('undoReducer STARTED_EDITING got action.payload', action.payload);
             return {
                ...state, // keep the past & future as is
                present: reducer(present, action), // update the present

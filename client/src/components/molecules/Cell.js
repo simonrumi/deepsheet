@@ -17,6 +17,7 @@ const Cell = props => {
    const cellReducer = useSelector(state => statePresent(state)[cellKey]);
    const cellHasFocus = useSelector(state => isCellFocused(props.cell, state));
 
+   // this ref is applied to the cell, so we can get its bounding rectangle (see renderInPlaceEditor)
    const cellRef = useRef(null);
 
    const onCellClick = () => {
@@ -47,9 +48,8 @@ const Cell = props => {
 
    const renderInPlaceEditor = cell => {
       const positioning = R.pick(['top', 'left', 'right', 'bottom', 'width', 'height'], cellRef.current.getBoundingClientRect());
-      console.log('renderInPlaceEditor made positioning', positioning);
       return (
-         <div>
+         <div className="w-full">
             {renderRegularCell(cell)}
             <CellInPlaceEditor positioning={positioning} cell={cell} cellHasFocus={cellHasFocus} />
          </div>
