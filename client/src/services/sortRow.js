@@ -5,7 +5,7 @@
 
 import * as R from 'ramda';
 import { forLoopReduce, getObjectFromArrayByKeyValue, isSomething } from '../helpers';
-import { createNewAxisVisibility, createNewAxisFilters } from '../helpers/sortHelpers';
+import { createNewAxisVisibility, createNewAxisFilters, createNewAxisSizing } from '../helpers/sortHelpers';
 import { getAllCells } from '../helpers/cellHelpers';
 import {
    stateColumnVisibility,
@@ -14,7 +14,8 @@ import {
    stateRowSortDirection,
    cellRow,
    cellColumn,
-   stateFrozenColumns
+   stateFrozenColumns,
+   stateColumnWidths,
 } from '../helpers/dataStructureHelpers';
 import { SORT_INCREASING, COLUMN_AXIS } from '../constants';
 import { compareCellContent, compareCellContentDecreasing } from './sortAxis';
@@ -41,7 +42,7 @@ const updateCellsPerColumnMap = R.curry((state, mapOfChangedColumns) =>
    )
 );
 
-const createNewCellArrayAndColumnVisibilityAndColumnFilters = R.curry((state, mapOfChangedColumns) => {
+const createUpdatesForStore = R.curry((state, mapOfChangedColumns) => {
    return {
       updatedCells: updateCellsPerColumnMap(state, mapOfChangedColumns),
       updatedVisibility: R.assoc(
@@ -49,7 +50,16 @@ const createNewCellArrayAndColumnVisibilityAndColumnFilters = R.curry((state, ma
          createNewAxisVisibility(stateColumnVisibility(state), mapOfChangedColumns),
          {}
       ),
-      updatedFilters: R.assoc(COLUMN_AXIS, createNewAxisFilters(stateColumnFilters(state), mapOfChangedColumns), {}),
+      updatedFilters: R.assoc(
+         COLUMN_AXIS, 
+         createNewAxisFilters(stateColumnFilters(state), mapOfChangedColumns),
+         {}
+      ),
+      updatedSizing: R.assoc(
+         COLUMN_AXIS, 
+         createNewAxisSizing(stateColumnWidths(state), mapOfChangedColumns),
+         {}
+      ),
    };
 });
 
@@ -100,7 +110,6 @@ const separateFrozenCells = R.curry((state, cellsInRow) => {
    );
 })
 
-
 const compareCellColumn = (cell1, cell2) => {
    if (cell1.column === cell2.column) {
       return 0;
@@ -110,9 +119,9 @@ const compareCellColumn = (cell1, cell2) => {
 
 const getCellsInRow = state =>
    R.reduce(
-      (accumulator, cell) => {
-         return cellRow(cell) === stateRowSortByIndex(state) ? [...accumulator, cell] : accumulator;
-      },
+      (accumulator, cell) => cellRow(cell) === stateRowSortByIndex(state) 
+         ? [...accumulator, cell] 
+         : accumulator,
       [],
       getAllCells(state)
    );
@@ -124,5 +133,5 @@ export default state =>
       separateFrozenCells(state),
       rowSort(state),
       createMapOfChangedColumns,
-      createNewCellArrayAndColumnVisibilityAndColumnFilters(state)
+      createUpdatesForStore(state)
    )(state);

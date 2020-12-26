@@ -1,105 +1,105 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
+import React, { useState } from 'react';
+import * as R from 'ramda';
 import managedStore from '../../store';
-import { DragSource } from 'react-dnd';
-import { ItemTypes } from '../../constants';
-import { indexToColumnLetter, isSomething, arrayContainsSomething, getObjectFromArrayByKeyValue } from '../../helpers';
-import { stateColumnFilters, stateShowFilterModal } from '../../helpers/dataStructureHelpers';
-import { getInitialFilterValues } from '../../helpers/visibilityHelpers';
-import { columnMoved } from '../../actions';
-import { toggledShowFilterModal } from '../../actions/filterActions';
+import { COLUMN_AXIS, DRAGGABLE_COLUMN_LETTER } from '../../constants';
+import { indexToColumnLetter, isSomething, getObjectFromArrayByKeyValue } from '../../helpers';
+import {
+   stateColumnFilters,
+   stateFrozenColumns,
+   stateDragType,
+   stateDragData,
+} from '../../helpers/dataStructureHelpers';
+import { columnMoved } from '../../actions/metadataActions';
 import { startedUndoableAction, completedUndoableAction } from '../../actions/undoActions';
-import { updatedFrozenColumns } from '../../actions/metadataActions';
-import IconFilter from '../atoms/IconFilter';
-import SnowflakeIcon from '../atoms/IconSnowflake';
+import { updatedAxisItemTool } from '../../actions/metadataActions';
+import DraggableColumnLetter from '../atoms/DraggableColumnLetter';
+import GearIcon from '../atoms/IconGear';
+import ColumnHeaderTools from './ColumnHeaderTools';
 
-const dragSourceSpec = {
-   beginDrag: (props, monitor, component) => {
-      return { columnIndex: props.index };
-   },
-   endDrag: (props, monitor, component) => {
-      columnMoved(props.index);
-      return { columnIndex: props.index };
-   },
-};
+const ColumnHeaderDetail = props => {
+   const { index, frozen } = props;
+   const [ isOver, setIsOver ]  = useState(false);
 
-const dragCollect = (connect, monitor) => {
-   return {
-      // Call this function inside render() to let React DnD handle the drag events:
-      connectDragSource: connect.dragSource(),
-      // You can ask the monitor about the current drag state:
-      isDragging: monitor.isDragging(),
-   };
-};
+   const isDroppable = columnMovingIndex => 
+      stateDragType(managedStore.state) === DRAGGABLE_COLUMN_LETTER && columnMovingIndex !== index;
 
-class ColumnHeaderDetail extends Component {
-   constructor(props) {
-      super(props);
-      this.showFilterModalForColumn = this.showFilterModalForColumn.bind(this);
-      this.toggleFreeze = this.toggleFreeze.bind(this);
-   }
-
-   showFilterModalForColumn = () => {
-      this.props.toggledShowFilterModal(
-         null,
-         this.props.index,
-         getInitialFilterValues({ state: managedStore.state, columnIndex: this.props.index })
-      );
-   }
-
-   isFilterEngaged = (columnFilters, columnIndex) => {
-      if (arrayContainsSomething(columnFilters)) {
-         const filterAtColumnIndex = getObjectFromArrayByKeyValue('index', columnIndex, columnFilters);
-         return isSomething(filterAtColumnIndex) && isSomething(filterAtColumnIndex.filterExpression);
+   const handleDrop = event => {
+      const { columnMovingIndex } = stateDragData(managedStore.state);
+      if (isDroppable(columnMovingIndex)) {
+         event.preventDefault();
+         if (isSomething(columnMovingIndex)) {
+            startedUndoableAction();
+            columnMoved({ columnMoved: columnMovingIndex, columnMovedTo: index });
+            setIsOver(false);
+            completedUndoableAction('moved column ' + columnMovingIndex + ' to ' + index);
+         }
       }
-      return false;
-   };
+   }
 
-   toggleFreeze = () => {
-      startedUndoableAction();
-      updatedFrozenColumns([{ index: this.props.index, isFrozen: !this.props.frozen }]);
-      completedUndoableAction('toggled freeze for column ' + this.props.index);
-   };
+   const handleDragOver = event => {
+      const { columnMovingIndex } = stateDragData(managedStore.state);
+      if (isDroppable(columnMovingIndex)) {
+         event.preventDefault(); // doing this allows the drop
+         event.dataTransfer.dropEffect = 'move'; // not sure how necessary this is
+         setIsOver(true);
+      }
+   }
 
-   render() {
-      const columnLetter = indexToColumnLetter(this.props.index);
+   const handleDragLeave = event =>  {
+      if (stateDragType(managedStore.state) === DRAGGABLE_COLUMN_LETTER) {
+         setIsOver(false);
+      }
+   }
 
-      // These props are injected by React DnD, as defined by your `collect` function above:
-      const { connectDragSource } = this.props;
+   const showToolForColumn = event => {
+      updatedAxisItemTool({
+         axis: COLUMN_AXIS,
+         index,
+         isVisible: true,
+      });
+   }
 
-      return connectDragSource(
-         <div className="flex w-full h-full cursor-col-resize">
-            <div className="w-3/4 text-center self-center text-grey-blue">{columnLetter}</div>
-            <SnowflakeIcon
-               classes="pt-1 pl-1 pb-1 w-1/4"
-               switchedOn={this.props.frozen}
-               onClickFn={this.toggleFreeze}
+   const filterEngaged = () => R.pipe(
+      stateColumnFilters,
+      getObjectFromArrayByKeyValue('index', index),
+      R.prop('filterExpression'),
+      isSomething,
+   )(managedStore.state);
+
+   const freezeEngaged = () => R.pipe(
+      stateFrozenColumns,
+      getObjectFromArrayByKeyValue('index', index),
+      R.prop('isFrozen'),
+   )(managedStore.state)
+ 
+   const gearClasses = 'p-1 self-center' + (
+      filterEngaged() || freezeEngaged()
+         ? ' text-pale-purple hover:text-vibrant-purple'
+         : ' text-grey-blue hover:text-vibrant-blue'
+   );
+
+   const render = () => {
+      const columnLetter = indexToColumnLetter(index);
+      const baseClasses = 'flex w-full h-full';
+      const allClasses = isOver 
+         ? baseClasses + ' bg-vibrant-blue' 
+         : baseClasses + ' cursor-ew-move';
+
+      return (
+         <div className={allClasses} 
+         onDragOver={handleDragOver}
+         onDragLeave={handleDragLeave}
+         onDrop={handleDrop}>
+            <DraggableColumnLetter columnLetter={columnLetter} index={index} />
+            <GearIcon
+               classes={gearClasses}
+               onClickFn={showToolForColumn}
             />
-            <IconFilter
-               classes="pt-1 w-1/4"
-               height="65%"
-               width="100%"
-               fitlerEngaged={this.isFilterEngaged(this.props.columnFilters, this.props.index)}
-               onClickFn={this.showFilterModalForColumn}
-               testId={'col' + this.props.index}
-            />
+            <ColumnHeaderTools index={index} frozen={frozen} />
          </div>
       );
    }
+   return render();
 }
 
-function mapStateToProps(state, ownProps) {
-   return {
-      showFilterModal: stateShowFilterModal(state),
-      index: ownProps.index,
-      columnFilters: stateColumnFilters(state),
-      frozen: ownProps.frozen
-   };
-}
-
-const DragableColumnHeader = DragSource(
-   ItemTypes.DRAGGABLE_COLUMN_HEADER,
-   dragSourceSpec,
-   dragCollect
-)(ColumnHeaderDetail);
-export default connect(mapStateToProps, { toggledShowFilterModal })(DragableColumnHeader);
+export default ColumnHeaderDetail;

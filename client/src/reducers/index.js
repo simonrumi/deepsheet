@@ -1,22 +1,26 @@
+import authReducer from './authReducers';
+import axisSizingReducer from './axisSizingReducer';
 import { cellDbUpdatesReducer, cellKeysReducer } from './cellReducers';
-import { focusReducer } from './focusReducer';
-import titleReducer from './titleReducer';
+import dragMonitorReducer from './dragMonitorReducer';
 import filterModalReducer from './filterModalReducer';
+import { focusReducer } from './focusReducer';
+import menuReducer from './menuReducer';
+import metadataReducer from './metadataReducer';
 import sheetReducer from './sheetReducer';
 import sheetsReducer from './sheetsReducer';
-import menuReducer from './menuReducer';
-import authReducer from './authReducers';
-import metadataReducer from './metadataReducer';
+import titleReducer from './titleReducer';
 
 export const staticReducers = {
-   sheet: sheetReducer,
-   sheets: sheetsReducer,
-   metadata: metadataReducer,
-   title: titleReducer,
-   filterModal: filterModalReducer,
+   auth: authReducer,
+   axisSizing: axisSizingReducer,
    cellDbUpdates: cellDbUpdatesReducer,
    cellKeys: cellKeysReducer,
-   menu: menuReducer,
+   dragMonitor: dragMonitorReducer,
+   filterModal: filterModalReducer,
    focus: focusReducer,
-   auth: authReducer,
+   menu: menuReducer,
+   metadata: metadataReducer,
+   sheet: sheetReducer,
+   sheets: sheetsReducer,
+   title: titleReducer,
 };

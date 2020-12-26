@@ -46,6 +46,8 @@ module.exports = {
          'not-allowed': 'not-allowed',
          'row-resize': 'row-resize',
          'col-resize': 'col-resize',
+         'ew-move': 'ew-resize',
+         'ns-move': 'ns-resize',
       },
    },
    variants: {},

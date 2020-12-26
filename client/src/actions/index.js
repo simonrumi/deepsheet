@@ -1,5 +1,7 @@
 import managedStore from '../store';
 import { COMPLETED_SAVE_UPDATES, } from './types';
+import { MENU_HIDDEN } from './menuTypes';
+import { HIDE_AXIS_ITEM_TOOL } from './metadataTypes'; // don't move this one to metadataActions.js
 import { 
    UPDATED_COLUMN_FILTERS,
    REPLACED_COLUMN_FILTERS,
@@ -11,24 +13,29 @@ import {
    REPLACED_COLUMN_VISIBILITY,
    UPDATED_ROW_VISIBILITY,
    REPLACED_ROW_VISIBILITY,
-   ROW_MOVED,
-   ROW_MOVED_TO,
-   COLUMN_MOVED,
-   COLUMN_MOVED_TO,
-   UPDATED_ROW_ORDER,
-   UPDATED_COLUMN_ORDER,
    UPDATED_SORT_OPTIONS,
    SORTED_AXIS,
    CLEARED_SORT_OPTIONS,
 } from './metadataTypes';
-
-// TODO: move all the metadata actions to their own file 
 
 export const completedSaveUpdates = () => {
    managedStore.store.dispatch({
       type: COMPLETED_SAVE_UPDATES,
    });
 };
+
+// note that hideAllPopups should not hide the filterModal - user must close filterModal after use
+// if this were to close the filterModal, that would cause a bug whereby filterModal wouldn't ever show
+export const hideAllPopups = () => {
+   managedStore.store.dispatch({
+      type: MENU_HIDDEN,
+   });
+   managedStore.store.dispatch({
+      type: HIDE_AXIS_ITEM_TOOL,
+   });
+}
+
+/****** TODO metadata actions to be moved, from here down: *****/
 
 export const updatedColumnFilters = newColumnFilter => {
    managedStore.store.dispatch({
@@ -100,49 +107,7 @@ export const replacedRowVisibility = newVisibility => {
    });
 };
 
-export const rowMoved = row => {
-   managedStore.store.dispatch({
-      type: ROW_MOVED,
-      payload: row,
-   });
-   managedStore.store.dispatch({
-      type: UPDATED_ROW_ORDER,
-      payload: null,
-   });
-};
-
-export const rowMovedTo = row => {
-   managedStore.store.dispatch({
-      type: ROW_MOVED_TO,
-      payload: row,
-   });
-   managedStore.store.dispatch({
-      type: UPDATED_ROW_ORDER,
-      payload: null,
-   });
-};
-
-export const columnMoved = column => {
-   managedStore.store.dispatch({
-      type: COLUMN_MOVED,
-      payload: column,
-   });
-   managedStore.store.dispatch({
-      type: UPDATED_COLUMN_ORDER,
-      payload: null,
-   });
-};
-
-export const columnMovedTo = column => {
-   managedStore.store.dispatch({
-      type: COLUMN_MOVED_TO,
-      payload: column,
-   });
-   managedStore.store.dispatch({
-      type: UPDATED_COLUMN_ORDER,
-      payload: null,
-   });
-};
+/***** TODO these look like actions to do wtih sorting, should be in a separate file also */
 
 export const sortedAxis = () => {
    managedStore.store.dispatch({

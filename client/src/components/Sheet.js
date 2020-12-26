@@ -1,75 +1,63 @@
 import * as R from 'ramda';
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
-import { DndProvider } from 'react-dnd';
-import HTML5Backend from 'react-dnd-html5-backend';
+import React, { useMemo } from 'react';
+import { useSelector } from 'react-redux';
+import managedStore from '../store';
 import { triggeredFetchSheet } from '../actions/sheetActions';
-import { isNothing } from '../helpers';
+import { isNothing, getObjectFromArrayByKeyValue } from '../helpers';
 import {
    stateIsLoggedIn,
    stateShowLoginModal,
    stateSheetId,
    stateShowFilterModal,
    stateSheetIsCallingDb,
-   stateMetadata,
    stateSheetCellsLoaded,
    stateSheetErrorMessage,
+   stateColumnWidths,
+   stateRowHeights,
+   stateColumnFilters,
+   stateColumnVisibility,
+   stateRowFilters,
+   stateRowVisibility,
 } from '../helpers/dataStructureHelpers';
-import {
-   getRequiredNumItemsForAxis,
-   isVisibilityCalcutated,
-} from '../helpers/visibilityHelpers';
+import { isVisibilityCalcutated } from '../helpers/visibilityHelpers';
+import { isAxisSizingCalculated,handleResizerDragOver, handleResizerDrop } from '../helpers/axisSizingHelpers';
 import { getUserInfoFromCookie } from '../helpers/userHelpers';
-import { ROW_AXIS, COLUMN_AXIS, THIN_COLUMN, ROW_HEIGHT } from '../constants';
+import {
+   ROW_AXIS,
+   COLUMN_AXIS,
+   THIN_COLUMN,
+   THIN_ROW,
+} from '../constants';
 import LoadingIcon from './atoms/IconLoading';
 import Header from './Header';
 import Cells from './Cells';
 import FilterModal from './organisms/FilterModal';
 import LoginModal from './organisms/LoginModal';
-import managedStore from  '../store';
 
 // TODO BUG NEXT - updating when the session has expired is not handled - need to log user in then complete action
 
-console.log('TODO: XSS defence: validate all the user input - must avoid having javascript entered into a cell, for example');
-// XSS attacks are when javascript is entered into fields and then executed by the app
-// must avoid this by escaping or URL encoding on both client and server
-// URL encode or escape content being sent from front end
-/// ...this works because if a user enters this into a form field
-/// "while(1)"
-// if executed like javascript it causes an infinite loop, but if escaped
-// "while\(1\)" 
-/// it is not valid javascript any longer 
-//
-// validator is a library that has a lot of sanitization functions in it for input
-//
-// NoSQL Map is a tool tht can test for SQL injection vulnerablitities
+const Sheet = props => {
+   const isLoggedIn = useSelector(state => stateIsLoggedIn(state));
+   const showFilterModal = useSelector(state => stateShowFilterModal(state));
+   const showLoginModal = useSelector(state => stateShowLoginModal(state));
+   const sheetIsCallingDb = useSelector(state => stateSheetIsCallingDb(state));
+   const columnWidths = useSelector(state => stateColumnWidths(state));
+   const rowHeights = useSelector(state => stateRowHeights(state));
+   const columnFilters = useSelector(state => stateColumnFilters(state));
+   const columnVisibility = useSelector(state => stateColumnVisibility(state));
+   const rowFilters = useSelector(state => stateRowFilters(state));
+   const rowVisibility = useSelector(state => stateRowVisibility(state));
+   const sheetId = useSelector(state => stateSheetId(state));
+   const cellsLoaded = useSelector(state => stateSheetCellsLoaded(state));
 
-// other ways to prevent XSS
-// whitelist allowed input
-// blacklist disallowed input (not as thorough or restrictive sa whitelisting)
-// standardize format for various kinds of data - e.g. urls always in the form https://www.mydomain.com (as oppsoed to http://mydomain.com)
-
-// to check npm packages for security issues, use nsp. (a cli tool from node)
-// there is also snyk ...more detailed upgrade info, but might cost
-
-// disallow older browsers which could have security vulnerabilities
-// and/or do all these things
-// https://moduscreate.com/blog/simple-security-lambda-edge/
-
-// make sure to assign a new session id on each login. This is to avoid trick where hacker uses someone else's session id to pretend to be that user
-
-class Sheet extends Component {
-   maybeRenderLoginOrFetchSheet = () => {
+   const maybeRenderLoginOrFetchSheet = () => {
       const { userId, sessionId } = getUserInfoFromCookie();
-      if (this.props.stateShowLoginModal || stateIsLoggedIn(managedStore.state) === false || !userId || !sessionId) {
+      if (showLoginModal || isLoggedIn === false || !userId || !sessionId) {
          return <LoginModal />;
       }
-      if (!stateSheetId(managedStore.state)) {
+      if (!sheetId) {
          return R.ifElse(
-            R.pipe(
-               stateSheetErrorMessage,
-               isNothing
-            ),
+            R.pipe(stateSheetErrorMessage, isNothing),
             () => triggeredFetchSheet(), // fetch the sheet if there is no sheetId and no sheet error message
             state => <div>{stateSheetErrorMessage(state)}</div> // show the sheet error message if there's no sheetId
          )(managedStore.state);
@@ -77,41 +65,64 @@ class Sheet extends Component {
       return null;
    };
 
-   columnHeaderStyle = colSpan => {
-      return {
-         gridColumn: colSpan,
-         gridRow: 'span 1',
-         width: '100%',
-         height: '100%',
-         padding: 0,
-      };
+   const compareSizesByIndex = (size1, size2) => {
+      if (size1.index === size2.index) {
+         return 0;
+      }
+      return size1.index > size2.index ? 1 : -1;
    };
 
-   // TODO this will need to be manipulated to create different sized columns and rows
-   // to see the reason for using minmax see https://css-tricks.com/preventing-a-grid-blowout/
-   getGridSizingStyle([numRows, numCols]) {
-      const rowsStyle = ROW_HEIGHT + ' repeat(' + numRows + ', minmax(0, 1fr)) ' + ROW_HEIGHT;
-      const columnsStyle = THIN_COLUMN + ' repeat(' + numCols + ', minmax(0, 1fr)) ' + THIN_COLUMN;
+   const createAxisSizes = (axisSizes = [], axisVisibility) => {
+      const sizesOrderedByIndex = R.sort(compareSizesByIndex, axisSizes);
+      // the following will generate a string like ' 40px 100px 29px 51px '
+      return R.reduce(
+         (accumulator, sizeObj) => {
+            const axisItemVisibility = getObjectFromArrayByKeyValue('index', sizeObj.index, axisVisibility);
+            return isNothing(axisItemVisibility) || axisItemVisibility.isVisible // a column/row is visible if either there is no axis visibility entry for it, or if the entry isVisible
+               ? accumulator + sizeObj.size + ' '
+               : accumulator;
+         },
+         ' ',
+         sizesOrderedByIndex
+      );
+   };
+
+   const getAxisSizing = axis =>
+      axis === COLUMN_AXIS
+         ? createAxisSizes(columnWidths, columnVisibility)
+         : createAxisSizes(rowHeights, rowVisibility);
+
+   const getGridSizingStyle = () => {
+      const contentRows = getAxisSizing(ROW_AXIS);
+      const contentColumns = getAxisSizing(COLUMN_AXIS);
+      const rowsStyle = THIN_ROW + contentRows + THIN_ROW; // the THIN_ROWs are for the ColumnHeader at the top and the RowAdder at the bottom
+      const columnsStyle = THIN_COLUMN + contentColumns + THIN_COLUMN; // the THIN_COLUMNs are for the RowHeaders on the left and the ColumnAdder on the right
       return {
          gridTemplateRows: rowsStyle,
          gridTemplateColumns: columnsStyle,
       };
    }
 
-   renderGridSizingStyle = () => {
-      if (!isVisibilityCalcutated()) {
-         return null;
-      }
-      const returnVal = this.getGridSizingStyle(
-         R.map(getRequiredNumItemsForAxis(R.__, managedStore.state), [ROW_AXIS, COLUMN_AXIS])
-      );
-      return returnVal;
-   };
+   const memoizedGridSizingStyle = useMemo(
+      getGridSizingStyle,
+      [
+         cellsLoaded,
+         columnWidths,
+         rowHeights,
+         columnFilters,
+         columnVisibility,
+         rowFilters,
+         rowVisibility,
+      ]
+   );
 
-   maybeRenderFilterModal = showFilterModal => (showFilterModal ? <FilterModal /> : null);
+   const renderGridSizingStyle = () =>
+      isVisibilityCalcutated() && isAxisSizingCalculated() ? memoizedGridSizingStyle : null;
 
-   render() {
-      if (this.props.sheetIsCallingDb) {
+   const maybeRenderFilterModal = () => (showFilterModal ? <FilterModal /> : null);
+
+   const render = () => {
+      if (sheetIsCallingDb) {
          return (
             <div className="m-auto max-w-md">
                <LoadingIcon />
@@ -122,29 +133,20 @@ class Sheet extends Component {
       return (
          <div className="px-1">
             <Header />
-            {this.maybeRenderFilterModal(this.props.showFilterModal)}
-            {this.maybeRenderLoginOrFetchSheet()}
-            <DndProvider backend={HTML5Backend}>
-               <div className="grid-container pt-1" style={this.renderGridSizingStyle()}>
-                  <Cells /> 
-               </div>
-            </DndProvider>
+            {maybeRenderFilterModal()}
+            {maybeRenderLoginOrFetchSheet()}
+            <div
+               className="grid-container pt-1"
+               style={renderGridSizingStyle()}
+               onDragOver={handleResizerDragOver}
+               onDrop={handleResizerDrop}>
+               <Cells />
+            </div>
          </div>
       );
    }
+
+   return render();
 }
 
-function mapStateToProps(state) {
-   return {
-      showFilterModal: stateShowFilterModal(state),
-      showLoginModal: stateShowLoginModal(state),
-      sheetIsCallingDb: stateSheetIsCallingDb(state),
-      // these are all here just as triggers to cause the Sheet to rerender when there are changes:
-      sheetId: stateSheetId(state),
-      metadata: stateMetadata(state),
-      cellsLoaded: stateSheetCellsLoaded(state),
-   };
-}
-export default connect(mapStateToProps, {
-   triggeredFetchSheet,
-})(Sheet);
+export default Sheet;

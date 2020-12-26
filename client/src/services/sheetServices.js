@@ -129,7 +129,7 @@ export const saveMetadataUpdates = async state => {
 };
 
 export const saveAllUpdates = async state => {
-   console.log('TODO sheetServices.saveAllUpdates is calling saveMetadataUpdates & saveCellUpdates serially -- yeech!');
+   // TODO we are calling saveMetadataUpdates & saveCellUpdates serially -- yeech!
    await saveMetadataUpdates(state);
    await saveCellUpdates(state);
    completedSaveUpdates(); // only gets here if there's no error thrown

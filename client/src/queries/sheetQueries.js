@@ -75,6 +75,5 @@ export const sheetQuery = async (sheetId, userId) => {
       variables: { sheetId, userId },
       fetchPolicy: 'network-only', // in other words, every time a different sheet is loaded, we're getting it from the network, not the cache. Otherwise cache might show old version of sheet
    });
-   console.log('sheetQueries got sheet', sheetResult);
    return sheetResult;
 };

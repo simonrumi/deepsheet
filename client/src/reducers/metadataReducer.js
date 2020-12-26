@@ -8,6 +8,8 @@ import {
    METADATA_UPDATE_FAILED,
    UPDATED_FROZEN_ROWS,
    UPDATED_FROZEN_COLUMNS,
+   REPLACED_FROZEN_ROWS,
+   REPLACED_FROZEN_COLUMNS,
    UPDATED_COLUMN_VISIBILITY,
    REPLACED_COLUMN_VISIBILITY,
    UPDATED_ROW_VISIBILITY,
@@ -25,6 +27,12 @@ import {
    COLUMN_MOVED_TO,
    UPDATED_SORT_OPTIONS,
    CLEARED_SORT_OPTIONS,
+   REPLACED_ROW_HEIGHTS,
+   REPLACED_COLUMN_WIDTHS,
+   UPDATED_COLUMN_WIDTH,
+   UPDATED_ROW_HEIGHT,
+   UPDATED_AXIS_ITEM_TOOL,
+   HIDE_AXIS_ITEM_TOOL,
 } from '../actions/metadataTypes';
 import { FETCHED_SHEET, COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
 
@@ -140,6 +148,61 @@ const metadataReducer = (state = {}, action) => {
             isStale: true,
             frozenColumns
          };
+
+      case REPLACED_FROZEN_ROWS:
+         return {
+            ...state,
+            isStale: true,
+            frozenRows: action.payload
+         }
+      
+      case REPLACED_FROZEN_COLUMNS:
+         return {
+            ...state,
+            isStale: true,
+            frozenColumns: action.payload
+         };
+         
+      case REPLACED_ROW_HEIGHTS:
+         return {
+            ...state,
+            rowHeights: action.payload,
+         }
+
+      case REPLACED_COLUMN_WIDTHS:
+         return {
+            ...state,
+            columnWidths: action.payload,
+         }
+
+      case UPDATED_COLUMN_WIDTH:
+         // payload should contain e.g { index: 2, size: '100px' }
+         const columnWidths = updateOrAddPayloadToState([action.payload], state.columnWidths || []);
+         return {
+            ...state,
+            isStale: true,
+            columnWidths
+         }
+
+      case UPDATED_ROW_HEIGHT:
+         const rowHeights = updateOrAddPayloadToState([action.payload], state.rowHeights || []);
+         return {
+            ...state,
+            isStale: true,
+            rowHeights
+         }
+
+      case UPDATED_AXIS_ITEM_TOOL:
+         return {
+            ...state,
+            axisItemTool: action.payload,
+         }
+
+      case HIDE_AXIS_ITEM_TOOL:
+         return {
+            ...state,
+            axisItemTool: { ...state.axisItemTool, isVisible: false }
+         }
 
       case POSTING_UPDATED_METADATA:
          return {

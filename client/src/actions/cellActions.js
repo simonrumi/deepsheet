@@ -35,7 +35,6 @@ export const updatedCells = async ({ sheetId, cells }) => {
 };
 
 export const deleteSubsheetId = R.curry(async (row, column, text, subsheetId, sheetId) => {
-   console.log('cellActions deleteSubsheetId dispatching POSTING_DELETE_SUBSHEET_ID');
    managedStore.store.dispatch({
       type: POSTING_DELETE_SUBSHEET_ID,
       payload: {

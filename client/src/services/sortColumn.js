@@ -5,7 +5,7 @@
 
 import * as R from 'ramda';
 import { forLoopReduce, getObjectFromArrayByKeyValue, isSomething } from '../helpers';
-import { createNewAxisVisibility, createNewAxisFilters } from '../helpers/sortHelpers';
+import { createNewAxisVisibility, createNewAxisFilters, createNewAxisSizing } from '../helpers/sortHelpers';
 import { getAllCells } from '../helpers/cellHelpers';
 import {
    stateRowVisibility,
@@ -14,7 +14,8 @@ import {
    stateColumnSortByIndex,
    cellColumn,
    cellRow,
-   stateFrozenRows
+   stateFrozenRows,
+   stateRowHeights,
 } from '../helpers/dataStructureHelpers';
 import { SORT_INCREASING, ROW_AXIS } from '../constants';
 import { compareCellContent, compareCellContentDecreasing } from './sortAxis';
@@ -41,16 +42,29 @@ const updateCellsPerRowMap = R.curry((state, mapOfChangedRows) =>
    )
 );
 
-const createNewCellArrayAndRowVisibilityAndRowFilters = R.curry((state, mapOfChangedRows) => {
+const createUpdatesForStore = R.curry((state, mapOfChangedRows) => {
    return {
       updatedCells: updateCellsPerRowMap(state, mapOfChangedRows),
-      updatedVisibility: R.assoc(ROW_AXIS, createNewAxisVisibility(stateRowVisibility(state), mapOfChangedRows), {}),
-      updatedFilters: R.assoc(ROW_AXIS, createNewAxisFilters(stateRowFilters(state), mapOfChangedRows), {}),
+      updatedVisibility: R.assoc(
+         ROW_AXIS, 
+         createNewAxisVisibility(stateRowVisibility(state), mapOfChangedRows), 
+         {}
+      ),
+      updatedFilters: R.assoc(
+         ROW_AXIS, 
+         createNewAxisFilters(stateRowFilters(state), mapOfChangedRows), 
+         {}
+      ),
+      updatedSizing: R.assoc(
+         ROW_AXIS, 
+         createNewAxisSizing(stateRowHeights(state), mapOfChangedRows),
+         {}
+      ),
    };
 });
 
-const createMapOfChangedRows = newCellOrder => {
-   return forLoopReduce(
+const createMapOfChangedRows = newCellOrder => 
+   forLoopReduce(
       (accumulator, index) => {
          if (index !== newCellOrder[index].row) {
             return [...accumulator, [newCellOrder[index].row, index]]; // adds a tuple with the [original row index, new row index] 
@@ -60,7 +74,6 @@ const createMapOfChangedRows = newCellOrder => {
       [],
       newCellOrder.length
    );
-}
 
 const columnSortFunc = state =>
    stateColumnSortDirection(state) === SORT_INCREASING ? compareCellContent : compareCellContentDecreasing;
@@ -106,9 +119,9 @@ const compareCellRow = (cell1, cell2) => {
 
 const getCellsInColumn = state =>
    R.reduce(
-      (accumulator, cell) => {
-         return cellColumn(cell) === stateColumnSortByIndex(state) ? [...accumulator, cell] : accumulator;
-      },
+      (accumulator, cell) => cellColumn(cell) === stateColumnSortByIndex(state) 
+         ? [...accumulator, cell] 
+         : accumulator,
       [],
       getAllCells(state)
    );
@@ -120,5 +133,5 @@ export default state =>
       separateFrozenCells(state),
       columnSort(state),
       createMapOfChangedRows,
-      createNewCellArrayAndRowVisibilityAndRowFilters(state),
+      createUpdatesForStore(state),
    )(state);

@@ -1,12 +1,13 @@
-import React, { useRef} from 'react';
+import React from 'react';
 import { useSelector } from 'react-redux';
 import * as R from 'ramda';
 import { focusedCell } from '../../actions/focusActions';
-import { menuHidden } from '../../actions/menuActions';
+import { hideAllPopups } from '../../actions';
 import { nothing, isSomething, isNothing } from '../../helpers';
 import { createCellId, isCellFocused, createCellKey } from '../../helpers/cellHelpers';
 import { isCellVisible } from '../../helpers/visibilityHelpers';
 import { cellSubsheetId, cellRow, cellColumn, cellText, statePresent} from '../../helpers/dataStructureHelpers';
+import { usePositioning } from '../../helpers/hooks';
 import SubsheetCell from './SubsheetCell';
 import CellInPlaceEditor from './CellInPlaceEditor';
 
@@ -16,17 +17,15 @@ const Cell = props => {
    const cellKey = createCellKey(row, column);
    const cellReducer = useSelector(state => statePresent(state)[cellKey]);
    const cellHasFocus = useSelector(state => isCellFocused(props.cell, state));
-
-   // this ref is applied to the cell, so we can get its bounding rectangle (see renderInPlaceEditor)
-   const cellRef = useRef(null);
+   const [cellRef, positioning] = usePositioning();
 
    const onCellClick = () => {
       focusedCell(cellReducer);
-      menuHidden(); // in case the menu was showing, hide it
+      hideAllPopups();
    }
 
    const createClassNames = classes => {
-      const cellBaseClasses = 'grid-item text-dark-dark-blue border-t border-l ';
+      const cellBaseClasses = 'grid-item overflow-hidden text-dark-dark-blue border-t border-l ';
       const otherClasses = classes ? classes : '';
       return cellBaseClasses + otherClasses;
    };
@@ -46,15 +45,12 @@ const Cell = props => {
       );
    }
 
-   const renderInPlaceEditor = cell => {
-      const positioning = R.pick(['top', 'left', 'right', 'bottom', 'width', 'height'], cellRef.current.getBoundingClientRect());
-      return (
+   const renderInPlaceEditor = cell => (
          <div className="w-full">
             {renderRegularCell(cell)}
             <CellInPlaceEditor positioning={positioning} cell={cell} cellHasFocus={cellHasFocus} />
          </div>
       );
-   }
 
    const renderBlankCell = cell => <div className={createClassNames(props.classes)} />;
 

@@ -1,22 +1,24 @@
 import React from 'react';
+import { TOOL_ICON_WIDTH, TOOL_ICON_HEIGHT, } from '../../constants';
 
 const SnowflakeIcon = ({
    style = {},
-   width = '100%',
-   height = '100%',
    classes = '',
    viewBox = '0 0 512 512',
    onClickFn,
    switchedOn,
 }) => {
-   const standardClasses = 'hover:text-vibrant-blue cursor-pointer '  + classes;
-   const allClasses = switchedOn ? 'text-vibrant-purple '  + standardClasses : 'text-grey-blue ' + standardClasses;
+   const allClasses =
+      classes +
+      ' cursor-pointer ' +
+      (switchedOn ? 'text-pale-purple hover:text-vibrant-purple' : 'text-grey-blue hover:text-vibrant-blue');
+
    return (
       <div className={allClasses} onClick={onClickFn}>
          <svg
             style={style}
-            height={height}
-            width={width}
+            width={TOOL_ICON_WIDTH}
+            height={TOOL_ICON_HEIGHT}
             viewBox={viewBox}
             className="fill-current"
             xmlns="http://www.w3.org/2000/svg">

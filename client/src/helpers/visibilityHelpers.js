@@ -209,9 +209,9 @@ export const isVisibilityCalcutated = () =>
    && stateRowVisibility(managedStore.state);
 
 export const updateOrAddPayloadToState = (payload, state) => {
-   const filterState = R.filter(stateVal =>
+   const filterState = R.filter(stateItem =>
       R.pipe(
-         R.find(payloadVal => payloadVal.index === stateVal.index), // if the state has an entry with the same index as payloadVal (an updated frozen row)
+        R.find(payloadItem => payloadItem.index === stateItem.index), // if the state has an entry with the same index as payloadItem
          isNothing // filter that entry out of the state
       )(payload)
    );

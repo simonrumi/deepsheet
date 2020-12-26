@@ -4,7 +4,7 @@ import { fetchSheet, fetchSheetByUserId } from '../services/sheetServices';
 import { fetchedSheet, fetchingSheet, fetchSheetError } from '../actions/sheetActions';
 import { cellsLoaded, clearedAllCellKeys } from '../actions/cellActions';
 import { clearedFocus } from '../actions/focusActions';
-import { menuHidden } from '../actions/menuActions';
+import { hideAllPopups } from '../actions';
 import { createCellReducers, populateCellsInStore } from '../reducers/cellReducers';
 import { isNothing, isSomething, arrayContainsSomething } from '../helpers';
 import { applyFilters, initializeAxesVisibility } from '../helpers/visibilityHelpers';
@@ -52,7 +52,7 @@ const runFetchSheet = async ({ store, sheetId, userId }) => {
             // note that R.juxt applies the argument sheet to all fns in its array
             R.juxt([
                R.pipe(fetchedSheet, store.dispatch), 
-               R.pipe(menuHidden, store.dispatch), 
+               R.pipe(hideAllPopups, store.dispatch), 
                initializeCells,
                cellsLoaded,
             ])

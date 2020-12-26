@@ -1,8 +1,18 @@
+// Note that this is very similar to moveColumn.js but not generalizing (into moveAxis.js) because it becomes too hard to follow
+
 import * as R from 'ramda';
 import { forLoopReduce } from '../helpers';
 import { createCellKey } from '../helpers/cellHelpers';
 import { getAxisVisibilityName, getAxisFilterName } from '../helpers/visibilityHelpers';
-import { stateTotalRows, stateTotalColumns, stateRowMoved, stateRowMovedTo } from '../helpers/dataStructureHelpers';
+import { getAxisSizingName } from '../helpers/axisSizingHelpers';
+import { getFrozenAxisName } from '../helpers/frozenAxisHelpers';
+import {
+   stateTotalRows,
+   stateTotalColumns,
+   stateRowMoved,
+   stateRowMovedTo,
+   stateCell,
+} from '../helpers/dataStructureHelpers';
 import {
    makeNewMetadataItemFromMap,
    buildObject,
@@ -12,10 +22,8 @@ import {
 } from './moveAxis';
 import { ROW_AXIS } from '../constants';
 
-//TODO moving rows & columns needs work: restict movement & show spinner
-
 const makeNewCellsFromMap = (rowUpdateMapping, state) => {
-   const getCellFromState = R.pipe(createCellKey, R.prop(R.__, state));
+   const getCellFromState = R.pipe(createCellKey, stateCell(state));
 
    const createCells = R.reduce((newCells, rowMapping) => {
       const rowIndex = rowMapping[0]; // this is the row that we are going to reconstruct
@@ -36,17 +44,25 @@ const makeNewCellsFromMap = (rowUpdateMapping, state) => {
 
 export default state => {
    const rowIndexToMove = stateRowMoved(state);
-   const insertBelowIndex = stateRowMovedTo(state);
-   const reorderedIndicies = reorderIndicies(rowIndexToMove, insertBelowIndex, stateTotalRows(state));
+   const insertAtIndex = stateRowMovedTo(state);
+   const totalRows = stateTotalRows(state);
+   const reorderedIndicies = reorderIndicies(rowIndexToMove, insertAtIndex, totalRows);
 
-   const newCells = R.pipe(createOptimizedMappingFromArray, makeNewCellsFromMap(R.__, state))(reorderedIndicies);
+   const newCells = R.pipe(
+      createOptimizedMappingFromArray, 
+      makeNewCellsFromMap(R.__, state)
+   )(reorderedIndicies);
 
    const rowUpdateArr = createMappingFromArray(reorderedIndicies);
-
-   const makeNewMetadatatItem = itemName => R.pipe(itemName, makeNewMetadataItemFromMap(rowUpdateArr, state))(ROW_AXIS);
+   const makeNewMetadatatItem = itemNameFn => 
+      R.pipe(
+         itemNameFn,
+         makeNewMetadataItemFromMap(rowUpdateArr, state),
+      )(ROW_AXIS);
 
    const newRowFilters = makeNewMetadatatItem(getAxisFilterName);
    const newRowVisibility = makeNewMetadatatItem(getAxisVisibilityName);
-   const isStale = true;
-   return [newCells, newRowFilters, newRowVisibility, isStale];
+   const newRowHeights = makeNewMetadatatItem(getAxisSizingName);
+   const newFrozenRows = makeNewMetadatatItem(getFrozenAxisName);
+   return  [ newCells, newRowFilters, newRowVisibility, newRowHeights, newFrozenRows ];
 };

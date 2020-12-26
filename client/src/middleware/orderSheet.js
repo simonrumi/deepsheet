@@ -9,6 +9,7 @@ import {
    SORTED_AXIS,
 } from '../actions/metadataTypes';
 import { UPDATED_CELL } from '../actions/cellTypes';
+import { startedUndoableAction, completedUndoableAction } from '../actions/undoActions';
 import { ROW_AXIS, COLUMN_AXIS } from '../constants';
 import {
    replacedRowFilters,
@@ -17,13 +18,18 @@ import {
    replacedColumnVisibility,
    clearedSortOptions,
 } from '../actions';
-import { hasChangedMetadata, } from '../actions/metadataActions';
-import { completedUndoableAction } from '../actions/undoActions';
+import {
+   hasChangedMetadata,
+   replacedRowHeights,
+   replacedColumnWidths,
+   replacedFrozenRows,
+   replacedFrozenColumns,
+} from '../actions/metadataActions';
 import moveRow from '../services/moveRow';
 import moveColumn from '../services/moveColumn';
 import sortAxis from '../services/sortAxis';
 import { hasChangedCell } from '../actions/cellActions';
-import { runIfSomething, isSomething } from '../helpers';
+import { runIfSomething, isSomething, arrayContainsSomething } from '../helpers';
 import { stateMetadataProp } from '../helpers/dataStructureHelpers';
 
 export default store => next => async action => {
@@ -74,46 +80,68 @@ export default store => next => async action => {
             ),
          ]),
          axisMoveFn, // if we pass all the conditions, run the fn
-         () => [null, null, null] // otherwise return null for all 3 values
+         () => [] // otherwise return nothing
       )(store.getState());
 
    switch (action.type) {
       case UPDATED_ROW_ORDER:
-         const [newRowCells, newRowFilters, newRowVisibility] = maybeMoveAxis(
-            'rowMoved',
-            'rowMovedTo',
-            moveRow,
-            store
-         );
-         // Note: if moveRow() returns an array then we get an error when trying to runCellDispatches() on it.
+         const [
+            newRowCells = null,
+            newRowFilters = null,
+            newRowVisibility = null,
+            newRowHeights = null,
+            newFrozenRows = null,
+         ] = maybeMoveAxis('rowMoved', 'rowMovedTo', moveRow, store);
+         // Note: if moveRow() returns an array for newRowCells then we get an error when trying to runCellDispatches() on it.
          // Instead here moveRow() returns an object which we convert to an array with R.values() ...and it works fine
          // same approached used with moveColumn()
          // Is this a Ramda bug?
-         runCellDispatches(R.values(newRowCells));
+         const newRowCellsArr = R.values(newRowCells);
+         if (arrayContainsSomething(newRowCellsArr)) {
+            startedUndoableAction();
+         }
+         runCellDispatches(newRowCellsArr);
          runIfSomething(replacedRowFilters, newRowFilters);
          runIfSomething(replacedRowVisibility, newRowVisibility);
+         runIfSomething(replacedRowHeights, newRowHeights);
+         runIfSomething(replacedFrozenRows, newFrozenRows);
          hasChangedMetadata();
+         if (arrayContainsSomething(newRowCellsArr)) {
+            completedUndoableAction();
+         }
          break;
 
       case UPDATED_COLUMN_ORDER:
-         const [newColumnCells, newColumnFilters, newColumnVisibility] = maybeMoveAxis(
-            'columnMoved',
-            'columnMovedTo',
-            moveColumn,
-            store
-         );
-         runCellDispatches(R.values(newColumnCells));
+         const [
+            newColumnCells = null,
+            newColumnFilters = null,
+            newColumnVisibility = null,
+            newColumnWidths = null,
+            newFrozenColumns = null,
+         ] = maybeMoveAxis('columnMoved', 'columnMovedTo', moveColumn, store);
+         const newColumnCellsArr = R.values(newColumnCells);
+         if (arrayContainsSomething(newColumnCellsArr)) {
+            startedUndoableAction();
+         }
+         runCellDispatches(newColumnCellsArr);
          runIfSomething(replacedColumnFilters, newColumnFilters);
          runIfSomething(replacedColumnVisibility, newColumnVisibility);
+         runIfSomething(replacedColumnWidths, newColumnWidths);
+         runIfSomething(replacedFrozenColumns, newFrozenColumns);
          hasChangedMetadata();
+         if (arrayContainsSomething(newColumnCellsArr)) {
+            completedUndoableAction();
+         }
          break;
 
       case SORTED_AXIS:
-         const { updatedCells = [], updatedVisibility = {}, updatedFilters = {} } = sortAxis(store.getState());
+         const { updatedCells = [], updatedVisibility = {}, updatedFilters = {}, updatedSizing = {} } = sortAxis(store.getState());
          runIfSomething(replacedRowVisibility, updatedVisibility[ROW_AXIS]);
          runIfSomething(replacedColumnVisibility, updatedVisibility[COLUMN_AXIS]);
          runIfSomething(replacedRowFilters, updatedFilters[ROW_AXIS]);
          runIfSomething(replacedColumnFilters, updatedFilters[COLUMN_AXIS]);
+         runIfSomething(replacedRowHeights, updatedSizing[ROW_AXIS]);
+         runIfSomething(replacedColumnWidths, updatedSizing[COLUMN_AXIS]);
          runCellDispatches(updatedCells);
          clearedSortOptions();
          completedUndoableAction();

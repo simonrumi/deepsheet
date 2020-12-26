@@ -98,9 +98,11 @@ export const saveableStateMetadata = R.pipe(
       'columnFilters', 
       'rowFilters',
       'frozenColumns',
-      'frozenRows'
+      'frozenRows',
+      'columnWidths',
+      'rowHeights',
    ])
-);
+);    
 
 // get any top level property from the state's metadata
 export const stateMetadataProp = R.curry((stateObj, propName) => {
@@ -133,6 +135,25 @@ export const stateMetadataErrorMessage = subObjectGetter(stateMetadataLens, 'err
 export const stateMetadataLastUpdated = subObjectGetter(stateMetadataLens, 'lastUpdated');
 export const stateFrozenRows = subObjectGetter(stateMetadataLens, 'frozenRows');
 export const stateFrozenColumns = subObjectGetter(stateMetadataLens, 'frozenColumns');
+export const stateRowHeights = subObjectGetter(stateMetadataLens, 'rowHeights');
+export const stateColumnWidths = subObjectGetter(stateMetadataLens, 'columnWidths');
+
+/* the axisItemTool is the popup that can show for each column and each row.
+The following metadata says which one is visible and which column/row it is for
+metadata {
+   ...
+   axisItemTool: {
+      isVisible: true,
+      axis: "row",
+      index: 2
+   }
+} */
+const stateAxisItemToolIndexLens = R.compose(stateMetadataLens, R.lensPath(['axisItemTool', 'index']));
+export const stateAxisItemToolIndex = R.view(stateAxisItemToolIndexLens);
+const stateAxisItemToolAxisLens = R.compose(stateMetadataLens, R.lensPath(['axisItemTool', 'axis']));
+export const stateAxisItemToolAxis = R.view(stateAxisItemToolAxisLens);
+const stateAxisItemToolIsVisibileLens = R.compose(stateMetadataLens, R.lensPath(['axisItemTool', 'isVisible']));
+export const stateAxisItemToolIsVisible = R.view(stateAxisItemToolIsVisibileLens);
 
 /** 
  * Sheet Metadata - if we directly have the sheet (not inside a "present" object) use these:
@@ -260,7 +281,13 @@ const sheetsLens = R.lensProp('sheets');
 const stateSheetsLens = R.compose(presentLens, sheetsLens);
 export const stateSheetsIsCallingDb = subObjectGetter(stateSheetsLens, 'isCallingDb');
 export const stateSheetsErrorMessage = subObjectGetter(stateSheetsLens, 'errorMessage');
-export const stateSheets = R.view(stateSheetsLens); // subObjectGetterSetter(stateSheetsLens, 'sheets');
+export const stateSheets = R.view(stateSheetsLens);
+
+const dragMonitorLens = R.lensProp('dragMonitor');
+const stateDragMonitorLens = R.compose(presentLens, dragMonitorLens);
+export const stateIsDragging = subObjectGetter(stateDragMonitorLens, 'isDragging');
+export const stateDragType = subObjectGetter(stateDragMonitorLens, 'dragType');
+export const stateDragData = subObjectGetter(stateDragMonitorLens, 'dragData');
 
 /************************************************ STATE IS_STALE  **********************************************/
 

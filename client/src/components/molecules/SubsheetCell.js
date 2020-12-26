@@ -1,7 +1,7 @@
 import React from 'react';
 import * as R from 'ramda';
 import { loadSheet } from '../../services/sheetServices';
-import { menuHidden } from '../../actions/menuActions';
+import { hideAllPopups } from '../../actions';
 import { deleteSubsheetId } from '../../actions/cellActions';
 import { focusedCell, clearedFocus } from '../../actions/focusActions';
 import {
@@ -81,7 +81,7 @@ const SubsheetCell = props => {
    const onCellClick = evt => {
       evt.preventDefault();
       focusedCell(props.cell);
-      menuHidden(); // in case the menu was showing, hide it
+      hideAllPopups();
    }
 
    const innerDivClassNames = cellHasFocus => {

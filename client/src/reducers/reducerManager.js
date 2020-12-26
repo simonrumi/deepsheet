@@ -70,16 +70,13 @@ export function createReducerManager(initialReducers) {
       delete _reducers[key];
       keysToRemove.push(key);
 
-      // _reducersCombined = combineReducers(_reducers);
       _reducersCombined = wrapAndCombineReducers(_reducers);
       return _reducersCombined;
    };
 
    const removeMany = keys => {
-      console.log('reducerManager.js removeMany got keys', keys);
       if (!keys || !(keys instanceof Array)) {
          console.log('WARNING: invalid keys array supplied to reducerManager.removeMany(), so no reducers removed');
-         // return combineReducers(_reducers);
          return wrapAndCombineReducers(_reducers);
       }
       keysToRemove = R.concat(keysToRemove, keys);
@@ -91,7 +88,6 @@ export function createReducerManager(initialReducers) {
          return true;
       }, Object.keys(_reducers));
       const remainingReducers = R.pick(filteredReducerKeys, _reducers);
-      // _reducersCombined = combineReducers(remainingReducers);
       _reducersCombined = wrapAndCombineReducers(remainingReducers);
       _reducers = remainingReducers;
       return _reducersCombined;

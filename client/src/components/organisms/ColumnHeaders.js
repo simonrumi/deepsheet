@@ -3,11 +3,11 @@ import * as R from 'ramda';
 import { connect } from 'react-redux';
 import { shouldShowColumn } from '../../helpers/visibilityHelpers';
 import { stateTotalColumns, stateColumnVisibility } from '../../helpers/dataStructureHelpers';
-import ColumnHeader from '../molecules/ColumnHeader';
+import ColumnHeader from './ColumnHeader';
 import TopLeftHeader from '../atoms/TopLeftHeader';
 import ColumnAdder from '../molecules/ColumnAdder';
 
-const COLUMN_HEADER_CLASSES = 'grid-header-item text-grey-blue border-t border-l h-12';
+const COLUMN_HEADER_CLASSES = 'grid-header-item text-grey-blue border-t border-l';
 
 class ColumnHeaders extends Component {
    constructor(props) {

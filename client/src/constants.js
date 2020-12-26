@@ -3,17 +3,25 @@ export const FACEBOOK_AUTH_URL = '/.netlify/functions/auth?provider=facebook';
 export const GOOGLE_AUTH_URL = '/.netlify/functions/auth?provider=google';
 export const GOOGLE_CLIENT_ID = '761528077812-aiufet2eu5rloejs76hqffber30r31kp.apps.googleusercontent.com';
 
+export const INVISIBLE_PIXEL = '/img/FFFFFF-0.png'; // not used so far, but keeping just in case
+
 export const ROW_AXIS = 'row';
 export const COLUMN_AXIS = 'column';
 
-export const THIN_COLUMN = '2.1em';
+export const THIN_COLUMN = '3em';
 export const SPLIT_THIN_COLUMN = '1.05em 1.05em';
-export const ROW_HEIGHT = '2em';
+export const THIN_ROW = '2em';
+export const DEFAULT_COLUMN_WIDTH = '16em';
+export const DEFAULT_ROW_HEIGHT = '2.5em';
+export const MIN_COLUMN_WIDTH = '50'; // this is in pixels
+export const MIN_ROW_HEIGHT = '30'; // this is in pixels
+export const TOOL_ICON_HEIGHT = '2em';
+export const TOOL_ICON_WIDTH = '2em';
 
-export const ItemTypes = {
-   DRAGGABLE_ROW_HEADER: 'draggable_row_header',
-   DRAGGABLE_COLUMN_HEADER: 'draggable_column_header',
-};
+export const DRAGGABLE_ROW_RESIZER = 'draggable_row_resizer';
+export const DRAGGABLE_COLUMN_RESIZER = 'draggable_column_resizer';
+export const DRAGGABLE_ROW_NUMBER = 'draggable_row_number';
+export const DRAGGABLE_COLUMN_LETTER = 'draggable_column_letter';
 
 export const SORT_INCREASING = 'sort_increasing';
 export const SORT_DECREASING = 'sort_decreasing';

@@ -1,108 +1,108 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
-import managedStore from '../../store';
+import React, { useState } from 'react';
 import * as R from 'ramda';
-import { DragSource } from 'react-dnd';
-import { ItemTypes } from '../../constants';
-import { indexToRowNumber, isSomething, isNothing } from '../../helpers';
-import { cellRow, stateRowFilters, stateShowFilterModal } from '../../helpers/dataStructureHelpers';
-import { getInitialFilterValues } from '../../helpers/visibilityHelpers';
-import { rowMoved } from '../../actions';
-import { toggledShowFilterModal } from '../../actions/filterActions';
+import managedStore from  '../../store';
+import { DRAGGABLE_ROW_NUMBER, ROW_AXIS } from '../../constants';
+import { indexToRowNumber, isSomething, getObjectFromArrayByKeyValue } from '../../helpers';
+import {
+   cellRow,
+   stateFrozenRows,
+   stateRowFilters,
+   stateDragType,
+   stateDragData,
+} from '../../helpers/dataStructureHelpers';
+import { rowMoved } from '../../actions/metadataActions';
+import { updatedAxisItemTool } from '../../actions/metadataActions';
 import { startedUndoableAction, completedUndoableAction } from '../../actions/undoActions';
-import { updatedFrozenRows } from '../../actions/metadataActions';
-import IconFilter from '../atoms/IconFilter';
-import SnowflakeIcon from '../atoms/IconSnowflake';
+import RowHeaderTools from './RowHeaderTools';
+import GearIcon from '../atoms/IconGear';
+import DraggableRowNumber from '../atoms/DraggableRowNumber';
 
-const dragSourceSpec = {
-   beginDrag: (props, monitor, component) => {
-      const row = cellRow(props.cell);
-      return { rowIndex: row };
-   },
-   endDrag: (props, monitor, component) => {
-      const row = cellRow(props.cell)
-      rowMoved(row);
-      return { rowIndex: row };
-   },
-};
+const RowHeaderDetail = props => {
+   const { cell, frozen } = props;
+   const index = cellRow(cell);
+   const [ isOver, setIsOver ]  = useState(false);
 
-const dragCollect = (connect, monitor) => {
-   return {
-      // Call this function inside render() to let React DnD handle the drag events:
-      connectDragSource: connect.dragSource(),
-      // You can ask the monitor about the current drag state:
-      isDragging: monitor.isDragging(),
-   };
-};
+   const isDroppable = rowMovingIndex => 
+      stateDragType(managedStore.state) === DRAGGABLE_ROW_NUMBER && rowMovingIndex !== index;
 
-class RowHeaderDetail extends Component {
-   constructor(props) {
-      super(props);
-      this.showFilterModalForRow = this.showFilterModalForRow.bind(this);
-      this.isFilterEngaged = this.isFilterEngaged.bind(this);
-      this.toggleFreeze = this.toggleFreeze.bind(this);
+   const handleDrop = event => {
+      const { rowMovingIndex } = stateDragData(managedStore.state);
+      if (isDroppable(rowMovingIndex)) {
+         event.preventDefault();
+         if (isSomething(rowMovingIndex)) {
+            startedUndoableAction();
+            rowMoved({ rowMoved: rowMovingIndex, rowMovedTo: index });
+            setIsOver(false);
+            completedUndoableAction('moved row ' + rowMovingIndex + ' to ' + index);
+         }
+      }
    }
 
-   showFilterModalForRow = rowIndex =>
-      this.props.toggledShowFilterModal(
-         rowIndex,
-         null,
-         getInitialFilterValues({ state: managedStore.state, rowIndex })
-      );
-
-   isFilterEngaged = (rowIndex, rowFilters) => {
-      if (isNothing(rowFilters)) {
-         return false;
+   const handleDragOver = event => {
+      const { rowMovingIndex } = stateDragData(managedStore.state);
+      if (isDroppable(rowMovingIndex)) {
+         event.preventDefault(); // doing this allows the drop
+         event.dataTransfer.dropEffect = 'move'; // not sure how necessary this is
+         setIsOver(true);
       }
-      return R.pipe(
-         R.find(R.pipe(R.prop('index'), R.equals(rowIndex))),
+   }
+
+   const handleDragLeave = event =>  {
+      if (stateDragType(managedStore.state) === DRAGGABLE_ROW_NUMBER) {
+         setIsOver(false);
+      }
+   }
+
+   // this pops up the RowHeaderTools (onCLick), then there is hideToolForRow within the RowHeaderTools (onMouseLeave)
+   const showToolForRow = event => {
+      updatedAxisItemTool({
+         axis: ROW_AXIS,
+         index,
+         isVisible: true,
+      });
+   }
+
+   const filterEngaged = () => R.pipe(
+         stateRowFilters,
+         getObjectFromArrayByKeyValue('index', index),
          R.prop('filterExpression'),
-         isSomething
-      )(rowFilters);
-   };
+         isSomething,
+      )(managedStore.state);
 
-   toggleFreeze = () => {
-      startedUndoableAction();
-      updatedFrozenRows([{ index: this.props.cell.row, isFrozen: !this.props.frozen }]);
-      completedUndoableAction('toggled freeze for row ' + this.props.index);
-   };
+   const freezeEngaged = () => R.pipe(
+      stateFrozenRows,
+      getObjectFromArrayByKeyValue('index', index),
+      R.prop('isFrozen'),
+   )(managedStore.state)
 
-   render() {
-      const row = cellRow(this.props.cell);
-      const rowNum = indexToRowNumber(row);
+   const gearClasses = 'self-center pl-1 pr-1' + (
+      filterEngaged() || freezeEngaged()
+         ? ' text-pale-purple hover:text-vibrant-purple'
+         : ' text-grey-blue hover:text-vibrant-blue'
+   );
 
-      // These props are injected by React DnD, as defined by your `collect` function above:
-      const { connectDragSource } = this.props;
+   const render = () => {
+      const rowNum = indexToRowNumber(index);
+      const baseClasses = 'flex w-full h-full justify-between';
+      const allClasses = isOver
+         ? baseClasses + ' bg-vibrant-blue'
+         : baseClasses + ' cursor-ns-move';
 
-      return connectDragSource(
-         <div className="flex flex-col w-full h-full justify-evenly">
-            <SnowflakeIcon classes="w-1/2 mt-1 ml-4" switchedOn={this.props.frozen} onClickFn={this.toggleFreeze} />
-            <div className="flex cursor-row-resize">
-               <div key={'rowNum_' + row} className="w-2/4 text-center self-center text-grey-blue">
-                  {rowNum}
-               </div>
-               <IconFilter
-                  key={'iconFilter_' + row}
-                  classes={'w-2/4 text-center'}
-                  height="100%"
-                  width="100%"
-                  fitlerEngaged={this.isFilterEngaged(row, stateRowFilters(managedStore.state))}
-                  onClickFn={() => this.showFilterModalForRow(row)}
-                  testId={'row' + rowNum}
+      return (
+         <div className={allClasses} 
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}>
+               <DraggableRowNumber number={rowNum} index={index} />
+               <GearIcon
+                  classes={gearClasses}
+                  onClickFn={showToolForRow}
                />
-            </div>
+               <RowHeaderTools index={index} frozen={frozen} />
          </div>
       );
    }
+   return render();
 }
 
-function mapStateToProps(state, ownProps) {
-   return {
-      showFilterModal: stateShowFilterModal(state),
-      cell: ownProps.cell,
-      frozen: ownProps.frozen
-   };
-}
-
-const DragableRowHeader = DragSource(ItemTypes.DRAGGABLE_ROW_HEADER, dragSourceSpec, dragCollect)(RowHeaderDetail);
-export default connect(mapStateToProps, { toggledShowFilterModal })(DragableRowHeader);
+export default RowHeaderDetail;

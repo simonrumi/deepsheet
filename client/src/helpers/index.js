@@ -14,12 +14,6 @@ export const maybeHasPath = R.curry((path, obj) =>
 const makeArr = length => new Array(length);
 export const mapWithIndex = R.addIndex(R.map);
 
-// TODO IDEA
-// spicyCurry
-// if every function has one argument which is an object e.g. { arg1, arg2, arg3 }
-// then spicyCurry looks to see how many args were received and if it isn't all of them
-// returns a function that expects an object with the rest of the args
-
 // when you want to map, but you don't have an array, just a number of times to run the function supplied to map
 // the function gets the index as a param each time
 // returns an array
@@ -53,9 +47,16 @@ export const runIfSomething = (fn, thing, ...args) =>
       thing
    );
 
+export const concatAll = listOfLists => R.reduce(
+      (accumulator, list) => R.concat(accumulator, list), 
+      R.head(listOfLists)
+   )(R.tail(listOfLists));
+
 export const capitalizeFirst = R.pipe(R.head, R.toUpper);
 
 export const capitalCase = R.converge(R.concat, [capitalizeFirst, R.pipe(R.tail, R.toLower)]);
+
+export const pluralize = R.concat(R.__, 's');
 
 export const getObjectFromArrayByKeyValue = R.curry((key, value, arr) =>
    isSomething(arr) ? R.find(item => isObject(item) && R.propEq(key, value, item), arr) || null : null

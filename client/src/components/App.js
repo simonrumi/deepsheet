@@ -45,14 +45,15 @@ const App = props => {
 const stateKeys = [
    'auth',
    'cellKeys',
+   'cellDbUpdates',
+   'dragMonitor',
+   'filterModal',
+   'focus',
+   'menu',
+   'metadata',
    'sheet',
    'sheets',
-   'metadata',
    'title',
-   'filterModal',
-   'cellDbUpdates',
-   'menu',
-   'focus',
 ];
 
 const logState = wrappedState => {

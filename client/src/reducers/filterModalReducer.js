@@ -48,11 +48,9 @@ const filterModalReducer = (state = { showFilterModal: false }, action) => {
          return { ...state, filterExpression: action.payload, isStale: true }
 
       case CHANGED_REGEX_VALUE:
-         console.log('filterModalReducer CHANGED_CASE_SENSITIVE_VALUE got action.payload', action.payload);
          return { ...state, regex: action.payload, isStale: true }
 
       case CHANGED_CASE_SENSITIVE_VALUE:
-         console.log('filterModalReducer CHANGED_CASE_SENSITIVE_VALUE got action.payload', action.payload);
          return { ...state, caseSensitive: action.payload, isStale: true }
     
       case FILTER_EDIT_CANCELLED:

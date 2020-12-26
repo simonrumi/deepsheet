@@ -10,6 +10,7 @@ import dbOperations from '../middleware/dbOperations';
 import initializeSheet from '../middleware/initializeSheet';
 import filterSheet from '../middleware/filterSheet';
 import orderSheet from '../middleware/orderSheet';
+import buildAxisSizing from '../middleware/buildAxisSizing';
 
 class ManagedStore {
    constructor() {
@@ -35,7 +36,8 @@ class ManagedStore {
             dbOperations, 
             initializeSheet, 
             orderSheet, 
-            filterSheet
+            filterSheet,
+            buildAxisSizing
          ) //tried reduxThunk at the end, and at the start, unsure which is best
       );
       this._store.reducerManager = reducerManager;

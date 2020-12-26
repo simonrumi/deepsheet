@@ -3,7 +3,7 @@ import * as R from 'ramda';
 import managedStore from '../../store';
 import { connect } from 'react-redux';
 import { openedTitleEditor } from '../../actions/titleActions';
-import { menuHidden } from '../../actions/menuActions';
+import { hideAllPopups } from '../../actions';
 import { undid, redid } from '../../actions/undoActions';
 import { loadSheet, saveAllUpdates } from '../../services/sheetServices';
 import { arrayContainsSomething } from '../../helpers';
@@ -74,7 +74,7 @@ class SheetHeader extends React.Component {
 
    render() {
       return (
-         <div className="flex items-center justify-between px-2 py-1" onClick={this.props.menuHidden} key="SheetHeader">
+         <div className="flex items-center justify-between px-2 py-1" onClick={this.props.hideAllPopups} key="SheetHeader">
             <Heading text={this.props.title} classes="pr-2" />
             <div className="flex items-end justify-between">
                {this.renderSaveIcon()}
@@ -100,5 +100,5 @@ function mapStateToProps(state) {
 export default connect(mapStateToProps, {
    openedTitleEditor,
    saveAllUpdates,
-   menuHidden,
+   hideAllPopups,
 })(SheetHeader);

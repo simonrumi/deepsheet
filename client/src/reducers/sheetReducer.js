@@ -36,7 +36,6 @@ const sheetReducer = (state = null, action) => {
          };
 
       case COMPLETED_CREATE_SHEET:
-         console.log('fetchSheetReducer got COMPLETED_CREATE_SHEET. Before update state was', state);
          return {
             ...state,
             isCallingDb: false,

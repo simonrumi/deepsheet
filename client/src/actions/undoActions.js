@@ -10,7 +10,6 @@ export const redid = () => {
 };
 
 export const startedUndoableAction = message => {
-   console.log('undoActions dispatching STARTED_UNDOABLE_ACTION:', message);
    managedStore.store.dispatch({ type: STARTED_UNDOABLE_ACTION, payload: message });
 };
 
