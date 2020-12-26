@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 const FilterModel = require('./FilterModel');
 const FreezeModel = require('./FreezeModel');
+const SizingModel = require('./SizingModel');
 const CellModel = require('./CellModel');
 const { isSomething } = require('../helpers');
 
@@ -30,7 +31,9 @@ const sheetSchema = new Schema(
          columnFilters: [FilterModel],
          rowFilters: [FilterModel],
          frozenRows: [FreezeModel],
-         frozenColumns: [FreezeModel]
+         frozenColumns: [FreezeModel],
+         columnWidths: [SizingModel],
+         rowHeights: [SizingModel],
       },
       title: { type: String, requried: true, default: 'My Deep Deep Sheet' },
       cells: [CellModel],

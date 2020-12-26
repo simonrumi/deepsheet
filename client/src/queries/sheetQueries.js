@@ -55,6 +55,14 @@ const SHEET_QUERY = gql`
                caseSensitive
                regex
             }
+            rowHeights {
+               index
+               size
+            }
+            columnWidths {
+               index
+               size
+            }
          }
          cells {
             row
@@ -75,5 +83,5 @@ export const sheetQuery = async (sheetId, userId) => {
       variables: { sheetId, userId },
       fetchPolicy: 'network-only', // in other words, every time a different sheet is loaded, we're getting it from the network, not the cache. Otherwise cache might show old version of sheet
    });
-   return sheetResult;
+   return sheetResult.data.sheet;
 };

@@ -39,6 +39,11 @@ const SheetMutations = gql`
       isFrozen: Boolean!
    }
 
+   input SheetSizingInput {
+      index: Int!
+      size: String!
+   }
+
    input SheetSummaryCellInput {
       row: Int
       column: Int
@@ -54,6 +59,8 @@ const SheetMutations = gql`
       columnFilters: [SheetFilterInput]
       frozenRows: [SheetFreezeInput]
       frozenColumns: [SheetFreezeInput]
+      rowHeights: [SheetSizingInput]
+      columnWidths: [SheetSizingInput]
    }
 
    input NewSheetInput {

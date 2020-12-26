@@ -33,8 +33,9 @@ import {
 export const fetchSheet = async (sheetId, userId) => {
    userId = userId || getUserInfoFromCookie();
    try {
-      const response = await sheetQuery(sheetId, userId);
-      return response.data.sheet;
+      const sheet = await sheetQuery(sheetId, userId);
+      console.log('sheetServices.fetchSheet got sheet', sheet);
+      return sheet;
    } catch (err) {
       console.error('error in sheetServices.fetchSheet', err);
    }

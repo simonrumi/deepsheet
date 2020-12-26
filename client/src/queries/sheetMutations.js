@@ -163,6 +163,14 @@ const SHEET_BY_USER_ID_MUTATION = gql`
                index
                isFrozen
             }
+            columnWidths {
+               index
+               size
+            }
+            rowHeights {
+               index
+               size
+            }
          }
          cells {
             row

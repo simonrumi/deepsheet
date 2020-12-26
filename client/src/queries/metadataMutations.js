@@ -12,6 +12,8 @@ const UPDATE_METATDATA_MUTATION = gql`
       $columnFilters: [SheetFilterInput]
       $frozenRows: [SheetFreezeInput]
       $frozenColumns: [SheetFreezeInput]
+      $rowHeights: [SheetSizingInput]
+      $columnWidths: [SheetSizingInput]
    ) {
       updateMetadata(
          input: {
@@ -24,6 +26,8 @@ const UPDATE_METATDATA_MUTATION = gql`
             columnFilters: $columnFilters
             frozenRows: $frozenRows
             frozenColumns: $frozenColumns
+            rowHeights: $rowHeights
+            columnWidths: $columnWidths
          }
       ) {
          created
@@ -47,6 +51,14 @@ const UPDATE_METATDATA_MUTATION = gql`
             caseSensitive
             regex
          }
+         columnWidths {
+            index
+            size
+         }
+         rowHeights {
+            index
+            size
+         }
       }
    }
 `;
@@ -60,7 +72,9 @@ export const updateMetadataMutation = async ({
    rowFilters,
    columnFilters,
    frozenRows,
-   frozenColumns
+   frozenColumns,
+   rowHeights,
+   columnWidths,
 }) => {
    const response = await apolloClient.mutate({
       mutation: UPDATE_METATDATA_MUTATION,
@@ -73,7 +87,9 @@ export const updateMetadataMutation = async ({
          rowFilters,
          columnFilters,
          frozenRows,
-         frozenColumns
+         frozenColumns,
+         rowHeights,
+         columnWidths,
       },
    });
    return response.data.updateMetadata; // "updateMetadata" is from the mutation above

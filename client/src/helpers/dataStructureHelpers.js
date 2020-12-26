@@ -55,6 +55,8 @@ export const dbTotalColumns = subObjectGetterSetter(dbMetadataLens, 'totalColumn
 export const dbParentSheetId = subObjectGetterSetter(dbMetadataLens, 'parentSheetId');
 export const dbColumnFilters = subObjectGetterSetter(dbMetadataLens, 'columnFilters');
 export const dbRowFilters = subObjectGetterSetter(dbMetadataLens, 'rowFilters');
+export const dbRowHeights = subObjectGetterSetter(dbMetadataLens, 'rowHeights');
+export const dbColumnWidths = subObjectGetterSetter(dbMetadataLens, 'columnWidths');
 
 // get the sheet's id from db structure
 const dbSheetIdLens = R.lensProp('id');

@@ -25,6 +25,11 @@ const SheetType = gql`
       isFrozen: Boolean
    }
 
+   type SheetSizingType {
+      index: Int!
+      size: String!
+   }
+
    type SheetSummaryCellType {
       row: Int
       column: Int
@@ -41,6 +46,8 @@ const SheetType = gql`
       rowFilters: [SheetFilterType]
       frozenColumns: [SheetFreezeType]
       frozenRows: [SheetFreezeType]
+      rowHeights: [SheetSizingType]
+      columnWidths: [SheetSizingType]
    }
 
    type SheetCollaboratorType {
