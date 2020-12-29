@@ -2,7 +2,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import * as R from 'ramda';
 import { focusedCell } from '../../actions/focusActions';
-import { hideAllPopups } from '../../actions';
+import { hidePopups } from '../../actions';
 import { nothing, isSomething, isNothing } from '../../helpers';
 import { createCellId, isCellFocused, createCellKey } from '../../helpers/cellHelpers';
 import { isCellVisible } from '../../helpers/visibilityHelpers';
@@ -21,7 +21,7 @@ const Cell = props => {
 
    const onCellClick = () => {
       focusedCell(cellReducer);
-      hideAllPopups();
+      hidePopups();
    }
 
    const createClassNames = classes => {

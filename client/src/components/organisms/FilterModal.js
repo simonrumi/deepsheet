@@ -16,7 +16,7 @@ const FilterModal = props => {
    // rare case of using local state. Tracking what the isStale prop was as we open the filter modal
    // this is so it can be reinstated if we cancel out of the filter modal
    const [wasStale, setWasStale] = useState(false);
-   useEffect(() => setWasStale(isStale), []); // equivalent to componentDidMount per https://medium.com/@felippenardi/how-to-do-componentdidmount-with-react-hooks-553ba39d1571
+   useEffect(() => setWasStale(isStale), [isStale]); 
 
    if (showFilterModal) {
       return (

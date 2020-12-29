@@ -1,5 +1,5 @@
 import React from 'react';
-import { TOOL_ICON_WIDTH, TOOL_ICON_HEIGHT, } from '../../constants';
+import { TOOL_ICON_WIDTH } from '../../constants';
 
 const RadioButton = ({
    style = {},

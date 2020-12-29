@@ -24,9 +24,9 @@ export const completedSaveUpdates = () => {
    });
 };
 
-// note that hideAllPopups should not hide the filterModal - user must close filterModal after use
+// note that hidePopups should not hide the filterModal - user must close filterModal after use
 // if this were to close the filterModal, that would cause a bug whereby filterModal wouldn't ever show
-export const hideAllPopups = () => {
+export const hidePopups = () => {
    managedStore.store.dispatch({
       type: MENU_HIDDEN,
    });

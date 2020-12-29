@@ -11,7 +11,7 @@ import {
 } from '../../helpers/dataStructureHelpers';
 import { isSomething, arrayContainsSomething } from '../../helpers';
 import { getInitialFilterValues } from '../../helpers/visibilityHelpers';
-import { hideAllPopups } from '../../actions';
+import { hidePopups } from '../../actions';
 import { startedUndoableAction, completedUndoableAction } from '../../actions/undoActions';
 import { toggledShowFilterModal } from '../../actions/filterActions';
 import { toggledShowSortModal } from '../../actions/sortActions';
@@ -39,7 +39,7 @@ const ColumnHeaderTools = props => {
          columnIndex,
          getInitialFilterValues({ state: managedStore.state, columnIndex })
       );
-      hideAllPopups();
+      hidePopups();
    }
 
    const isFilterEngaged = (columnIndex, columnFilters) => {

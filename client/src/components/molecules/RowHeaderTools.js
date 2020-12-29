@@ -11,7 +11,7 @@ import {
 } from '../../helpers/dataStructureHelpers';
 import { isSomething, arrayContainsSomething } from '../../helpers';
 import { getInitialFilterValues } from '../../helpers/visibilityHelpers';
-import { hideAllPopups } from '../../actions';
+import { hidePopups } from '../../actions';
 import { startedUndoableAction, completedUndoableAction } from '../../actions/undoActions';
 import { toggledShowFilterModal } from '../../actions/filterActions';
 import { toggledShowSortModal } from '../../actions/sortActions';
@@ -39,7 +39,7 @@ const RowHeaderTools = props => {
             null,
             getInitialFilterValues({ state: managedStore.state, rowIndex })
          );
-      hideAllPopups();
+      hidePopups();
    }
 
    const isFilterEngaged = (rowIndex, rowFilters) => {
