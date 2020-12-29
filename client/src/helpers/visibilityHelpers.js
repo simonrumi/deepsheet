@@ -107,11 +107,11 @@ export const shouldShowRow = R.curry((rowVisibility, cell) => {
  * different structure of data available to ColumnHeaders.js compared with Sheet.js,
  * consequently it doesn't seem worthwhile trying to generalize any of these functions
  ****/
-export const shouldShowColumn = R.curry((colVisibilityArr, colIndex) => {
+export const shouldShowColumn = R.curry((colVisibilityArr, columnIndex) => {
    if (isNothing(colVisibilityArr) || !arrayContainsSomething(colVisibilityArr)) {
       return true;
    }
-   const colVisibilityObj = getObjectFromArrayByKeyValue('index', colIndex, colVisibilityArr);
+   const colVisibilityObj = getObjectFromArrayByKeyValue('index', columnIndex, colVisibilityArr);
    return isSomething(colVisibilityObj) ? colVisibilityObj.isVisible : true;
 });
 
@@ -167,7 +167,7 @@ const mapWithUpdatedFilter = axis =>
             regex: filterRegex(filter),
             showFilterModal: false,
             rowIndex: axis === ROW_AXIS ? filterIndex(filter) : null,
-            colIndex: axis === COLUMN_AXIS ? filterIndex(filter) : null,
+            columnIndex: axis === COLUMN_AXIS ? filterIndex(filter) : null,
          },
          isInitializingSheet
       );

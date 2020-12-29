@@ -25,3 +25,6 @@ export const DRAGGABLE_COLUMN_LETTER = 'draggable_column_letter';
 
 export const SORT_INCREASING = 'sort_increasing';
 export const SORT_DECREASING = 'sort_decreasing';
+export const SORT_TYPE_TEXT = 'sort_type_text';
+export const SORT_TYPE_NUMBERS = 'sort_type_numbers';
+export const SORT_TYPE_DATES = 'sort_type_dates';

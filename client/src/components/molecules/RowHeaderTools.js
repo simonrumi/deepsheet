@@ -11,11 +11,14 @@ import {
 } from '../../helpers/dataStructureHelpers';
 import { isSomething, arrayContainsSomething } from '../../helpers';
 import { getInitialFilterValues } from '../../helpers/visibilityHelpers';
+import { hideAllPopups } from '../../actions';
 import { startedUndoableAction, completedUndoableAction } from '../../actions/undoActions';
 import { toggledShowFilterModal } from '../../actions/filterActions';
+import { toggledShowSortModal } from '../../actions/sortActions';
 import { updatedFrozenRows, updatedAxisItemTool } from '../../actions/metadataActions';
 import FilterIcon from '../atoms/IconFilter';
 import SnowflakeIcon from '../atoms/IconSnowflake';
+import SortIcon from '../atoms/IconSort';
 
 const RowHeaderTools = props => {
    const { index, frozen, } = props;
@@ -23,12 +26,21 @@ const RowHeaderTools = props => {
    const toolAxis = useSelector(state => stateAxisItemToolAxis(state));
    const toolIndex = useSelector(state => stateAxisItemToolIndex(state));
 
-   const showFilterModalForRow = rowIndex =>
-      toggledShowFilterModal(
+   const showSortModalForRow = rowIndex => {
+      toggledShowSortModal(
          rowIndex,
          null,
-         getInitialFilterValues({ state: managedStore.state, rowIndex })
       );
+   }
+   
+   const showFilterModalForRow = rowIndex => {
+         toggledShowFilterModal(
+            rowIndex,
+            null,
+            getInitialFilterValues({ state: managedStore.state, rowIndex })
+         );
+      hideAllPopups();
+   }
 
    const isFilterEngaged = (rowIndex, rowFilters) => {
       if (arrayContainsSomething(rowFilters)) {
@@ -89,13 +101,15 @@ const RowHeaderTools = props => {
             <div className={iconColumnClasses}>
                <div  className={iconHeadingClasses}>filter</div>
                <FilterIcon
-                  key={'iconFilter_' + index}
-                  classes={'p-1'}
+                  classes="p-1"
                   fitlerEngaged={isFilterEngaged(index, stateRowFilters(managedStore.state))}
                   onClickFn={() => showFilterModalForRow(index)}
                />
             </div>
-            
+            <div className={iconColumnClasses}>
+               <div  className={iconHeadingClasses}>sort</div>
+               <SortIcon classes="p-1" onClickFn={() => showSortModalForRow(index)} />
+            </div>
          </div>
       )
       : null;

@@ -76,7 +76,7 @@ const createMapOfChangedColumns = newCellOrder =>
    );
 
 const rowSortFunc = state =>
-   stateRowSortDirection(state) === SORT_INCREASING ? compareCellContent : compareCellContentDecreasing;
+   stateRowSortDirection(state) === SORT_INCREASING ? compareCellContent(state) : compareCellContentDecreasing(state);
 
 const rowSort = R.curry((state, cellArrays) => {
    const sortedMoveableCells = R.sort(rowSortFunc(state), cellArrays.moveableCells);
@@ -126,12 +126,12 @@ const getCellsInRow = state =>
       getAllCells(state)
    );
 
-export default state =>
+export default state => 
    R.pipe(
       getCellsInRow,
       R.sort(compareCellColumn),
       separateFrozenCells(state),
       rowSort(state),
       createMapOfChangedColumns,
-      createUpdatesForStore(state)
-   )(state);
+      createUpdatesForStore(state),
+     )(state);

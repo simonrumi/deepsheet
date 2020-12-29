@@ -11,11 +11,14 @@ import {
 } from '../../helpers/dataStructureHelpers';
 import { isSomething, arrayContainsSomething } from '../../helpers';
 import { getInitialFilterValues } from '../../helpers/visibilityHelpers';
+import { hideAllPopups } from '../../actions';
 import { startedUndoableAction, completedUndoableAction } from '../../actions/undoActions';
 import { toggledShowFilterModal } from '../../actions/filterActions';
+import { toggledShowSortModal } from '../../actions/sortActions';
 import { updatedFrozenColumns, updatedAxisItemTool } from '../../actions/metadataActions';
 import FilterIcon from '../atoms/IconFilter';
 import SnowflakeIcon from '../atoms/IconSnowflake';
+import SortIcon from '../atoms/IconSort';
 
 const ColumnHeaderTools = props => {
    const { index, frozen } = props;
@@ -23,12 +26,21 @@ const ColumnHeaderTools = props => {
    const toolAxis = useSelector(state => stateAxisItemToolAxis(state));
    const toolIndex = useSelector(state => stateAxisItemToolIndex(state));
 
-   const showFilterModalForColumn = columnIndex =>
+   const showSortModalForColumn = columnIndex => {
+      toggledShowSortModal(
+         null,
+         columnIndex,
+      );
+   }
+   
+   const showFilterModalForColumn = columnIndex => {
       toggledShowFilterModal(
          null,
          columnIndex,
          getInitialFilterValues({ state: managedStore.state, columnIndex })
       );
+      hideAllPopups();
+   }
 
    const isFilterEngaged = (columnIndex, columnFilters) => {
       if (arrayContainsSomething(columnFilters)) {
@@ -94,7 +106,10 @@ const ColumnHeaderTools = props => {
                   onClickFn={() => showFilterModalForColumn(index)}
                />
             </div>
-            
+            <div className={iconColumnClasses}>
+               <div className={iconHeadingClasses}>sort</div>
+               <SortIcon classes="p-1" onClickFn={() => showSortModalForColumn(index)} />
+            </div>
          </div>
       )
       : null;

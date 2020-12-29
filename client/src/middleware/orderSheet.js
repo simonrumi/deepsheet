@@ -135,7 +135,9 @@ export default store => next => async action => {
          break;
 
       case SORTED_AXIS:
-         const { updatedCells = [], updatedVisibility = {}, updatedFilters = {}, updatedSizing = {} } = sortAxis(store.getState());
+         const sortAxisResult = sortAxis(store.getState());
+         console.log('orderSheet.SORTED_AXIS got sortAxisResult',sortAxisResult);
+         const { updatedCells = [], updatedVisibility = {}, updatedFilters = {}, updatedSizing = {} } = sortAxisResult;
          runIfSomething(replacedRowVisibility, updatedVisibility[ROW_AXIS]);
          runIfSomething(replacedColumnVisibility, updatedVisibility[COLUMN_AXIS]);
          runIfSomething(replacedRowFilters, updatedFilters[ROW_AXIS]);

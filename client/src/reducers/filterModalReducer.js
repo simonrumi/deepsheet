@@ -14,7 +14,7 @@ const filterModalReducer = (state = { showFilterModal: false }, action) => {
             ...state, 
             showFilterModal: false,
             rowIndex: null,
-            colIndex: null,
+            columnIndex: null,
             filterExpression: null, 
             regex: null,
             caseSensitive: null
@@ -24,7 +24,7 @@ const filterModalReducer = (state = { showFilterModal: false }, action) => {
             return modalHiddenState;
          }
 
-         const { showModal, rowIndex, colIndex, initialValues } = action.payload;
+         const { showModal, rowIndex, columnIndex, initialValues } = action.payload;
 
          if (!showModal) {
             return modalHiddenState;
@@ -38,7 +38,7 @@ const filterModalReducer = (state = { showFilterModal: false }, action) => {
             ...state,
             showFilterModal: true,
             rowIndex,
-            colIndex,
+            columnIndex,
             filterExpression, 
             regex,
             caseSensitive,
@@ -57,7 +57,7 @@ const filterModalReducer = (state = { showFilterModal: false }, action) => {
          return {
             ...state,
             rowIndex: null,
-            colIndex: null,
+            columnIndex: null,
             filterExpression: null, 
             regex: null,
             caseSensitive: null,

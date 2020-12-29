@@ -239,7 +239,7 @@ const clearAllFilters = store => {
       regex: false,
       showFilterModal: false,
       rowIndex: null,
-      colIndex: 0, //doesn't really matter which filter icon that was clicked on, so we pretend it was column A
+      columnIndex: 0, //doesn't really matter which filter icon that was clicked on, so we pretend it was column A
    };
    const isInitializingSheet = false;
    R.pipe(getDataFromActionAndStore, filterAxes, filterCells)(filterDataReset, isInitializingSheet, store);

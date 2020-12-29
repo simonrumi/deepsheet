@@ -1,8 +1,6 @@
 import * as R from 'ramda';
 import { isSomething } from './index';
 
-// TODO: use createGetter instead of createGetterSetter for all state data
-
 /************************************************ GENERAL STUFF **********************************************/
 
 const createGetterSetter = lens => (data, newValue) =>
@@ -131,6 +129,7 @@ export const stateRowSortByIndex = subObjectGetter(stateMetadataLens, 'rowSortBy
 export const stateRowSortDirection = subObjectGetter(stateMetadataLens, 'rowSortDirection');
 export const stateColumnSortByIndex = subObjectGetter(stateMetadataLens, 'columnSortByIndex');
 export const stateColumnSortDirection = subObjectGetter(stateMetadataLens, 'columnSortDirection');
+export const stateSortType = subObjectGetter(stateMetadataLens, 'sortType');
 export const stateMetadataIsStale = subObjectGetter(stateMetadataLens, 'isStale');
 export const stateMetadataIsCallingDb = subObjectGetter(stateMetadataLens, 'isCallingDb');
 export const stateMetadataErrorMessage = subObjectGetter(stateMetadataLens, 'errorMessage');
@@ -166,12 +165,19 @@ export const sheetParentSheetId = subObjectGetter(metadataLens, 'parentSheetId')
 const filterModalLens = R.lensProp('filterModal');
 const stateFilterModalLens = R.compose(presentLens, filterModalLens);
 export const stateShowFilterModal = subObjectGetter(stateFilterModalLens, 'showFilterModal');
-export const stateFilterColumnIndex = subObjectGetter(stateFilterModalLens, 'colIndex');
+export const stateFilterColumnIndex = subObjectGetter(stateFilterModalLens, 'columnIndex');
 export const stateFilterRowIndex = subObjectGetter(stateFilterModalLens, 'rowIndex');
 export const stateFilterExpression = subObjectGetter(stateFilterModalLens, 'filterExpression');
 export const stateFilterCaseSensitive = subObjectGetter(stateFilterModalLens, 'caseSensitive');
 export const stateFilterRegex = subObjectGetter(stateFilterModalLens, 'regex');
 export const stateFilterIsStale = subObjectGetter(stateFilterModalLens, 'isStale');
+
+/************************************************ STATE SORT MODAL **********************************************/
+const sortModalLens = R.lensProp('sortModal');
+const stateSortModalLens = R.compose(presentLens, sortModalLens);
+export const stateShowSortModal = subObjectGetter(stateSortModalLens, 'showSortModal');
+export const stateSortColumnIndex = subObjectGetter(stateSortModalLens, 'columnIndex');
+export const stateSortRowIndex = subObjectGetter(stateSortModalLens, 'rowIndex');
 
 /************************************************ STATE AUTH **********************************************/
 const authLens = R.lensProp('auth');

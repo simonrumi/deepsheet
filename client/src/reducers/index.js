@@ -8,6 +8,7 @@ import menuReducer from './menuReducer';
 import metadataReducer from './metadataReducer';
 import sheetReducer from './sheetReducer';
 import sheetsReducer from './sheetsReducer';
+import sortModalReducer from './sortModalReducer';
 import titleReducer from './titleReducer';
 
 export const staticReducers = {
@@ -22,5 +23,6 @@ export const staticReducers = {
    metadata: metadataReducer,
    sheet: sheetReducer,
    sheets: sheetsReducer,
+   sortModal: sortModalReducer,
    title: titleReducer,
 };

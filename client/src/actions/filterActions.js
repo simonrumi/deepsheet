@@ -11,8 +11,8 @@ import {
 } from './filterTypes';
 import { STARTED_UNDOABLE_ACTION, COMPLETED_UNDOABLE_ACTION } from './undoTypes';
 
-export const toggledShowFilterModal = (rowIndex, colIndex, initialValues) => {
-   const showModal = isSomething(rowIndex) || isSomething(colIndex);
+export const toggledShowFilterModal = (rowIndex, columnIndex, initialValues) => {
+   const showModal = isSomething(rowIndex) || isSomething(columnIndex);
    if (showModal) {
       managedStore.store.dispatch({ type: STARTED_UNDOABLE_ACTION });
    } else {
@@ -20,7 +20,7 @@ export const toggledShowFilterModal = (rowIndex, colIndex, initialValues) => {
    }
    managedStore.store.dispatch({
       type: TOGGLED_SHOW_FILTER_MODAL,
-      payload: { showModal, rowIndex, colIndex, initialValues },
+      payload: { showModal, rowIndex, columnIndex, initialValues },
    });
 };
 

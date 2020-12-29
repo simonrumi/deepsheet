@@ -76,7 +76,7 @@ const createMapOfChangedRows = newCellOrder =>
    );
 
 const columnSortFunc = state =>
-   stateColumnSortDirection(state) === SORT_INCREASING ? compareCellContent : compareCellContentDecreasing;
+   stateColumnSortDirection(state) === SORT_INCREASING ? compareCellContent(state) : compareCellContentDecreasing(state);
 
 const columnSort = R.curry((state, cellArrays) => {
    const sortedMoveableCells = R.sort(columnSortFunc(state), cellArrays.moveableCells);

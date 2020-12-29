@@ -112,16 +112,20 @@ const metadataReducer = (state = {}, action) => {
          return { ...state, columnMovedTo: action.payload };
 
       case UPDATED_SORT_OPTIONS:
+         console.log('metadatReducer.UPDATED_SORT_OPTIONS got action.payload', action.payload);
+         const { columnSortByIndex, rowSortByIndex, sortType, sortDirection } = action.payload;
          return typeof action.payload.rowSortByIndex === 'number'
             ? {
-                 ...state,
-                 rowSortByIndex: action.payload.rowSortByIndex,
-                 rowSortDirection: action.payload.sortDirection,
+                  ...state,
+                  rowSortByIndex,
+                  rowSortDirection: sortDirection,
+                  sortType,
               }
             : {
-                 ...state,
-                 columnSortByIndex: action.payload.columnSortByIndex,
-                 columnSortDirection: action.payload.sortDirection,
+                  ...state,
+                  columnSortByIndex,
+                  columnSortDirection: sortDirection,
+                  sortType,
               };
 
       case CLEARED_SORT_OPTIONS:

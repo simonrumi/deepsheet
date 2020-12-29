@@ -53,6 +53,7 @@ const stateKeys = [
    'metadata',
    'sheet',
    'sheets',
+   'sortModal',
    'title',
 ];
 

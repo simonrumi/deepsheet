@@ -9,6 +9,7 @@ import {
    stateShowLoginModal,
    stateSheetId,
    stateShowFilterModal,
+   stateShowSortModal,
    stateSheetIsCallingDb,
    stateSheetCellsLoaded,
    stateSheetErrorMessage,
@@ -32,6 +33,7 @@ import LoadingIcon from './atoms/IconLoading';
 import Header from './Header';
 import Cells from './Cells';
 import FilterModal from './organisms/FilterModal';
+import SortModal from './organisms/SortModal';
 import LoginModal from './organisms/LoginModal';
 
 // TODO BUG NEXT - updating when the session has expired is not handled - need to log user in then complete action
@@ -39,6 +41,7 @@ import LoginModal from './organisms/LoginModal';
 const Sheet = props => {
    const isLoggedIn = useSelector(state => stateIsLoggedIn(state));
    const showFilterModal = useSelector(state => stateShowFilterModal(state));
+   const showSortModal = useSelector(state => stateShowSortModal(state));
    const showLoginModal = useSelector(state => stateShowLoginModal(state));
    const sheetIsCallingDb = useSelector(state => stateSheetIsCallingDb(state));
    const columnWidths = useSelector(state => stateColumnWidths(state));
@@ -121,6 +124,8 @@ const Sheet = props => {
 
    const maybeRenderFilterModal = () => (showFilterModal ? <FilterModal /> : null);
 
+   const maybeRenderSortModal = () => (showSortModal ? <SortModal /> : null);
+
    const render = () => {
       if (sheetIsCallingDb) {
          return (
@@ -134,6 +139,7 @@ const Sheet = props => {
          <div className="px-1">
             <Header />
             {maybeRenderFilterModal()}
+            {maybeRenderSortModal()}
             {maybeRenderLoginOrFetchSheet()}
             <div
                className="grid-container pt-1"
