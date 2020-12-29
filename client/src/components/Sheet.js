@@ -19,6 +19,8 @@ import {
    stateColumnVisibility,
    stateRowFilters,
    stateRowVisibility,
+   stateTotalRows,
+   stateTotalColumns,
 } from '../helpers/dataStructureHelpers';
 import { isVisibilityCalcutated } from '../helpers/visibilityHelpers';
 import { isAxisSizingCalculated,handleResizerDragOver, handleResizerDrop } from '../helpers/axisSizingHelpers';
@@ -52,6 +54,8 @@ const Sheet = props => {
    const rowVisibility = useSelector(state => stateRowVisibility(state));
    const sheetId = useSelector(state => stateSheetId(state));
    const cellsLoaded = useSelector(state => stateSheetCellsLoaded(state));
+   const totalRows = useSelector(state => stateTotalRows(state));
+   const totalColumns = useSelector(state => stateTotalColumns(state));
 
    const maybeRenderLoginOrFetchSheet = () => {
       const { userId, sessionId } = getUserInfoFromCookie();
@@ -116,6 +120,8 @@ const Sheet = props => {
          columnVisibility,
          rowFilters,
          rowVisibility,
+         totalRows,
+         totalColumns
       ]
    );
 

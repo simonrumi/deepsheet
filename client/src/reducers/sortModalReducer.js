@@ -1,8 +1,6 @@
 import { TOGGLED_SHOW_SORT_MODAL, SORT_CANCELLED } from '../actions/sortTypes';
 import { isNothing } from '../helpers';
 
-// TODO - return to grid creation stuff and deal with adding rows/columns
-
 const sortModalReducer = (state = { showSortModal: false }, action) => {
    const modalHiddenState = {
       showSortModal: false,
@@ -26,7 +24,6 @@ const sortModalReducer = (state = { showSortModal: false }, action) => {
          }
 
       case SORT_CANCELLED:
-         console.log('sortModalReducer got SORT_CANCELLED');
          return modalHiddenState;
 
       default:

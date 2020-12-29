@@ -10,9 +10,7 @@ const ToolModalHeading = props => {
       rowIndex => (rowIndex ? ROW_AXIS : COLUMN_AXIS),
       capitalCase
    )(rowIndex);
-   console.log('ToolModalHeading got columnIndex', columnIndex, 'about to call indexToColumnLetter')
    const axisIndexConverter = rowIndex ? indexToRowNumber : indexToColumnLetter;
-   console.log('ToolModalHeading finished calling indexToColumnLetter');
 	const convertAxisIndex = (converter, rowIndex, columnIndex) => rowIndex ? R.toString(converter(rowIndex)) : converter(columnIndex);
 	const getAxisItemValue = (rowIndex, columnIndex) => convertAxisIndex(axisIndexConverter, rowIndex, columnIndex);
 	const createModalHeadingText = (rowIndex, columnIndex) => concatAll([

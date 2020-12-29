@@ -6,18 +6,17 @@ import {
    ROW_MOVED_TO,
    COLUMN_MOVED,
    COLUMN_MOVED_TO,
-   SORTED_AXIS,
 } from '../actions/metadataTypes';
+import { SORTED_AXIS } from '../actions/sortTypes';
 import { UPDATED_CELL } from '../actions/cellTypes';
 import { startedUndoableAction, completedUndoableAction } from '../actions/undoActions';
-import { ROW_AXIS, COLUMN_AXIS } from '../constants';
 import {
    replacedRowFilters,
    replacedColumnFilters,
    replacedRowVisibility,
    replacedColumnVisibility,
-   clearedSortOptions,
 } from '../actions';
+import { clearedSortOptions } from '../actions/sortActions';
 import {
    hasChangedMetadata,
    replacedRowHeights,
@@ -31,6 +30,7 @@ import sortAxis from '../services/sortAxis';
 import { hasChangedCell } from '../actions/cellActions';
 import { runIfSomething, isSomething, arrayContainsSomething } from '../helpers';
 import { stateMetadataProp } from '../helpers/dataStructureHelpers';
+import { ROW_AXIS, COLUMN_AXIS } from '../constants';
 
 export default store => next => async action => {
    const clearMoveData = () => {
@@ -136,7 +136,6 @@ export default store => next => async action => {
 
       case SORTED_AXIS:
          const sortAxisResult = sortAxis(store.getState());
-         console.log('orderSheet.SORTED_AXIS got sortAxisResult',sortAxisResult);
          const { updatedCells = [], updatedVisibility = {}, updatedFilters = {}, updatedSizing = {} } = sortAxisResult;
          runIfSomething(replacedRowVisibility, updatedVisibility[ROW_AXIS]);
          runIfSomething(replacedColumnVisibility, updatedVisibility[COLUMN_AXIS]);

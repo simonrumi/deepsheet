@@ -25,8 +25,6 @@ import {
    ROW_MOVED_TO,
    COLUMN_MOVED,
    COLUMN_MOVED_TO,
-   UPDATED_SORT_OPTIONS,
-   CLEARED_SORT_OPTIONS,
    REPLACED_ROW_HEIGHTS,
    REPLACED_COLUMN_WIDTHS,
    UPDATED_COLUMN_WIDTH,
@@ -34,6 +32,7 @@ import {
    UPDATED_AXIS_ITEM_TOOL,
    HIDE_AXIS_ITEM_TOOL,
 } from '../actions/metadataTypes';
+import { UPDATED_SORT_OPTIONS, CLEARED_SORT_OPTIONS } from '../actions/sortTypes';
 import { FETCHED_SHEET, COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
 
 const metadataReducer = (state = {}, action) => {
@@ -112,7 +111,6 @@ const metadataReducer = (state = {}, action) => {
          return { ...state, columnMovedTo: action.payload };
 
       case UPDATED_SORT_OPTIONS:
-         console.log('metadatReducer.UPDATED_SORT_OPTIONS got action.payload', action.payload);
          const { columnSortByIndex, rowSortByIndex, sortType, sortDirection } = action.payload;
          return typeof action.payload.rowSortByIndex === 'number'
             ? {

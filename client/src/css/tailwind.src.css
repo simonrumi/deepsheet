@@ -7,7 +7,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* TODO this grid stuff is breaking the atomic approach to classes so need to fix that */
+/* Note: this grid stuff is breaking tailwind's atomic approach to classes, but it's just these 3 items and it hasn't really hurt anything to leave it as is */
 
 /*! purgecss ignore */
 .grid-container {

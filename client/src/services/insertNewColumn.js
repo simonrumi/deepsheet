@@ -8,7 +8,7 @@ import * as R from 'ramda';
 import managedStore from '../store';
 import { updatedTotalColumns, updatedColumnVisibility, } from '../actions';
 import { addedCellKeys } from '../actions/cellActions';
-import { hasChangedMetadata, } from '../actions/metadataActions';
+import { hasChangedMetadata, updatedColumnWidth } from '../actions/metadataActions';
 import { shouldShowRow } from '../helpers/visibilityHelpers';
 import {
    stateTotalColumns,
@@ -23,6 +23,7 @@ import {
    createUpdatesForNewCellKeys,
 } from './insertNewAxis';
 import { addCellReducers } from '../reducers/cellReducers';
+import { DEFAULT_COLUMN_WIDTH } from '../constants';
 
 const makeNewColumnCell = R.curry((rowIndex, columnIndex, rowVisibility) => {
    const partialCell = {
@@ -81,6 +82,7 @@ const insertNewColumn = () => {
    addNewCellsToStore(updatedCells);
    addNewCellsToCellDbUpdates(updatedCells);
    updatedTotalColumns(totalColumns + 1);
+   updatedColumnWidth(totalColumns, DEFAULT_COLUMN_WIDTH);
    hasChangedMetadata();
 };
 

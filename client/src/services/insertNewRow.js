@@ -8,7 +8,7 @@ import * as R from 'ramda';
 import managedStore from '../store';
 import { updatedTotalRows, updatedRowVisibility, } from '../actions';
 import { addedCellKeys } from '../actions/cellActions';
-import { hasChangedMetadata, } from '../actions/metadataActions';
+import { hasChangedMetadata, updatedRowHeight } from '../actions/metadataActions';
 import { shouldShowColumn } from '../helpers/visibilityHelpers';
 import {
    addNewCellsToStore,
@@ -23,6 +23,7 @@ import {
    stateRowVisibility,
 } from '../helpers/dataStructureHelpers';
 import { addCellReducers } from '../reducers/cellReducers';
+import { DEFAULT_ROW_HEIGHT } from '../constants';
 
 const makeNewRowCell = (rowIndex, columnIndex, columnVisibility) => {
    const partialCell = {
@@ -83,6 +84,7 @@ const insertNewRow = () => {
    addNewCellsToStore(updatedCells);
    addNewCellsToCellDbUpdates(updatedCells);
    updatedTotalRows(totalRows + 1);
+   updatedRowHeight(totalRows, DEFAULT_ROW_HEIGHT);
    hasChangedMetadata();
 };
 

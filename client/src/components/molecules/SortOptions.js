@@ -9,8 +9,7 @@ import {
    SORT_TYPE_NUMBERS,
    SORT_TYPE_DATES,
 } from '../../constants';
-import { updatedSortOptions, sortedAxis } from '../../actions';
-import { toggledShowSortModal } from '../../actions/sortActions';
+import { toggledShowSortModal, sortedAxis, updatedSortOptions } from '../../actions/sortActions';
 import { startedUndoableAction, completedUndoableAction } from '../../actions/undoActions';
 import SortUpIcon from '../atoms/IconSortUp';
 import SortDownIcon from '../atoms/IconSortDown';
