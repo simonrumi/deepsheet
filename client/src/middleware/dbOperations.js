@@ -22,7 +22,9 @@ import { createSheetMutation } from '../queries/sheetMutations';
 import { isSomething } from '../helpers';
 import { getUserInfoFromCookie } from '../helpers/userHelpers';
 import { getSaveableCellData } from '../helpers/cellHelpers';
+import { createDefaultAxisSizing } from '../helpers/axisSizingHelpers';
 import { cellText, cellSubsheetIdSetter, dbSheetId } from '../helpers/dataStructureHelpers';
+import { DEFAULT_TOTAL_ROWS, DEFAULT_TOTAL_COLUMNS, DEFAULT_ROW_HEIGHT, DEFAULT_COLUMN_WIDTH } from '../constants';
 
 // note that services/sheetServices.js has a bunch of db operations in it as well.
 // they should be not coming via an action....TODO investigate this situation...should they be in here?
@@ -35,9 +37,13 @@ const saveParentSheetData = async (parentSheetCell, parentSheetId, newSheet) => 
    await updatedCells({ sheetId: parentSheetId, cells: [savableParentSheetCell] });
 };
 
-const createNewSheet = async ({ userId, rows, columns, title, parentSheetId, summaryCell, parentSheetCell }) => {
+const createNewSheet = async ({ userId, rows, columns, title, parentSheetId, summaryCell, parentSheetCell, rowHeights, columnWidths }) => {
    // note calling function must wrap createNewSheet in a try-catch block since we're not doing that here
    const summaryCellText = cellText(parentSheetCell);
+   rows = rows || DEFAULT_TOTAL_ROWS;
+   columns = columns || DEFAULT_TOTAL_COLUMNS
+   rowHeights = rowHeights || createDefaultAxisSizing(rows, DEFAULT_ROW_HEIGHT);
+   columnWidths = columnWidths || createDefaultAxisSizing(columns, DEFAULT_COLUMN_WIDTH);
    const createSheetResult = await createSheetMutation({
       userId,
       rows,
@@ -46,6 +52,8 @@ const createNewSheet = async ({ userId, rows, columns, title, parentSheetId, sum
       parentSheetId,
       summaryCell,
       summaryCellText,
+      rowHeights, 
+      columnWidths,
    });
    if (isSomething(parentSheetId)) {
       await saveParentSheetData(parentSheetCell, parentSheetId, createSheetResult);

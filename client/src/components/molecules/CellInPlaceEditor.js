@@ -7,10 +7,12 @@ import { clearedFocus } from '../../actions/focusActions';
 import { startedEditing, finishedEditing } from '../../actions/undoActions'; 
 import { isSomething } from '../../helpers';
 import { getUserInfoFromCookie } from '../../helpers/userHelpers';
+import { createDefaultAxisSizing } from '../../helpers/axisSizingHelpers';
 import { stateSheetId, cellText, cellRow, cellColumn, stateOriginalValue } from '../../helpers/dataStructureHelpers';
 import IconNewDoc from '../atoms/IconNewDoc';
 import IconClose from '../atoms/IconClose';
 import CheckmarkSubmitIcon from '../atoms/IconCheckmarkSubmit';
+import { DEFAULT_TOTAL_ROWS, DEFAULT_TOTAL_COLUMNS, DEFAULT_COLUMN_WIDTH, DEFAULT_ROW_HEIGHT } from '../../constants';
 
 const CellInPlaceEditor = props => {
    const keyBindings = event => {
@@ -66,14 +68,16 @@ const CellInPlaceEditor = props => {
    }
 
    const triggerCreatedSheetAction = () => {
-      const rows = null;
-      const columns = null;
+      const rows = DEFAULT_TOTAL_ROWS;
+      const columns = DEFAULT_TOTAL_COLUMNS;
       const title = null;
       const parentSheetId = stateSheetId(managedStore.state);
       const summaryCell = { row: 0, column: 0 }; // this would be to tell which cell in the new sheet is the summary cell. Default is 0,0
       const parentSheetCell = props.cell;
+      const rowHeights = createDefaultAxisSizing(DEFAULT_TOTAL_ROWS, DEFAULT_ROW_HEIGHT);
+      const columnWidths = createDefaultAxisSizing(DEFAULT_TOTAL_COLUMNS, DEFAULT_COLUMN_WIDTH);
       const { userId } = getUserInfoFromCookie();
-      createdSheet({ rows, columns, title, parentSheetId, summaryCell, parentSheetCell, userId });
+      createdSheet({ rows, columns, title, parentSheetId, summaryCell, parentSheetCell, rowHeights, columnWidths, userId });
    }
 
    const handleSubmit = event => {

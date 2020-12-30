@@ -7,7 +7,8 @@ export const INVISIBLE_PIXEL = '/img/FFFFFF-0.png'; // not used so far, but keep
 
 export const ROW_AXIS = 'row';
 export const COLUMN_AXIS = 'column';
-
+export const DEFAULT_TOTAL_ROWS = 6;
+export const DEFAULT_TOTAL_COLUMNS = 6;
 export const THIN_COLUMN = '3em';
 export const SPLIT_THIN_COLUMN = '1.05em 1.05em';
 export const THIN_ROW = '2em';

@@ -10,6 +10,8 @@ const CREATE_SHEET_MUTATION = gql`
       $parentSheetId: ID
       $summaryCell: SheetSummaryCellInput
       $summaryCellText: String
+      $rowHeights: [SheetSizingInput]
+      $columnWidths: [SheetSizingInput]
    ) {
       createSheet(
          input: {
@@ -20,6 +22,8 @@ const CREATE_SHEET_MUTATION = gql`
             parentSheetId: $parentSheetId
             summaryCell: $summaryCell
             summaryCellText: $summaryCellText
+            rowHeights: $rowHeights, 
+            columnWidths: $columnWidths,
          }
       ) {
          id
@@ -53,6 +57,14 @@ const CREATE_SHEET_MUTATION = gql`
                caseSensitive
                regex
             }
+            rowHeights {
+               index
+               size
+            }
+            columnWidths {
+               index
+               size
+            }
          }
          cells {
             row
@@ -75,10 +87,12 @@ export const createSheetMutation = async ({
    parentSheetId,
    summaryCell,
    summaryCellText,
+   rowHeights, 
+   columnWidths,
 }) => {
    const response = await apolloClient.mutate({
       mutation: CREATE_SHEET_MUTATION,
-      variables: { userId, rows, columns, title, parentSheetId, summaryCell, summaryCellText },
+      variables: { userId, rows, columns, title, parentSheetId, summaryCell, summaryCellText, rowHeights, columnWidths },
    });
    return response.data.createSheet; // "createSheet" comes from mutation above
 };

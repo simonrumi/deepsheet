@@ -203,6 +203,8 @@ export const stateCell = R.curry((state, cellKey) =>
 /*** 
  * get values for the cell itself - note that getters and setters are separate fns so that the setter can be curried. 
  * The setters are going to be used on copies of the cell that will be updated in the state via actions
+ * 
+ * /// TODO - almost certainly don't need/want setters for cell state - get rid of them
 ***/
 const cellRowLens = R.lensProp('row');
 export const cellRow = cell => R.view(cellRowLens, cell);

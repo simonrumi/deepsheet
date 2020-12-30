@@ -71,6 +71,8 @@ const SheetMutations = gql`
       parentSheetId: ID
       summaryCell: SheetSummaryCellInput
       summaryCellText: String
+      rowHeights: [SheetSizingInput]
+      columnWidths: [SheetSizingInput]
    }
 
    extend type Mutation {

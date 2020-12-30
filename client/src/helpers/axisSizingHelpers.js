@@ -1,5 +1,5 @@
 import managedStore from '../store';
-import { isSomething } from './index';
+import { isSomething, forLoopMap } from './index';
 import { stateRowHeights, stateColumnWidths, stateDragType, stateDragData } from './dataStructureHelpers';
 import { startedUndoableAction, completedUndoableAction } from '../actions/undoActions';
 import { updatedRowHeight, updatedColumnWidth } from '../actions/metadataActions';
@@ -10,6 +10,11 @@ import {
    DRAGGABLE_ROW_RESIZER,
    DRAGGABLE_COLUMN_RESIZER,
 } from '../constants';
+
+export const createDefaultAxisSizing = (numItems, defaultSize) => forLoopMap(
+      index => ({ index, size: defaultSize }),
+      numItems
+   );
 
 export const isAxisSizingCalculated = () => 
    stateRowHeights(managedStore.state) 

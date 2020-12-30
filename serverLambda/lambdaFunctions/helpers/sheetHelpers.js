@@ -24,6 +24,8 @@ const createNewSheet = ({
    parentSheetId = null,
    summaryCell = DEFAULT_SUMMARY_CELL,
    summaryCellText = '',
+   rowHeights = [],
+   columnWidths = [],
    userId,
 }) => {
    if (isNothing(userId)) {
@@ -34,6 +36,8 @@ const createNewSheet = ({
    const totalColumns = columns || DEFAULT_COLUMNS;
    summaryCell = summaryCell || DEFAULT_SUMMARY_CELL;
    title = title || DEFAULT_TITLE;
+   rowHeights = rowHeights || [];
+   columnWidths = columnWidths || [];
    const cells = forLoopReduce(
       (cellsAccumulator, rowIndex) => {
          const rowOfCells = forLoopReduce(
@@ -65,6 +69,8 @@ const createNewSheet = ({
          totalColumns,
          parentSheetId,
          summaryCell,
+         rowHeights,
+         columnWidths
       },
       cells,
       users: {
