@@ -76,10 +76,10 @@ export default store => next => async action => {
                } /* note that "changeTitle" is the name of the mutation in titleMutation.js */,
             });
          } catch (err) {
-            console.error('did not successfully update the title: err:', err);
+            // console.error('did not successfully update the title: err:', err);
             managedStore.store.dispatch({
                type: TITLE_UPDATE_FAILED,
-               payload: { ...action.payload, errorMessage: 'title was not updated: ' + err },
+               payload: { ...action.payload, errorMessage: 'title was not updated' },
             });
          }
          break;
@@ -93,10 +93,10 @@ export default store => next => async action => {
                payload: { sheet: response },
             });
          } catch (err) {
-            console.error('did not successfully create the sheet in the db: err:', err);
+            // console.error('did not successfully create the sheet in the db: err:', err);
             managedStore.store.dispatch({
                type: SHEET_CREATION_FAILED,
-               payload: { errorMessage: 'sheet was not created in the db: ' + err },
+               payload: { errorMessage: 'sheet was not created in the db' },
             });
          }
          break;
@@ -114,10 +114,10 @@ export default store => next => async action => {
                },
             }); //note that "updateMetada" is the name of the mutation in metadataMutation.js
          } catch (err) {
-            console.error('Did not successfully update the metadata in the db:', err);
+            // console.error('Did not successfully update the metadata in the db:', err);
             managedStore.store.dispatch({
                type: METADATA_UPDATE_FAILED,
-               payload: { errorMessage: 'metadata was not updated in the db: ' + err },
+               payload: { errorMessage: 'metadata was not updated in the db' },
             });
          }
          break;
@@ -145,10 +145,9 @@ export default store => next => async action => {
                return null; // no return value needed - putting here to stop a warning from showing in the console
             })(action.payload.cells);
          } catch (err) {
-            console.error('did not successfully update the cells in the db: err:', err);
             managedStore.store.dispatch({
                type: CELLS_UPDATE_FAILED,
-               payload: { errorMessage: 'cells were not updated in the db: ' + err },
+               payload: { errorMessage: 'cells were not updated in the db'}, // don't publish the exact error, err for security reasons
             });
          }
          break;
@@ -162,13 +161,13 @@ export default store => next => async action => {
                payload: response,
             });
          } catch (err) {
-            console.error('Error deleting subsheetId:', err);
+            // console.error('Error deleting subsheetId:', err);
             managedStore.store.dispatch({
                type: DELETE_SUBSHEET_ID_FAILED,
                payload: {
                   ...action.payload,
                   errorMessage:
-                     'did not successfully delete the subsheetId of a cell in the db. err:' + err,
+                     'did not successfully delete the subsheetId of a cell in the db.',
                },
             });
          }

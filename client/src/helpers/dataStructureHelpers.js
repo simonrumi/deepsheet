@@ -55,6 +55,7 @@ export const dbColumnFilters = subObjectGetterSetter(dbMetadataLens, 'columnFilt
 export const dbRowFilters = subObjectGetterSetter(dbMetadataLens, 'rowFilters');
 export const dbRowHeights = subObjectGetterSetter(dbMetadataLens, 'rowHeights');
 export const dbColumnWidths = subObjectGetterSetter(dbMetadataLens, 'columnWidths');
+export const dbLastUpdated = subObjectGetterSetter(dbMetadataLens, 'lastUpdated');
 
 // get the sheet's id from db structure
 const dbSheetIdLens = R.lensProp('id');
@@ -133,7 +134,7 @@ export const stateSortType = subObjectGetter(stateMetadataLens, 'sortType');
 export const stateMetadataIsStale = subObjectGetter(stateMetadataLens, 'isStale');
 export const stateMetadataIsCallingDb = subObjectGetter(stateMetadataLens, 'isCallingDb');
 export const stateMetadataErrorMessage = subObjectGetter(stateMetadataLens, 'errorMessage');
-export const stateMetadataLastUpdated = subObjectGetter(stateMetadataLens, 'lastUpdated');
+export const stateLastUpdated = subObjectGetter(stateMetadataLens, 'lastUpdated'); // don't have "Metadata" in the name, because this is the last updated date for the whole sheet, not just the metadata
 export const stateFrozenRows = subObjectGetter(stateMetadataLens, 'frozenRows');
 export const stateFrozenColumns = subObjectGetter(stateMetadataLens, 'frozenColumns');
 export const stateRowHeights = subObjectGetter(stateMetadataLens, 'rowHeights');

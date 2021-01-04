@@ -1,6 +1,6 @@
 import * as R from 'ramda';
 import managedStore from '../store';
-import { indexToColumnLetter, indexToRowNumber, isSomething } from './index';
+import { indexToColumnLetter, indexToRowNumber, isSomething, arrayContainsSomething } from './index';
 import {
    cellRow,
    cellColumn,
@@ -92,7 +92,25 @@ export const createUpdatedCellState = (payloadCell, state, sheetId) => {
 const filterToCurrentRow = R.curry((rowIndex, cells) => R.filter(cell => cell.row === rowIndex)(cells));
 const sortByColumns = R.sortBy(cell => cell.column);
 
+/**
+ * makes sure at least one cell contains something
+ */
+const checkCells = cells => {
+   if (!arrayContainsSomething(cells)) {
+      return false;
+   }
+   return R.reduce(
+      (accumulator, cell) => accumulator || isSomething(cell),
+      false,
+      cells
+   );
+}
+
 export const orderCells = cells => {
+   if (!checkCells(cells)) {
+      return [];
+   }
+
    const buildSortedArr = (unsortedCells, sortedCells = [], currentRow = 0) => {
       const cellsSortedSoFar = R.pipe(
          filterToCurrentRow,
@@ -117,5 +135,5 @@ export const removeAllCellReducers = () => R.pipe(
       getAllCells,
       getAllCellReducerNames,
       managedStore.store.reducerManager.removeMany,
-      managedStore.store.replaceReducer,
+      managedStore.store.replaceReducer
    )();

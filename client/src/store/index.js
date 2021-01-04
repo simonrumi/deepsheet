@@ -8,6 +8,7 @@ import preprocess from '../middleware/preprocess';
 import authorize from '../middleware/authorize';
 import dbOperations from '../middleware/dbOperations';
 import initializeSheet from '../middleware/initializeSheet';
+import postProcess from '../middleware/postProcess';
 import filterSheet from '../middleware/filterSheet';
 import orderSheet from '../middleware/orderSheet';
 import buildAxisSizing from '../middleware/buildAxisSizing';
@@ -34,7 +35,8 @@ class ManagedStore {
             preprocess, 
             authorize, 
             dbOperations, 
-            initializeSheet, 
+            initializeSheet,
+            postProcess,
             orderSheet, 
             filterSheet,
             buildAxisSizing

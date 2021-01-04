@@ -26,6 +26,8 @@ import {
    stateSheetId,
    stateMetadataIsStale,
    saveableStateMetadata,
+   stateTitleIsStale,
+   stateTitleText,
 } from '../helpers/dataStructureHelpers';
 
 // TODO return the response.data.thing for each query/mutation so the consumer doesn;t have to know that path
@@ -88,6 +90,20 @@ export const updateTitleInDB = async (id, title) => {
    return await titleMutation(id, title);
 };
 
+const saveTitleUpdate = async state => {
+   if (stateTitleIsStale(state)) {
+      try {
+         const sheetId = stateSheetId(state);
+         const titleText = stateTitleText(state);
+         await updateTitleInDB(sheetId, titleText);
+      } catch (err) {
+         console.error('error updating title in db');
+         throw new Error('Error updating title in db', err);
+      }
+      
+   }
+}
+
 const getUpdatedCells = R.curry((state, updatedCellCoordinates) => {
    if (isSomething(updatedCellCoordinates) && arrayContainsSomething(updatedCellCoordinates)) {
       return R.map(({ row, column }) => {
@@ -107,7 +123,7 @@ export const saveCellUpdates = async state => {
       try {
          await updatedCells({ sheetId, cells: changedCells });
       } catch (err) {
-         console.error('Error updating cells in db', err);
+         console.error('Error updating cells in db');
          throw new Error('Error updating cells in db', err);
       }
    }
@@ -122,7 +138,7 @@ export const saveMetadataUpdates = async state => {
          const sheetId = stateSheetId(state);
          await updatedMetadata({ sheetId, changedMetadata });
       } catch (err) {
-         console.error('Error updating metadata in db', err);
+         console.error('Error updating metadata in db');
          throw new Error('Error updating metadata in db', err);
       }
    }
@@ -132,6 +148,7 @@ export const saveAllUpdates = async state => {
    // TODO we are calling saveMetadataUpdates & saveCellUpdates serially -- yeech!
    await saveMetadataUpdates(state);
    await saveCellUpdates(state);
+   await saveTitleUpdate(state);
    completedSaveUpdates(); // only gets here if there's no error thrown
 };
 

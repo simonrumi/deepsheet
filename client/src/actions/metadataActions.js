@@ -3,6 +3,7 @@
 
 import managedStore from '../store';
 import { 
+   REPLACED_ALL_METADATA,
    POSTING_UPDATED_METADATA, 
    HAS_CHANGED_METADATA,
    UPDATED_FROZEN_ROWS, 
@@ -22,6 +23,13 @@ import {
    UPDATED_ROW_ORDER,
    UPDATED_COLUMN_ORDER,
 } from './metadataTypes';
+
+export const replacedAllMetadata = metadata => {
+   managedStore.store.dispatch({
+      type: REPLACED_ALL_METADATA,
+      payload: metadata,
+   });
+}
 
 export const updatedMetadata = async data => {
    managedStore.store.dispatch({

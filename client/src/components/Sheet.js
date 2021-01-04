@@ -38,8 +38,6 @@ import FilterModal from './organisms/FilterModal';
 import SortModal from './organisms/SortModal';
 import LoginModal from './organisms/LoginModal';
 
-// TODO BUG NEXT - updating when the session has expired is not handled - need to log user in then complete action
-
 const Sheet = props => {
    const isLoggedIn = useSelector(state => stateIsLoggedIn(state));
    const showFilterModal = useSelector(state => stateShowFilterModal(state));

@@ -29,3 +29,7 @@ export const SORT_DECREASING = 'sort_decreasing';
 export const SORT_TYPE_TEXT = 'sort_type_text';
 export const SORT_TYPE_NUMBERS = 'sort_type_numbers';
 export const SORT_TYPE_DATES = 'sort_type_dates';
+
+export const LOCAL_STORAGE_STATE_KEY = 'dds_state';
+export const LOCAL_STORAGE_ACTION_KEY = 'dds_action';
+export const LOCAL_STORAGE_TIME_KEY = 'dds_time';

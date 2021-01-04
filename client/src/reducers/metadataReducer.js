@@ -2,6 +2,7 @@ import * as R from 'ramda';
 import { removeObjectFromArrayByKeyValue, isSomething, maybeHasPath } from '../helpers';
 import { updatedAxisFilters, updateOrAddPayloadToState } from '../helpers/visibilityHelpers';
 import {
+   REPLACED_ALL_METADATA,
    HAS_CHANGED_METADATA,
    POSTING_UPDATED_METADATA,
    COMPLETED_SAVE_METADATA,
@@ -46,6 +47,9 @@ const metadataReducer = (state = {}, action) => {
             R.assoc('columnVisibility', []),
             R.assoc('rowVisibility', []),
           )(action)
+
+      case REPLACED_ALL_METADATA:
+         return action.payload;
 
       case HAS_CHANGED_METADATA: {
          return { ...state, isStale: true };

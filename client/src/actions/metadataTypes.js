@@ -1,3 +1,4 @@
+export const REPLACED_ALL_METADATA = 'replace_all_metadata';
 export const POSTING_UPDATED_METADATA = 'posting_updated_metadata';
 export const COMPLETED_SAVE_METADATA = 'completed_save_metadata';
 export const METADATA_UPDATE_FAILED = 'metadata_update_failed';

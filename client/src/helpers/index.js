@@ -104,3 +104,33 @@ export const indexToColumnLetter = index => {
 export const indexToRowNumber = index => {
    return parseInt(index, 10) + 1;
 };
+
+/**
+ * This is like currying except it is for functions that expect one argument, which is an object (same idea as an object containing optional properties)
+ * This eliminates the issue of having to supply the arguments to a curried function in a particular order
+ * But it requires that you supply a template of the arguments object when you curry the function. Use as follows:
+ * const fooFn = ({a, b, c}) => a + b + c;
+ * const template = { a: 1, b: 1, c: 1 };
+ * const spicyFoo = spicyCurry(fooFn, template);
+ * const partOfFoo = spicyFoo({b: 10});
+ * partOfFoo({ a: 2, c: 3 }); // returns 15
+ */
+export const spicyCurry = R.curry((func, templateObj, argObj) => {
+   const categorizedArgs = R.reduce(
+      (accumulator, key) =>
+         argObj[key] === undefined
+            ? { ...accumulator, argsPending: R.assoc(key, templateObj[key], accumulator.argsPending) }
+            : { ...accumulator, argsSupplied: R.assoc(key, argObj[key], accumulator.argsSupplied) },
+      { argsSupplied: {}, argsPending: {} },
+      Object.keys(templateObj)
+   );
+   if (R.isEmpty(categorizedArgs.argsPending)) {
+      return func(categorizedArgs.argsSupplied);
+   }
+   const partialFunc = remainingArgs =>
+      func({
+         ...categorizedArgs.argsSupplied,
+         ...remainingArgs,
+      });
+   return spicyCurry(partialFunc, categorizedArgs.argsPending);
+});

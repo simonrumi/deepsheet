@@ -6,8 +6,6 @@ import Sheet from './Sheet';
 import ModalBackground from './atoms/ModalBackground';
 import Footer from './molecules/Footer';
 
-// TODO: need to change whitelist of IP addresses for mongodb
-
 const keyBindings = event => {
    // note that metaKey detects both the command key on the Mac but also (in some browsers) the windows key.
    // this is ok - just means that windows key + Z will also undo
