@@ -4,6 +4,8 @@ module.exports = {
    whitelist: process.env.WHITELIST.split(','),
    facebookClientID: process.env.FACEBOOK_CLIENT_ID,
    facebookClientSecret: process.env.FACEBOOK_CLIENT_SECRET,
-   facebookStateCheck: process.env.FACEBOOK_STATE_CHECK,
    authReturnURI: process.env.AUTH_RETURN_URI,
+   googleAuthReturnURI: process.env.GOOGLE_AUTH_RETURN_URI,
+   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
+   googleClientID: process.env.GOOGLE_CLIENT_ID,
 };
