@@ -1,16 +1,25 @@
+const dbConnector = require('./dbConnector');
 const { standardAuthError } = require('./helpers/userHelpers');
+const { createStateCheck } = require('./helpers/authHelpers');
 const { makeGoogleAuthCall } = require('./helpers/googleAuthHelpers');
 const { makeFacebookAuthCall } = require('./helpers/facebookAuthHelpers');
 
 export async function handler(event, context, callback) {
-//    console.log('*********** started auth process - auth.js got event', event);
-   const provider = event.queryStringParameters?.provider || null;
-   console.log('auth got provider', provider);
+   await dbConnector();
 
+   let stateCheck;
+   try {
+      stateCheck = await createStateCheck();
+   } catch(err) {
+      console.log('error making stateCheck', err);
+      return standardAuthError;
+   }
+   
+   const provider = event.queryStringParameters?.provider || null;
    switch (provider) {
       case 'facebook':
          try {
-            const fbResponse = await makeFacebookAuthCall();
+            const fbResponse = await makeFacebookAuthCall(stateCheck.stateCheckValue);
             return fbResponse;
          } catch (err) {
             console.log('error making fb auth call', err);
@@ -19,7 +28,7 @@ export async function handler(event, context, callback) {
 
       case 'google':
          try {
-            const googleResponse = await makeGoogleAuthCall(event, context);
+            const googleResponse = await makeGoogleAuthCall(stateCheck.stateCheckValue);
             return googleResponse;
          } catch (err) {
             console.log('error making google auth call', err);

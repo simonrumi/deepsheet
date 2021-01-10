@@ -1,15 +1,13 @@
-// note that authReturn is needed for the Facebook auth process only. Google auth doesn't need it
+// this is just for Facbeook... probably should be called authReturnFacebook.js, but leaving as-is
 
-const keys = require('../config/keys');
 const dbConnector = require('./dbConnector');
-const { findOrCreateUser, applyAuthSession, standardAuthError, makeCookie } = require('./helpers/userHelpers');
+const { standardAuthError } = require('./helpers/userHelpers');
 const { getFacebookToken, getFbUserId } = require('./helpers/facebookAuthHelpers');
+const { confirmStateCheck, prepareAuthResponse } = require('./helpers/authHelpers');
 const { AUTH_PROVIDER_FACEBOOK } = require('../constants');
 
 export async function handler(event, context, callback) {
-   // console.log('started authReturn handler, got event', event);
-
-   // for some reason we need to have this line here, in order for the findUser() call to work
+   // for some reason we need to have this line here, in order for the findUser() call (within prepareAuthResponse) to work
    // even though we are not directly using the db connection it returns
    await dbConnector();
 
@@ -20,8 +18,9 @@ export async function handler(event, context, callback) {
       return standardAuthError;
    }
 
-   if (state !== keys.facebookStateCheck) {
-      console.log('authReturn.js did not pass the facebookStateCheck since it got state', state);
+   const stateCheckOk = await confirmStateCheck(state);
+   if (!stateCheckOk) {
+      console.log('authReturn.js did not pass the state check since it got state', state);
       return standardAuthError;
    }
 
@@ -32,26 +31,11 @@ export async function handler(event, context, callback) {
    }
 
    if (access_token) {
-      console.log('TODO - Set-Cookie with Secure flag....somehow');
+      //TODO - Set-Cookie with Secure flag....somehow
       try {
          const userIdFromProvider = await getFbUserId(access_token);
-         const user = await findOrCreateUser({
-            userIdFromProvider,
-            provider: AUTH_PROVIDER_FACEBOOK,
-            token: access_token,
-         });
-         const session = await applyAuthSession(user);
-         const cookie = makeCookie(user._id, session._id);
-         return {
-            statusCode: 302,
-            headers: {
-               Location: 'http://localhost:3000',
-               'Set-Cookie': cookie,
-               // 'Access-Control-Allow-Headers': '*',
-               // 'Access-Control-Allow-Origin': 'https://www.facebook.com', //'http://localhost:3000', '*'
-               // 'Access-Control-Allow-Methods': '*', // 'OPTIONS, POST, GET',
-            },
-         };
+         const authResponse = await prepareAuthResponse(userIdFromProvider, AUTH_PROVIDER_FACEBOOK, access_token);
+         return authResponse;
       } catch (err) {
          console.log('AuthReturn has error either getting basicUserInfo, or finding user, or creating user:', err);
          return standardAuthError;

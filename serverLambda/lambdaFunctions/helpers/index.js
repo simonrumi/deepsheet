@@ -2,8 +2,14 @@ const R = require('ramda');
 
 const isNothing = R.either(R.isNil, R.isEmpty);
 const isSomething = R.pipe(isNothing, R.not);
-const arrayContainsSomething = R.reduce((accumulator, arrItem) => accumulator || isSomething(arrItem), false);
-
+const arrayContainsSomething = arr => 
+   isSomething(arr) && 
+   R.reduce(
+      (accumulator, arrItem) => accumulator || isSomething(arrItem), 
+      false,
+      arr
+   );
+   
 // use like this:
 // runIfSomething(myFn, thingToTest, extraParameters)
 // if the thingToTest exists and is not empty, myFn will run, having the thingToTest and extraParameters passed to it

@@ -1,7 +1,6 @@
 export const GRAPHQL_URL = '/.netlify/functions/graphql';
 export const FACEBOOK_AUTH_URL = '/.netlify/functions/auth?provider=facebook';
 export const GOOGLE_AUTH_URL = '/.netlify/functions/auth?provider=google';
-export const GOOGLE_CLIENT_ID = '761528077812-aiufet2eu5rloejs76hqffber30r31kp.apps.googleusercontent.com';
 
 export const INVISIBLE_PIXEL = '/img/FFFFFF-0.png'; // not used so far, but keeping just in case
 

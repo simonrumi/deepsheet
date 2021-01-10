@@ -6,6 +6,7 @@ let cachedDbConnection = null;
 const connectedTypes = [1, 2]; // 1 == connected, 2 == connecting
 module.exports = async () => {
    if (cachedDbConnection && connectedTypes.includes(cachedDbConnection.readyState)) {
+      console.log('dbConnector returning cachedDbConnection');
       return cachedDbConnection;
    }
    try {

@@ -17,12 +17,12 @@ const getFacebookToken = async code => {
    }
 };
 
-const makeFacebookAuthCall = async () => {
+const makeFacebookAuthCall = async state => {
    const endpoint =
       'https://www.facebook.com/v8.0/dialog/oauth?' +
       `client_id=${keys.facebookClientID}` +
       `&redirect_uri=${keys.authReturnURI}` +
-      `&state=${keys.facebookStateCheck}` +
+      `&state=${state}` +
       `&response_type=code,granted_scopes` +
       `&scope=email`;
 
