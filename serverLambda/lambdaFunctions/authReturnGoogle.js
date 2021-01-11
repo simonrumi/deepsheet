@@ -31,7 +31,8 @@ export async function handler(event, context, callback) {
       console.log('authReturnGoogle got token (from google)', token);
       const userIdFromProvider = await getGoogleUserId(token);
       console.log('authReturnGoogle got userIdFromProvider', userIdFromProvider);
-      const authResponse = prepareAuthResponse(userIdFromProvider, AUTH_PROVIDER_GOOGLE, token);
+      const authResponse = await prepareAuthResponse(userIdFromProvider, AUTH_PROVIDER_GOOGLE, token);
+      console.log('authReturnGoogle made authResponse', authResponse);
       return authResponse;
    } catch (err) {
       console.log('error authenticating via google', err);
