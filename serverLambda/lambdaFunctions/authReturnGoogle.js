@@ -19,8 +19,7 @@ export async function handler(event, context, callback) {
    }
 
    const stateCheckOk = await confirmStateCheck(state);
-   if (!stateCheckOk) { 
-      console.log('authReturnGoogle failed state check for state', state);
+   if (!stateCheckOk) {
       return standardAuthError;
    }
 

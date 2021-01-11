@@ -29,7 +29,7 @@ const makeStateCheckValue = () => R.concat(partRandomString(), partRandomString(
 const createStateCheck = async () => {
    try {
       const newStateCheck = new StateCheckModel({ stateCheckValue: makeStateCheckValue() });
-      const result = await newStateCheck.save();
+      await newStateCheck.save();
       return newStateCheck;
    } catch (err) {
       console.log('Error creating state check:', err);
@@ -38,9 +38,7 @@ const createStateCheck = async () => {
 };
 
 const confirmStateCheck = async stateCheckValue => {
-   console.log('authHelpers.confirmStateCheck got stateCheckValue', stateCheckValue);
    const stateCheck = await StateCheckModel.find({ stateCheckValue });
-   console.log('authHelpers.confirmStateCheck search for the stateCheckValue in db returned', stateCheck);
    if (!arrayContainsSomething(stateCheck)) {
       return false;
    }
