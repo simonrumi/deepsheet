@@ -8,4 +8,5 @@ module.exports = {
    googleAuthReturnURI: process.env.GOOGLE_AUTH_RETURN_URI,
    googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
    googleClientID: process.env.GOOGLE_CLIENT_ID,
+   mainUri: process.env.MAIN_URI,
 };

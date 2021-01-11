@@ -2,6 +2,7 @@ const R = require('ramda');
 const mongoose = require('mongoose');
 const { arrayContainsSomething } = require('./index');
 const { findOrCreateUser, applyAuthSession, makeCookie } = require('./userHelpers');
+const keys = require('../../config/keys');
 require('../models/StateCheckModel');
 const StateCheckModel = mongoose.model('stateCheck');
 
@@ -12,7 +13,7 @@ const prepareAuthResponse = async (userIdFromProvider, provider, token) => {
    return {
       statusCode: 302,
       headers: {
-         Location: 'http://localhost:3000',
+         Location: keys.mainUri,
          'Set-Cookie': cookie,
          // 'Access-Control-Allow-Headers': '*',
          // 'Access-Control-Allow-Origin': 'https://www.facebook.com', //'http://localhost:3000', '*'
