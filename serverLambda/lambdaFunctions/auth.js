@@ -30,7 +30,7 @@ export async function handler(event, context, callback) {
 
       case 'google':
          try {
-            console.log('auth.js before makeGoogleAuthCall got stateCheckValue', (stateCheck.stateCheckValue);
+            console.log('auth.js before makeGoogleAuthCall got stateCheckValue', stateCheck.stateCheckValue);
             const googleResponse = await makeGoogleAuthCall(stateCheck.stateCheckValue);
             console.log('auth.js after makeGoogleAuthCall got googleResponse', googleResponse);
             return googleResponse;
