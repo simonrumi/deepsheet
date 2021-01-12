@@ -16,7 +16,7 @@ const prepareAuthResponse = async (userIdFromProvider, provider, token) => {
          Location: keys.mainUri,
          'Set-Cookie': cookie,
          // 'Access-Control-Allow-Headers': '*',
-         'Access-Control-Allow-Origin': keys.netlifyUri, //'https://www.facebook.com', //'http://localhost:3000', '*'
+         'Access-Control-Allow-Origin': keys.mainUri, //'https://www.facebook.com', //'http://localhost:3000', '*'
          // 'Access-Control-Allow-Methods': '*', // 'OPTIONS, POST, GET',
       },
    };
