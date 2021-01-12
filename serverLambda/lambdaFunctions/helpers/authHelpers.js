@@ -14,7 +14,7 @@ const prepareAuthResponse = async (userIdFromProvider, provider, token) => {
       statusCode: 302,
       headers: {
          // TODO compare with local version ...what's different?
-         // Location: keys.mainUri, // TODO try without this
+         Location: keys.mainUri, // TODO try without this
          'Set-Cookie': cookie,
          // TODO all 3 of these Access-Control-Allow- options didn't help. so figure out which ones can be removed
          'Access-Control-Allow-Headers': '*',
