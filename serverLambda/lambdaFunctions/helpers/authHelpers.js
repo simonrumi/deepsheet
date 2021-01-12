@@ -15,9 +15,9 @@ const prepareAuthResponse = async (userIdFromProvider, provider, token) => {
       headers: {
          Location: keys.mainUri,
          'Set-Cookie': cookie,
-         // 'Access-Control-Allow-Headers': '*',
-         'Access-Control-Allow-Origin': keys.mainUri, //'https://www.facebook.com', //'http://localhost:3000', '*'
-         // 'Access-Control-Allow-Methods': '*', // 'OPTIONS, POST, GET',
+         'Access-Control-Allow-Headers': '*',
+         'Access-Control-Allow-Origin': '*', // keys.mainUri, //'https://www.facebook.com', //'http://localhost:3000', '*'
+         'Access-Control-Allow-Methods': '*', // 'OPTIONS, POST, GET',
       },
    };
 }
