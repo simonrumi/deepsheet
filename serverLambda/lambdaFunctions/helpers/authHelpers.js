@@ -13,7 +13,8 @@ const prepareAuthResponse = async (userIdFromProvider, provider, token) => {
    return {
       statusCode: 302,
       headers: {
-         'location': keys.mainUri, // TODO BUG maybe here - in prod this seems to come back with lower case 'location' which might be ignored 
+         'Location': keys.mainUri,
+         'Access-Control-Expose-Headers': 'Set-Cookie',
          'Set-Cookie': cookie,
          // TODO all 3 of these Access-Control-Allow- options didn't help. so figure out which ones can be removed
          'Access-Control-Allow-Headers': '*',
