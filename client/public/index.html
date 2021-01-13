@@ -22,9 +22,15 @@
       <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
 
       <title>Deep Deep Sheet</title>
+      <script>
+         console.log(`index.html head has document.cookie ${document.cookie}`);
+      </script>
    </head>
    <body>
       <noscript>You need to enable JavaScript to run this app.</noscript>
       <div id="root"></div>
+      <script>
+         console.log(`index.html bottom of body has document.cookie ${document.cookie}`);
+      </script>
    </body>
 </html>
