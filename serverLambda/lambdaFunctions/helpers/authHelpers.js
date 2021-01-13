@@ -42,6 +42,7 @@ const createStateCheck = async () => {
 
 const confirmStateCheck = async stateCheckValue => {
    const stateCheck = await StateCheckModel.find({ stateCheckValue });
+   console.log('authHelpers.confirmStateCheck got stateCheckValue', stateCheckValue, 'and when looking for that value in the db, got the response', stateCheck);
    if (!arrayContainsSomething(stateCheck)) {
       return false;
    }
