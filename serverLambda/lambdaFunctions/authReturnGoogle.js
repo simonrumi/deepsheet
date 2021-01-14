@@ -24,6 +24,10 @@ export async function handler(event, context, callback) {
       return standardAuthError;
    }
 
+// NOTE: Google credentials, Authorized redirect URIs used to contain
+// https://stupefied-lamarr-20c8d9.netlify.app/.netlify/functions/authReturnGoogle
+
+
    try {
       const { googleClientID, googleClientSecret, googleAuthReturnURI } = keys;
       console.log('authReturnGoogle got googleAuthReturnURI', googleAuthReturnURI);

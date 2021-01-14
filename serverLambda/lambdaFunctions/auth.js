@@ -14,8 +14,6 @@ export async function handler(event, context, callback) {
       console.log('error making stateCheck', err);
       return standardAuthError;
    }
-   
-// TODO BUG - something is causing a redirect to localhost, after returning from the login flow in prod 
 
    const provider = event.queryStringParameters?.provider || null;
    switch (provider) {

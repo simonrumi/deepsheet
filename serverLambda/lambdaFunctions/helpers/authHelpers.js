@@ -17,9 +17,9 @@ const prepareAuthResponse = async (userIdFromProvider, provider, token) => {
          'Access-Control-Expose-Headers': 'Set-Cookie',
          'Set-Cookie': cookie,
          // TODO all 3 of these Access-Control-Allow- options didn't help. so figure out which ones can be removed
-         'Access-Control-Allow-Headers': '*',
+         // 'Access-Control-Allow-Headers': '*',
          'Access-Control-Allow-Origin': '*', // keys.mainUri, //'https://www.facebook.com', //'http://localhost:3000', '*'
-         'Access-Control-Allow-Methods': '*', // 'OPTIONS, POST, GET',
+         // 'Access-Control-Allow-Methods': '*', // 'OPTIONS, POST, GET',
       },
    };
 }

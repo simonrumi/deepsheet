@@ -31,7 +31,6 @@ export async function handler(event, context, callback) {
    }
 
    if (access_token) {
-      //TODO - Set-Cookie with Secure flag....somehow
       try {
          const userIdFromProvider = await getFbUserId(access_token);
          const authResponse = await prepareAuthResponse(userIdFromProvider, AUTH_PROVIDER_FACEBOOK, access_token);

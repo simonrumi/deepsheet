@@ -88,6 +88,7 @@ class Menu extends Component {
       const sheetsArr = stateSheets(this.props.state);
       if (arrayContainsSomething(sheetsArr)) {
          const sheetsTree = buildSheetsTree(sheetsArr);
+         console.log('Menu.js got built sheetsTree', sheetsTree);
          const sheetList = R.map(node => (
             <li key={node.sheet.id} className={'ml-2 ' + basicClasses}>
                <div className="flex align-center justify-between">
