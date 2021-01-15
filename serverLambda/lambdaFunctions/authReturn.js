@@ -1,5 +1,6 @@
 // this is just for Facbeook... probably should be called authReturnFacebook.js, but leaving as-is
 
+const keys = require('../config/keys');
 const dbConnector = require('./dbConnector');
 const { findOrCreateUser, applyAuthSession, standardAuthError, makeCookie  } = require('./helpers/userHelpers');
 const { getFacebookToken, getFbUserId } = require('./helpers/facebookAuthHelpers');
@@ -48,7 +49,7 @@ export async function handler(event, context, callback) {
          return {
             statusCode: 302,
             headers: {
-               Location: 'http://localhost:3000',
+               Location: keys.mainUri,
                'Set-Cookie': cookie,
                // 'Access-Control-Allow-Headers': '*',
                // 'Access-Control-Allow-Origin': 'https://www.facebook.com', //'http://localhost:3000', '*'
