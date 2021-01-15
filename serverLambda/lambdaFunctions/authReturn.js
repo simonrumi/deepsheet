@@ -10,6 +10,9 @@ const { AUTH_PROVIDER_FACEBOOK } = require('../constants');
 // TODO !! note that in Netlify the Production Branch has to be changed back to "master"
 // Site Settings -> Build & Deploy -> Continuous Development -> Deploy Context -> Production Branch
 
+
+// TODO BUG is that stupified-lamar has the cookie, but the domain that needs it is deepdeepsheet !!
+
 export async function handler(event, context, callback) {
    // for some reason we need to have this line here, in order for the findUser() call (within prepareAuthResponse) to work
    // even though we are not directly using the db connection it returns
