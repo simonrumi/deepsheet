@@ -46,9 +46,9 @@ const makeFacebookAuthCall = async state => {
       statusCode: 302,
       headers: {
          Location: endpoint,
-         'Access-Control-Allow-Headers': '*',
-         'Access-Control-Allow-Origin': '*', //'https://www.facebook.com', //'http://localhost:3000', '*'
-         'Access-Control-Allow-Methods': '*', // 'OPTIONS, POST, GET',
+         // 'Access-Control-Allow-Headers': '*',
+         // 'Access-Control-Allow-Origin': '*', //'https://www.facebook.com', //'http://localhost:3000', '*'
+         // 'Access-Control-Allow-Methods': '*', // 'OPTIONS, POST, GET',
       },
       // not having a body causes a warning to be thrown, saying we should have a body,
       // but we're redirecting, so we have no use for a body...and in fact the redirect breaks if we do

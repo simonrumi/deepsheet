@@ -4,14 +4,12 @@ const keys = require('../../config/keys');
 
 const makeGoogleAuthCall = state => {
    const { googleClientID, googleClientSecret, googleAuthReturnURI } = keys;
-   console.log('googleAuthHelpers.makeGoogleAuthCall got googleAuthReturnURI', googleAuthReturnURI);
    const oauth2Client = new google.auth.OAuth2(googleClientID, googleClientSecret, googleAuthReturnURI);
    const endpoint = oauth2Client.generateAuthUrl({
       access_type: 'online',
       scope: [ 'profile' ],
       state,
    });
-   console.log('googleAuthHelpers.makeGoogleAuthCall build endpoint', endpoint);
    // status code 302 is what passport uses. From MDN:
    // "The HyperText Transfer Protocol (HTTP) 302 Found redirect status response code indicates
    // that the resource requested has been temporarily moved to the URL given by the Location header.
@@ -20,9 +18,9 @@ const makeGoogleAuthCall = state => {
       statusCode: 302,
       headers: {
          Location: endpoint,
-         'Access-Control-Allow-Headers': '*',
-         'Access-Control-Allow-Origin': '*', 
-         'Access-Control-Allow-Methods': '*', // 'OPTIONS, POST, GET',
+         // 'Access-Control-Allow-Headers': '*',
+         // 'Access-Control-Allow-Origin': '*', 
+         // 'Access-Control-Allow-Methods': '*', // 'OPTIONS, POST, GET',
       },
       // not having a body causes a warning to be thrown, saying we should have a body,
       // but we're redirecting, so we have no use for a body...and in fact the redirect breaks if we do

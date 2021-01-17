@@ -19,25 +19,16 @@ export async function handler(event, context, callback) {
    }
 
    const stateCheckOk = await confirmStateCheck(state);
-   console.log('authReturnGoogle got stateCheckOk', stateCheckOk);
    if (!stateCheckOk) {
       return standardAuthError;
    }
 
-// NOTE: Google credentials, Authorized redirect URIs used to contain
-// https://stupefied-lamarr-20c8d9.netlify.app/.netlify/functions/authReturnGoogle
-
-
    try {
       const { googleClientID, googleClientSecret, googleAuthReturnURI } = keys;
-      console.log('authReturnGoogle got googleAuthReturnURI', googleAuthReturnURI);
       const oauth2Client = new google.auth.OAuth2(googleClientID, googleClientSecret, googleAuthReturnURI);
       const token = await getTokenFromGoogle(oauth2Client, code);
-      console.log('authReturnGoogle got token (from google)', token);
       const userIdFromProvider = await getGoogleUserId(token);
-      console.log('authReturnGoogle got userIdFromProvider', userIdFromProvider);
       const authResponse = await prepareAuthResponse(userIdFromProvider, AUTH_PROVIDER_GOOGLE, token);
-      console.log('authReturnGoogle made authResponse', authResponse);
       return authResponse;
    } catch (err) {
       console.log('error authenticating via google', err);

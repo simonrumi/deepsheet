@@ -284,7 +284,6 @@ module.exports = db => ({
 /* refreshUserSession: async (parent, args, context) => {
          try {
             const currentSession = await SessionModel.findById(args.sessionId);
-            console.log('refreshUserSession got currentSession', currentSession);
             if (currentSession) {
                currentSession.lastAccessed = Date.now();
                const refreshsedSession = await currentSession.save();
