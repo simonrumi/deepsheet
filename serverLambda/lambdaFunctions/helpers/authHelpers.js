@@ -18,7 +18,7 @@ const prepareAuthResponse = async (userIdFromProvider, provider, token) => {
          'Set-Cookie': cookie,
          // TODO all 3 of these Access-Control-Allow- options didn't help. so figure out which ones can be removed
          // 'Access-Control-Allow-Headers': '*',
-         'Access-Control-Allow-Origin': '*', // keys.mainUri, //'https://www.facebook.com', //'http://localhost:3000', '*'
+         // 'Access-Control-Allow-Origin': '*', // keys.mainUri, //'https://www.facebook.com', //'http://localhost:3000', '*'
          // 'Access-Control-Allow-Methods': '*', // 'OPTIONS, POST, GET',
       },
    };
@@ -42,7 +42,6 @@ const createStateCheck = async () => {
 
 const confirmStateCheck = async stateCheckValue => {
    const stateCheck = await StateCheckModel.find({ stateCheckValue });
-   console.log('authHelpers.confirmStateCheck got stateCheckValue', stateCheckValue, 'and when looking for that value in the db, got the response', stateCheck);
    if (!arrayContainsSomething(stateCheck)) {
       return false;
    }
