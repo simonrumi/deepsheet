@@ -14,7 +14,7 @@ const makeCookie = (userId, sessionId) => {
    const cookieStr = encodeURIComponent('I_' + userId + '_S_' + sessionId);
    const maxAge = 60 * 60 * 24 * 30; // i.e. set cookie to expire after 30 days
    console.log('userHelpers.makeCookie process.env.NODE_ENV', process.env.NODE_ENV);
-   return 'deepdeepsheet=' + cookieStr + '; Max-Age=' + maxAge + (process.env.NODE_ENV === 'production' ? '; Secure' : '');
+   return 'deepdeepsheet=' + cookieStr + '; Path="/"; Max-Age=' + maxAge + (process.env.NODE_ENV === 'production' ? '; Secure' : '');
 };
 
 const standardAuthError = {
