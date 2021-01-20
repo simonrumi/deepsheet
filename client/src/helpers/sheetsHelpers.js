@@ -1,5 +1,5 @@
 import * as R from 'ramda';
-import { isSomething, isNothing, arrayContainsSomething, getObjectFromArrayByKeyValue } from './index';
+import { isNothing, arrayContainsSomething, getObjectFromArrayByKeyValue } from './index';
 import { sheetParentSheetId, cellSubsheetIdSetter, cellSubsheetId, dbCells } from './dataStructureHelpers';
 import { fetchSheet } from '../services/sheetServices';
 import { updateCellsMutation } from '../queries/cellMutations';
@@ -28,24 +28,6 @@ const removeChildNode = (parent, childToRemove) => {
    }
    return parent;
 };
-
-const findInTree = (sheetId, sheetsTree) => {
-   const sheetInTree = R.reduce(
-      (accumulator, node) => {
-         if (node.sheet.id === sheetId) {
-            return R.reduced(node);
-         }
-         if (arrayContainsSomething(node.children)) {
-            const foundNode = findInTree(sheetId, node.children);
-            return R.isEmpty(foundNode) ? foundNode : R.reduced(foundNode); // if the node is empty, keep looking, otherwise stop looking 
-         }
-         return accumulator
-      },
-      {},
-      sheetsTree
-   );
-   return sheetInTree;
-}
 
 const maybePlaceSheetInTree = (parentNode, newSheet) => {
    // try to add the newSheet as a direct child of the parentNode...
