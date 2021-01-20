@@ -1,5 +1,5 @@
 import * as R from 'ramda';
-import { isSomething, isNothing, arrayContainsSomething } from './index';
+import { isSomething, isNothing, arrayContainsSomething, getObjectFromArrayByKeyValue } from './index';
 import { sheetParentSheetId, cellSubsheetIdSetter, cellSubsheetId, dbCells } from './dataStructureHelpers';
 import { fetchSheet } from '../services/sheetServices';
 import { updateCellsMutation } from '../queries/cellMutations';
@@ -28,6 +28,24 @@ const removeChildNode = (parent, childToRemove) => {
    }
    return parent;
 };
+
+const findInTree = (sheetId, sheetsTree) => {
+   const sheetInTree = R.reduce(
+      (accumulator, node) => {
+         if (node.sheet.id === sheetId) {
+            return R.reduced(node);
+         }
+         if (arrayContainsSomething(node.children)) {
+            const foundNode = findInTree(sheetId, node.children);
+            return R.isEmpty(foundNode) ? foundNode : R.reduced(foundNode); // if the node is empty, keep looking, otherwise stop looking 
+         }
+         return accumulator
+      },
+      {},
+      sheetsTree
+   );
+   return sheetInTree;
+}
 
 const maybePlaceSheetInTree = (parentNode, newSheet) => {
    // try to add the newSheet as a direct child of the parentNode...
@@ -66,21 +84,29 @@ const maybePlaceSheetInTree = (parentNode, newSheet) => {
 const replaceNodeInArr = (newNode, nodeArr) =>
    R.map(node => (newNode.sheet.id === node.sheet.id ? newNode : node))(nodeArr);
 
+const isParentSheet = R.curry((sheetsArr, parentSheetId) => {
+   if (isNothing(parentSheetId)) {
+      return true;
+   }
+   const sheetInArr = getObjectFromArrayByKeyValue('id', parentSheetId, sheetsArr);
+   return isNothing(sheetInArr);
+});
+
 export const buildSheetsTree = sheetsArr => {
-   const parentSheets = R.filter(
+  const parentSheets = R.filter(
       sheet => R.pipe(
          sheetParentSheetId,
-         isNothing
+         isParentSheet(sheetsArr)
       )(sheet)
    )(sheetsArr);
    const parentNodes = R.map(sheet => createNode(sheet))(parentSheets);
    const unassignedSheets = R.filter(
       sheet => R.pipe(
          sheetParentSheetId, 
-         isSomething
+         isParentSheet(sheetsArr),
+         R.not
       )(sheet)
    )(sheetsArr);
-
    return R.reduce(
       (accumulatorArr, unassignedSheet) => {
          const updatedParentNodesArr = R.reduce(
