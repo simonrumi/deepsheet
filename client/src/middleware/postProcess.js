@@ -1,8 +1,10 @@
 import * as R from 'ramda';
 import { saveAllUpdates } from '../services/sheetServices';
 import { isSomething } from '../helpers';
+import { saveToLocalStorage } from '../helpers/authHelpers';
 import { stateMetadata, stateLastUpdated } from '../helpers/dataStructureHelpers';
-import { TRIGGERED_FETCH_SHEET } from '../actions/sheetTypes';
+import { SAVE_STATE } from '../actions/authTypes';
+import { TRIGGERED_FETCH_SHEET, FETCHED_SHEET } from '../actions/sheetTypes';
 import { replacedAllMetadata } from '../actions/metadataActions';
 import { LOCAL_STORAGE_STATE_KEY, LOCAL_STORAGE_TIME_KEY, LOCAL_STORAGE_ACTION_KEY } from '../constants';
 
@@ -15,7 +17,12 @@ import { LOCAL_STORAGE_STATE_KEY, LOCAL_STORAGE_TIME_KEY, LOCAL_STORAGE_ACTION_K
  */
 export default store => next => async action => {
    switch (action.type) {
+      case SAVE_STATE:
+         saveToLocalStorage(store.getState(), action);
+         break;
+
       case TRIGGERED_FETCH_SHEET:
+      case FETCHED_SHEET:
          const state = store.getState();
          try {
             const storedAction = JSON.parse(localStorage.getItem(LOCAL_STORAGE_ACTION_KEY));
@@ -29,6 +36,7 @@ export default store => next => async action => {
                isSomething(storedAction) && 
                (getTimeMs(stateLastUpdated(state)) < getTimeMs(storedActionTime))
             ) {
+               // TODO need to check that the sheet we just loaded and the sheet in localStorage are the same
                replacedAllMetadata(stateMetadata(storedState));
                await saveAllUpdates(storedState);
                localStorage.clear();

@@ -7,14 +7,7 @@ import { POSTING_CREATE_SHEET } from '../actions/sheetTypes';
 import { POSTING_UPDATED_TITLE } from '../actions/titleTypes';
 import { getUserInfoFromCookie } from '../helpers/userHelpers';
 import { stateIsLoggedIn } from '../helpers/dataStructureHelpers';
-import { LOCAL_STORAGE_STATE_KEY, LOCAL_STORAGE_ACTION_KEY, LOCAL_STORAGE_TIME_KEY } from '../constants';
-
-const saveToLocalStorage = (state, action) => {
-   window.localStorage.clear();
-   window.localStorage.setItem(LOCAL_STORAGE_STATE_KEY, JSON.stringify(state));
-   window.localStorage.setItem(LOCAL_STORAGE_ACTION_KEY, JSON.stringify(action));
-   window.localStorage.setItem(LOCAL_STORAGE_TIME_KEY, Date.now());
-}
+import { saveToLocalStorage } from '../helpers/authHelpers';
 
 export default store => next => async action => {
    switch (action.type) {

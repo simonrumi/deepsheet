@@ -1,11 +1,17 @@
 import managedStore from '../store';
-import { PROMPT_LOGIN, LOGGED_IN, LOGGED_OUT } from './authTypes';
+import { PROMPT_LOGIN, LOGGED_IN, LOGGED_OUT, SAVE_STATE } from './authTypes';
 
 export const promptLogin = () => {
    managedStore.store.dispatch({
       type: PROMPT_LOGIN,
    });
 };
+
+export const saveState = () => {
+   managedStore.store.dispatch({
+      type: SAVE_STATE,
+   });
+}
 
 export const loggedIn = () => {
    managedStore.store.dispatch({
