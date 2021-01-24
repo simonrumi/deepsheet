@@ -38,7 +38,7 @@ export const fetchSheet = async (sheetId, userId) => {
       const sheet = await sheetQuery(sheetId, userId);
       return sheet;
    } catch (err) {
-      console.error('error in sheetServices.fetchSheet', err);
+      console.error('error fetching sheet');
    }
 };
 
@@ -121,7 +121,7 @@ export const saveCellUpdates = async state => {
    const sheetId = stateSheetId(state);
    if (changedCells) {
       try {
-         await updatedCells({ sheetId, cells: changedCells });
+         await updatedCells({ sheetId, cells: changedCells }); // note the "await" here doesn't do much because it is just triggering the action, which completes immediately. That action doesn't wait for the db update to happen
       } catch (err) {
          console.error('Error updating cells in db');
          throw new Error('Error updating cells in db', err);

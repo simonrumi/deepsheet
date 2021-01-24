@@ -48,7 +48,7 @@ export function createReducerManager(initialReducers) {
 
    const addMany = newReducers => {
       if (!(newReducers instanceof Object)) {
-         console.log('WARNING: addMany() did not receive any new reducers');
+         console.warn('WARNING: addMany() did not receive any new reducers');
          // return combineReducers(_reducers);
          return wrapAndCombineReducers(_reducers);
       }
@@ -76,7 +76,7 @@ export function createReducerManager(initialReducers) {
 
    const removeMany = keys => {
       if (!keys || !(keys instanceof Array)) {
-         console.log('WARNING: invalid keys array supplied to reducerManager.removeMany(), so no reducers removed');
+         console.warn('WARNING: invalid keys array supplied to reducerManager.removeMany(), so no reducers removed');
          return wrapAndCombineReducers(_reducers);
       }
       keysToRemove = R.concat(keysToRemove, keys);

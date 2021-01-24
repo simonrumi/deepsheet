@@ -2,7 +2,7 @@ import * as R from 'ramda';
 import { saveAllUpdates } from '../services/sheetServices';
 import { isSomething } from '../helpers';
 import { saveToLocalStorage } from '../helpers/authHelpers';
-import { stateMetadata, stateLastUpdated } from '../helpers/dataStructureHelpers';
+import { stateMetadata, stateLastUpdated, stateSheetId } from '../helpers/dataStructureHelpers';
 import { SAVE_STATE } from '../actions/authTypes';
 import { TRIGGERED_FETCH_SHEET, FETCHED_SHEET } from '../actions/sheetTypes';
 import { replacedAllMetadata } from '../actions/metadataActions';
@@ -36,8 +36,9 @@ export default store => next => async action => {
                isSomething(storedAction) && 
                (getTimeMs(stateLastUpdated(state)) < getTimeMs(storedActionTime))
             ) {
-               // TODO need to check that the sheet we just loaded and the sheet in localStorage are the same
-               replacedAllMetadata(stateMetadata(storedState));
+               if (R.equals(stateSheetId(storedState), stateSheetId(state))) {
+                  replacedAllMetadata(stateMetadata(storedState));
+               }
                await saveAllUpdates(storedState);
                localStorage.clear();
             }

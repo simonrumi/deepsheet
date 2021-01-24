@@ -22,7 +22,6 @@ export default new ApolloClient({
          console.error('graphQLErrors', graphQLErrors);
       }
       if (networkError) {
-         console.log('apolloCLient got NetworkError, calling maybeDealWith401Error');
          maybeDealWith401Error(networkError);
       }
    },

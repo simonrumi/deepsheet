@@ -112,7 +112,7 @@ export default store => next => async action => {
                   updatedMetadata: data,
                   lastUpdated: Date.now(),
                },
-            }); //note that "updateMetada" is the name of the mutation in metadataMutation.js
+            });
          } catch (err) {
             // console.error('Did not successfully update the metadata in the db:', err);
             managedStore.store.dispatch({
@@ -145,6 +145,7 @@ export default store => next => async action => {
                return null; // no return value needed - putting here to stop a warning from showing in the console
             })(action.payload.cells);
          } catch (err) {
+            console.error('dbOperations tried to update cells but failed');
             managedStore.store.dispatch({
                type: CELLS_UPDATE_FAILED,
                payload: { errorMessage: 'cells were not updated in the db'}, // don't publish the exact error, err for security reasons

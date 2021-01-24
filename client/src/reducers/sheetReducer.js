@@ -12,9 +12,9 @@ const sheetReducer = (state = null, action) => {
          return { ...state, sheetId: action.payload, errorMessage: null };
 
       case FETCHING_SHEET:
-         const { sheetId, userId } = action.payload;
+         const { userId } = action.payload;
          return {
-            sheetId,
+            ...state,
             userId,
             isCallingDb: true,
             errorMessage: null,
@@ -47,7 +47,7 @@ const sheetReducer = (state = null, action) => {
       case SHEET_CREATION_FAILED:
          return {
             ...state,
-            sheetId: null,
+            // sheetId: null,
             isCallingDb: false,
             errorMessage: action.payload,
          };

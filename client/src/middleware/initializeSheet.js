@@ -82,11 +82,15 @@ export default store => next => async action => {
          ) {
             return null;
          }
-
-         const sheetResult = await Promise.resolve(getOrFindSheet(store, action.payload));
-         if (isNothing(sheetResult)) {
-            fetchSheetError('No sheet found');
-            return;
+         try {
+            const sheetResult = await Promise.resolve(getOrFindSheet(store, action.payload));
+            if (isNothing(sheetResult)) {
+               fetchSheetError('No sheet found');
+               return;
+            }
+         } catch (err) {
+            console.error('error fetching sheet');
+            fetchSheetError('error fetching sheet: ' + err);
          }
          return next(action);
 
