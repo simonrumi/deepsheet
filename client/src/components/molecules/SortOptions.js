@@ -54,7 +54,7 @@ const SortOptions = props => {
    const render = () => {
       const parentClasses = 'border border-solid border-grey-blue flex items-top justify-between p-2 ' + classes;
       const rowClasses = 'flex w-full justify-left pb-2'; // note that "row" here means a row within the modal box, nothing to do with a row in the spreadsheet
-      const nonClickableTextClasses = 'text-grey-blue pl-2';
+      const nonClickableTextClasses = 'text-dark-dark-blue pl-2';
       
       return (
          <div className={parentClasses}>
@@ -74,6 +74,7 @@ const SortOptions = props => {
                      high to low
                   </span>
                </div>
+               <hr className="border-grey-blue border-t w-full py-2" />
                <div className={rowClasses}>
                   <RadioButton changeHandler={onClickSortText} value={sortType === SORT_TYPE_TEXT} />
                   <span className={nonClickableTextClasses}>sort as text</span>
@@ -90,10 +91,8 @@ const SortOptions = props => {
          </div>
       );
    } 
-   // note that the magic number for the marginLeft style for the "low to high" text is to make the up and down arrows line up directly above each other
-   // it is needed because the IconSortDown and IconSortUp svgs were made by splitting up IconSort...but the positioning of each within their viewbox is note even
-   // the value for marginLeft is also dependent on the constants TOOL_ICON_WIDTH and TOOL_ICON_HEIGHT (which are both 2em), which are used within the icons' components
-   // it's fiddly and a bit hokey but this seems like an exception that will just need to be managed as such
+   // note that the IconSortDown and IconSortUp svgs were made by splitting up IconSort...but the positioning of each within their viewbox is not even
+   // so it's fiddly and a bit hokey to get them lined up vertically
 
    return render();
 }
