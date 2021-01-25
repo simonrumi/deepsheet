@@ -292,7 +292,7 @@ const sheetsLens = R.lensProp('sheets');
 const stateSheetsLens = R.compose(presentLens, sheetsLens);
 export const stateSheetsIsCallingDb = subObjectGetter(stateSheetsLens, 'isCallingDb');
 export const stateSheetsErrorMessage = subObjectGetter(stateSheetsLens, 'errorMessage');
-export const stateSheets = R.view(stateSheetsLens);
+export const stateSheets = subObjectGetter(stateSheetsLens, 'sheets');
 
 const dragMonitorLens = R.lensProp('dragMonitor');
 const stateDragMonitorLens = R.compose(presentLens, dragMonitorLens);

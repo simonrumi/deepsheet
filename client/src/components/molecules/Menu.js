@@ -78,7 +78,7 @@ class Menu extends Component {
    renderSheetListError() {
       const err = stateSheetsErrorMessage(this.props.state);
       if (isSomething(err)) {
-         return <div>{err}</div>;
+         return <div>{err.message}</div>;
       }
    }
 

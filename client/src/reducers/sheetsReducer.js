@@ -17,7 +17,12 @@ const sheetsReducer = (state = {}, action) => {
          };
 
       case FETCHED_SHEETS:
-         return action.payload;
+         return {
+            ...state,
+            isCallingDb: false,
+            errorMessage: null,
+            sheets: action.payload,
+         };
 
       case FETCH_SHEETS_ERROR:
          return {
@@ -34,7 +39,12 @@ const sheetsReducer = (state = {}, action) => {
          };
 
       case DELETED_SHEETS:
-         return action.payload;
+         return {
+            ...state,
+            isCallingDb: false,
+            errorMessage: null,
+            sheets: action.payload, // these are the new sheets
+         };
 
       case DELETE_SHEETS_ERROR:
          return {
