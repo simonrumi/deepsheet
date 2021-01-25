@@ -63,6 +63,14 @@ const SHEET_QUERY = gql`
                index
                size
             }
+            frozenRows {
+               index
+               isFrozen
+            }
+            frozenColumns {
+               index
+               isFrozen
+            }
          }
          cells {
             row
