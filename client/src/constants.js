@@ -14,7 +14,7 @@ export const THIN_ROW = '2em';
 export const DEFAULT_COLUMN_WIDTH = '16em';
 export const DEFAULT_ROW_HEIGHT = '2.5em';
 export const MIN_COLUMN_WIDTH = '50'; // this is in pixels
-export const MIN_ROW_HEIGHT = '30'; // this is in pixels
+export const MIN_ROW_HEIGHT = '40'; // this is in pixels..smaller than this means the row resizer can disappear if the row is too small
 export const TOOL_ICON_HEIGHT = '2em';
 export const TOOL_ICON_WIDTH = '2em';
 
