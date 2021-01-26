@@ -10,17 +10,16 @@ import { useState, useCallback } from 'react';
 */
 export const usePositioning = () => {
    const [positioning, setPositioning] = useState({});
-
    const ref = useCallback(node => {
       if (node !== null) {
          const rect = node.getBoundingClientRect();
          setPositioning({
             height: rect.height,
             width: rect.width,
-            top: rect.top,
+            top: rect.top + window.scrollY,
             right: rect.right,
             bottom: rect.bottom,
-            left: rect.left,
+            left: rect.left + window.scrollX,
          });
       }
    }, []);
