@@ -36,6 +36,7 @@ const SHEET_QUERY = gql`
          metadata {
             created
             lastUpdated
+            lastAccessed
             totalRows
             totalColumns
             parentSheetId

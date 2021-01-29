@@ -38,6 +38,7 @@ const CREATE_SHEET_MUTATION = gql`
          metadata {
             created
             lastUpdated
+            lastAccessed
             totalRows
             totalColumns
             parentSheetId
@@ -154,6 +155,7 @@ const SHEET_BY_USER_ID_MUTATION = gql`
          metadata {
             created
             lastUpdated
+            lastAccessed
             totalRows
             totalColumns
             parentSheetId
@@ -206,3 +208,25 @@ export const sheetByUserIdMutation = async userId => {
    });
    return result.data.sheetByUserId;
 };
+
+const UPDATE_SHEET_LAST_ACCESSED = gql`
+   mutation UpdateSheetLastAccessed($id: ID!, $lastAccessed: String!) {
+      updateSheetLastAccessed(id: $id, lastAccessed: $lastAccessed) {
+         id
+         title
+         metadata {
+            created
+            lastUpdated
+            lastAccessed
+         }
+      }
+   }
+`;
+
+export const updateSheetLastAccessed = async sheetId => {
+   const sheetResult = await apolloClient.mutate({
+      mutation: UPDATE_SHEET_LAST_ACCESSED,
+      variables: { id: sheetId, lastAccessed: Date.now().toString() }
+   });
+   return sheetResult;
+} 

@@ -92,7 +92,7 @@ const getAllSheetsForUser = async userId => {
 const getLatestSheet = async sheetIds => {
    try {
       const latestSheet = await SheetModel.find({ _id: { $in: sheetIds } })
-         .sort({ 'metadata.lastUpdated': -1 })
+         .sort({ 'metadata.lastAccessed': -1,  'metadata.lastUpdated': -1})
          .limit(1)
          .exec();
       return latestSheet[0];   

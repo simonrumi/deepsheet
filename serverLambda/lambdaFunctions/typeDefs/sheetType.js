@@ -38,6 +38,7 @@ const SheetType = gql`
    type SheetMetadataType {
       created: String
       lastUpdated: String
+      lastAccessed: String
       totalRows: Int
       totalColumns: Int
       parentSheetId: ID

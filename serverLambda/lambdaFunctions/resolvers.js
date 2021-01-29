@@ -101,7 +101,6 @@ module.exports = db => ({
                await addSheetToUser({ user, sheetId: newSheet._id });
                return newSheet;
             }
-            // const sheetResult = await SheetModel.findOne(sheetId);
             const sheetResult = await getLatestSheet(user.sheets);
             return sheetResult;
          } catch (err) {
@@ -155,6 +154,13 @@ module.exports = db => ({
             console.log('Error updating metadata:', err);
             return err;
          }
+      },
+
+      updateSheetLastAccessed: async (parent, args, context) => {
+         const sheetDoc = await SheetModel.findById(args.id);
+         sheetDoc.metadata.lastAccessed = args.lastAccessed;
+         const savedSheet = await sheetDoc.save();
+         return savedSheet;
       },
 
       updateCells: async (parent, args, context) => {

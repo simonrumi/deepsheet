@@ -79,6 +79,7 @@ const SheetMutations = gql`
       createSheet(input: NewSheetInput): SheetType
       changeTitle(id: ID!, title: String!): SheetType
       updateMetadata(input: UpdateMetadataInput): SheetMetadataType
+      updateSheetLastAccessed(id: ID!, lastAccessed: String!): SheetType
       updateCells(input: UpdateCellsInput): SheetType
       deleteSubsheetId(input: UpdateSubsheetIdInput): SheetCellType
       deleteSheet(sheetId: ID!, userId: ID!): [SheetType]

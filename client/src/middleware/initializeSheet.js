@@ -18,7 +18,6 @@ import {
 } from '../helpers/dataStructureHelpers';
 import { getUserInfoFromCookie } from '../helpers/userHelpers';
 
-// impure
 const initializeCells = R.curry((store, sheet) => {
    if (arrayContainsSomething(dbCells(sheet))) {
       initializeAxesVisibility();
@@ -45,7 +44,6 @@ const runFetchFunctionForId = async ({ sheetId, userId }) => {
    return sheetId ? await fetchSheet(sheetId, userId) : await fetchSheetByUserId(userId);
 };
 
-// impure
 const runFetchSheet = async ({ store, sheetId, userId }) => {
    if (stateIsLoggedIn(store.getState()) === false) {
       fetchSheetError('Must log in before fetching a sheet');

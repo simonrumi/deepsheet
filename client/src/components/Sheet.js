@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import managedStore from '../store';
 import { triggeredFetchSheet } from '../actions/sheetActions';
-import { isNothing, getObjectFromArrayByKeyValue } from '../helpers';
+import { isNothing, arrayContainsSomething, forLoopReduce, getObjectFromArrayByKeyValue } from '../helpers';
 import {
    stateIsLoggedIn,
    stateShowLoginModal,
@@ -30,6 +30,8 @@ import {
    COLUMN_AXIS,
    THIN_COLUMN,
    THIN_ROW,
+   DEFAULT_ROW_HEIGHT,
+   DEFAULT_COLUMN_WIDTH,
 } from '../constants';
 import LoadingIcon from './atoms/IconLoading';
 import Header from './Header';
@@ -55,21 +57,6 @@ const Sheet = props => {
    const totalRows = useSelector(state => stateTotalRows(state));
    const totalColumns = useSelector(state => stateTotalColumns(state));
 
-   const maybeRenderLoginOrFetchSheet = () => {
-      const { userId, sessionId } = getUserInfoFromCookie();
-      if (showLoginModal || isLoggedIn === false || !userId || !sessionId) {
-         return <LoginModal />;
-      }
-      if (!sheetId) {
-         return R.ifElse(
-            R.pipe(stateSheetErrorMessage, isNothing),
-            () => triggeredFetchSheet(), // fetch the sheet if there is no sheetId and no sheet error message
-            state => <div>{stateSheetErrorMessage(state)}</div> // show the sheet error message if there's no sheetId
-         )(managedStore.state);
-      }
-      return null;
-   };
-
    const compareSizesByIndex = (size1, size2) => {
       if (size1.index === size2.index) {
          return 0;
@@ -77,9 +64,23 @@ const Sheet = props => {
       return size1.index > size2.index ? 1 : -1;
    };
 
-   const createAxisSizes = (axisSizes = [], axisVisibility) => {
-      const sizesOrderedByIndex = R.sort(compareSizesByIndex, axisSizes);
+   const createDefaultAxisSizes = axis => {
+      // the following will generate a string like ' 2em 2em 2em 2em ' (as many values as there are items in the axis)
+      const totalItems = axis === ROW_AXIS ? stateTotalRows(managedStore.state) : stateTotalColumns(managedStore.state);
+      const defaultSize = axis === ROW_AXIS ? DEFAULT_ROW_HEIGHT : DEFAULT_COLUMN_WIDTH
+      return forLoopReduce(
+         (accumulator, index) => accumulator + defaultSize + ' ', 
+         ' ', 
+         totalItems
+      );
+   }
+
+   const createAxisSizes = (axisSizes = [], axisVisibility, axis) => {
+      if (!arrayContainsSomething(axisSizes)) {
+         return createDefaultAxisSizes(axis);
+      }
       // the following will generate a string like ' 40px 100px 29px 51px '
+      const sizesOrderedByIndex = R.sort(compareSizesByIndex, axisSizes);
       return R.reduce(
          (accumulator, sizeObj) => {
             const axisItemVisibility = getObjectFromArrayByKeyValue('index', sizeObj.index, axisVisibility);
@@ -94,8 +95,8 @@ const Sheet = props => {
 
    const getAxisSizing = axis =>
       axis === COLUMN_AXIS
-         ? createAxisSizes(columnWidths, columnVisibility)
-         : createAxisSizes(rowHeights, rowVisibility);
+         ? createAxisSizes(columnWidths, columnVisibility, COLUMN_AXIS)
+         : createAxisSizes(rowHeights, rowVisibility, ROW_AXIS);
 
    const getGridSizingStyle = () => {
       const contentRows = getAxisSizing(ROW_AXIS);
@@ -123,8 +124,33 @@ const Sheet = props => {
       ]
    );
 
-   const renderGridSizingStyle = () =>
-      isVisibilityCalcutated() && isAxisSizingCalculated() ? memoizedGridSizingStyle : null;
+   const renderGridSizingStyle = () => isVisibilityCalcutated() && isAxisSizingCalculated() ? memoizedGridSizingStyle : null;
+
+   const maybeRenderCells = () =>
+      cellsLoaded ? (
+         <div
+            className="grid-container pt-1"
+            style={renderGridSizingStyle()}
+            onDragOver={handleResizerDragOver}
+            onDrop={handleResizerDrop}>
+            <Cells />
+         </div>
+      ) : null;
+
+   const maybeRenderLoginOrFetchSheet = () => {
+      const { userId, sessionId } = getUserInfoFromCookie();
+      if (showLoginModal || isLoggedIn === false || !userId || !sessionId) {
+         return <LoginModal />;
+      }
+      if (!sheetId) {
+         return R.ifElse(
+            R.pipe(stateSheetErrorMessage, isNothing),
+            () => triggeredFetchSheet(), // fetch the sheet if there is no sheetId and no sheet error message
+            state => <div>{stateSheetErrorMessage(state)}</div> // show the sheet error message if there's no sheetId
+         )(managedStore.state);
+      }
+      return null;
+   };
 
    const maybeRenderFilterModal = () => (showFilterModal ? <FilterModal /> : null);
 
@@ -145,13 +171,7 @@ const Sheet = props => {
             {maybeRenderFilterModal()}
             {maybeRenderSortModal()}
             {maybeRenderLoginOrFetchSheet()}
-            <div
-               className="grid-container pt-1"
-               style={renderGridSizingStyle()}
-               onDragOver={handleResizerDragOver}
-               onDrop={handleResizerDrop}>
-               <Cells />
-            </div>
+            {maybeRenderCells()}
          </div>
       );
    }

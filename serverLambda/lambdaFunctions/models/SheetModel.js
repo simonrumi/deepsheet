@@ -21,6 +21,7 @@ const sheetSchema = new Schema(
       metadata: {
          created: { type: Date, default: Date.now },
          lastUpdated: { type: Date, default: Date.now },
+         lastAccessed: { type: Date, default: Date.now },
          totalRows: { type: Number, required: true, default: 10 },
          totalColumns: { type: Number, required: true, default: 5 },
          parentSheetId: { type: Schema.Types.ObjectId, ref: 'Sheet' },
