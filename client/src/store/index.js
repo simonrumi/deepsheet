@@ -39,7 +39,7 @@ class ManagedStore {
             postProcess,
             orderSheet, 
             filterSheet,
-            buildAxisSizing
+            buildAxisSizing,
          ) //tried reduxThunk at the end, and at the start, unsure which is best
       );
       this._store.reducerManager = reducerManager;

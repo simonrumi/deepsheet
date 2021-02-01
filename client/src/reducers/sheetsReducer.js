@@ -5,7 +5,11 @@ import {
    DELETING_SHEETS,
    DELETED_SHEETS,
    DELETE_SHEETS_ERROR,
+   UPDATED_SHEETS_TREE,
+   UPDATED_SHEETS_TREE_NODE,
 } from '../actions/sheetsTypes';
+
+import { replaceNodeWithinSheetsTree } from '../helpers/sheetsHelpers';
 
 const sheetsReducer = (state = {}, action) => {
    switch (action.type) {
@@ -52,6 +56,19 @@ const sheetsReducer = (state = {}, action) => {
             isCallingDb: false,
             errorMessage: action.payload,
          };
+
+      case UPDATED_SHEETS_TREE:
+         return {
+            ...state,
+            sheetsTree: action.payload,
+         }
+
+         case UPDATED_SHEETS_TREE_NODE:
+            const updatedSheetsTree = replaceNodeWithinSheetsTree(action.payload, state.sheetsTree);
+            return {
+               ...state,
+               sheetsTree: updatedSheetsTree,
+            }
 
       default:
          return state;

@@ -19,3 +19,5 @@ export const menuSheetsText = (classes, onClickFn) => {
       </span>
    );
 };
+
+export const menuDeleteSheetError = () => 'aw sheet, couldn\'t delete it - try again later';

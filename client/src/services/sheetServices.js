@@ -1,4 +1,5 @@
 import * as R from 'ramda';
+import managedStore from '../store';
 import { completedSaveUpdates } from '../actions';
 import { triggeredFetchSheet } from '../actions/sheetActions';
 import { updatedCells, clearedAllCellKeys } from '../actions/cellActions';
@@ -15,6 +16,10 @@ import {
    deletedSheets,
    deleteSheetsError,
 } from '../actions/sheetsActions';
+import { createSheetsTreeFromArray } from '../helpers/sheetsHelpers';
+import { updatedSheetsTree } from '../actions/sheetsActions';
+// import { LOGGED_IN, LOGGED_OUT } from '../actions/authTypes';
+// import { FETCHED_SHEETS } from '../actions/sheetsTypes'
 import { sheetQuery, sheetsQuery } from '../queries/sheetQueries';
 import { deleteSheetsMutation, deleteSheetMutation, sheetByUserIdMutation } from '../queries/sheetMutations';
 import titleMutation from '../queries/titleMutation';
@@ -28,14 +33,21 @@ import {
    saveableStateMetadata,
    stateTitleIsStale,
    stateTitleText,
+   stateSheets,
 } from '../helpers/dataStructureHelpers';
 
 // TODO return the response.data.thing for each query/mutation so the consumer doesn;t have to know that path
 
 export const fetchSheet = async (sheetId, userId) => {
-   userId = userId || getUserInfoFromCookie();
+   const confirmedUserId = isSomething(userId) 
+      ? userId 
+      : R.pipe(
+         getUserInfoFromCookie, 
+         R.prop('userId')
+      )();
+
    try {
-      const sheet = await sheetQuery(sheetId, userId);
+      const sheet = await sheetQuery(sheetId, confirmedUserId);
       return sheet;
    } catch (err) {
       console.error('error fetching sheet');
@@ -57,6 +69,11 @@ export const fetchSheets = async () => {
    try {
       const response = await sheetsQuery(userId);
       fetchedSheets(response.data.sheets);
+      const sheetsArr = stateSheets(managedStore.state);
+      if (arrayContainsSomething(sheetsArr)) {
+         const sheetsTree = createSheetsTreeFromArray(sheetsArr);
+         updatedSheetsTree(sheetsTree);
+      }
    } catch (err) {
       console.error('error fetching sheets:', err);
       fetchSheetsError(err);
@@ -68,7 +85,6 @@ export const deleteSheets = async (sheetIds, userId) => {
    try {
       const remainingSheets = await deleteSheetsMutation(sheetIds, userId);
       deletedSheets(remainingSheets);
-      // TODO - if the deleted sheet is the current sheet then load a new sheet
    } catch (err) {
       console.error('error deleting sheets:', err);
       deleteSheetsError(err);

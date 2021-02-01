@@ -15,7 +15,7 @@ import {
    DELETE_SUBSHEET_ID_FAILED,
 } from '../actions/cellTypes';
 import { updatedCells } from '../actions/cellActions';
-import { updateTitleInDB } from '../services/sheetServices';
+import { updateTitleInDB, fetchSheets } from '../services/sheetServices';
 import { updateMetadataMutation } from '../queries/metadataMutations';
 import { updateCellsMutation, deleteSubsheetIdMutation } from '../queries/cellMutations';
 import { createSheetMutation } from '../queries/sheetMutations';
@@ -73,8 +73,9 @@ export default store => next => async action => {
                payload: {
                   text: data.title,
                   lastUpdated: Date.now(),
-               } /* note that "changeTitle" is the name of the mutation in titleMutation.js */,
+               },
             });
+            await fetchSheets(); // this will update the sheetsTree in the store, since some sheet in that tree has a new name
          } catch (err) {
             // console.error('did not successfully update the title: err:', err);
             managedStore.store.dispatch({
@@ -92,6 +93,7 @@ export default store => next => async action => {
                type: COMPLETED_CREATE_SHEET,
                payload: { sheet: response },
             });
+            await fetchSheets(); // this will update the sheetsTree in the store, since there's a new sheet to add
          } catch (err) {
             // console.error('did not successfully create the sheet in the db: err:', err);
             managedStore.store.dispatch({
@@ -161,6 +163,7 @@ export default store => next => async action => {
                type: COMPLETED_DELETE_SUBSHEET_ID,
                payload: response,
             });
+            await fetchSheets(); // this will update the sheetsTree in the store, since a sheet has been unlinked from its parent
          } catch (err) {
             // console.error('Error deleting subsheetId:', err);
             managedStore.store.dispatch({

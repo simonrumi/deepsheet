@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { stateTitleText, stateTitleIsEditingTitle } from '../helpers/dataStructureHelpers';
 import SheetHeader from './molecules/SheetHeader';
 import TitleForm from './molecules/TitleForm';
-import Menu from './molecules/Menu';
+import Menu from './organisms/Menu';
 
 export class Header extends Component {
    renderTitleOrTitleForm() {

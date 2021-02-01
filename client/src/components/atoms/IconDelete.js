@@ -8,7 +8,7 @@ const IconDelete = ({
    viewBox = '0 0 512.016 512.016',
    onClickFn,
 }) => {
-   const allClasses = 'text-subdued-blue hover:text-vibrant-burnt-orange cursor-pointer ' + classes;
+   const allClasses = 'text-subdued-blue hover:text-vibrant-blue cursor-pointer ' + classes;
    return (
       <div className={allClasses} onClick={onClickFn}>
          <svg

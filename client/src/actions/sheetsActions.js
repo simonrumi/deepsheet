@@ -9,6 +9,8 @@ import {
    DELETING_SHEETS,
    DELETED_SHEETS,
    DELETE_SHEETS_ERROR,
+   UPDATED_SHEETS_TREE,
+   UPDATED_SHEETS_TREE_NODE,
 } from './sheetsTypes';
 
 export const fetchingSheets = () => {
@@ -48,3 +50,11 @@ export const deletedSheets = newSheets => {
 export const deleteSheetsError = err => {
    managedStore.store.dispatch({ type: DELETE_SHEETS_ERROR, payload: err });
 };
+
+export const updatedSheetsTree = tree => {
+   managedStore.store.dispatch({ type: UPDATED_SHEETS_TREE, payload: tree });
+};
+
+export const updatedSheetsTreeNode = updatedNode => {
+   managedStore.store.dispatch({ type: UPDATED_SHEETS_TREE_NODE, payload: updatedNode });
+}

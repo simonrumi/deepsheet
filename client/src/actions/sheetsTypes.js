@@ -2,6 +2,9 @@ export const FETCHING_SHEETS = 'fetching_sheets';
 export const FETCHED_SHEETS = 'fetched_sheets';
 export const FETCH_SHEETS_ERROR = 'fetched_sheets_error';
 
+export const UPDATED_SHEETS_TREE = 'updated_sheets_tree';
+export const UPDATED_SHEETS_TREE_NODE = 'updated_sheets_tree_node';
+
 // singular sheet
 export const DELETING_SHEET = 'deleting_sheet';
 export const DELETED_SHEET = 'deleted_sheet';

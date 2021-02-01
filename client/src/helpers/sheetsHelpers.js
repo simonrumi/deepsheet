@@ -1,5 +1,5 @@
 import * as R from 'ramda';
-import { isNothing, arrayContainsSomething, getObjectFromArrayByKeyValue } from './index';
+import { isNothing, isSomething, arrayContainsSomething, getObjectFromArrayByKeyValue } from './index';
 import { sheetParentSheetId, cellSubsheetIdSetter, cellSubsheetId, dbCells } from './dataStructureHelpers';
 import { fetchSheet } from '../services/sheetServices';
 import { updateCellsMutation } from '../queries/cellMutations';
@@ -14,10 +14,11 @@ import { updateCellsMutation } from '../queries/cellMutations';
          }
       },
       children: [node1, node2, etc],
+      error: 'some error here'
    } 
 */
 
-const createNode = sheet => ({ sheet, children: [] });
+const createNode = sheet => ({ sheet, children: [], error: null });
 
 const addChildNode = (parent, child) => ({ ...parent, children: R.append(child, parent.children) });
 
@@ -74,7 +75,7 @@ const isParentSheet = R.curry((sheetsArr, parentSheetId) => {
    return isNothing(sheetInArr);
 });
 
-export const buildSheetsTree = sheetsArr => {
+export const createSheetsTreeFromArray = sheetsArr => {
   const parentSheets = R.filter(
       sheet => R.pipe(
          sheetParentSheetId,
@@ -122,7 +123,7 @@ const getCellsFromSheet = async sheetId => {
       return null;
    }
    const sheet = await fetchSheet(sheetId);
-   return dbCells(sheet);
+   return isSomething(sheet) ? dbCells(sheet) : [];
 };
 
 export const removeSheetFromParent = async node => {
@@ -133,7 +134,6 @@ export const removeSheetFromParent = async node => {
    }
    const parentCells = await getCellsFromSheet(parentId);
 
-   // TODO - need to catch error from updateCellsMutation either here or in whatever calls this
    await R.reduce(
       async (accumulator, parentCell) => {
          if (cellSubsheetId(parentCell) === sheetId) {
@@ -147,3 +147,23 @@ export const removeSheetFromParent = async node => {
       parentCells
    );
 };
+
+export const replaceNodeWithinSheetsTree = (updatedNode, sheetsTree) => {
+   // note that the sheetsTree is actually an array, with each element containing a top level node
+   const sheetId = updatedNode.sheet.id;
+   const returnVal = R.map(
+      node => {
+         if (R.equals(node.sheet.id, sheetId)) {
+            return updatedNode;
+         }
+         if (arrayContainsSomething(node.children)) {
+            return { 
+               ...node, 
+               children: replaceNodeWithinSheetsTree(updatedNode, node.children) 
+            };
+         }
+         return node;
+      }
+   )(sheetsTree);
+   return returnVal;
+}
