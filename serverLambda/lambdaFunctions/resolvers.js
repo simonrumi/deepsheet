@@ -22,7 +22,11 @@ module.exports = db => ({
    Query: {
       sheet: async (parent, args, context) => {
          try {
+            const startTime = new Date();
+            console.log('resolvers.Query.sheet starting findOne query for sheetId', args.sheetId, 'userId', args.userId, 'time', startTime);
             const sheetResult = await SheetModel.findOne({ _id: args.sheetId, 'users.owner': args.userId });
+            const queryLength = (new Date() - startTime) / 1000;
+            console.log('resolvers.Query.sheet finished findOne query. It took', queryLength);
             return sheetResult;
          } catch (err) {
             console.log('Error finding sheet:', err);
@@ -37,7 +41,11 @@ module.exports = db => ({
       subsheetId: async (parent, args, context) => {
          if (parent.subsheetId) {
             try {
+               const startTime = new Date();
+               console.log('resolvers.Query.subsheetId starting findById query for subsheetId', parent.subsheetId, 'time', startTime);
                const subsheet = await SheetModel.findById(parent.subsheetId);
+               const queryLength = (new Date() - startTime) / 1000;
+               console.log('resolvers.Query.subsheetId finished findbyId query. It took', queryLength);
                if (isSomething(subsheet)) {
                   return parent.subsheetId;
                }
@@ -91,7 +99,11 @@ module.exports = db => ({
 
       sheetByUserId: async (parent, args, context) => {
          try {
+            let startTime = new Date();
+            console.log('resolvers.Mutation.sheetByUserId starting findById query for userId', args.userId, 'time', startTime);
             const user = await UserModel.findById(args.userId);
+            const queryLength = (new Date() - startTime) / 1000;
+            console.log('resolvers.Mutation.sheetByUserId finished findbyId query. It took', queryLength);
             if (isNothing(user)) {
                return new Error('no user found');
             }

@@ -81,7 +81,11 @@ const createNewSheet = ({
 
 const getAllSheetsForUser = async userId => {
    try {
+      const startTime = new Date();
+      console.log('sheetHelpers.getAllSheetsForUser starting find query for userId', userId, 'time', startTime);
       const allSheets = await SheetModel.find({ 'users.owner': userId });
+      const queryLength = (new Date() - startTime) / 1000;
+      console.log('sheetHelpers.getAllSheetsForUser finished find query. It took', queryLength);
       return allSheets;
    } catch (err) {
       console.log('Error returning all sheets', err);
@@ -91,10 +95,14 @@ const getAllSheetsForUser = async userId => {
 
 const getLatestSheet = async sheetIds => {
    try {
+      const startTime = new Date();
+      console.log('sheetHelpers.getLatestSheet starting find query for multiple sheetIds, start time', startTime);
       const latestSheet = await SheetModel.find({ _id: { $in: sheetIds } })
          .sort({ 'metadata.lastAccessed': -1,  'metadata.lastUpdated': -1})
          .limit(1)
          .exec();
+      const queryLength = (new Date() - startTime) / 1000;
+      console.log('sheetHelpers.getLatestSheet finished find query. It took', queryLength);
       return latestSheet[0];   
 
    } catch (err) {
