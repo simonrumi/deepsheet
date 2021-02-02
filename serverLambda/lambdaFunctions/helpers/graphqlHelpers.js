@@ -7,10 +7,15 @@ const { validateUserSession, standardAuthError } = require('./userHelpers');
 let cachedServer = null;
 const createServer = async () => {
    if (cachedServer) {
+      console.log('graphqlHelpers.createServer returning a cachedServer');
       return cachedServer;
    }
    try {
+      const startTime = new Date();
+      console.log('graphqlHelpers.createServer getting db from dbConnector, startTime', startTime);
       const db = await dbConnector();
+      const timeTaken = (new Date() - startTime) / 1000;
+      console.log('graphqlHelpers.createServer got db from dbConnector...it took', timeTaken)
       const server = new ApolloServer({
          typeDefs,
          resolvers: resolvers(db),

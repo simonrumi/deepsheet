@@ -10,8 +10,11 @@ module.exports = async () => {
       return cachedDbConnection;
    }
    try {
+      const startTime = new Date();
+      console.log('dbConnector connecting to db, startTime', startTime);
       await mongoose.connect(keys.mongoURI, keys.options);
-      console.log('connected to mongodb!');
+      const timeTaken = (new Date() - startTime) / 1000;
+      console.log('connected to mongodb! It took', timeTaken, 'seconds');
       cachedDbConnection = mongoose.connection;
       return cachedDbConnection;
    } catch (err) {
