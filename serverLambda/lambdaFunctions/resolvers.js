@@ -35,6 +35,8 @@ module.exports = db => ({
       },
 
       sheets: async (parent, args, context) => {
+         const startTime = new Date();
+         console.log('resolvers.Query.sheet about to call getAllSheetsForUser with userId', args.userId);
          return await getAllSheetsForUser(args.userId);
       },
 
