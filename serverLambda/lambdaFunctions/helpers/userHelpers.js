@@ -131,11 +131,17 @@ const getUserInfoFromReq = reqHeaders => {
 // graphql uses this to make sure it is ok to run queries
 const validateUserSession = async reqHeaders => {
    const { userId, sessionId } = getUserInfoFromReq(reqHeaders);
+   console.log('userHelpers.validateUserSession got userId', userId, 'sessionId', sessionId);
    if (isNothing(userId) || isNothing(sessionId)) {
+      console.log('userHelpers.validateUserSession missing either userId or sessionId so returning false');
       return false;
    }
    try {
+      let startTime = new Date();
+      console.log('userHelpers.validateUserSession about to .findById(userId) at start time', startTime);
       const user = await UserModel.findById(userId);
+      let timeTaken = (new Date() - startTime) / 1000;
+      console.log('userHelpers.validateUserSession got user, it took', timeTaken, 'seconds');
       // see if the session in the user obj matches the session from the context
       // note that we can't test with double equals like this
       // user.session !== sessionId
@@ -144,8 +150,12 @@ const validateUserSession = async reqHeaders => {
          console.log('session is not current, user is not authorized');
          return false;
       }
+      startTime = new Date();
+      console.log('userHelpers.validateUserSession about to refreshSession at start time', startTime);
       const refreshedSession = await refreshSession(user.session);
-      return isSomething(refreshedSession); // ***** REVERT THIS!!!
+      timeTaken = (new Date() - startTime) / 1000;
+      console.log('userHelpers.validateUserSession got refreshedSession, it took', timeTaken, 'seconds');
+      return isSomething(refreshedSession);
    } catch (err) {
       console.log('error validating user session', err);
       return false;
