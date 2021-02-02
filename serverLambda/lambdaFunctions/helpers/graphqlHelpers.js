@@ -20,9 +20,6 @@ const createServer = async () => {
          typeDefs,
          resolvers: resolvers(db),
          debug: true,
-         // context: async args => ({
-         //    isAuthorized: await validateUserSession(args.event.headers),
-         // }),
       });
       console.log('created apollo server');
       cachedServer = server;
@@ -59,13 +56,21 @@ const withAuth = func => async (event, context) => {
    const authMiddleware = {
       apply: async (targetFn, thisArg, args) => {
          if (!AUTH_ON) {
-            console.log('\n******\nWARNING! Auth is off! Turn on in graphqlHelpers.js before publishing!\n******\n');
+            console.log('\n******\nWARNING! Auth is off! Turn on before publishing!\n******\n');
          }
+         let startTime = new Date();
+         console.log('graphqlHelpers.withAuth started at time', startTime);
          const db = await dbConnector(); // stuff breaks if we don't make sure we have the db connection first
+         let timeTaken = (new Date() - startTime) / 1000;
+         console.log('graphqlHelpers.withAuth took', timeTaken, 'seconds to get db');
          const event = args[0];
          const context = args[1];
          try {
+            startTime = new Date();
+            console.log('graphqlHelpers.withAuth about to check authorization at', startTime);
             const isAuthorized = await validateUserSession(event.headers);
+            timeTaken = (new Date() - startTime) / 1000;
+            console.log('graphqlHelpers.withAuth got isAuthorized', isAuthorized, 'it took', timeTaken, 'seconds');
             if (!isAuthorized && AUTH_ON) {
                return standardAuthError;
             }
@@ -73,6 +78,8 @@ const withAuth = func => async (event, context) => {
             console.log('error in call to validateUserSession:', err);
             return standardAuthError;
          }
+         timeTaken = (new Date() - startTime) / 1000;
+         console.log('graphqlHelpers.withAuth about to return - timeTaken', timeTaken);
          return await targetFn(event, context);
       },
    };
