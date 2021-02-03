@@ -62,12 +62,21 @@ const createSession = async () => {
 
 const refreshSession = async sessionId => {
    try {
+      let startTime = new Date();
+      console.log('userHelpers.refreshSession starting findById for sessionId', sessionId, 'at startTime', startTime);
       const currentSession = await SessionModel.findById(sessionId);
+      let timeTaken = (new Date() - startTime) / 1000;
+      console.log('userHelpers.refreshSession got currentSession', currentSession, 'it took', timeTaken, 'seconds');
       if (currentSession) {
          currentSession.lastAccessed = Date.now();
+         startTime = new Date();
+         console.log('userHelpers.refreshSession starting saving currentSession at startTime', startTime);
          const refreshsedSession = await currentSession.save();
+         timeTaken = (new Date() - startTime) / 1000;
+         console.log('userHelpers.refreshSession saved currentSession, it took', timeTaken, 'seconds');
          return refreshsedSession;
       }
+      console.log('userHelpers.refreshSession found no currentSession so returning null');
       return null;
    } catch (err) {
       console.log('Error refreshing session', err);
