@@ -1,5 +1,7 @@
 const R = require('ramda');
 const { isSomething, isNothing, arrayContainsSomething } = require('.');
+const { log } = require('./logger');
+const { LOG } = require('../../constants');
 
 const mongoose = require('mongoose');
 require('../models/UserModel');
@@ -34,7 +36,7 @@ const findUser = async ({ userIdFromProvider, provider }) => {
             return existingUser;
          }
       } catch (err) {
-         console.log('error finding user with userIdFromProvider', userIdFromProvider, 'error:', err);
+         log({ level: LOG.ERROR }, 'error finding user with userIdFromProvider', userIdFromProvider, 'error:', err.message);
          return null;
       }
    }
@@ -55,31 +57,29 @@ const createSession = async () => {
       const newSession = await new SessionModel().save();
       return newSession;
    } catch (err) {
-      console.log('Error creating session:', err);
+      log({ level: LOG.ERROR }, 'Error creating session:', err.message);
       return err;
    }
 };
 
 const refreshSession = async sessionId => {
    try {
-      let startTime = new Date();
-      console.log('userHelpers.refreshSession starting findById for sessionId', sessionId, 'at startTime', startTime);
-      const currentSession = await SessionModel.findById(sessionId);
-      let timeTaken = (new Date() - startTime) / 1000;
-      console.log('userHelpers.refreshSession got currentSession', currentSession, 'it took', timeTaken, 'seconds');
+      const startTime = log({ printTime: true, level: LOG.DEBUG }, 'userHelpers.refreshSession starting findById for sessionId', sessionId);
+      const allSessions = await SessionModel.find({}); // TEMP TEST
+      log({ startTime, level: LOG.DEBUG }, 'userHelpers.refreshSession test getting allSessions', allSessions);
+      const currentSession = await SessionModel.findById(sessionId); //// TODO BUG - breaks here....but only every other time. perhaps somehting happening in background that hasn't completed?....what happens if we wait a long time between updates?
+      log({ startTime, level: LOG.DEBUG }, 'userHelpers.refreshSession got currentSession', currentSession);
       if (currentSession) {
          currentSession.lastAccessed = Date.now();
-         startTime = new Date();
-         console.log('userHelpers.refreshSession starting saving currentSession at startTime', startTime);
+         const startTime = log({ printTime: true, level: LOG.DEBUG }, 'userHelpers.refreshSession starting saving currentSession');
          const refreshsedSession = await currentSession.save();
-         timeTaken = (new Date() - startTime) / 1000;
-         console.log('userHelpers.refreshSession saved currentSession, it took', timeTaken, 'seconds');
+         log({ startTime, level: LOG.DEBUG }, 'userHelpers.refreshSession saved currentSession');
          return refreshsedSession;
       }
-      console.log('userHelpers.refreshSession found no currentSession so returning null');
+      log({ level: LOG.DEBUG }, 'userHelpers.refreshSession found no currentSession so returning null');
       return null;
    } catch (err) {
-      console.log('Error refreshing session', err);
+      log({ level: LOG.DEBUG }, 'Error refreshing session:', err.message);
       throw new Error('Error refreshing session: ' + err);
    }
 };
@@ -92,7 +92,7 @@ const getSession = async user => {
             return session;
          }
       } catch (err) {
-         console.log('waring could not refresh session:', err);
+         log({ level: LOG.WARN }, 'waring could not refresh session:', err.message);
          // however will continue and try to create a new session
       }
    }
@@ -140,33 +140,29 @@ const getUserInfoFromReq = reqHeaders => {
 // graphql uses this to make sure it is ok to run queries
 const validateUserSession = async reqHeaders => {
    const { userId, sessionId } = getUserInfoFromReq(reqHeaders);
-   console.log('userHelpers.validateUserSession got userId', userId, 'sessionId', sessionId);
+   log({ level: LOG.DEBUG }, 'userHelpers.validateUserSession got userId', userId, 'sessionId', sessionId);
    if (isNothing(userId) || isNothing(sessionId)) {
-      console.log('userHelpers.validateUserSession missing either userId or sessionId so returning false');
+      log({ level: LOG.DEBUG }, 'userHelpers.validateUserSession missing either userId or sessionId so returning false');
       return false;
    }
    try {
-      let startTime = new Date();
-      console.log('userHelpers.validateUserSession about to .findById(userId) at start time', startTime);
+      const startTime1 = log({ level: LOG.DEBUG, printTime: true }, 'userHelpers.validateUserSession about to findById(userId)');
       const user = await UserModel.findById(userId);
-      let timeTaken = (new Date() - startTime) / 1000;
-      console.log('userHelpers.validateUserSession got user, it took', timeTaken, 'seconds');
+      log({ level: LOG.DEBUG, startTime: startTime1 }, 'userHelpers.validateUserSession got user');
       // see if the session in the user obj matches the session from the context
       // note that we can't test with double equals like this
       // user.session !== sessionId
       // because one is a string and the other is something else (I think)
       if (isNothing(user.session) || user.session != sessionId) {
-         console.log('session is not current, user is not authorized');
+         log({ level: LOG.INFO }, 'session is not current, user is not authorized');
          return false;
       }
-      startTime = new Date();
-      console.log('userHelpers.validateUserSession about to refreshSession at start time', startTime);
+      const startTime2 = log({ level: LOG.DEBUG, printTime: true }, 'userHelpers.validateUserSession about to refreshSession');
       const refreshedSession = await refreshSession(user.session);
-      timeTaken = (new Date() - startTime) / 1000;
-      console.log('userHelpers.validateUserSession got refreshedSession, it took', timeTaken, 'seconds');
+      log({ level: LOG.DEBUG, startTime: startTime2 }, 'userHelpers.validateUserSession got refreshedSession');
       return isSomething(refreshedSession);
    } catch (err) {
-      console.log('error validating user session', err);
+      log({ level: LOG.ERROR }, 'error validating user session', err.message);
       return false;
    }
 };
@@ -179,7 +175,7 @@ const createUser = async userDetails => {
       }
       return userArr[0];
    } catch (err) {
-      console.log('error creating user:', err);
+      log({ level: LOG.ERROR }, 'error creating user:', err.message);
       throw new Error('error creating user: ' + err);
    }
 };

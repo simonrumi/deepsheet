@@ -3,29 +3,29 @@ const dbConnector = require('../dbConnector');
 const typeDefs = require('../typeDefs');
 const resolvers = require('../resolvers');
 const { validateUserSession, standardAuthError } = require('./userHelpers');
+const { log } = require('./logger');
+const { LOG } = require('../../constants');
 
 let cachedServer = null;
 const createServer = async () => {
    if (cachedServer) {
-      console.log('graphqlHelpers.createServer returning a cachedServer');
+      log({ level: LOG.INFO }, 'graphqlHelpers.createServer returning a cachedServer');
       return cachedServer;
    }
    try {
-      const startTime = new Date();
-      console.log('graphqlHelpers.createServer getting db from dbConnector, startTime', startTime);
+      const startTime = log({ level: LOG.DEBUG, printTime: true }, 'graphqlHelpers.createServer getting db from dbConnector');
       const db = await dbConnector();
-      const timeTaken = (new Date() - startTime) / 1000;
-      console.log('graphqlHelpers.createServer got db from dbConnector...it took', timeTaken)
+      log({ level: LOG.DEBUG, startTime }, 'graphqlHelpers.createServer got db from dbConnector');
       const server = new ApolloServer({
          typeDefs,
          resolvers: resolvers(db),
          debug: true,
       });
-      console.log('created apollo server');
+      log({ level: LOG.INFO }, 'created apollo server');
       cachedServer = server;
       return cachedServer;
    } catch (err) {
-      console.log('not able to connect to db', err);
+      log({ level: LOG.ERROR }, 'not able to connect to db', err.message);
       throw new Error('could not start..sorry :(');
    }
 };
