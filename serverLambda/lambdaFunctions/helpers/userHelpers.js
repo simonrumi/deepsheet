@@ -4,6 +4,7 @@ const { log } = require('./logger');
 const { LOG } = require('../../constants');
 
 const mongoose = require('mongoose');
+mongoose.Promise = global.Promise; // Per Stephen Grider: Mongoose's built in promise library is deprecated, replace it with ES2015 Promise
 require('../models/UserModel');
 const UserModel = mongoose.model('user');
 require('../models/SessionModel');
@@ -65,7 +66,7 @@ const createSession = async () => {
 const refreshSession = async sessionId => {
    try {
       const startTime = log({ printTime: true, level: LOG.DEBUG }, 'userHelpers.refreshSession starting findById for sessionId', sessionId);
-      const allSessions = await SessionModel.find({}); // TEMP TEST
+      const allSessions = await SessionModel.find({}); // TEMP TEST // TODO BUG Doesn't even managed to do this....what is the issue with SessionModel ???
       log({ startTime, level: LOG.DEBUG }, 'userHelpers.refreshSession test getting allSessions', allSessions);
       const currentSession = await SessionModel.findById(sessionId); //// TODO BUG - breaks here....but only every other time. perhaps somehting happening in background that hasn't completed?....what happens if we wait a long time between updates?
       log({ startTime, level: LOG.DEBUG }, 'userHelpers.refreshSession got currentSession', currentSession);

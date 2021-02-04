@@ -1,6 +1,7 @@
 const R = require('ramda');
 const { forLoopReduce, isNothing } = require('./index');
 const mongoose = require('mongoose');
+mongoose.Promise = global.Promise; // Per Stephen Grider: Mongoose's built in promise library is deprecated, replace it with ES2015 Promise
 const { DEFAULT_ROWS, DEFAULT_COLUMNS, DEFAULT_TITLE, DEFAULT_SUMMARY_CELL } = require('../../constants');
 
 const SheetModel = mongoose.model('sheet');

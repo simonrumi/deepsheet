@@ -1,6 +1,7 @@
 const R = require('ramda');
 // note that we have to create the Models first, before requiring in code below that relies on them
 const mongoose = require('mongoose');
+mongoose.Promise = global.Promise; // Per Stephen Grider: Mongoose's built in promise library is deprecated, replace it with ES2015 Promise
 require('./models/SheetModel');
 const SheetModel = mongoose.model('sheet');
 require('./models/UserModel');

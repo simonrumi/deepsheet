@@ -1,5 +1,6 @@
 const R = require('ramda');
 const mongoose = require('mongoose');
+mongoose.Promise = global.Promise; // Per Stephen Grider: Mongoose's built in promise library is deprecated, replace it with ES2015 Promise
 const { Schema } = mongoose;
 const FilterModel = require('./FilterModel');
 const FreezeModel = require('./FreezeModel');
