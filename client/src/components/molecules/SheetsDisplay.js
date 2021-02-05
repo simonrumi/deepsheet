@@ -49,6 +49,7 @@ const SheetsDisplay = props => {
       return isSomething(node.error) ? "text-burnt-orange hover:text-vibrant-burnt-orange pr-2" : "pr-2";
    }
 
+   // TODO BUG - after deleting sheet, the display doesn't update with the sheet deleted. needs to be refrehsed again, then it disappears
    const displayChildren = (basicClasses, hoverClasses, children) => {
       const childrenList = R.map(childNode => {
          const grandChildrenList =

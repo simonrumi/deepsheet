@@ -185,6 +185,7 @@ const authLens = R.lensProp('auth');
 const stateAuthLens = R.compose(presentLens, authLens);
 export const stateIsLoggedIn = subObjectGetter(stateAuthLens, 'isLoggedIn');
 export const stateShowLoginModal = subObjectGetter(stateAuthLens, 'showLoginModal');
+export const stateAuthError = subObjectGetter(stateAuthLens, 'error');
 
 /************************************************ STATE CELLS **********************************************/
 const cellKeysLens = R.lensProp('cellKeys');

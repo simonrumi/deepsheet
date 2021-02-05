@@ -1,6 +1,6 @@
 import * as R from 'ramda';
 import { isSomething, arrayContainsSomething } from '.';
-import { promptLogin, saveState } from '../actions/authActions';
+import { promptLogin, saveState, receivedNetworkError } from '../actions/authActions';
 
 // note that this is pretty much the same as helpers/userHelpers.js/getUserInfoFromReq in server code
 export const getUserInfoFromCookie = () => {
@@ -30,11 +30,14 @@ export const getUserInfoFromCookie = () => {
    return { userId, sessionId };
 };
 
-export const maybeDealWith401Error = err => {
-   if (/status code 401/.test(err)) {
-      saveState();
-      promptLogin();
-   } else {
-      console.error('maybeDealWith401Error got non-401 error:', err);
-   }
+export const handleNetworkError = err => {
+   R.when(
+      R.pipe(
+         error => /status code 401/.test(err),
+         R.not
+      ),
+      receivedNetworkError // this should be an action to update something that could get displayed in the login prompt
+   )(err);
+   saveState();
+   promptLogin();
 };

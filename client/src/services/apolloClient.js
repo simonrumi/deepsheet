@@ -1,6 +1,6 @@
 import ApolloClient, { InMemoryCache /* HttpLink, ApolloLink */ } from 'apollo-boost';
 import { GRAPHQL_URL } from '../constants';
-import { maybeDealWith401Error } from '../helpers/userHelpers';
+import { handleNetworkError } from '../helpers/userHelpers';
 
 // following funtion taken from https://github.com/apollographql/apollo-client/issues/5229
 export default new ApolloClient({
@@ -22,7 +22,7 @@ export default new ApolloClient({
          console.error('graphQLErrors', graphQLErrors);
       }
       if (networkError) {
-         maybeDealWith401Error(networkError);
+         handleNetworkError(networkError);
       }
    },
 });

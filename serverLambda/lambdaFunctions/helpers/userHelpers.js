@@ -55,7 +55,9 @@ const findOrCreateUser = async ({ userIdFromProvider, provider, token }) => {
 
 const createSession = async () => {
    try {
+      const startTime = log({ level: LOG.DEBUG }, 'userHelpers.createSession creating new SessionModel');
       const newSession = await new SessionModel().save();
+      log({ startTime, level: LOG.DEBUG }, 'userHelpers.createSession got newSession', newSession);
       return newSession;
    } catch (err) {
       log({ level: LOG.ERROR }, 'Error creating session:', err.message);
@@ -66,8 +68,6 @@ const createSession = async () => {
 const refreshSession = async sessionId => {
    try {
       const startTime = log({ printTime: true, level: LOG.DEBUG }, 'userHelpers.refreshSession starting findById for sessionId', sessionId);
-      const allSessions = await SessionModel.find({}); // TEMP TEST // TODO BUG Doesn't even managed to do this....what is the issue with SessionModel ???
-      log({ startTime, level: LOG.DEBUG }, 'userHelpers.refreshSession test getting allSessions', allSessions);
       const currentSession = await SessionModel.findById(sessionId); //// TODO BUG - breaks here....but only every other time. perhaps somehting happening in background that hasn't completed?....what happens if we wait a long time between updates?
       log({ startTime, level: LOG.DEBUG }, 'userHelpers.refreshSession got currentSession', currentSession);
       if (currentSession) {

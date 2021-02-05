@@ -20,4 +20,6 @@ export const menuSheetsText = (classes, onClickFn) => {
    );
 };
 
-export const menuDeleteSheetError = () => 'aw sheet, couldn\'t delete it - try again later';
+export const menuDeleteSheetError = () => 'Aw sheet, couldn\'t delete it - try again later';
+
+export const networkErrorText = () => 'Looks like we got some deep deep internet error - give it another shot';

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { stateIsLoggedIn } from '../../helpers/dataStructureHelpers';
+import { stateIsLoggedIn, stateAuthError } from '../../helpers/dataStructureHelpers';
 
 import FacebookLoginButton from '../atoms/BtnFacebookLogin';
 import GoogleLoginButton from '../atoms/BtnGoogleLogin';
@@ -14,6 +14,7 @@ class LoginModal extends Component {
                   <div className="mb-8 text-dark-dark-blue w-3/4">Let's get logged in so we can save our sheet...</div>
                   <GoogleLoginButton classes="flex justify-center w-3/4 pt-4" />
                   <FacebookLoginButton classes="w-3/4 pt-4" />
+                  <div className="my-4 text-burnt-orange w-3/4">{stateAuthError(this.props.state)}</div>
                </div>
             </div>
          );
