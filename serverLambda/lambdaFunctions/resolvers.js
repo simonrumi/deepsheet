@@ -18,42 +18,39 @@ const {
    updateSubsheetCellContent,
 } = require('./helpers/updateCellsHelpers');
 const { AuthenticationError } = require('apollo-server-lambda');
+const { log } = require('./helpers/logger');
+const { LOG } = require('../constants');
 
 module.exports = db => ({
    Query: {
       sheet: async (parent, args, context) => {
          try {
-            const startTime = new Date();
-            console.log('resolvers.Query.sheet starting findOne query for sheetId', args.sheetId, 'userId', args.userId, 'time', startTime);
+            const startTime = log({ level: LOG.DEBUG, printTime: true }, 'resolvers.Query.sheet starting findOne query for sheetId', args.sheetId, 'userId', args.userId);
             const sheetResult = await SheetModel.findOne({ _id: args.sheetId, 'users.owner': args.userId });
-            const queryLength = (new Date() - startTime) / 1000;
-            console.log('resolvers.Query.sheet finished findOne query. It took', queryLength);
+            log({ level: LOG.DEBUG, startTime }, 'resolvers.Query.sheet finished findOne query');
             return sheetResult;
          } catch (err) {
-            console.log('Error finding sheet:', err);
+            log({ level: LOG.ERROR}, 'resolvers.Query.sheet error finding sheet:', err.message);
             return err;
          }
       },
 
       sheets: async (parent, args, context) => {
-         const startTime = new Date();
-         console.log('resolvers.Query.sheet about to call getAllSheetsForUser with userId', args.userId);
+         log({ level: LOG.DEBUG, printTime: true }, 'resolvers.Query.sheets about to call getAllSheetsForUser with userId', args.userId);
          return await getAllSheetsForUser(args.userId);
       },
 
       subsheetId: async (parent, args, context) => {
          if (parent.subsheetId) {
             try {
-               const startTime = new Date();
-               console.log('resolvers.Query.subsheetId starting findById query for subsheetId', parent.subsheetId, 'time', startTime);
+               log({ level: LOG.DEBUG, printTime: true }, 'resolvers.Query.subsheetId starting findById query for subsheetId', parent.subsheetId);
                const subsheet = await SheetModel.findById(parent.subsheetId);
-               const queryLength = (new Date() - startTime) / 1000;
-               console.log('resolvers.Query.subsheetId finished findbyId query. It took', queryLength);
+               log({ level: LOG.DEBUG, startTime }, 'resolvers.Query.subsheetId finished findbyId query.');
                if (isSomething(subsheet)) {
                   return parent.subsheetId;
                }
             } catch (err) {
-               console.log('Error finding subsheet:', err);
+               log({ level: LOG.ERROR}, 'resolvers.Query.subsheetId error finding subsheet:', err.message);
                return err;
             }
          }
@@ -64,7 +61,7 @@ module.exports = db => ({
          try {
             return parent.subsheetId ? await SheetModel.getSummaryCellContent(parent.subsheetId) : parent.text;
          } catch (err) {
-            console.log('Error finding subsheet:', err);
+            log({ level: LOG.ERROR}, 'resolvers.Query.text error finding subsheet:', err.message);
             return err;
          }
       },
@@ -74,7 +71,7 @@ module.exports = db => ({
             const userResult = UserModel.findById(args.userId);
             return userResult;
          } catch (err) {
-            console.log('Error finding user:', err);
+            log({ level: LOG.ERROR}, 'resolvers.Query.user error finding user:', err.message);
             return err;
          }
       },
@@ -89,24 +86,27 @@ module.exports = db => ({
             try {
                await addSheetToUser({ userId: args.input.userId, sheetId: newSheet._id });
             } catch (err) {
-               console.log('After creating new sheet, was not able to add sheet to user');
-               await SheetModel.deleteOne({ _id: newSheet._id }); // maybe this also throws an error, if so we'll have an orphaned sheet...not the end of the world
+               log({ level: LOG.ERROR}, 'resolvers.Mutation.createSheet after creating new sheet, was not able to add sheet to user', err.message);
+               try {
+                  await SheetModel.deleteOne({ _id: newSheet._id });
+               } catch (err) {
+                  log({ level: LOG.ERROR}, 'resolvers.Mutation.createSheet Failed to delete the orphaned sheet with id', newSheet._id, err.message);
+                  // ...so we'll have an orphaned sheet...not the end of the world
+               }
                return err;
             }
             return newSheet;
          } catch (err) {
-            console.log('Error creating sheet:', err);
+            log({ level: LOG.ERROR}, 'resolvers.Mutation.createSheet Error creating sheet:', err.message);
             return err;
          }
       },
 
       sheetByUserId: async (parent, args, context) => {
          try {
-            let startTime = new Date();
-            console.log('resolvers.Mutation.sheetByUserId starting findById query for userId', args.userId, 'time', startTime);
+            const startTime = log({ level: LOG.DEBUG, printTime: true }, 'resolvers.Mutation.sheetByUserId starting findById query for userId', args.userId);
             const user = await UserModel.findById(args.userId);
-            const queryLength = (new Date() - startTime) / 1000;
-            console.log('resolvers.Mutation.sheetByUserId finished findbyId query. It took', queryLength);
+            log({ level: LOG.DEBUG, startTime }, 'resolvers.Mutation.sheetByUserId finished findbyId query.');
             if (isNothing(user)) {
                return new Error('no user found');
             }
@@ -119,7 +119,7 @@ module.exports = db => ({
             const sheetResult = await getLatestSheet(user.sheets);
             return sheetResult;
          } catch (err) {
-            console.log('Error finding sheet by user id:', err);
+            log({ level: LOG.ERROR }, 'resolvers.Mutation.sheetByUserId Error finding sheet by user id:', err.message);
             return err;
          }
       },
@@ -132,7 +132,7 @@ module.exports = db => ({
             const savedSheet = await sheetDoc.save();
             return savedSheet;
          } catch (err) {
-            console.log('Error updating title:', err);
+            log({ level: LOG.ERROR }, 'resolvers.Mutation.changeTitle Error updating title:', err.message);
             return err;
          }
       },
@@ -166,16 +166,21 @@ module.exports = db => ({
             const savedSheet = await sheetDoc.save();
             return savedSheet.metadata;
          } catch (err) {
-            console.log('Error updating metadata:', err);
+            log({ level: LOG.ERROR }, 'resolvers.Mutation.updateMetadata Error updating metadata:', err.message);
             return err;
          }
       },
 
       updateSheetLastAccessed: async (parent, args, context) => {
-         const sheetDoc = await SheetModel.findById(args.id);
-         sheetDoc.metadata.lastAccessed = args.lastAccessed;
-         const savedSheet = await sheetDoc.save();
-         return savedSheet;
+         try {
+            const sheetDoc = await SheetModel.findById(args.id);
+            sheetDoc.metadata.lastAccessed = args.lastAccessed;
+            const savedSheet = await sheetDoc.save();
+            return savedSheet;
+         } catch (err) {
+            log({ level: LOG.ERROR }, 'resolvers.Mutation.updateSheetLastAccessed', err.message);
+            return err;
+         }
       },
 
       updateCells: async (parent, args, context) => {
@@ -205,7 +210,7 @@ module.exports = db => ({
             sheetDoc.metadata.lastUpdated = new Date();
             return await sheetDoc.save();
          } catch (err) {
-            console.log('Error updating cells:', err);
+            log({ level: LOG.ERROR }, 'resolvers.Mutation.updateCells Error updating cells:', err.message);
             return err;
          }
       },
@@ -231,7 +236,7 @@ module.exports = db => ({
             const cell = findCellByRowAndColumn(row, column, sheetDoc.cells);
             return cell;
          } catch (err) {
-            console.log('Error deleting subsheet id:', err);
+            log({ level: LOG.ERROR }, 'resolvers.Mutation.deleteSubsheetId Error deleting subsheet id:', err.message);
             return err;
          }
       },
@@ -246,7 +251,7 @@ module.exports = db => ({
             await SheetModel.deleteOne({ _id: args.sheetId });
             return getAllSheetsForUser(args.userId);
          } catch (err) {
-            console.log('Error deleting sheet', err);
+            log({ level: LOG.ERROR }, 'resolvers.Mutation.deleteSheet Error deleting sheet', err.message);
             return err;
          }
       },
@@ -258,7 +263,7 @@ module.exports = db => ({
             await UserModel.updateMany({}, { $pullAll: { sheets: sheetIdsToDelete } }); // remove the deleted sheets from all the users
             return getAllSheetsForUser(args.userId);
          } catch (err) {
-            console.log('Error deleting sheets id:', err);
+            log({ level: LOG.ERROR }, 'resolvers.Mutation.deleteSheets Error deleting sheets:', err.message);
             return err;
          }
       },
