@@ -56,30 +56,28 @@ const withAuth = func => async (event, context) => {
    const authMiddleware = {
       apply: async (targetFn, thisArg, args) => {
          if (!AUTH_ON) {
-            console.log('\n******\nWARNING! Auth is off! Turn on before publishing!\n******\n');
+            log({ level: LOG.WARN }, '\n******\nWARNING! Auth is off! Turn on before publishing!\n******\n');
          }
-         let startTime = new Date();
-         console.log('graphqlHelpers.withAuth started at time', startTime);
+
+         const startTime = log({ level: LOG.DEBUG, printTime: true }, 'graphqlHelpers.withAuth gettingdb');
          const db = await dbConnector(); // stuff breaks if we don't make sure we have the db connection first
-         let timeTaken = (new Date() - startTime) / 1000;
-         console.log('graphqlHelpers.withAuth took', timeTaken, 'seconds to get db');
+         log({ level: LOG.DEBUG, startTime }, 'graphqlHelpers.withAuth got db');
+         
          const event = args[0];
          const context = args[1];
          try {
-            startTime = new Date();
-            console.log('graphqlHelpers.withAuth about to check authorization at', startTime);
+            const startTime = log({ level: LOG.DEBUG, printTime: true }, 'graphqlHelpers.withAuth about to check authorization');
             const isAuthorized = await validateUserSession(event.headers);
-            timeTaken = (new Date() - startTime) / 1000;
-            console.log('graphqlHelpers.withAuth got isAuthorized', isAuthorized, 'it took', timeTaken, 'seconds');
+            log({ level: LOG.DEBUG, startTime }, 'graphqlHelpers.withAuth got isAuthorized', isAuthorized);
+            
             if (!isAuthorized && AUTH_ON) {
                return standardAuthError;
             }
          } catch (err) {
-            console.log('error in call to validateUserSession:', err);
+            log({ level: LOG.ERROR }, 'graphqlHelpers.withAuth error in call to validateUserSession:', err);
             return standardAuthError;
          }
-         timeTaken = (new Date() - startTime) / 1000;
-         console.log('graphqlHelpers.withAuth about to return - timeTaken', timeTaken);
+         log({ level: LOG.DEBUG, startTime }, 'graphqlHelpers.withAuth completed the whole middleware function');
          return await targetFn(event, context);
       },
    };

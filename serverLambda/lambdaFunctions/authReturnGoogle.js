@@ -32,7 +32,10 @@ export async function handler(event, context, callback) {
 
    try {
       const { googleClientID, googleClientSecret, googleAuthReturnURI } = keys;
+      
+      const startTime0 = log({ level: LOG.DEBUG, printTime: true }, 'autReturnGoogle getting OAuth2 client');
       const oauth2Client = new google.auth.OAuth2(googleClientID, googleClientSecret, googleAuthReturnURI);
+      log({ level: LOG.DEBUG, startTime: startTime0 }, 'autReturnGoogle got oauth2Client');
 
       const startTime1 = log({ level: LOG.DEBUG, printTime: true }, 'autReturnGoogle getting token google');
       const token = await getTokenFromGoogle(oauth2Client, code);
@@ -45,13 +48,10 @@ export async function handler(event, context, callback) {
       const startTime3 = log({ level: LOG.DEBUG, printTime: true }, 'autReturnGoogle preparing Auth Response');
       const authResponse = await prepareAuthResponse(userIdFromProvider, AUTH_PROVIDER_GOOGLE, token);
       log({ level: LOG.DEBUG, startTime: startTime3 }, 'autReturnGoogle got authResponse', authResponse);
-      
+
       return authResponse;
    } catch (err) {
       log({ level: LOG.ERROR }, 'authReturnGoogle', err);
+      return standardAuthError;
    }
-   // if we get here then we didn't get an access token nor did we get an error.
-   // This shouldn't happen....but leaving it here just in case
-   log({ level: LOG.ERROR }, 'authReturnGoogle authorization failed, but for no known reason');
-   return standardAuthError;
 }
