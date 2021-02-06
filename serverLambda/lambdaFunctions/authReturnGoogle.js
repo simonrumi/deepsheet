@@ -3,10 +3,9 @@ const dbConnector = require('./dbConnector');
 const { standardAuthError } = require('./helpers/userHelpers');
 const { confirmStateCheck, prepareAuthResponse } = require('./helpers/authHelpers');
 const { getTokenFromGoogle, getGoogleUserId } = require('./helpers/googleAuthHelpers');
-const { AUTH_PROVIDER_GOOGLE } = require('../constants');
-const keys = require('../config/keys');
 const { log } = require('./helpers/logger');
-const { LOG } = require('../constants');
+const { AUTH_PROVIDER_GOOGLE, LOG } = require('../constants');
+const keys = require('../config/keys');
 
 // TODO NEXT - if this gets an error need to return something to front end so it can react in some way
 

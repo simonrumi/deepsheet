@@ -4,7 +4,8 @@ const dbConnector = require('./dbConnector');
 const { standardAuthError } = require('./helpers/userHelpers');
 const { getFacebookToken, getFbUserId } = require('./helpers/facebookAuthHelpers');
 const { confirmStateCheck, prepareAuthResponse } = require('./helpers/authHelpers');
-const { AUTH_PROVIDER_FACEBOOK } = require('../constants');
+const { log } = require('./helpers/logger');
+const { AUTH_PROVIDER_FACEBOOK, LOG } = require('../constants');
 
 export async function handler(event, context, callback) {
    const startTime = log({ level: LOG.DEBUG, printTime: true }, 'autReturn starting by getting db');
