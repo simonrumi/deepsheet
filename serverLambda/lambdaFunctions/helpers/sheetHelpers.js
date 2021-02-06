@@ -2,7 +2,8 @@ const R = require('ramda');
 const { forLoopReduce, isNothing } = require('./index');
 const mongoose = require('mongoose');
 mongoose.Promise = global.Promise; // Per Stephen Grider: Mongoose's built in promise library is deprecated, replace it with ES2015 Promise
-const { DEFAULT_ROWS, DEFAULT_COLUMNS, DEFAULT_TITLE, DEFAULT_SUMMARY_CELL } = require('../../constants');
+const { DEFAULT_ROWS, DEFAULT_COLUMNS, DEFAULT_TITLE, DEFAULT_SUMMARY_CELL, LOG } = require('../../constants');
+const { log } = require('./logger');
 
 const SheetModel = mongoose.model('sheet');
 
@@ -82,32 +83,29 @@ const createNewSheet = ({
 
 const getAllSheetsForUser = async userId => {
    try {
-      const startTime = new Date();
-      console.log('sheetHelpers.getAllSheetsForUser starting find query for userId', userId, 'time', startTime);
+      const startTime = log({ level: LOG.DEBUG, printTime: true }, 'sheetHelpers.getAllSheetsForUser starting find query for userId', userId);
       const allSheets = await SheetModel.find({ 'users.owner': userId });
-      const queryLength = (new Date() - startTime) / 1000;
-      console.log('sheetHelpers.getAllSheetsForUser finished find query. It took', queryLength);
+      log({ level: LOG.DEBUG, startTime }, 'sheetHelpers.getAllSheetsForUser finished find query.');
+
       return allSheets;
    } catch (err) {
-      console.log('Error returning all sheets', err);
+      log({ level: LOG.ERROR }, 'sheetHelpers.getAllSheetsForUser', err.message);
       return err;
    }
 };
 
 const getLatestSheet = async sheetIds => {
    try {
-      const startTime = new Date();
-      console.log('sheetHelpers.getLatestSheet starting find query for multiple sheetIds, start time', startTime);
+      const startTime = log({ level: LOG.DEBUG, printTime: true }, 'sheetHelpers.getLatestSheet starting find query for multiple sheetIds', sheetIds);
       const latestSheet = await SheetModel.find({ _id: { $in: sheetIds } })
          .sort({ 'metadata.lastAccessed': -1,  'metadata.lastUpdated': -1})
          .limit(1)
          .exec();
-      const queryLength = (new Date() - startTime) / 1000;
-      console.log('sheetHelpers.getLatestSheet finished find query. It took', queryLength);
+      log({ level: LOG.DEBUG, startTime }, 'sheetHelpers.getLatestSheet finished find query.');
       return latestSheet[0];   
 
    } catch (err) {
-      console.log('Error getting latest sheet', err);
+      log({ level: LOG.ERROR }, 'sheetHelpers.getLatestSheet', err.message);
       return err;
    }
 }

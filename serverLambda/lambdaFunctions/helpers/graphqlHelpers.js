@@ -16,6 +16,7 @@ const createServer = async () => {
       const startTime = log({ level: LOG.DEBUG, printTime: true }, 'graphqlHelpers.createServer getting db from dbConnector');
       const db = await dbConnector();
       log({ level: LOG.DEBUG, startTime }, 'graphqlHelpers.createServer got db from dbConnector');
+      
       const server = new ApolloServer({
          typeDefs,
          resolvers: resolvers(db),

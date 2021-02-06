@@ -7,42 +7,43 @@ const { confirmStateCheck, prepareAuthResponse } = require('./helpers/authHelper
 const { AUTH_PROVIDER_FACEBOOK } = require('../constants');
 
 export async function handler(event, context, callback) {
-   // for some reason we need to have this line here, in order for the findUser() call (within prepareAuthResponse) to work
-   // even though we are not directly using the db connection it returns
-   await dbConnector();
+   const startTime = log({ level: LOG.DEBUG, printTime: true }, 'autReturn starting by getting db');
+   await dbConnector(); // for some reason we need to have this line here, in order for the findUser() call (within prepareAuthResponse) to work
+   log({ level: LOG.DEBUG, startTime }, 'autReturn got db.');
 
    const { code, state, error, error_reason, error_description } = event.queryStringParameters;
 
    if (error) {
-      console.log('authReturn.js got this error:', error, error_reason, error_description);
+      log({ level: LOG.ERROR }, 'authReturn', error, error_reason, error_description);
       return standardAuthError;
    }
 
    const stateCheckOk = await confirmStateCheck(state);
    if (!stateCheckOk) {
-      console.log('authReturn.js did not pass the state check since it got state', state);
+      log({ level: LOG.ERROR }, 'authRetur state check did not pass');
       return standardAuthError;
    }
 
    const { token_error, access_token, token_type, expires_in } = await getFacebookToken(code);
    if (token_error) {
-      console.log('authReturn.js got error getting token', token_error);
+      log({ level: LOG.ERROR }, 'authReturn error getting token', token_error);
       return standardAuthError;
    }
 
    if (access_token) {
       try {
+         const startTime1 = log({ level: LOG.DEBUG, printTime: true }, 'autReturn getting userId from FB');
          const userIdFromProvider = await getFbUserId(access_token);
+         log({ level: LOG.DEBUG, startTime1 }, 'autReturn got userIdFromProvider', userIdFromProvider);
+
+         const startTime2 = log({ level: LOG.DEBUG, printTime: true }, 'autReturn preparing Auth Response');
          const authResponse = await prepareAuthResponse(userIdFromProvider, AUTH_PROVIDER_FACEBOOK, access_token);
+         log({ level: LOG.DEBUG, startTime: startTime2 }, 'autReturn got authResponse', authResponse);
+
          return authResponse;
       } catch (err) {
-         console.log('AuthReturn has error either getting basicUserInfo, or finding user, or creating user:', err);
+         log({ level: LOG.ERROR }, 'authReturn', err);
          return standardAuthError;
       }
    }
-
-   // if we get here then we didn't get an access token nor did we get an error.
-   // This shouldn't happen....but leaving it here just in case
-   console.log('authorization failed, but for no known reason');
-   return standardAuthError;
 }
