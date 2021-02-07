@@ -14,7 +14,7 @@ const prepareAuthResponse = async (userIdFromProvider, provider, token) => {
    return {
       statusCode: 302,
       headers: {
-         'Location': keys.mainUri,
+         'Location': `${keys.mainUri}?auth`, // adding the query parameter is just to replace the long string with the code coming from the auth provider (google or FB)
          'Access-Control-Expose-Headers': 'Set-Cookie',
          'Set-Cookie': cookie,
       },

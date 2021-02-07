@@ -2,6 +2,7 @@ const R = require('ramda');
 const { isSomething, isNothing, arrayContainsSomething } = require('.');
 const { log } = require('./logger');
 const { LOG } = require('../../constants');
+const keys = require('../../config//keys');
 
 const mongoose = require('mongoose');
 mongoose.Promise = global.Promise; // Per Stephen Grider: Mongoose's built in promise library is deprecated, replace it with ES2015 Promise
@@ -19,8 +20,22 @@ const makeCookie = (userId, sessionId) => {
    return 'deepdeepsheet=' + cookieStr + '; Path=/; Max-Age=' + maxAge + (process.env.NODE_ENV === 'production' ? '; Secure' : '');
 };
 
-const standardAuthError = {
+// Note that this used to be the standardAuthError
+/* const standardAuthError = {
    statusCode: 401,
+   body: JSON.stringify({
+      error: 'authentication failed...bummer',
+   }),
+}; */
+
+// Originally we sent a 401 (unauthorized) response, but what we really want to happen on the client
+// when authorization fails, is to return to the main uri without a cookie, so that the login prompt will show
+// this redirect accomplishes that
+const standardAuthError = {
+   statusCode: 302,
+   headers: {
+      'Location': keys.mainUri,
+   },
    body: JSON.stringify({
       error: 'authentication failed...bummer',
    }),
@@ -68,13 +83,16 @@ const createSession = async () => {
 const refreshSession = async sessionId => {
    try {
       const startTime = log({ printTime: true, level: LOG.DEBUG }, 'userHelpers.refreshSession starting findById for sessionId', sessionId);
-      const currentSession = await SessionModel.findById(sessionId); //// TODO BUG - breaks here....but only every other time. perhaps somehting happening in background that hasn't completed?....what happens if we wait a long time between updates?
+      const currentSession = await SessionModel.findById(sessionId);
       log({ startTime, level: LOG.DEBUG }, 'userHelpers.refreshSession got currentSession', currentSession);
+      
       if (currentSession) {
          currentSession.lastAccessed = Date.now();
+         
          const startTime = log({ printTime: true, level: LOG.DEBUG }, 'userHelpers.refreshSession starting saving currentSession');
          const refreshsedSession = await currentSession.save();
          log({ startTime, level: LOG.DEBUG }, 'userHelpers.refreshSession saved currentSession');
+         
          return refreshsedSession;
       }
       log({ level: LOG.DEBUG }, 'userHelpers.refreshSession found no currentSession so returning null');

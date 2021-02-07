@@ -36,7 +36,7 @@ export const handleNetworkError = err => {
          error => /status code 401/.test(err),
          R.not
       ),
-      receivedNetworkError // this should be an action to update something that could get displayed in the login prompt
+      receivedNetworkError
    )(err);
    saveState();
    promptLogin();

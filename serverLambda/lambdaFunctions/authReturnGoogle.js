@@ -7,8 +7,6 @@ const { log } = require('./helpers/logger');
 const { AUTH_PROVIDER_GOOGLE, LOG } = require('../constants');
 const keys = require('../config/keys');
 
-// TODO NEXT - if this gets an error need to return something to front end so it can react in some way
-
 export async function handler(event, context, callback) {
    // for some reason we need to have this line here, in order for the findUser() call (within prepareAuthResponse) to work
    // even though we are not directly using the db connection it returns

@@ -156,6 +156,14 @@ const Sheet = props => {
 
    const maybeRenderSortModal = () => (showSortModal ? <SortModal /> : null);
 
+   // the header is in a fixed position, but we want the spreadsheet to get pushed down below the header, so we use this spacer
+   // when scrolling the spreadhsheet appears to scroll under the header
+   const renderHeaderSpacer = () => {
+      const headerHeight = document.getElementById('header')?.clientHeight || '4em'; // probably the 4em never gets displayed, just during initial rendering the id 'header' is sometimes undefined
+      const style = { height: headerHeight }
+      return <div style={style} ></div>
+   }
+
    const render = () => {
       if (sheetIsCallingDb) {
          return (
@@ -168,6 +176,7 @@ const Sheet = props => {
       return (
          <div className="px-1">
             <Header />
+            {renderHeaderSpacer()}
             {maybeRenderFilterModal()}
             {maybeRenderSortModal()}
             {maybeRenderLoginOrFetchSheet()}
