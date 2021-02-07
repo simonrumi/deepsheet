@@ -5,6 +5,9 @@ export const FETCH_SHEETS_ERROR = 'fetched_sheets_error';
 export const UPDATED_SHEETS_TREE = 'updated_sheets_tree';
 export const UPDATED_SHEETS_TREE_NODE = 'updated_sheets_tree_node';
 
+export const SHEETS_TREE_STALE = 'sheets_tree_stale';
+export const SHEETS_TREE_CURRENT = 'sheets_tree_current';
+
 // singular sheet
 export const DELETING_SHEET = 'deleting_sheet';
 export const DELETED_SHEET = 'deleted_sheet';

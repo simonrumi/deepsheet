@@ -295,6 +295,7 @@ export const stateSheetsIsCallingDb = subObjectGetter(stateSheetsLens, 'isCallin
 export const stateSheetsErrorMessage = subObjectGetter(stateSheetsLens, 'errorMessage');
 export const stateSheets = subObjectGetter(stateSheetsLens, 'sheets');
 export const stateSheetsTree = subObjectGetter(stateSheetsLens, 'sheetsTree');
+export const stateSheetsTreeStale = subObjectGetter(stateSheetsLens, 'sheetsTreeStale');
 
 const dragMonitorLens = R.lensProp('dragMonitor');
 const stateDragMonitorLens = R.compose(presentLens, dragMonitorLens);

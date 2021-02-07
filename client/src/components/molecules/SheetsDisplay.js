@@ -7,10 +7,18 @@ import IconRightArrow from '../atoms/IconRightArrow';
 import IconDelete from '../atoms/IconDelete';
 import { menuSheetsText, menuDeleteSheetError } from '../displayText';
 import { loadSheet, deleteSheets, fetchSheets } from '../../services/sheetServices';
-import { updatedSheetsTreeNode, updatedSheetsTree } from '../../actions/sheetsActions';
+import {
+   updatedSheetsTreeNode,
+   updatedSheetsTree,
+   sheetsTreeStale,
+   sheetsTreeCurrent,
+} from '../../actions/sheetsActions';
+import { triggeredFetchSheet } from '../../actions/sheetActions';
+import { clearedAllCellKeys } from '../../actions/cellActions';
 import { isSomething, arrayContainsSomething } from '../../helpers';
 import { createSheetsTreeFromArray, getSheetIdsFromNode, removeSheetFromParent } from '../../helpers/sheetsHelpers';
 import { getUserInfoFromCookie } from '../../helpers/userHelpers';
+import { clearCells } from '../../helpers/cellHelpers';
 import {
    stateSheets,
    stateSheetsTree,
@@ -18,6 +26,7 @@ import {
    stateSheetsErrorMessage,
    stateSheetId,
    stateParentSheetId,
+   stateSheetsTreeStale,
 } from '../../helpers/dataStructureHelpers';
 
 const SheetsDisplay = props => {
@@ -26,18 +35,28 @@ const SheetsDisplay = props => {
    const sheetsIsCallingDb = useSelector(state => stateSheetsIsCallingDb(state));
    const sheetsErrorMessage = useSelector(state => stateSheetsErrorMessage(state));
    const sheetId = useSelector(state => stateSheetId(state));
+   const sheetsTreeIsStale = useSelector(state => stateSheetsTreeStale(state));
 
    const errorClasses = 'px-2 text-burnt-orange';
 
    const handleSheetDelete = async node => {
       try {
-         await removeSheetFromParent(node);
-         const sheetIds = getSheetIdsFromNode(node);
          const { userId } = getUserInfoFromCookie();
+         await removeSheetFromParent(node, userId);
+         const sheetIds = getSheetIdsFromNode(node);
          await deleteSheets(sheetIds, userId);
-         console.log('SheetsDisplay.handleSheetDelete TODO need to test case where the sheet being deleted is the currently loaded sheet');
+         
+         if (stateSheetId(managedStore.state) === node.sheet.id) {
+            clearCells(managedStore.state);
+            clearedAllCellKeys();
+            await triggeredFetchSheet();
+         }
+         
+         sheetsTreeStale();
+
          if (stateParentSheetId(node.sheet) === sheetId) {
-            await loadSheet(managedStore.state, sheetId); // TODO if we have deleted the current sheet, shouldn't we load some other sheet?
+            console.warn('SheetsDisplay.handleSheetDelete has the case where the parentSheetId === sheetId, so now it will call loadSheet for the sheetId');
+            await loadSheet(managedStore.state, sheetId);
          }
       } catch (err) {
          console.warn('could not delete sheet');
@@ -49,7 +68,6 @@ const SheetsDisplay = props => {
       return isSomething(node.error) ? "text-burnt-orange hover:text-vibrant-burnt-orange pr-2" : "pr-2";
    }
 
-   // TODO BUG - after deleting sheet, the display doesn't update with the sheet deleted. needs to be refrehsed again, then it disappears
    const displayChildren = (basicClasses, hoverClasses, children) => {
       const childrenList = R.map(childNode => {
          const grandChildrenList =
@@ -86,9 +104,12 @@ const SheetsDisplay = props => {
    const buildSheetList = () => {
       const basicClasses = 'pl-2 pt-2 text-subdued-blue';
       const hoverClasses = 'hover:text-vibrant-blue cursor-pointer';
-      if (arrayContainsSomething(sheetsArr) && !arrayContainsSomething(sheetsTree)) {
+      if (arrayContainsSomething(sheetsArr) && (!arrayContainsSomething(sheetsTree) || sheetsTreeIsStale)) {
          const newSheetsTree = createSheetsTreeFromArray(sheetsArr);
-         setTimeout(() => updatedSheetsTree(newSheetsTree), 0); // run updatedSheetsTree 1 tick later so we can finish rendering SheetsDisplay first (otherwise we get a console warning)
+         setTimeout(() => {
+            updatedSheetsTree(newSheetsTree);
+            sheetsTreeCurrent();
+         }, 0); // run updatedSheetsTree 1 tick later so we can finish rendering SheetsDisplay first (otherwise we get a console warning)
       }
       if (arrayContainsSomething(sheetsTree)) {
          const sheetList = R.map(node => (

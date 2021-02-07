@@ -126,7 +126,7 @@ const getCellsFromSheet = async sheetId => {
    return isSomething(sheet) ? dbCells(sheet) : [];
 };
 
-export const removeSheetFromParent = async node => {
+export const removeSheetFromParent = async (node, userId) => {
    const sheetId = node.sheet.id;
    const parentId = sheetParentSheetId(node.sheet);
    if (isNothing(sheetId) || isNothing(parentId)) {
@@ -138,7 +138,7 @@ export const removeSheetFromParent = async node => {
       async (accumulator, parentCell) => {
          if (cellSubsheetId(parentCell) === sheetId) {
             const newCell = cellSubsheetIdSetter(null, parentCell);
-            await updateCellsMutation(parentId, [newCell]);
+            await updateCellsMutation({ sheetId: parentId, cells: [newCell], userId });
             return R.reduced(true);
          }
          return accumulator;

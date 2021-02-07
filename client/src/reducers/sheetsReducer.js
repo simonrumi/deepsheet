@@ -7,6 +7,8 @@ import {
    DELETE_SHEETS_ERROR,
    UPDATED_SHEETS_TREE,
    UPDATED_SHEETS_TREE_NODE,
+   SHEETS_TREE_STALE,
+   SHEETS_TREE_CURRENT,
 } from '../actions/sheetsTypes';
 
 import { replaceNodeWithinSheetsTree } from '../helpers/sheetsHelpers';
@@ -49,6 +51,18 @@ const sheetsReducer = (state = {}, action) => {
             errorMessage: null,
             sheets: action.payload, // these are the new sheets
          };
+
+      case SHEETS_TREE_STALE:
+         return {
+            ...state,
+            sheetsTreeStale: true,
+         }
+
+      case SHEETS_TREE_CURRENT:
+         return {
+            ...state,
+            sheetsTreeStale: false,
+         }
 
       case DELETE_SHEETS_ERROR:
          return {

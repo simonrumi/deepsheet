@@ -11,6 +11,8 @@ import {
    DELETE_SHEETS_ERROR,
    UPDATED_SHEETS_TREE,
    UPDATED_SHEETS_TREE_NODE,
+   SHEETS_TREE_STALE,
+   SHEETS_TREE_CURRENT,
 } from './sheetsTypes';
 
 export const fetchingSheets = () => {
@@ -57,4 +59,12 @@ export const updatedSheetsTree = tree => {
 
 export const updatedSheetsTreeNode = updatedNode => {
    managedStore.store.dispatch({ type: UPDATED_SHEETS_TREE_NODE, payload: updatedNode });
+}
+
+export const sheetsTreeStale = () => {
+   managedStore.store.dispatch({ type: SHEETS_TREE_STALE });
+}
+
+export const sheetsTreeCurrent = () => {
+   managedStore.store.dispatch({ type: SHEETS_TREE_CURRENT });
 }

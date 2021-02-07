@@ -6,7 +6,7 @@ import { openedTitleEditor } from '../../actions/titleActions';
 import { hidePopups } from '../../actions';
 import { undid, redid } from '../../actions/undoActions';
 import { loadSheet, saveAllUpdates } from '../../services/sheetServices';
-import { arrayContainsSomething } from '../../helpers';
+import { arrayContainsSomething, getObjectFromArrayByKeyValue, isSomething } from '../../helpers';
 import {
    stateParentSheetId,
    stateIsStale,
@@ -15,6 +15,7 @@ import {
    stateTitleText,
    statePast,
    stateFuture,
+   stateSheets,
 } from '../../helpers/dataStructureHelpers';
 import Heading from '../atoms/Heading';
 import IconEdit from '../atoms/IconEdit';
@@ -36,8 +37,15 @@ class SheetHeader extends React.Component {
       await this.props.saveAllUpdates(managedStore.state);
    }
 
+   hasLegitParentSheetId() {
+      return R.pipe(
+         getObjectFromArrayByKeyValue,
+         isSomething,
+      )('id', stateParentSheetId(managedStore.state), stateSheets(managedStore.state))
+   }
+
    renderUpArrow() {
-      if (stateParentSheetId(managedStore.state)) {
+      if (this.hasLegitParentSheetId()) {
          return (
             <IconUpArrow
                height="1.5em"
