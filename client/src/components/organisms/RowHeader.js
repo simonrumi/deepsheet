@@ -11,11 +11,10 @@ const RowHeader  = props => {
    const row = cellRow(cell);
    const rowFrozen = getObjectFromArrayByKeyValue('index', row, stateFrozenRows(managedStore.state));   
    return (
-      <div id={'rowHeader_' + row} className="relative flex flex-col justify-between w-full h-full border-t border-l" >
+      <div id={'rowHeader_' + row} className="flex flex-col justify-between w-full h-full border-t border-l" >
          <RowHeaderDetail cell={cell} frozen={rowFrozen?.isFrozen || false} />
          <RowResizer rowIndex={row} />
       </div>
    );
 }
-
 export default RowHeader;

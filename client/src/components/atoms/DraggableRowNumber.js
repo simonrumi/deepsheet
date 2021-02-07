@@ -19,7 +19,6 @@ const DraggableRowNumber = props => {
       endedDrag();
    }
 
-   // w-2/4 
    const baseClasses = 'p-1 text-center self-center cursor-ns-move'; 
    const allClasses = isDragging
       ? baseClasses + ' text-vibrant-blue'

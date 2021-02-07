@@ -45,7 +45,7 @@ const Menu = props => {
 
    const renderHamburgerOrMenu = () => {
       if (showMenu) {
-         const menuClasses = 'flex-col z-10 border-solid border-grey-blue border-2 w-1/4 absolute bg-white';
+         const menuClasses = 'absolute flex-col z-30 border-solid border-grey-blue border-2 w-1/4 bg-white shadow-lg';
          const textClasses = 'p-2 text-subdued-blue hover:text-vibrant-blue cursor-pointer';
          return (
             <div className={menuClasses}>
