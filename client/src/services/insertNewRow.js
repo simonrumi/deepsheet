@@ -9,6 +9,7 @@ import managedStore from '../store';
 import { updatedTotalRows, updatedRowVisibility, } from '../actions';
 import { addedCellKeys } from '../actions/cellActions';
 import { hasChangedMetadata, updatedRowHeight } from '../actions/metadataActions';
+import { startedUndoableAction, completedUndoableAction } from '../actions/undoActions';
 import { shouldShowColumn } from '../helpers/visibilityHelpers';
 import {
    addNewCellsToStore,
@@ -64,6 +65,7 @@ const createUpdatesForNewCells = (
 };
 
 const insertNewRow = () => {
+   startedUndoableAction();
    const totalRows = stateTotalRows(managedStore.state);
    const rowVisibility = stateRowVisibility(managedStore.state);
    const columnVisibility = stateColumnVisibility(managedStore.state);
@@ -86,6 +88,7 @@ const insertNewRow = () => {
    updatedTotalRows(totalRows + 1);
    updatedRowHeight(totalRows, DEFAULT_ROW_HEIGHT);
    hasChangedMetadata();
+   completedUndoableAction('added row');
 };
 
 export default insertNewRow;
