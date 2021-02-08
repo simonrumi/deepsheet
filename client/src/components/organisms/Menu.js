@@ -45,10 +45,11 @@ const Menu = props => {
 
    const renderHamburgerOrMenu = () => {
       if (showMenu) {
-         const menuClasses = 'absolute flex-col z-30 border-solid border-grey-blue border-2 w-1/4 bg-white shadow-lg';
+         const menuClasses = 'absolute flex-col z-30 border-solid border-grey-blue border-2 w-1/4 overflow-y-auto bg-white shadow-lg';
+         const menuStyle = { maxHeight: '95vh' }; // a little less than the full size of the window to allow for the scrollbar at the bottom. TODO make this a class in tailwind
          const textClasses = 'p-2 text-subdued-blue hover:text-vibrant-blue cursor-pointer';
          return (
-            <div className={menuClasses}>
+            <div className={menuClasses} style={menuStyle} >
                <div className="flex justify-between">
                   <div className={textClasses} onClick={handleNewSheet}>
                      {menuNewSheetText()}

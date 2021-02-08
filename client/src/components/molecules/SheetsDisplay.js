@@ -144,7 +144,7 @@ const SheetsDisplay = props => {
          return <IconLoading height="1.5em" width="1.5em" />;
       }
       return (
-         <div>
+         <div >
             {menuSheetsText(textClasses, handleFetchSheets)}
             {buildSheetList()}
             {renderSheetListError()}

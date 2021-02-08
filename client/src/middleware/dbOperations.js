@@ -15,7 +15,7 @@ import {
    DELETE_SUBSHEET_ID_FAILED,
 } from '../actions/cellTypes';
 import { updatedCells } from '../actions/cellActions';
-import { updateTitleInDB, fetchSheets } from '../services/sheetServices';
+import { updateTitleInDB, fetchSheets, saveAllUpdates } from '../services/sheetServices';
 import { updateMetadataMutation } from '../queries/metadataMutations';
 import { updateCellsMutation, deleteSubsheetIdMutation } from '../queries/cellMutations';
 import { createSheetMutation } from '../queries/sheetMutations';
@@ -88,6 +88,7 @@ export default store => next => async action => {
       case POSTING_CREATE_SHEET:
          next(action); // get this action to the reducer before we do the next steps
          try {
+            await saveAllUpdates(store.getState());
             const response = await createNewSheet(action.payload);
             managedStore.store.dispatch({
                type: COMPLETED_CREATE_SHEET,
