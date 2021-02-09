@@ -118,6 +118,7 @@ export const stateMetadataProp = R.curry((stateObj, propName) => {
 export const stateTotalRows = subObjectGetter(stateMetadataLens, 'totalRows');
 export const stateTotalColumns = subObjectGetter(stateMetadataLens, 'totalColumns');
 export const stateParentSheetId = subObjectGetter(stateMetadataLens, 'parentSheetId');
+export const stateSummaryCell = subObjectGetter(stateMetadataLens, 'summaryCell');
 export const stateColumnVisibility = subObjectGetter(stateMetadataLens, 'columnVisibility');
 export const stateRowVisibility = subObjectGetter(stateMetadataLens, 'rowVisibility');
 export const stateColumnFilters = subObjectGetter(stateMetadataLens, 'columnFilters');

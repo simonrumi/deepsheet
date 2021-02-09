@@ -6,7 +6,7 @@ import { hidePopups } from '../../actions';
 import { nothing, isSomething, isNothing } from '../../helpers';
 import { createCellId, isCellFocused, createCellKey } from '../../helpers/cellHelpers';
 import { isCellVisible } from '../../helpers/visibilityHelpers';
-import { cellSubsheetId, cellRow, cellColumn, cellText, statePresent} from '../../helpers/dataStructureHelpers';
+import { cellSubsheetId, cellRow, cellColumn, cellText, statePresent, stateSummaryCell } from '../../helpers/dataStructureHelpers';
 import { usePositioning } from '../../helpers/hooks';
 import SubsheetCell from './SubsheetCell';
 import CellInPlaceEditor from './CellInPlaceEditor';
@@ -17,6 +17,7 @@ const Cell = props => {
    const cellKey = createCellKey(row, column);
    const cellReducer = useSelector(state => statePresent(state)[cellKey]);
    const cellHasFocus = useSelector(state => isCellFocused(props.cell, state));
+   const summaryCell = useSelector(state => stateSummaryCell(state));
    const [cellRef, positioning] = usePositioning();
 
    const onCellClick = () => {
@@ -52,6 +53,21 @@ const Cell = props => {
          </div>
       );
 
+   const renderSummaryCell = cell => {
+      console.log('Cell.renderSUmmaryCell got cell', cell);
+      return (
+         <div
+            className="grid-item grid items-stretch cursor-pointer border-t border-l"
+            onClick={onCellClick}>
+            <div className="m-px p-px border border-pale-purple">
+               {cellText(cell)}
+            </div>
+         </div>
+      );
+   }
+      
+   const isSummaryCell = () => summaryCell?.row === row && summaryCell?.column === column;
+
    const renderBlankCell = cell => <div className={createClassNames(props.classes)} />;
 
    const renderSubsheetCell = cell => <SubsheetCell cell={cell} />;
@@ -63,6 +79,7 @@ const Cell = props => {
          [R.thunkify(R.identity)(props.blankCell), renderBlankCell],
          [R.pipe(cellSubsheetId, isSomething), renderSubsheetCell],
          [R.thunkify(R.identity)(cellHasFocus), renderInPlaceEditor],
+         [isSummaryCell, renderSummaryCell],
          [R.pipe(cellSubsheetId, isNothing), renderRegularCell],
       ])(cellReducer);
    };

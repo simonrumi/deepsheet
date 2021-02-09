@@ -70,7 +70,7 @@ const CellInPlaceEditor = props => {
    const triggerCreatedSheetAction = () => {
       const rows = DEFAULT_TOTAL_ROWS;
       const columns = DEFAULT_TOTAL_COLUMNS;
-      const title = null;
+      const title = cellText(props.cell) || null;
       const parentSheetId = stateSheetId(managedStore.state);
       const summaryCell = { row: 0, column: 0 }; // this would be to tell which cell in the new sheet is the summary cell. Default is 0,0
       const parentSheetCell = props.cell;
