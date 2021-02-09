@@ -1,8 +1,30 @@
 import * as R from 'ramda';
+import React from 'react';
+import managedStore from '../store';
 import { isNothing, isSomething, arrayContainsSomething, getObjectFromArrayByKeyValue } from './index';
-import { sheetParentSheetId, cellSubsheetIdSetter, cellSubsheetId, dbCells } from './dataStructureHelpers';
-import { fetchSheet } from '../services/sheetServices';
+import { getUserInfoFromCookie } from './userHelpers';
+import { clearCells } from './cellHelpers';
+import {
+   sheetParentSheetId,
+   stateParentSheetId,
+   stateSheetId,
+   cellSubsheetIdSetter,
+   cellSubsheetId,
+   dbCells,
+} from './dataStructureHelpers';
+import { menuDeleteSheetError } from '../components/displayText';
+import { fetchSheet, loadSheet, deleteSheets } from '../services/sheetServices';
+import {
+   updatedSheetsTreeNode,
+   updatedSheetsTree,
+   sheetsTreeStale,
+   sheetsTreeCurrent,
+} from '../actions/sheetsActions';
+import { triggeredFetchSheet } from '../actions/sheetActions';
+import { clearedAllCellKeys } from '../actions/cellActions';
 import { updateCellsMutation } from '../queries/cellMutations';
+import IconRightArrow from '../components/atoms/IconRightArrow';
+import IconDelete from '../components/atoms/IconDelete';
 
 /* Here's what a node in the tree of sheets looks like
    node = { 
@@ -166,4 +188,95 @@ export const replaceNodeWithinSheetsTree = (updatedNode, sheetsTree) => {
       }
    )(sheetsTree);
    return returnVal;
+}
+
+const handleSheetDelete = async (node, sheetId) => {
+   try {
+      const { userId } = getUserInfoFromCookie();
+      await removeSheetFromParent(node, userId);
+      const sheetIds = getSheetIdsFromNode(node);
+      await deleteSheets(sheetIds, userId);
+      
+      if (stateSheetId(managedStore.state) === node.sheet.id) {
+         clearCells(managedStore.state);
+         clearedAllCellKeys();
+         await triggeredFetchSheet();
+      }
+      
+      sheetsTreeStale();
+
+      if (stateParentSheetId(node.sheet) === sheetId) {
+         console.warn('SheetsDisplay.handleSheetDelete has the case where the parentSheetId === sheetId, so now it will call loadSheet for the sheetId');
+         await loadSheet(managedStore.state, sheetId);
+      }
+   } catch (err) {
+      console.warn('could not delete sheet');
+      updatedSheetsTreeNode({ ...node, error: menuDeleteSheetError() });
+   }
+}
+
+const getIconDeleteClasses = node => isSomething(node.error) ? "text-burnt-orange hover:text-vibrant-burnt-orange pr-2" : "pr-2";
+const errorClasses = 'px-2 text-burnt-orange';
+
+const displayChildren = (basicClasses, hoverClasses, children, sheetId) => {
+   const childrenList = R.map(childNode => {
+      const grandChildrenList =
+         arrayContainsSomething(childNode.children)
+            ? displayChildren(basicClasses, hoverClasses, childNode.children, sheetId)
+            : null;
+      return (
+         <li className={basicClasses} key={childNode.sheet.id}>
+            <div className="flex items-center justify-between">
+               <div className="flex items-center">
+                  <IconRightArrow height="0.75em" width="0.75em" classes="pr-2 text-subdued-blue" />
+                  <span className={hoverClasses} onClick={() => loadSheet(managedStore.state, childNode.sheet.id)}>
+                     {childNode.sheet.title}
+                  </span>
+               </div>
+               <IconDelete
+                  height="1.0em"
+                  width="1.0em"
+                  classes={getIconDeleteClasses(childNode)}
+                  onClickFn={() => handleSheetDelete(childNode, sheetId)}
+               />
+            </div>
+            <div className={errorClasses}>{childNode.error}</div>
+            {grandChildrenList}
+         </li>
+      );
+   })(children);
+   return <ul>{childrenList}</ul>;
+}
+
+export const buildSheetList = ({ sheetId, sheetsArr, sheetsTree, sheetsTreeIsStale }) => {
+   const basicClasses = 'pl-2 pt-2 text-subdued-blue';
+   const hoverClasses = 'hover:text-vibrant-blue cursor-pointer';
+   if (arrayContainsSomething(sheetsArr) && (!arrayContainsSomething(sheetsTree) || sheetsTreeIsStale)) {
+      const newSheetsTree = createSheetsTreeFromArray(sheetsArr);
+      setTimeout(() => {
+         updatedSheetsTree(newSheetsTree);
+         sheetsTreeCurrent();
+      }, 0); // run updatedSheetsTree 1 tick later so we can finish rendering SheetsDisplay first (otherwise we get a console warning)
+   }
+   if (arrayContainsSomething(sheetsTree)) {
+      const sheetList = R.map(node => (
+         <li key={node.sheet.id} className={'ml-2 ' + basicClasses}>
+            <div className="flex align-center justify-between">
+               <span className={hoverClasses} onClick={() => loadSheet(managedStore.state, node.sheet.id)}>
+                  {node.sheet.title}
+               </span>
+               <div className={errorClasses}>{node.error}</div>
+               <IconDelete
+                  height="1.0em"
+                  width="1.0em"
+                  classes={getIconDeleteClasses(node)}
+                  onClickFn={() => handleSheetDelete(node)}
+               />
+            </div>
+            {displayChildren(basicClasses, hoverClasses, node.children, sheetId)}
+         </li>
+      ))(sheetsTree);
+      return <ul>{sheetList}</ul>;
+   }
+   return null;
 }

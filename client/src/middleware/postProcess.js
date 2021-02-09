@@ -1,27 +1,40 @@
 import * as R from 'ramda';
-import { saveAllUpdates } from '../services/sheetServices';
-import { isSomething } from '../helpers';
+import { saveAllUpdates, fetchSheets } from '../services/sheetServices';
+import { isSomething, arrayContainsSomething } from '../helpers';
 import { saveToLocalStorage } from '../helpers/authHelpers';
-import { stateMetadata, stateLastUpdated, stateSheetId } from '../helpers/dataStructureHelpers';
+import { createSheetsTreeFromArray } from '../helpers/sheetsHelpers';
+import {
+   stateMetadata,
+   stateLastUpdated,
+   stateSheetId,
+   stateSheets,
+} from '../helpers/dataStructureHelpers';
 import { SAVE_STATE } from '../actions/authTypes';
-import { TRIGGERED_FETCH_SHEET } from '../actions/sheetTypes';
+import { TRIGGERED_FETCH_SHEET, FETCHED_SHEET } from '../actions/sheetTypes';
+import { updatedSheetsTree, sheetsTreeCurrent } from '../actions/sheetsActions';
 import { replacedAllMetadata } from '../actions/metadataActions';
 import { updateSheetLastAccessed } from '../queries/sheetMutations';
 import { LOCAL_STORAGE_STATE_KEY, LOCAL_STORAGE_TIME_KEY, LOCAL_STORAGE_ACTION_KEY } from '../constants';
 
-/**
- * The purpose of this post-processing is to catch the case where the user's login timed out, but there were updates they wanted to make.
- * In that situation the login process refetches the sheet from the db, but the version of the state with the changes 
- * is saved in localStorage. 
- * So we get those saved changes and re-save the updates to the db.
- * This all happens before we run the filterSheet middleware, so that filterSheet will have the correct state to operate on
- */
+const runCreateSheetsTree = store => {
+   const newSheetsTree = createSheetsTreeFromArray(stateSheets(store.getState()));
+   updatedSheetsTree(newSheetsTree);
+   sheetsTreeCurrent();
+}
+
 export default store => next => async action => {
    switch (action.type) {
+      /**
+       * The purpose of SAVE_STATE & TRIGGERED_FETCH_SHEET is to catch the case where the user's login timed out, but there were updates they wanted to make.
+       * In that situation the login process refetches the sheet from the db, but the version of the state with the changes 
+       * is saved in localStorage. 
+       * So we get those saved changes and re-save the updates to the db.
+       * This all happens before we run the filterSheet middleware, so that filterSheet will have the correct state to operate on
+       */
       case SAVE_STATE:
          saveToLocalStorage(store.getState(), action);
          break;
-
+      
       case TRIGGERED_FETCH_SHEET:
          const state = store.getState();
          try {
@@ -54,6 +67,25 @@ export default store => next => async action => {
                console.warn('failed to update the last accessed time...not the end of the world');
             }
          }
+         break;
+
+      case FETCHED_SHEET:
+         // build the sheets list for the menu, but only after everything else has completed
+         setTimeout(async () => {
+            try {
+               const state = store.getState();
+               if (isSomething(state)) {
+                  if(!arrayContainsSomething(stateSheets(state))) {
+                     await fetchSheets();
+                     runCreateSheetsTree(store);
+                  } else {
+                     runCreateSheetsTree(store);
+                  }
+               }
+            } catch (err) {
+               console.warn('failed to build the sheets list on load of the sheet');
+            }
+         }, 0); // wait 1 tick to do this
          break;
 
       default:

@@ -11,11 +11,11 @@ export const menuNewSheetText = () => (
    </span>
 );
 
-export const menuSheetsText = (classes, onClickFn) => {
-   const allClasses = classes + ' underline';
+export const menuSheetsText = (onClickFn) => {
+   const allClasses = 'p-2 text-subdued-blue font-semibold';
    return (
-      <span className={allClasses} onClick={onClickFn}>
-         Show my Sheets:
+      <span className={allClasses} >
+         Here's all my sheet:
       </span>
    );
 };

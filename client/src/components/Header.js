@@ -15,7 +15,7 @@ export class Header extends Component {
 
    render() {
       return (
-         <div id="header" className="fixed flex border-b border-grey-blue w-full bg-white shadow-lg">
+         <div id="header" className="fixed flex border-b border-grey-blue w-full bg-white shadow-md">
             <div className="pr-2 max-w-4">
                <Menu />
             </div>
