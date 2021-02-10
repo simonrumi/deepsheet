@@ -1,12 +1,12 @@
 import React from 'react';
+import { useSelector } from 'react-redux';
 import * as R from 'ramda';
 import managedStore from '../../store';
-import { connect } from 'react-redux';
 import { openedTitleEditor } from '../../actions/titleActions';
 import { hidePopups } from '../../actions';
 import { undid, redid } from '../../actions/undoActions';
 import { loadSheet, saveAllUpdates } from '../../services/sheetServices';
-import { arrayContainsSomething, getObjectFromArrayByKeyValue, isSomething } from '../../helpers';
+import { isSomething, arrayContainsSomething } from '../../helpers';
 import {
    stateParentSheetId,
    stateIsStale,
@@ -15,7 +15,6 @@ import {
    stateTitleText,
    statePast,
    stateFuture,
-   stateSheets,
 } from '../../helpers/dataStructureHelpers';
 import Heading from '../atoms/Heading';
 import IconEdit from '../atoms/IconEdit';
@@ -25,27 +24,20 @@ import LoadingIcon from '../atoms/IconLoading';
 import UndoIcon from '../atoms/IconUndo';
 import RedoIcon from '../atoms/IconRedo';
 
-class SheetHeader extends React.Component {
-   constructor(props) {
-      super(props);
-      this.handleSave = this.handleSave.bind(this);
-      this.renderSaveIcon = this.renderSaveIcon.bind(this);
-      this.renderUpArrow = this.renderUpArrow.bind(this);
+const SheetHeader = props => {
+   const title = useSelector(state => stateTitleText(state));
+   const past = useSelector(state => statePast(state));
+   const future = useSelector(state => stateFuture(state));
+   const isStale = useSelector(state => stateIsStale(state));
+   const isCallingDb = useSelector(state => stateIsCallingDb(state));
+   const parentSheetId = useSelector(state => stateParentSheetId(state));
+
+   const handleSave = async () => {
+      await saveAllUpdates(managedStore.state);
    }
 
-   async handleSave() {
-      await this.props.saveAllUpdates(managedStore.state);
-   }
-
-   hasLegitParentSheetId() {
-      return R.pipe(
-         getObjectFromArrayByKeyValue,
-         isSomething,
-      )('id', stateParentSheetId(managedStore.state), stateSheets(managedStore.state))
-   }
-
-   renderUpArrow() {
-      if (this.hasLegitParentSheetId()) {
+   const renderUpArrow = () => {
+      if (isSomething(parentSheetId)) {
          return (
             <IconUpArrow
                height="1.5em"
@@ -59,19 +51,19 @@ class SheetHeader extends React.Component {
       return null;
    }
 
-   renderSaveIcon() {
-      if (this.props.isCallingDb) {
+   const renderSaveIcon = () => {
+      if (isCallingDb) {
          return <LoadingIcon height="2em" width="2em" classes="pr-2" />;
       }
-      if (this.props.isStale) {
+      if (isStale) {
          const classes = stateErrorMessages(managedStore.state) ? 'pr-2 text-burnt-orange ' : 'pr-2 ';
-         return <SaveIcon height="1.5em" width="1.5em" classes={classes} onClickFn={this.handleSave} />;
+         return <SaveIcon height="1.5em" width="1.5em" classes={classes} onClickFn={handleSave} />;
       }
    }
 
-   renderUndoRedoIcons() {
-      const undoClasses = arrayContainsSomething(this.props.past) ? 'text-subdued-blue hover:text-vibrant-blue pr-2' : 'text-grey-blue pr-2';
-      const redoClasses = arrayContainsSomething(this.props.future) ? 'text-subdued-blue hover:text-vibrant-blue' : 'text-grey-blue';
+   const renderUndoRedoIcons = () => {
+      const undoClasses = arrayContainsSomething(past) ? 'text-subdued-blue hover:text-vibrant-blue pr-2' : 'text-grey-blue pr-2';
+      const redoClasses = arrayContainsSomething(future) ? 'text-subdued-blue hover:text-vibrant-blue' : 'text-grey-blue';
       return (
          <div className="flex items-center justify-between pr-2">
             <UndoIcon height="1.5em" width="1.5em" classes={undoClasses} onClickFn={undid} />
@@ -80,33 +72,17 @@ class SheetHeader extends React.Component {
       );
    }
 
-   render() {
-      return (
-         <div className="flex items-center justify-between px-2 py-1" onClick={this.props.hidePopups} key="SheetHeader">
-            <Heading text={this.props.title} classes="pr-2" />
-            <div className="flex items-end justify-between">
-               {this.renderSaveIcon()}
-               {this.renderUndoRedoIcons()}
-               <IconEdit height="1.5em" width="1.5em" onClickFn={() => this.props.openedTitleEditor(true)} />
-               {this.renderUpArrow()}
-            </div>
+   return (
+      <div className="flex items-center justify-between px-2 py-1" onClick={hidePopups} key="SheetHeader">
+         <Heading text={title} classes="pr-2" />
+         <div className="flex items-end justify-between">
+            {renderSaveIcon()}
+            {renderUndoRedoIcons()}
+            <IconEdit height="1.5em" width="1.5em" onClickFn={() => openedTitleEditor(true)} />
+            {renderUpArrow()}
          </div>
-      );
-   }
+      </div>
+   );
 }
 
-function mapStateToProps(state) {
-   return {
-      title: stateTitleText(state),
-      past: statePast(state),
-      future: stateFuture(state),
-      isStale: stateIsStale(state),
-      isCallingDb: stateIsCallingDb(state),
-   };
-}
-
-export default connect(mapStateToProps, {
-   openedTitleEditor,
-   saveAllUpdates,
-   hidePopups,
-})(SheetHeader);
+export default SheetHeader;

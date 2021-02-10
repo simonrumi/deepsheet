@@ -22,6 +22,7 @@ import {
    COLUMN_MOVED_TO,
    UPDATED_ROW_ORDER,
    UPDATED_COLUMN_ORDER,
+   UPDATED_PARENT_SHEET_ID,
 } from './metadataTypes';
 
 export const replacedAllMetadata = metadata => {
@@ -142,3 +143,10 @@ export const columnMoved = ({ columnMoved, columnMovedTo }) => {
       payload: null,
    });
 };
+
+export const updatedParentSheetId = parentSheetId => {
+   managedStore.store.dispatch({
+      type: UPDATED_PARENT_SHEET_ID,
+      payload: parentSheetId,
+   });
+}

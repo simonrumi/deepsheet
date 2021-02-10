@@ -6,7 +6,15 @@ import { hidePopups } from '../../actions';
 import { nothing, isSomething, isNothing } from '../../helpers';
 import { createCellId, isCellFocused, createCellKey } from '../../helpers/cellHelpers';
 import { isCellVisible } from '../../helpers/visibilityHelpers';
-import { cellSubsheetId, cellRow, cellColumn, cellText, statePresent, stateSummaryCell } from '../../helpers/dataStructureHelpers';
+import {
+   cellSubsheetId,
+   cellRow,
+   cellColumn,
+   cellText,
+   statePresent,
+   stateSummaryCell,
+   stateParentSheetId,
+} from '../../helpers/dataStructureHelpers';
 import { usePositioning } from '../../helpers/hooks';
 import SubsheetCell from './SubsheetCell';
 import CellInPlaceEditor from './CellInPlaceEditor';
@@ -18,6 +26,7 @@ const Cell = props => {
    const cellReducer = useSelector(state => statePresent(state)[cellKey]);
    const cellHasFocus = useSelector(state => isCellFocused(props.cell, state));
    const summaryCell = useSelector(state => stateSummaryCell(state));
+   const parentSheetId = useSelector(state => stateParentSheetId(state))
    const [cellRef, positioning] = usePositioning();
 
    const onCellClick = () => {
@@ -54,7 +63,6 @@ const Cell = props => {
       );
 
    const renderSummaryCell = cell => {
-      console.log('Cell.renderSUmmaryCell got cell', cell);
       return (
          <div
             className="grid-item grid items-stretch cursor-pointer border-t border-l"
@@ -66,7 +74,7 @@ const Cell = props => {
       );
    }
       
-   const isSummaryCell = () => summaryCell?.row === row && summaryCell?.column === column;
+   const isSummaryCell = () => isSomething(parentSheetId) && summaryCell?.row === row && summaryCell?.column === column;
 
    const renderBlankCell = cell => <div className={createClassNames(props.classes)} />;
 

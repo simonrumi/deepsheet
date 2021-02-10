@@ -15,11 +15,11 @@ export const menuSheetsText = (onClickFn) => {
    const allClasses = 'p-2 text-subdued-blue font-semibold';
    return (
       <span className={allClasses} >
-         Here's all my sheet:
+         I've got my sheets together:
       </span>
    );
 };
 
 export const menuDeleteSheetError = () => 'Aw sheet, couldn\'t delete it - try again later';
 
-export const networkErrorText = () => 'Looks like we got some deep deep internet error - give it another shot';
+export const networkErrorText = () => '(Your session probably timed out)';

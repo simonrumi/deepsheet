@@ -8,6 +8,7 @@ import {
    sheetParentSheetId,
    stateParentSheetId,
    stateSheetId,
+   stateSheets,
    cellSubsheetIdSetter,
    cellSubsheetId,
    dbCells,
@@ -21,6 +22,7 @@ import {
    sheetsTreeCurrent,
 } from '../actions/sheetsActions';
 import { triggeredFetchSheet } from '../actions/sheetActions';
+import { updatedParentSheetId } from '../actions/metadataActions';
 import { clearedAllCellKeys } from '../actions/cellActions';
 import { updateCellsMutation } from '../queries/cellMutations';
 import IconRightArrow from '../components/atoms/IconRightArrow';
@@ -279,4 +281,17 @@ export const buildSheetList = ({ sheetId, sheetsArr, sheetsTree, sheetsTreeIsSta
       return <ul>{sheetList}</ul>;
    }
    return null;
+}
+
+export const validateParentSheetId = () => {
+   const parentSheetId = stateParentSheetId(managedStore.state);
+   if (isSomething(parentSheetId)) {
+      const parentSheetIdInSheetsList = R.pipe(
+         getObjectFromArrayByKeyValue,
+         isSomething,
+      )('id', parentSheetId, stateSheets(managedStore.state));
+      if (!parentSheetIdInSheetsList) {
+         updatedParentSheetId(null);
+      }
+   }
 }

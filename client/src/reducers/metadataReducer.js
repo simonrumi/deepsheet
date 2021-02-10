@@ -22,6 +22,7 @@ import {
    RESET_VISIBLITY,
    UPDATED_TOTAL_COLUMNS,
    UPDATED_TOTAL_ROWS,
+   UPDATED_PARENT_SHEET_ID,
    ROW_MOVED,
    ROW_MOVED_TO,
    COLUMN_MOVED,
@@ -101,6 +102,9 @@ const metadataReducer = (state = {}, action) => {
 
       case UPDATED_TOTAL_ROWS:
          return { ...state, totalRows: action.payload };
+
+      case UPDATED_PARENT_SHEET_ID:
+         return { ...state, parentSheetId: action.payload, isStale: true };
 
       case ROW_MOVED:
          return { ...state, rowMoved: action.payload };

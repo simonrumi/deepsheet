@@ -32,3 +32,4 @@ export const UPDATED_COLUMN_WIDTH = 'updated_column_width';
 export const UPDATED_ROW_HEIGHT = 'updated_row_Height';
 export const UPDATED_AXIS_ITEM_TOOL = 'updated_axis_item_tool';
 export const HIDE_AXIS_ITEM_TOOL = 'hide_axis_item_tool';
+export const UPDATED_PARENT_SHEET_ID = 'updatd_parent_sheet_id';

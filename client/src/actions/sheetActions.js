@@ -1,5 +1,11 @@
 import managedStore from '../store';
-import { POSTING_CREATE_SHEET, TRIGGERED_FETCH_SHEET, FETCHING_SHEET, FETCHED_SHEET, FETCH_SHEET_ERROR } from './sheetTypes';
+import {
+   POSTING_CREATE_SHEET,
+   TRIGGERED_FETCH_SHEET,
+   FETCHING_SHEET,
+   FETCHED_SHEET,
+   FETCH_SHEET_ERROR,
+} from './sheetTypes';
 
 export const createdSheet = async newSheetData => {
    managedStore.store.dispatch({ type: POSTING_CREATE_SHEET, payload: newSheetData });
