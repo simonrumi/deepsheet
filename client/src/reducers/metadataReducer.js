@@ -176,12 +176,14 @@ const metadataReducer = (state = {}, action) => {
       case REPLACED_ROW_HEIGHTS:
          return {
             ...state,
+            isStale: true,
             rowHeights: action.payload,
          }
 
       case REPLACED_COLUMN_WIDTHS:
-         return {
+         return { 
             ...state,
+            isStale: true,
             columnWidths: action.payload,
          }
 

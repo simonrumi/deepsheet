@@ -11,7 +11,7 @@ export const menuNewSheetText = () => (
    </span>
 );
 
-export const menuSheetsText = (onClickFn) => {
+export const menuSheetsText = () => {
    const allClasses = 'p-2 text-subdued-blue font-semibold';
    return (
       <span className={allClasses} >
@@ -21,5 +21,7 @@ export const menuSheetsText = (onClickFn) => {
 };
 
 export const menuDeleteSheetError = () => 'Aw sheet, couldn\'t delete it - try again later';
+
+export const loginModalText = () => 'Log me in so I can save my sheet:'
 
 export const networkErrorText = () => '(Your session probably timed out)';
