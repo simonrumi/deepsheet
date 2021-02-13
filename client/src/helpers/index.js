@@ -134,3 +134,91 @@ export const spicyCurry = R.curry((func, templateObj, argObj) => {
       });
    return spicyCurry(partialFunc, categorizedArgs.argsPending);
 });
+
+const maybeConvertBoolToFunction = (maybeFunc, params) => R.cond([
+   // if already a function, return a function which executes maybeFn with the params 
+   [
+      funcOrBool => typeof funcOrBool === 'function', 
+      funcOrBool => () => Array.isArray(params) ? funcOrBool(...params) : funcOrBool(params), // note: if there are more than one param then params is an array
+   ],
+   // if a boolean, return a function that returns the boolean
+   [funcOrBool => typeof funcOrBool === 'boolean', funcOrBool => () => funcOrBool],
+   // if neither a function nor a boolean, throw an error
+   [R.T, () => { throw new Error('must supply a boolean or a function') }] 
+])(maybeFunc); // note that maybeFn becomes funcOrBool above
+
+const maybeConvertArrToFunction = (maybeArr, params) => R.cond([
+   // if it is an array (of functions) then return a function that pipes the functions, seeded with the params
+   [
+      arrOrFunc => Array.isArray(arrOrFunc), 
+      arrOrFunc => () => Array.isArray(params) ? R.pipe(...arrOrFunc)(...params) : R.pipe(...arrOrFunc)(params), // note: if there are more than one param then params is an array 
+   ],
+   // if it is a function return a function that executes maybeArr with the params
+   [
+      arrOrFunc => typeof arrOrFunc ==='function', 
+      arrOrFunc => () => Array.isArray(params) ? arrOrFunc(...params) : arrOrFunc(params)
+   ],
+   // if neither an array nor a function, throw an error
+   [R.T, () => { throw new Error('must be a function or an array'); }] 
+])(maybeArr); // note that maybeArr becomes arrOrFunc above
+
+/**
+ * if-then functionality where
+ * ifCond - can be either a boolean or a function returning a boolean
+ * thenDo - can be either a function or an array of functions to be piped
+ * params - an object: { ifParams, thenParams } where ifParams are passed to ifCond and thenParams to thenDo 
+ * All the above a required - if any are missing you get a function that expects the remaining key-value pairs
+ * example of use:
+ * ifThen({
+ *    ifCond: (a, b) => a === b,
+ *    thenDo: [
+ *       paramValue => 'value is ' + paramValue, 
+ *       outputOfFn1 => '2nd func got output from the first function: ' + outputOfFn1
+ *    ],
+ *    params: { ifParams: [2,3], thenParams: 42 }
+ * });
+ */
+export const ifThen = spicyCurry(
+   ({ ifCond, thenDo, params }) => {
+      const ifFn = maybeConvertBoolToFunction(ifCond, params.ifParams);
+      const thenFn = maybeConvertArrToFunction(thenDo, params.thenParams);
+      return R.ifElse(
+         ifFn, 
+         thenFn, 
+         () => null
+      )(params);
+   }, 
+   { ifCond: true, thenDo: [], params: {} } // template
+);
+
+/**
+ * if-then-else functionality where
+ * ifCond - can be either a boolean or a function returning a boolean
+ * thenDo - can be either a function or an array of functions to be piped
+ * elseDo - can be either a function or an array of functions to be piped 
+ * params - an object: { ifParams, thenParams, elseParams } where ifParams are passed to ifCond, thenParams to thenDo, and elseParams to elseDo 
+ * All of these are required - when any are missing you get a function that expects the missing key-value pairs
+ * example of use:
+ * ifThenElse({
+ *    ifCond: (a, b) => a === b,
+ *    thenDo: [
+ *       paramValue => 'value is ' + paramValue, 
+ *       outputOfFn1 => '2nd func got output from the first function: ' + outputOfFn1
+ *    ],
+ *    elseDo: ({ failMessage }) => 'Error: ' + failMessage,
+ *    params: { ifParams: (2, 3), thenParams: 42, elseParams: 'was not equal to the ifValue' }
+ * });
+ */
+export const ifThenElse = spicyCurry(
+   ({ ifCond, thenDo, elseDo, params }) => {
+      const ifFn = maybeConvertBoolToFunction(ifCond, params.ifParams);
+      const thenFn = maybeConvertArrToFunction(thenDo, params.thenParams);
+      const elseFn = maybeConvertArrToFunction(elseDo, params.elseParams);
+      return R.ifElse(
+         ifFn, 
+         thenFn, 
+         elseFn
+      )(params);
+   }, 
+   { ifCond: true, thenDo: [], elseDo: [], params: {} } // template
+);

@@ -59,7 +59,7 @@ export const updatedAxisFilters = (payload, filterName, stateObj, filterArr) =>
  ****/
 const confirmAxis = axis => (axis === ROW_AXIS || axis === COLUMN_AXIS ? axis : '');
 
-const getVisibilityForAxis = (axis, state) => stateMetadataProp(state, R.concat(axis, 'Visibility'));
+export const getVisibilityForAxis = (axis, state) => stateMetadataProp(state, R.concat(axis, 'Visibility'));
 
 const numHiddenItems = R.reduce(
    (accumulator, visibilityObj) => (!visibilityObj.isVisible ? accumulator + 1 : accumulator),
