@@ -17,8 +17,8 @@ import {
    stateFrozenRows,
    stateRowHeights,
 } from '../helpers/dataStructureHelpers';
-import { SORT_INCREASING, ROW_AXIS } from '../constants';
-import { compareCellContent, compareCellContentDecreasing } from './sortAxis';
+import { SORT_DECREASING, ROW_AXIS } from '../constants';
+import { compareCellContent } from './sortAxis';
 
 const updateCellsPerRowMap = R.curry((state, mapOfChangedRows) =>
    R.reduce(
@@ -76,7 +76,7 @@ const createMapOfChangedRows = newCellOrder =>
    );
 
 const columnSortFunc = state =>
-   stateColumnSortDirection(state) === SORT_INCREASING ? compareCellContent(state) : compareCellContentDecreasing(state);
+   stateColumnSortDirection(state) === SORT_DECREASING ? compareCellContent(state, true) : compareCellContent(state, false);
 
 const columnSort = R.curry((state, cellArrays) => {
    const sortedMoveableCells = R.sort(columnSortFunc(state), cellArrays.moveableCells);

@@ -206,7 +206,7 @@ export const ifThen = spicyCurry(
  *       outputOfFn1 => '2nd func got output from the first function: ' + outputOfFn1
  *    ],
  *    elseDo: ({ failMessage }) => 'Error: ' + failMessage,
- *    params: { ifParams: (2, 3), thenParams: 42, elseParams: 'was not equal to the ifValue' }
+ *    params: { ifParams: [2, 3], thenParams: 42, elseParams: 'was not equal to the ifValue' }
  * });
  */
 export const ifThenElse = spicyCurry(
