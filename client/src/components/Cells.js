@@ -66,7 +66,7 @@ const renderCells = cells => {
       cells?.length > 0
    ) {
       return R.pipe(
-         orderCells,
+         orderCells(stateTotalRows(managedStore.state)),
          R.map(cell => maybeCell(managedStore.state, cell)),
          R.prepend(<ColumnHeaders key="columnHeaders" />),
          R.append(<LastRow key="lastRow" />),

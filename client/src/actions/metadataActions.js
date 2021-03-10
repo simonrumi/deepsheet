@@ -5,6 +5,7 @@ import managedStore from '../store';
 import { 
    REPLACED_ALL_METADATA,
    POSTING_UPDATED_METADATA, 
+   CLEAR_METADATA,
    HAS_CHANGED_METADATA,
    UPDATED_FROZEN_ROWS, 
    UPDATED_FROZEN_COLUMNS,
@@ -38,6 +39,12 @@ export const updatedMetadata = async data => {
       payload: data,
    });
 };
+
+export const clearMetadata = () => {
+   managedStore.store.dispatch({
+      type: CLEAR_METADATA
+   });
+}
 
 export const hasChangedMetadata = () => {
    managedStore.store.dispatch({

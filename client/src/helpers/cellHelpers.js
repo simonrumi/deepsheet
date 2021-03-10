@@ -1,6 +1,14 @@
 import * as R from 'ramda';
 import managedStore from '../store';
-import { indexToColumnLetter, indexToRowNumber, isSomething, arrayContainsSomething } from './index';
+import {
+   indexToColumnLetter,
+   indexToRowNumber,
+   isSomething,
+   arrayContainsSomething,
+   S,
+   toLeft,
+   eitherIsSomething,
+} from './index';
 import {
    cellRow,
    cellColumn,
@@ -70,7 +78,7 @@ export const clearCells = state => R.pipe(
       managedStore.store.reducerManager.removeMany
    )(state);
 
-export const getAllCells = state =>  R.pipe(
+export const getAllCells = state => R.pipe(
       stateCellKeys,
       R.map(cellKey => statePresent(state)[cellKey])
    )(state);
@@ -106,18 +114,17 @@ const checkCells = cells => {
    );
 }
 
-export const orderCells = cells => {
+export const orderCells = R.curry((totalRows, cells) => {
    if (!checkCells(cells)) {
       return [];
    }
-
    const buildSortedArr = (unsortedCells, sortedCells = [], currentRow = 0) => {
       const cellsSortedSoFar = R.pipe(
          filterToCurrentRow,
          sortByColumns,
          R.concat(sortedCells)
       )(currentRow, unsortedCells);
-      return cellsSortedSoFar.length === cells.length
+      return cellsSortedSoFar.length >= cells.length || currentRow >= totalRows 
          ? cellsSortedSoFar
          : buildSortedArr(unsortedCells, cellsSortedSoFar, currentRow + 1);
    };
@@ -125,7 +132,7 @@ export const orderCells = cells => {
       R.sortBy(cell => cell.row),
       buildSortedArr
    )(cells);
-};
+});
 /********/
 
 const getAllCellReducerNames = R.map(cell => createCellKey(cell.row, cell.column))
@@ -137,3 +144,44 @@ export const removeAllCellReducers = () => R.pipe(
       managedStore.store.reducerManager.removeMany,
       managedStore.store.replaceReducer
    )();
+
+/**
+ * The following functions are used to make the final function validateAction which is used in cellReducers.js
+ */
+const isCellAction = actionEither => {
+   return S.isLeft(actionEither) 
+      ? actionEither
+      : R.pipe(
+         R.map(action => 
+            isSomething(action?.type) &&
+            isSomething(action?.payload?.row) &&
+            isSomething(action?.payload?.column)
+               ? action
+               : 'not a cell action'
+         ),
+         toLeft(R.includes('not a cell action'))
+      )(actionEither);
+};
+
+const axisEqual = actionEither => cellEither => axis => S.chain(action => 
+   S.map(cell => action.payload[axis] === cell[axis])(cellEither)
+   )(actionEither);
+
+const isSameCell = R.curry(
+   (action, cell) => S.isLeft(action) 
+   ? action
+   : S.isLeft(cell)
+      ? cell
+      : R.pipe(
+         S.lift2(S.and) (axisEqual(action)(cell)('column')),
+         toLeft(R.not)
+      )(axisEqual(action)(cell)('row'))
+);
+
+
+// use: validateAction(S.Right(someAction), S.Right(someCell))
+export const validateAction = R.curry((action, cell) => R.pipe(
+      R.useWith(isSameCell, [isCellAction, eitherIsSomething]),
+      answer => (S.isRight(answer) ? action : answer) // isSameCell will return Right(true) if the action is valid, or a Left if not
+   )(action, cell)
+);

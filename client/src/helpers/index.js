@@ -1,4 +1,9 @@
 import * as R from 'ramda';
+import * as Sanct from 'sanctuary';
+
+const SANCTUARY_TYPE_CHECKING_ON = false;
+
+export const S = SANCTUARY_TYPE_CHECKING_ON ? Sanct : Sanct.unchecked;
 
 export const nothing = () => null;
 
@@ -222,3 +227,20 @@ export const ifThenElse = spicyCurry(
    }, 
    { ifCond: true, thenDo: [], elseDo: [], params: {} } // template
 );
+
+/***** Sanctuary stuff ****/
+export const getEitherValue = myEither => S.either 
+   (S.I) // return the value if we have S.Left
+   (S.I) // return the value if we have S.Right
+   (myEither);
+
+export const toLeft = conditionFn => right => R.pipe(R.map, getEitherValue)(conditionFn, right)
+   ? R.pipe(getEitherValue, S.Left)(right) 
+   : right;
+
+export const eitherIsSomething = either => S.isLeft(either) 
+   ? either
+   : R.pipe(
+      R.map(value => isSomething(value) ? value : S.Nothing),
+      toLeft(R.equals(S.Nothing))
+   )(either);

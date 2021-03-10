@@ -4,7 +4,7 @@ import { completedSaveUpdates } from '../actions';
 import { triggeredFetchSheet } from '../actions/sheetActions';
 import { updatedCells, clearedAllCellKeys } from '../actions/cellActions';
 import { clearCells } from '../helpers/cellHelpers';
-import { updatedMetadata } from '../actions/metadataActions';
+import { updatedMetadata, clearMetadata } from '../actions/metadataActions';
 import {
    fetchingSheets,
    fetchedSheets,
@@ -171,6 +171,7 @@ export const saveAllUpdates = async state => {
 export const loadSheet = R.curry(async (state, sheetId) => {
    saveAllUpdates(state); // save any changes to the current sheet
    clearCells(state); // clear out the current sheet's cells and cell keys
+   clearMetadata();
    clearedAllCellKeys();
    triggeredFetchSheet(sheetId); // then get the new sheet
 });

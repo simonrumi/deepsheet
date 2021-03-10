@@ -1,7 +1,7 @@
 import * as R from 'ramda';
 import managedStore from '../store';
-import { isSomething, isNothing } from '../helpers';
-import { createUpdatedCellState, createCellKey } from '../helpers/cellHelpers';
+import { isSomething, isNothing, getEitherValue, S } from '../helpers';
+import { createUpdatedCellState, createCellKey, validateAction } from '../helpers/cellHelpers';
 import { dbCells } from '../helpers/dataStructureHelpers';
 import { updatedCell, addedCellKeys } from '../actions/cellActions';
 import {
@@ -23,54 +23,59 @@ import {
 import { FETCHED_SHEET } from '../actions/sheetTypes';
 import { COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
 
+const processCellAction = R.curry((state, sheetId, action) => {
+   switch (action.type) {
+      case UPDATED_CELL:
+         return { ...state, ...action.payload };
+
+      case UPDATED_CONTENT_OF_CELL:
+         return { ...state, ...action.payload, isStale: true };
+
+      case COMPLETED_SAVE_CELL:
+         return createUpdatedCellState(action.payload, state, sheetId);
+      
+      case POSTING_DELETE_SUBSHEET_ID:
+         /* action.payload looks like this:
+         {
+            row, 
+            column, 
+            content: {
+               text, 
+               subsheetId
+            },
+            sheetId, 
+         } */
+         return {
+            ...state,
+            ...R.dissoc('sheetId', action.payload),
+            isStale: true,
+            isCallingDb: true,
+         };
+
+      case COMPLETED_DELETE_SUBSHEET_ID:
+         return { ...state, ...action.payload, isStale: false, isCallingDb: false  };
+
+      case DELETE_SUBSHEET_ID_FAILED:
+         return { ...state, ...action.payload, isStale: true, isCallingDb: false  };
+
+      default:
+         return state;
+   }
+});
+
+
 const cellReducerFactory = (cell, sheetId) => 
    (state = {}, action) => {
-      if (!action || !action.type) {
-         return state;
-      }
-      const payloadCell = action.payload;
-      if (isNothing(payloadCell) || payloadCell.row !== cell.row || payloadCell.column !== cell.column) {
-         return state;
-      }
-
-      switch (action.type) {
-         case UPDATED_CELL:
-            return { ...state, ...payloadCell };
-   
-         case UPDATED_CONTENT_OF_CELL:
-            return { ...state, ...payloadCell, isStale: true };
-   
-         case COMPLETED_SAVE_CELL:
-            return createUpdatedCellState(payloadCell, state, sheetId);
-         
-         case POSTING_DELETE_SUBSHEET_ID:
-            /* action.payload looks like this:
-            {
-               row, 
-               column, 
-               content: {
-                  text, 
-                  subsheetId
-               },
-               sheetId, 
-            } */
-            return {
-               ...state,
-               ...R.dissoc('sheetId', action.payload),
-               isStale: true,
-               isCallingDb: true,
-            };
-   
-         case COMPLETED_DELETE_SUBSHEET_ID:
-            return { ...state, ...payloadCell, isStale: false, isCallingDb: false  };
-   
-         case DELETE_SUBSHEET_ID_FAILED:
-            return { ...state, ...payloadCell, isStale: true, isCallingDb: false  };
-   
-         default:
-            return state;
-      }
-   }
+      return R.pipe(
+         validateAction,
+         validatedAction => S.isLeft(validatedAction) 
+            ? state 
+            : R.pipe(
+               getEitherValue,
+               processCellAction(state, sheetId),
+            )(validatedAction)
+      )(S.Right(action), S.Right(cell));
+   };
 
 const cellReducerCreator = thunkifiedCreatorFunc => {
    const store = managedStore.store;
@@ -116,16 +121,15 @@ export const addCellReducers = (cells, sheetId) => {
    cellReducerCreator(thunkifiedCreatorFunc);
 }
 
-export const populateCellsInStore = sheet => R.forEach(
-   cell => {
-      updatedCell(cell);
-      R.pipe(
-         createCellKey,
-         addedCellKeys
-      )(cell.row, cell.column);
-   }, 
-   dbCells(sheet)
-);
+export const populateCellsInStore = sheet => {
+   R.pipe(
+      dbCells,
+      R.map(cell => createCellKey(cell.row, cell.column)),
+      addedCellKeys
+   ) (sheet);
+   
+   R.forEach(cell => updatedCell(cell)) (dbCells(sheet));
+}
 
 export const cellDbUpdatesReducer = (state = {}, action) => {
    switch (action.type) {

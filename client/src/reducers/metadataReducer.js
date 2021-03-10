@@ -5,6 +5,7 @@ import {
    REPLACED_ALL_METADATA,
    HAS_CHANGED_METADATA,
    POSTING_UPDATED_METADATA,
+   CLEAR_METADATA,
    COMPLETED_SAVE_METADATA,
    METADATA_UPDATE_FAILED,
    UPDATED_FROZEN_ROWS,
@@ -224,6 +225,10 @@ const metadataReducer = (state = {}, action) => {
             errorMessage: null,
             lastUpdated: isSomething(state.lastUpdated) ? state.lastUpdated : null,
          };
+
+      case CLEAR_METADATA: {
+         return {}
+      }
 
       case COMPLETED_SAVE_METADATA:
          return {
