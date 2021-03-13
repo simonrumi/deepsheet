@@ -6,9 +6,16 @@ import { createdSheet } from '../../actions/sheetActions';
 import { clearedFocus } from '../../actions/focusActions';
 import { startedEditing, finishedEditing } from '../../actions/undoActions'; 
 import { isSomething } from '../../helpers';
+import { tabToNextVisibleCell } from '../../helpers/cellHelpers';
 import { getUserInfoFromCookie } from '../../helpers/userHelpers';
 import { createDefaultAxisSizing } from '../../helpers/axisSizingHelpers';
-import { stateSheetId, cellText, cellRow, cellColumn, stateOriginalValue } from '../../helpers/dataStructureHelpers';
+import {
+   stateSheetId,
+   cellText,
+   cellRow,
+   cellColumn,
+   stateOriginalValue,
+} from '../../helpers/dataStructureHelpers';
 import IconNewDoc from '../atoms/IconNewDoc';
 import IconClose from '../atoms/IconClose';
 import CheckmarkSubmitIcon from '../atoms/IconCheckmarkSubmit';
@@ -16,9 +23,19 @@ import { DEFAULT_TOTAL_ROWS, DEFAULT_TOTAL_COLUMNS, DEFAULT_COLUMN_WIDTH, DEFAUL
 
 const CellInPlaceEditor = props => {
    const keyBindings = event => {
-      // esc
-      if (event.keyCode === 27) {
-         handleCancel(event);
+      // use https://keycode.info/ to get key values
+      switch(event.keyCode) {
+         case 27: // esc
+            handleCancel(event);
+            break;
+         case 13: // enter
+            handleSubmit(event);
+            break;
+         case 9: // tab
+            handleSubmit(event);
+            tabToNextVisibleCell(props.cell.row, props.cell.column, event.shiftKey);
+            break;
+         default:
       }
    }
 

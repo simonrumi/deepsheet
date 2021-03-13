@@ -1,13 +1,27 @@
 import React from 'react';
 import { hidePopups } from '../../actions';
-import { focusedCell } from '../../actions/focusActions';
+import { focusedCell, clearedFocus } from '../../actions/focusActions';
 import { cellText } from '../../helpers/dataStructureHelpers';
-import { isCellFocused } from '../../helpers/cellHelpers';
+import { isCellFocused, tabToNextVisibleCell } from '../../helpers/cellHelpers';
 import SubsheetCellTools from './SubsheetCellTools';
 import managedStore from '../../store';
 
 const SubsheetCell = props => {
    const { cell } = props;
+
+   const keyBindings = event => {
+      // use https://keycode.info/ to get key values
+      switch(event.keyCode) {
+         case 27: // esc
+            document.removeEventListener('keydown', keyBindings, false);
+            clearedFocus();
+            break;
+         case 9: // tab
+            tabToNextVisibleCell(props.cell.row, props.cell.column, event.shiftKey);
+            break;
+         default:
+      }
+   }
 
    const renderIcons = cellHasFocus => {
       return (
@@ -33,6 +47,7 @@ const SubsheetCell = props => {
 
    const renderSubsheetCell = () => {
       const cellHasFocus = isCellFocused(cell, managedStore.state);
+      cellHasFocus ? document.addEventListener('keydown', keyBindings, false) : document.removeEventListener('keydown', keyBindings, false);
       return (
          <div
             className="grid-item grid items-stretch cursor-pointer border-t border-l"

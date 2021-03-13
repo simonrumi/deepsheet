@@ -8,6 +8,7 @@ import {
    S,
    toLeft,
    eitherIsSomething,
+   compareIndexValues,
 } from './index';
 import {
    cellRow,
@@ -24,7 +25,10 @@ import {
    stateCellKeys,
    stateCell,
    statePresent,
+   stateTotalColumns,
+   stateColumnVisibility,
 } from './dataStructureHelpers';
+import { focusedCell } from '../actions/focusActions';
 import { THIN_COLUMN } from '../constants';
 
 export const getCellContent = cell =>
@@ -38,7 +42,7 @@ export const getColNumFromObj = obj => (R.isNil(obj) ? null : R.has('column') ? 
 export const createCellId = (rowIndex, columnIndex) =>
    R.concat(indexToColumnLetter(columnIndex), R.pipe(indexToRowNumber, R.toString)(rowIndex));
 
-export const createCellKey = (rowIndex, columnIndex) => 'cell_' + rowIndex + '_' + columnIndex;
+export const createCellKey = R.curry((rowIndex, columnIndex) => 'cell_' + rowIndex + '_' + columnIndex);
 
 export const renderWholeRowGridSizingStyle = numCols => {
    const rowsStyle = 'repeat(1, 1.5em)';
@@ -63,8 +67,8 @@ export const isCellFocused = (cell, state) => {
    const currentlyFocused = stateFocus(state);
    return (
       R.hasPath(['cell'], currentlyFocused) &&
-      currentlyFocused.cell.row === cell.row &&
-      currentlyFocused.cell.column === cell.column
+      currentlyFocused.cell?.row === cell?.row &&
+      currentlyFocused.cell?.column === cell?.column
    );
 };
 
@@ -185,3 +189,31 @@ export const validateAction = R.curry((action, cell) => R.pipe(
       answer => (S.isRight(answer) ? action : answer) // isSameCell will return Right(true) if the action is valid, or a Left if not
    )(action, cell)
 );
+/* *** end of cell validation functions **** */
+
+const getNextVisibleColumn = (columnIndex, goBackwards) => columnVisibilityArr => arrayContainsSomething(columnVisibilityArr)
+   ? R.pipe(
+      R.sort(compareIndexValues),
+      sortedColumnVisibility => goBackwards 
+         ? R.pipe(R.slice(0, columnIndex), R.reverse)(sortedColumnVisibility) // get the column indexes lower than the current one we're on, then reverse the order
+         : R.slice(columnIndex + 1, Infinity)(sortedColumnVisibility), // get the column indexs higher than the current one we're on
+      R.reduce(
+         (accumulator, columnVisibility) => columnVisibility.isVisible ? R.reduced(columnVisibility.index) : accumulator, // when we find a visible column, return that index and finish
+         columnIndex, // default value is the current column
+      )
+   )(columnVisibilityArr)
+   : goBackwards 
+      ? columnIndex === 0
+         ? columnIndex //we're already at the first column so stay where we are
+         : columnIndex - 1
+      : columnIndex === (stateTotalColumns(managedStore.state) - 1)
+         ? columnIndex //we're already at the last column so stay where we are
+         : columnIndex + 1
+
+export const tabToNextVisibleCell = (rowIndex, columnIndex, goBackwards) => R.pipe(
+   stateColumnVisibility,
+   getNextVisibleColumn(columnIndex, goBackwards),
+   createCellKey(rowIndex),
+   cellKey => statePresent(managedStore.state)[cellKey],
+   focusedCell
+)(managedStore.state);

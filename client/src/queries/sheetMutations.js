@@ -159,6 +159,10 @@ const SHEET_BY_USER_ID_MUTATION = gql`
             totalRows
             totalColumns
             parentSheetId
+            summaryCell {
+               row
+               column
+            }
             columnFilters {
                index
                filterExpression

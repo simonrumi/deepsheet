@@ -110,6 +110,14 @@ export const indexToRowNumber = index => {
    return parseInt(index, 10) + 1;
 };
 
+// each object is expected to have a key called 'index'
+// this is designed for use with R.sort()
+export const compareIndexValues = (obj1, obj2) => obj1.index < obj2.index
+   ? -1
+   : obj1.index > obj2.index
+      ? 1
+      : 0;
+
 /**
  * This is like currying except it is for functions that expect one argument, which is an object (same idea as an object containing optional properties)
  * This eliminates the issue of having to supply the arguments to a curried function in a particular order

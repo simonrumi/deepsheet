@@ -17,8 +17,8 @@ import {
 } from '../../helpers/dataStructureHelpers';
 import { usePositioning } from '../../helpers/hooks';
 import SubsheetCell from './SubsheetCell';
+import SummaryCell from './SummaryCell';
 import CellInPlaceEditor from './CellInPlaceEditor';
-
 
 const Cell = props => {
    const { row, column } = props.cell;
@@ -62,17 +62,7 @@ const Cell = props => {
          </div>
       );
 
-   const renderSummaryCell = cell => {
-      return (
-         <div
-            className="grid-item grid items-stretch cursor-pointer border-t border-l"
-            onClick={onCellClick}>
-            <div className="m-px p-px border border-pale-purple">
-               {cellText(cell)}
-            </div>
-         </div>
-      );
-   }
+   const renderSummaryCell = cell => <SummaryCell cell={cell} cellHasFocus={cellHasFocus} />
       
    const isSummaryCell = () => isSomething(parentSheetId) && summaryCell?.row === row && summaryCell?.column === column;
 
