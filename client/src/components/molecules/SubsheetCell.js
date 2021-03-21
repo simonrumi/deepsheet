@@ -1,13 +1,14 @@
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { hidePopups } from '../../actions';
 import { focusedCell, clearedFocus } from '../../actions/focusActions';
 import { cellText } from '../../helpers/dataStructureHelpers';
 import { isCellFocused, tabToNextVisibleCell } from '../../helpers/cellHelpers';
 import SubsheetCellTools from './SubsheetCellTools';
-import managedStore from '../../store';
 
 const SubsheetCell = props => {
    const { cell } = props;
+   const cellHasFocus = useSelector(state => isCellFocused(props.cell, state));
 
    const keyBindings = event => {
       // use https://keycode.info/ to get key values
@@ -17,20 +18,10 @@ const SubsheetCell = props => {
             clearedFocus();
             break;
          case 9: // tab
-            tabToNextVisibleCell(props.cell.row, props.cell.column, event.shiftKey);
+            tabToNextVisibleCell(cell.row, cell.column, event.shiftKey);
             break;
          default:
       }
-   }
-
-   const renderIcons = cellHasFocus => {
-      return (
-         <div className="relative w-full">
-            <div className="absolute bottom-4 left-0 z-10 min-w-full flex justify-start">
-               <SubsheetCellTools cell={cell} cellHasFocus={cellHasFocus} />
-            </div>
-         </div>
-      );
    }
 
    const onCellClick = evt => {
@@ -39,34 +30,42 @@ const SubsheetCell = props => {
       hidePopups();
    }
 
+   const manageFocus = () => {
+      if (cellHasFocus) {
+         document.addEventListener('keydown', keyBindings, false);
+         return;
+      } 
+      document.removeEventListener('keydown', keyBindings, false);
+   }
+
    const innerDivClassNames = cellHasFocus => {
-      const cellBaseClasses = 'm-px p-px ';
+      const cellBaseClasses = 'p-px ';
       const borderClasses = cellHasFocus ? 'border-2 border-subdued-blue' : 'border border-pale-yellow';
       return cellBaseClasses + borderClasses;
    };
 
-   const renderSubsheetCell = () => {
-      const cellHasFocus = isCellFocused(cell, managedStore.state);
-      cellHasFocus ? document.addEventListener('keydown', keyBindings, false) : document.removeEventListener('keydown', keyBindings, false);
+   const render = () => {
+      manageFocus();
+      // note the class grid-item makes this cell an item within the large grid which is the spreadsheet
+      // while these classes create a 1x1 grid that takes up the full space within that:
+      // grid items-stretch
       return (
          <div
             className="grid-item grid items-stretch cursor-pointer border-t border-l"
-            onClick={evt => onCellClick(evt)}>
-            <div className={innerDivClassNames(cellHasFocus)}>
-               {renderIcons(cellHasFocus)}
+            onClick={onCellClick}
+            /* ref={cellRef} */
+         >
+            <div className={innerDivClassNames(cellHasFocus)} >
+               <SubsheetCellTools cell={cell} cellHasFocus={cellHasFocus} /* widths={columnWidths} *//>
                {cellText(cell)}
             </div>
          </div>
       );
-      // note the class grid-item makes this cell an item within the large grid which is the spreadsheet
-      // while these classes create a 1x1 grid that takes up the full space within that:
-      // grid items-stretch
-      // In the inner div there is the text, with m-px giving a 1px margin so its orange border is a little separated from the outer div's grey border
+      
+      // In the inner div there is the text, with p-px giving a 1px padding so its orange border is a little separated from the outer div's grey border
    };
 
-   // Note that we're not using redux's useSelector() hook in here, 
-   // instead we're relying having this component re-rendered whenever the parent Cell component is rerendered
-   return renderSubsheetCell();
+   return render();
 }
 
 export default SubsheetCell;

@@ -68,7 +68,10 @@ const Cell = props => {
 
    const renderBlankCell = cell => <div className={createClassNames(props.classes)} />;
 
-   const renderSubsheetCell = cell => <SubsheetCell cell={cell} />;
+   const renderSubsheetCell = cell => {
+      
+      return <SubsheetCell cell={cell} />;
+   };
 
    const renderCell = cellReducer => {
       return R.cond([

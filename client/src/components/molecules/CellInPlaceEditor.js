@@ -112,18 +112,19 @@ const CellInPlaceEditor = props => {
    }
 
    const renderIcons = () => {
+      const leftPositioning = {
+         left: props.positioning.width
+      }
       return (
          <div className="relative w-full">
-            <div className="absolute bottom-0 left-0 z-10 w-full flex justify-between bg-white border border-grey-blue p-1">
+            <div className="absolute top-0 z-10 flex flex-col bg-white border border-grey-blue p-1" style={leftPositioning}>
                {/* onMouseDown is fired before onBlur, whereas onClick is after onBlur. 
                Since the textarea has the focus, clicking on IconNewDoc will cause
                the editor's onBlur to fire...but we need to call another action before the onBlur,
                hence the use of onMouseDown */}
-               <IconNewDoc classes="w-full" svgClasses="w-6" onMouseDownFn={triggerCreatedSheetAction} />
-               <div className="w-full flex justify-end">
-                  <IconClose classes="bg-white" svgClasses="w-6" onMouseDownFn={handleCancel} />
-                  <CheckmarkSubmitIcon classes="w-6 bg-white" svgClasses="w-6" onMouseDownFn={handleSubmit} />
-               </div>
+               <IconNewDoc classes="mb-1" svgClasses="w-6" onMouseDownFn={triggerCreatedSheetAction} />
+               <CheckmarkSubmitIcon classes="bg-white mb-1" svgClasses="w-6" onMouseDownFn={handleSubmit} />
+               <IconClose classes="bg-white" svgClasses="w-6" onMouseDownFn={handleCancel} />
             </div>
          </div>
       );
