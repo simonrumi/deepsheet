@@ -217,7 +217,7 @@ const getNewFilter = data =>
 // in the array, then each of the 3 functions in the array are used by R.ifElse
 const addNewFilter = data => {
    if (!data.isInitializingSheet) {
-      const newFilter = getNewFilter(data);\
+      const newFilter = getNewFilter(data);
       R.useWith(R.ifElse, [
          R.thunkify(R.equals(ROW_AXIS)),
          R.thunkify(updatedRowFilters),
