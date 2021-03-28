@@ -28,7 +28,7 @@ const FilterOptions = props => {
    const rowIndex = useSelector(state => stateFilterRowIndex(state));
    const columnIndex = useSelector(state => stateFilterColumnIndex(state));
    const filterExpression = useSelector(state => stateFilterExpression(state));
-   const hideBlanks = useSelector(state => stateFilterHideBlanks(state));
+   const hideBlanks = useSelector(state => isNothing(stateFilterHideBlanks(state)) ? false : stateFilterHideBlanks(state));
    const caseSensitive = useSelector(state => isNothing(stateFilterCaseSensitive(state)) ? false : stateFilterCaseSensitive(state));
    const regex = useSelector(state => isNothing(stateFilterRegex(state)) ? false : stateFilterRegex(state));
    const [errors, setErrors] = useState({ filterExpression: '', caseSensitive: '', regex: '' });

@@ -18,7 +18,8 @@ const filterModalReducer = (state = { showFilterModal: false }, action) => {
             columnIndex: null,
             filterExpression: null, 
             regex: null,
-            caseSensitive: null
+            caseSensitive: null,
+            hideBlanks: null,
          }
 
          if (isNothing(action.payload)) {
@@ -31,9 +32,9 @@ const filterModalReducer = (state = { showFilterModal: false }, action) => {
             return modalHiddenState;
          }
 
-         const { filterExpression, regex, caseSensitive } = initialValues
+         const { filterExpression, regex, caseSensitive, hideBlanks } = initialValues
             ? initialValues
-            : { filterExpression: null, regex: null, caseSensitive: null };
+            : { filterExpression: null, regex: null, caseSensitive: null, hideBlanks: null };
 
          return {
             ...state,
@@ -43,6 +44,7 @@ const filterModalReducer = (state = { showFilterModal: false }, action) => {
             filterExpression, 
             regex,
             caseSensitive,
+            hideBlanks,
          }
          
       case CHANGED_FILTER_VALUE:
@@ -65,6 +67,7 @@ const filterModalReducer = (state = { showFilterModal: false }, action) => {
             filterExpression: null, 
             regex: null,
             caseSensitive: null,
+            hideBlanks: null,
             initialValues: null,
             showFilterModal: false,
             isStale: action.payload,
