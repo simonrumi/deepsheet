@@ -2,6 +2,7 @@ import { isNothing } from '../helpers';
 import {
    TOGGLED_SHOW_FILTER_MODAL,
    CHANGED_FILTER_VALUE,
+   CHANGED_HIDE_BLANKS_VALUE,
    CHANGED_REGEX_VALUE,
    CHANGED_CASE_SENSITIVE_VALUE,
    FILTER_EDIT_CANCELLED,
@@ -46,6 +47,9 @@ const filterModalReducer = (state = { showFilterModal: false }, action) => {
          
       case CHANGED_FILTER_VALUE:
          return { ...state, filterExpression: action.payload, isStale: true }
+
+      case CHANGED_HIDE_BLANKS_VALUE:
+         return { ...state, hideBlanks: action.payload, isStale: true }
 
       case CHANGED_REGEX_VALUE:
          return { ...state, regex: action.payload, isStale: true }

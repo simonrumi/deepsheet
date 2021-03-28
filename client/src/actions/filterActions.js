@@ -5,6 +5,7 @@ import {
    HIDE_FILTERED,
    CLEAR_ALL_FILTERS,
    CHANGED_FILTER_VALUE,
+   CHANGED_HIDE_BLANKS_VALUE,
    CHANGED_REGEX_VALUE,
    CHANGED_CASE_SENSITIVE_VALUE,
    FILTER_EDIT_CANCELLED
@@ -44,6 +45,13 @@ export const changedFilterValue = newFilter => {
    managedStore.store.dispatch({
       type: CHANGED_FILTER_VALUE,
       payload: newFilter,
+   });
+}
+
+export const changedHideBlanksValue = newHideBlanks => {
+   managedStore.store.dispatch({
+      type: CHANGED_HIDE_BLANKS_VALUE,
+      payload: newHideBlanks,
    });
 }
 

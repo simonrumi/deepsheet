@@ -10,6 +10,7 @@ import {
    clearedAllFilters,
    updatedFilter,
    changedFilterValue,
+   changedHideBlanksValue,
    changedRegexValue,
    changedCaseSensitiveValue,
 } from '../../actions/filterActions';
@@ -18,18 +19,18 @@ import {
    stateFilterRowIndex,
    stateFilterColumnIndex,
    stateFilterExpression,
+   stateFilterHideBlanks,
    stateFilterCaseSensitive,
    stateFilterRegex,
-   stateFilterIsStale
 } from '../../helpers/dataStructureHelpers';
 
 const FilterOptions = props => {
    const rowIndex = useSelector(state => stateFilterRowIndex(state));
    const columnIndex = useSelector(state => stateFilterColumnIndex(state));
    const filterExpression = useSelector(state => stateFilterExpression(state));
+   const hideBlanks = useSelector(state => stateFilterHideBlanks(state));
    const caseSensitive = useSelector(state => isNothing(stateFilterCaseSensitive(state)) ? false : stateFilterCaseSensitive(state));
    const regex = useSelector(state => isNothing(stateFilterRegex(state)) ? false : stateFilterRegex(state));
-   const isStale = useSelector(state => stateFilterIsStale(state));
    const [errors, setErrors] = useState({ filterExpression: '', caseSensitive: '', regex: '' });
 
    const validateFormValues = () => {
@@ -52,6 +53,7 @@ const FilterOptions = props => {
       event.preventDefault();
       updatedFilter({
          filterExpression,
+         hideBlanks,
          caseSensitive,
          regex,
          showFilterModal: false,
@@ -60,11 +62,16 @@ const FilterOptions = props => {
       });
    };
 
-   const submitDisabled = () => !isStale || hasErrors(errors);
+   const submitDisabled = () => hasErrors(errors);
 
    const handleBlur = event => {
       event.preventDefault();
       validateFormValues();
+   }
+
+   const handleChangeHideBlanks = event => {
+      event.preventDefault();
+      changedHideBlanksValue(!JSON.parse(event.target.value)); // the value should be "true" or "false", so toggle it
    }
 
    const handleChangeCaseSensitive = event => {
@@ -81,25 +88,36 @@ const FilterOptions = props => {
       event.preventDefault();
       changedFilterValue(event.target.value);
    }
-
+//justify-between
    const render = () => {
       const allClasses =
-         'border-t border-r border-b border-l border-solid border-grey-blue flex items-start justify-between px-2 py-2 ' +
+         'border-t border-r border-b border-l border-solid border-grey-blue flex items-start px-2 py-2 ' +
          props.classes;
       return (
          <form onSubmit={handleSubmit}>
             <div className={allClasses}>
                <Label label="Filter" />
-               <div>
+               <div className='w-full'>
                   <TextInput 
                      props={{ 
                         changeHandler: handleChangeFilter, 
                         value: filterExpression || '', 
                         blurHandler: handleBlur, 
-                        error: errors.filterExpression
+                        error: errors.filterExpression,
+                        classes: 'w-full'
                      }} 
                   />
                   <ErrorText error={errors.filterExpression} />
+
+                  <div className="flex items-center px-2 py-2">
+                     <Checkbox 
+                        classes="pl-0" 
+                        changeHandler={handleChangeHideBlanks}
+                        value={hideBlanks}
+                        blurHandler={handleBlur}
+                     />
+                     <Label label="Hide blanks" classes="pl-2" />
+                  </div>
 
                   <div className="flex items-center px-2 py-2">
                      <Checkbox 

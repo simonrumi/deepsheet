@@ -5,6 +5,7 @@ const { Schema } = mongoose;
 const filterSchema = new Schema({
    index: { type: Number, required: true },
    filterExpression: { type: String, required: true, default: '' },
+   hideBody: { type: Boolean, default: false },
    caseSensitive: { type: Boolean, default: false },
    regex: { type: Boolean, default: false },
 });

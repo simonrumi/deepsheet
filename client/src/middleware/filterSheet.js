@@ -70,6 +70,9 @@ const isCellShownByFilter = R.curry((cell, filter, axisOfFilter) => {
    if (cell[axisOfFilter] !== filter.index) {
       return true; // because this filter does not apply to this cell
    }
+   if (filter.hideBlanks && isNothing(cell.content.text)) {
+      return false;
+   }
    const flags = filter.caseSensitive ? '' : 'i';
    const filterExpression = filter.regex
       ? filter.filterExpression || ''
@@ -204,7 +207,7 @@ const getFilterIndex = data => (R.isNil(data.rowIndex) ? data.columnIndex : data
 const getNewFilter = data =>
    R.mergeAll([
       R.assoc('index', getFilterIndex(data), {}),
-      R.pick(['filterExpression', 'caseSensitive', 'regex'])(data),
+      R.pick(['filterExpression', 'caseSensitive', 'regex', 'hideBlanks'])(data),
    ]);
 
 // this was hard to figure out!
@@ -214,7 +217,7 @@ const getNewFilter = data =>
 // in the array, then each of the 3 functions in the array are used by R.ifElse
 const addNewFilter = data => {
    if (!data.isInitializingSheet) {
-      const newFilter = getNewFilter(data);
+      const newFilter = getNewFilter(data);\
       R.useWith(R.ifElse, [
          R.thunkify(R.equals(ROW_AXIS)),
          R.thunkify(updatedRowFilters),
@@ -228,13 +231,19 @@ const addNewFilter = data => {
 /* getDataFromActionAndStore - creates a data object for passing to subsequent functions in hideFiltered's pipe */
 const getDataFromActionAndStore = (actionData, isInitializingSheet, store) => R.mergeAll([actionData, { store, isInitializingSheet }]);
 
-const hideFiltered = R.pipe(getDataFromActionAndStore, addNewFilter, filterAxes, filterCells);
+const hideFiltered = R.pipe(
+   getDataFromActionAndStore,
+   addNewFilter, 
+   filterAxes, 
+   filterCells
+);
 
 const clearAllFilters = store => {
    store.dispatch({ type: RESET_VISIBLITY });
    toggledShowFilterModal();
    const filterDataReset = {
       filterExpression: '',
+      hideBlanks: false,
       caseSensitive: false,
       regex: false,
       showFilterModal: false,
@@ -242,7 +251,11 @@ const clearAllFilters = store => {
       columnIndex: 0, //doesn't really matter which filter icon that was clicked on, so we pretend it was column A
    };
    const isInitializingSheet = false;
-   R.pipe(getDataFromActionAndStore, filterAxes, filterCells)(filterDataReset, isInitializingSheet, store);
+   R.pipe(
+      getDataFromActionAndStore, 
+      filterAxes, 
+      filterCells
+   )(filterDataReset, isInitializingSheet, store);
 };
 
 export default store => next => async action => {

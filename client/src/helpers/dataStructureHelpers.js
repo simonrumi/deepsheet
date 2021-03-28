@@ -170,6 +170,7 @@ export const stateShowFilterModal = subObjectGetter(stateFilterModalLens, 'showF
 export const stateFilterColumnIndex = subObjectGetter(stateFilterModalLens, 'columnIndex');
 export const stateFilterRowIndex = subObjectGetter(stateFilterModalLens, 'rowIndex');
 export const stateFilterExpression = subObjectGetter(stateFilterModalLens, 'filterExpression');
+export const stateFilterHideBlanks = subObjectGetter(stateFilterModalLens, 'hideBlanks');
 export const stateFilterCaseSensitive = subObjectGetter(stateFilterModalLens, 'caseSensitive');
 export const stateFilterRegex = subObjectGetter(stateFilterModalLens, 'regex');
 export const stateFilterIsStale = subObjectGetter(stateFilterModalLens, 'isStale');

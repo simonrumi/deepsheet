@@ -30,6 +30,7 @@ const SheetMutations = gql`
    input SheetFilterInput {
       index: Int!
       filterExpression: String!
+      hideBlanks: Boolean
       caseSensitive: Boolean
       regex: Boolean
    }

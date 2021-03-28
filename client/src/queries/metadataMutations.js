@@ -42,12 +42,14 @@ const UPDATE_METATDATA_MUTATION = gql`
          columnFilters {
             index
             filterExpression
+            hideBlanks
             caseSensitive
             regex
          }
          rowFilters {
             index
             filterExpression
+            hideBlanks
             caseSensitive
             regex
          }
