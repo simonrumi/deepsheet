@@ -16,7 +16,7 @@ const SheetType = gql`
    type SheetFilterType {
       index: Int!
       filterExpression: String!
-      hideBody: Boolean
+      hideBlanks: Boolean
       caseSensitive: Boolean
       regex: Boolean
    }
