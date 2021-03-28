@@ -73,7 +73,7 @@ const RowHeaderTools = props => {
       const rowHeaderBoundingRect = rowHeaderElement.getBoundingClientRect();
       // the magic numbers in here have no real logic to them - they are just what made for what looked like good sizing
       const left = `${rowHeaderBoundingRect.left + rowHeaderBoundingRect.width / 2}px`;
-      const top = `${rowHeaderBoundingRect.height / 2}px`;
+      const top = `${rowHeaderBoundingRect.top}`;
       return {
          left,
          top,
