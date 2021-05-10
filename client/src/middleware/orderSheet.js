@@ -10,12 +10,6 @@ import {
 import { SORTED_AXIS } from '../actions/sortTypes';
 import { UPDATED_CELL } from '../actions/cellTypes';
 import { startedUndoableAction, completedUndoableAction } from '../actions/undoActions';
-import {
-   replacedRowFilters,
-   replacedColumnFilters,
-   replacedRowVisibility,
-   replacedColumnVisibility,
-} from '../actions';
 import { clearedSortOptions } from '../actions/sortActions';
 import {
    hasChangedMetadata,
@@ -23,6 +17,10 @@ import {
    replacedColumnWidths,
    replacedFrozenRows,
    replacedFrozenColumns,
+   replacedRowFilters,
+   replacedColumnFilters,
+   replacedRowVisibility,
+   replacedColumnVisibility,
 } from '../actions/metadataActions';
 import moveRow from '../services/moveRow';
 import moveColumn from '../services/moveColumn';

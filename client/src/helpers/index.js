@@ -36,6 +36,7 @@ export const isNothing = R.either(R.isNil, R.isEmpty);
 export const isSomething = R.pipe(isNothing, R.not);
 export const arrayContainsSomething = arr => 
    isSomething(arr) && 
+   R.length(arr) > 0 &&
    R.reduce(
       (accumulator, arrItem) => accumulator || isSomething(arrItem), 
       false,
@@ -206,10 +207,10 @@ export const ifThen = spicyCurry(
 
 /**
  * if-then-else functionality where
- * ifCond - can be either a boolean or a function returning a boolean
- * thenDo - can be either a function or an array of functions to be piped
- * elseDo - can be either a function or an array of functions to be piped 
- * params - an object: { ifParams, thenParams, elseParams } where ifParams are passed to ifCond, thenParams to thenDo, and elseParams to elseDo 
+ * @param ifCond - can be either a boolean or a function returning a boolean
+ * @param thenDo - can be either a function or an array of functions to be piped
+ * @param elseDo - can be either a function or an array of functions to be piped 
+ * @param params - an object: { ifParams, thenParams, elseParams } where ifParams are passed to ifCond, thenParams to thenDo, and elseParams to elseDo 
  * All of these are required - when any are missing you get a function that expects the missing key-value pairs
  * example of use:
  * ifThenElse({

@@ -1,12 +1,13 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import * as R from 'ramda';
+import { useSelector } from 'react-redux';
 import managedStore from '../../store';
 import { updatedCell, hasChangedCell } from '../../actions/cellActions';
 import { createdSheet } from '../../actions/sheetActions';
 import { clearedFocus } from '../../actions/focusActions';
 import { startedEditing, finishedEditing } from '../../actions/undoActions'; 
 import { isSomething } from '../../helpers';
-import { tabToNextVisibleCell } from '../../helpers/cellHelpers';
+import { tabToNextVisibleCell, createCellKey, getCellsFromCellKeys } from '../../helpers/cellHelpers';
 import { getUserInfoFromCookie } from '../../helpers/userHelpers';
 import { createDefaultAxisSizing } from '../../helpers/axisSizingHelpers';
 import {
@@ -21,7 +22,17 @@ import IconClose from '../atoms/IconClose';
 import CheckmarkSubmitIcon from '../atoms/IconCheckmarkSubmit';
 import { DEFAULT_TOTAL_ROWS, DEFAULT_TOTAL_COLUMNS, DEFAULT_COLUMN_WIDTH, DEFAULT_ROW_HEIGHT } from '../../constants';
 
-const CellInPlaceEditor = props => {
+const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
+   // the store's state is the source of truth for the cell's content, the cell value received as a prop seems not always in sync with that
+   // TODO test using cell instead of stateCell - maybe stateCEll is not needed
+   const stateCell = useSelector(state =>  R.pipe(
+         createCellKey,
+         R.append(R.__, []),
+         getCellsFromCellKeys(managedStore.state),
+         R.head
+      )(cell.row, cell.column)
+   );
+
    const keyBindings = event => {
       // use https://keycode.info/ to get key values
       switch(event.keyCode) {
@@ -29,11 +40,11 @@ const CellInPlaceEditor = props => {
             handleCancel(event);
             break;
          case 13: // enter
-            handleSubmit(event);
+            handleSubmit(event, stateCell);
             break;
          case 9: // tab
             handleSubmit(event);
-            tabToNextVisibleCell(props.cell.row, props.cell.column, event.shiftKey);
+            tabToNextVisibleCell(cell.row, cell.column, event.shiftKey);
             break;
          default:
       }
@@ -41,8 +52,8 @@ const CellInPlaceEditor = props => {
 
    const reinstateOriginalValue = () => {
       updatedCell({
-         ...props.cell,
-         content: { ...props.cell.content, text: stateOriginalValue(managedStore.state) },
+         ...cell,
+         content: { ...cell.content, text: stateOriginalValue(managedStore.state) },
          isStale: false,
       });
    }
@@ -51,20 +62,20 @@ const CellInPlaceEditor = props => {
       event.preventDefault();
       document.addEventListener('keydown', keyBindings, false);
       cellInPlaceEditorRef.current.selectionStart = 0;
-      cellInPlaceEditorRef.current.selectionEnd = cellText(props.cell).length;
-      startedEditing(cellText(props.cell));
+      cellInPlaceEditorRef.current.selectionEnd = cellText(cell).length;
+      startedEditing(cellText(cell));
    }
 
    const finalizeCellContent = () => {
       if (!R.equals(stateOriginalValue(managedStore.state), cellInPlaceEditorRef.current?.value)) {
          hasChangedCell({
-            row: cellRow(props.cell),
-            column: cellColumn(props.cell),
+            row: cellRow(cell),
+            column: cellColumn(cell),
          });
       }
       finishedEditing({
          value: isSomething(cellInPlaceEditorRef.current) ? cellInPlaceEditorRef.current.value : null,
-         message: 'edited row ' + cellRow(props.cell) + ', column ' + cellColumn(props.cell),
+         message: 'edited row ' + cellRow(cell) + ', column ' + cellColumn(cell),
       });
    }
 
@@ -73,13 +84,14 @@ const CellInPlaceEditor = props => {
       finalizeCellContent();
       document.removeEventListener('keydown', keyBindings, false);
       clearedFocus();
+      updatedCell(cell);
    }
 
    const manageChange = event => {
       event.preventDefault();
       updatedCell({
-         ...props.cell,
-         content: { ...props.cell.content, text: event.target.value },
+         ...cell,
+         content: { ...cell.content, text: event.target.value },
          isStale: true,
       });
    }
@@ -87,17 +99,17 @@ const CellInPlaceEditor = props => {
    const triggerCreatedSheetAction = () => {
       const rows = DEFAULT_TOTAL_ROWS;
       const columns = DEFAULT_TOTAL_COLUMNS;
-      const title = cellText(props.cell) || null;
+      const title = cellText(cell) || null;
       const parentSheetId = stateSheetId(managedStore.state);
       const summaryCell = { row: 0, column: 0 }; // this would be to tell which cell in the new sheet is the summary cell. Default is 0,0
-      const parentSheetCell = props.cell;
+      const parentSheetCell = cell;
       const rowHeights = createDefaultAxisSizing(DEFAULT_TOTAL_ROWS, DEFAULT_ROW_HEIGHT);
       const columnWidths = createDefaultAxisSizing(DEFAULT_TOTAL_COLUMNS, DEFAULT_COLUMN_WIDTH);
       const { userId } = getUserInfoFromCookie();
       createdSheet({ rows, columns, title, parentSheetId, summaryCell, parentSheetCell, rowHeights, columnWidths, userId });
    }
 
-   const handleSubmit = event => {
+   const handleSubmit = (event, cell) => {
       event.preventDefault();
       finalizeCellContent();
       document.removeEventListener('keydown', keyBindings, false);
@@ -106,14 +118,14 @@ const CellInPlaceEditor = props => {
 
    const handleCancel = event => {
       event.preventDefault();
-      reinstateOriginalValue();
+      reinstateOriginalValue(); // note: this does the updatedCell call
       document.removeEventListener('keydown', keyBindings, false);
       clearedFocus();
    }
 
    const renderIcons = () => {
       const leftPositioning = {
-         left: props.positioning.width
+         left: positioning.width
       }
       return (
          <div className="relative w-full">
@@ -130,17 +142,18 @@ const CellInPlaceEditor = props => {
       );
    };
 
-   const renderTextForm = editorRef => {
+   const renderTextForm = (editorRef, cell) => {
       const textArea = (
-         <form onSubmit={handleSubmit} >
+         <form onSubmit={event => handleSubmit(event, cell)} >
+            {renderIcons()}
             <textarea
                className="focus:outline-none border-2 border-subdued-blue p-1 shadow-lg w-full h-full" 
                ref={editorRef}
                rows="3"
-               value={cellText(props.cell)}
+               value={cellText(cell)}
                onChange={manageChange}
-               onFocus={manageFocus}
                onBlur={manageBlur}
+               onFocus={manageFocus}
             />
          </form>
       );
@@ -153,15 +166,14 @@ const CellInPlaceEditor = props => {
    // need to do this setTimeout workaround so the cellInPlaceEditorRef can first be assigned to the textarea
    // then we set the focus on that text area 1 tick after. Replace this if a better way is found.
    window.setTimeout(() => {
-      if (props.cellHasFocus && isSomething(cellInPlaceEditorRef.current)) {
+      if (cellHasFocus && isSomething(cellInPlaceEditorRef.current)) {
          cellInPlaceEditorRef.current.focus();
       }
    }, 0);
-   
+
    return (
-      <div style={props.positioning} className="absolute z-10 bg-white text-dark-dark-blue " >
-         {renderIcons()}
-         {renderTextForm(cellInPlaceEditorRef)}
+      <div style={positioning} className="absolute z-10 bg-white text-dark-dark-blue " >
+         {renderTextForm(cellInPlaceEditorRef, stateCell)}
       </div>
    );
 }

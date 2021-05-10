@@ -7,7 +7,7 @@ import {
    arrayContainsSomething,
    getObjectFromArrayByKeyValue,
 } from './index';
-import { replacedRowVisibility, replacedColumnVisibility } from '../actions';
+import { replacedRowVisibility, replacedColumnVisibility } from '../actions/metadataActions';
 import { updatedFilter } from '../actions/filterActions';
 import {
    stateMetadataProp,

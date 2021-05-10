@@ -4,18 +4,6 @@ import { MENU_HIDDEN } from './menuTypes';
 import { HIDE_AXIS_ITEM_TOOL } from './metadataTypes'; // don't move this one to metadataActions.js
 import { TOGGLED_SHOW_SORT_MODAL } from './sortTypes';
 import { TOGGLED_SHOW_FILTER_MODAL } from './filterTypes';
-import { 
-   UPDATED_COLUMN_FILTERS,
-   REPLACED_COLUMN_FILTERS,
-   UPDATED_ROW_FILTERS,
-   REPLACED_ROW_FILTERS,
-   UPDATED_TOTAL_COLUMNS,
-   UPDATED_TOTAL_ROWS,
-   UPDATED_COLUMN_VISIBILITY,
-   REPLACED_COLUMN_VISIBILITY,
-   UPDATED_ROW_VISIBILITY,
-   REPLACED_ROW_VISIBILITY,
-} from './metadataTypes';
 
 export const completedSaveUpdates = () => {
    managedStore.store.dispatch({
@@ -52,74 +40,3 @@ export const hideAllPopups = () => {
    });
 }
 
-/****** TODO metadata actions to be moved, from here down: *****/
-
-export const updatedColumnFilters = newColumnFilter => {
-   managedStore.store.dispatch({
-      type: UPDATED_COLUMN_FILTERS,
-      payload: newColumnFilter,
-   });
-};
-
-export const replacedColumnFilters = columnFilters => {
-   managedStore.store.dispatch({
-      type: REPLACED_COLUMN_FILTERS,
-      payload: columnFilters,
-   });
-};
-
-export const updatedRowFilters = newRowFilter => {
-   managedStore.store.dispatch({
-      type: UPDATED_ROW_FILTERS,
-      payload: newRowFilter,
-   });
-};
-
-export const replacedRowFilters = rowFilters => {
-   managedStore.store.dispatch({
-      type: REPLACED_ROW_FILTERS,
-      payload: rowFilters,
-   });
-};
-
-export const updatedTotalColumns = newTotalColumns => {
-   managedStore.store.dispatch({
-      type: UPDATED_TOTAL_COLUMNS,
-      payload: newTotalColumns,
-   });
-};
-
-export const updatedTotalRows = newTotalRows => {
-   managedStore.store.dispatch({
-      type: UPDATED_TOTAL_ROWS,
-      payload: newTotalRows,
-   });
-};
-
-export const updatedColumnVisibility = newVisibility => {
-   managedStore.store.dispatch({
-      type: UPDATED_COLUMN_VISIBILITY,
-      payload: newVisibility,
-   });
-};
-
-export const replacedColumnVisibility = newVisibility => {
-   managedStore.store.dispatch({
-      type: REPLACED_COLUMN_VISIBILITY,
-      payload: newVisibility,
-   });
-};
-
-export const updatedRowVisibility = newVisibility => {
-   managedStore.store.dispatch({
-      type: UPDATED_ROW_VISIBILITY,
-      payload: newVisibility,
-   });
-};
-
-export const replacedRowVisibility = newVisibility => {
-   managedStore.store.dispatch({
-      type: REPLACED_ROW_VISIBILITY,
-      payload: newVisibility,
-   });
-};

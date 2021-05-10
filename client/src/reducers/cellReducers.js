@@ -63,6 +63,16 @@ const processCellAction = R.curry((state, sheetId, action) => {
    }
 });
 
+const cellReducerCreator = thunkifiedCreatorFunc => {
+   const store = managedStore.store;
+   if (!store || !store.reducerManager) {
+      console.error('ERROR: createCellReducers failed as there was no reducerManager');
+      return;
+   }
+   const cellReducers = thunkifiedCreatorFunc();
+   const combineNewReducers = store.reducerManager.addMany(cellReducers);
+   store.replaceReducer(combineNewReducers);
+}
 
 const cellReducerFactory = (cell, sheetId) => 
    (state = {}, action) => {
@@ -76,17 +86,6 @@ const cellReducerFactory = (cell, sheetId) =>
             )(validatedAction)
       )(S.Right(action), S.Right(cell));
    };
-
-const cellReducerCreator = thunkifiedCreatorFunc => {
-   const store = managedStore.store;
-   if (!store || !store.reducerManager) {
-      console.error('ERROR: createCellReducers failed as there was no reducerManager');
-      return;
-   }
-   const cellReducers = thunkifiedCreatorFunc();
-   const combineNewReducers = store.reducerManager.addMany(cellReducers);
-   store.replaceReducer(combineNewReducers);
-}
 
 export const createCellReducers = sheet => {
    const thunkifiedCreatorFunc = R.thunkify(

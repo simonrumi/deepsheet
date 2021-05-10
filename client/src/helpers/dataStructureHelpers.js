@@ -207,8 +207,6 @@ export const stateCell = R.curry((state, cellKey) =>
 /*** 
  * get values for the cell itself - note that getters and setters are separate fns so that the setter can be curried. 
  * The setters are going to be used on copies of the cell that will be updated in the state via actions
- * 
- * /// TODO - almost certainly don't need/want setters for cell state - get rid of them
 ***/
 const cellRowLens = R.lensProp('row');
 export const cellRow = cell => R.view(cellRowLens, cell);
@@ -246,7 +244,7 @@ export const stateCellDbUpdatesIsStale = subObjectGetter(stateCellDbUpdatesLens,
 export const stateCellDbUpdatesLastUpdated = subObjectGetter(stateCellDbUpdatesLens, 'lastUpdated');
 export const stateChangedCells = subObjectGetter(stateCellDbUpdatesLens, 'changedCells');
 
-/************************************************ STATE OTHER **********************************************/
+/************************************************ STATE SHEET **********************************************/
 
 const sheetLens = R.lensProp('sheet');
 const stateSheetLens = R.compose(presentLens, sheetLens);
@@ -267,9 +265,32 @@ const cellsLoadedLens = R.lensProp('cellsLoaded');
 const stateSheetCellsLoadedLens = R.compose(stateSheetLens, cellsLoadedLens);
 export const stateSheetCellsLoaded = R.view(stateSheetCellsLoadedLens);
 
+const cellsUpdateInfoLens = R.lensProp('cellsUpdateInfo');
+const stateSheetCellsUpdateInfoLens = R.compose(stateSheetLens, cellsUpdateInfoLens);
+export const stateCellsUpdateInfo = R.view(stateSheetCellsUpdateInfoLens);
+
+const cellsUpdateDataLens = R.lensProp('data');
+const stateSheetCellsUpdateDataLens = R.compose(stateSheetLens, cellsUpdateInfoLens, cellsUpdateDataLens);
+export const stateCellsUpdateData = R.view(stateSheetCellsUpdateDataLens);
+
+const cellsChangeTypeLens = R.lensProp('changeType');
+const stateSheetCellsChangeTypeLens = R.compose(stateSheetLens, cellsUpdateInfoLens, cellsChangeTypeLens);
+export const stateCellsChangeType = R.view(stateSheetCellsChangeTypeLens);
+
+const cellsRenderCountLens = R.lensProp('cellsRenderCount');
+const stateSheetCellsRenderCountLens = R.compose(stateSheetLens, cellsRenderCountLens);
+export const stateCellsRenderCount = R.view(stateSheetCellsRenderCountLens);
+
+/************************************************ STATE OTHER **********************************************/
 const focusLens = R.lensProp('focus'); // there's a property called focus which is used to track which UI element currently has focus
 const stateFocusLens = R.compose(presentLens, focusLens);
 export const stateFocus = R.view(stateFocusLens);
+const stateFocusCellLens = R.compose(stateFocusLens, R.lensProp('cell'));
+export const stateFocusCell = R.view(stateFocusCellLens);
+const statePreviouslyFocusedCellLens = R.compose(stateFocusLens, R.lensProp('previouslyFocusedCell'));
+export const statePreviouslyFocusedCell = R.view(statePreviouslyFocusedCellLens);
+const stateCellRangeLens = R.compose(stateFocusLens, R.lensProp('cellRange'));
+export const stateCellRange = R.view(stateCellRangeLens);
 
 const titleLens = R.lensProp('title');
 const stateTitleLens = R.compose(presentLens, titleLens);

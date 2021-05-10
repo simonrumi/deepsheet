@@ -13,4 +13,6 @@ export const CELLS_LOADED = 'cells_loaded';
 export const ADDED_CELL_KEYS = 'added_cell_keys';
 export const REMOVED_CELL_KEYS = 'removed_cell_keys';
 export const CLEARED_ALL_CELL_KEYS = 'cleared_all_cell_keys';
+export const CELLS_UPDATED = 'cells_updated';
+export const CELLS_REDRAW_COMPLETED = 'cells_redraw_completed';
 

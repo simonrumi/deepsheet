@@ -1,8 +1,9 @@
 import * as R from 'ramda';
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import managedStore from '../store';
 import { triggeredFetchSheet } from '../actions/sheetActions';
+import { cellsRedrawCompleted } from '../actions/cellActions';
 import { isNothing, arrayContainsSomething, forLoopReduce, getObjectFromArrayByKeyValue } from '../helpers';
 import {
    stateIsLoggedIn,
@@ -21,10 +22,13 @@ import {
    stateRowVisibility,
    stateTotalRows,
    stateTotalColumns,
+   stateCellsUpdateInfo,
+   stateCellsRenderCount,
 } from '../helpers/dataStructureHelpers';
 import { isVisibilityCalcutated } from '../helpers/visibilityHelpers';
 import { isAxisSizingCalculated,handleResizerDragOver, handleResizerDrop } from '../helpers/axisSizingHelpers';
 import { getUserInfoFromCookie } from '../helpers/userHelpers';
+import { haveCellsNeedingUpdate, renderChangedCells } from '../helpers/cellHelpers';
 import {
    ROW_AXIS,
    COLUMN_AXIS,
@@ -32,6 +36,7 @@ import {
    THIN_ROW,
    DEFAULT_ROW_HEIGHT,
    DEFAULT_COLUMN_WIDTH,
+   ALL_CELLS,
 } from '../constants';
 import LoadingIcon from './atoms/IconLoading';
 import Header from './Header';
@@ -39,6 +44,42 @@ import Cells from './Cells';
 import FilterModal from './organisms/FilterModal';
 import SortModal from './organisms/SortModal';
 import LoginModal from './organisms/LoginModal';
+
+const compareSizesByIndex = (size1, size2) => {
+   if (size1.index === size2.index) {
+      return 0;
+   }
+   return size1.index > size2.index ? 1 : -1;
+};
+
+const createDefaultAxisSizes = axis => {
+   // the following will generate a string like ' 2em 2em 2em 2em ' (as many values as there are items in the axis)
+   const totalItems = axis === ROW_AXIS ? stateTotalRows(managedStore.state) : stateTotalColumns(managedStore.state);
+   const defaultSize = axis === ROW_AXIS ? DEFAULT_ROW_HEIGHT : DEFAULT_COLUMN_WIDTH
+   return forLoopReduce(
+      (accumulator, index) => accumulator + defaultSize + ' ', 
+      ' ', 
+      totalItems
+   );
+}
+
+const createAxisSizes = (axisSizes = [], axisVisibility, axis) => {
+   if (!arrayContainsSomething(axisSizes)) {
+      return createDefaultAxisSizes(axis);
+   }
+   // the following will generate a string like ' 40px 100px 29px 51px '
+   const sizesOrderedByIndex = R.sort(compareSizesByIndex, axisSizes);
+   return R.reduce(
+      (accumulator, sizeObj) => {
+         const axisItemVisibility = getObjectFromArrayByKeyValue('index', sizeObj.index, axisVisibility);
+         return isNothing(axisItemVisibility) || axisItemVisibility.isVisible // a column/row is visible if either there is no axis visibility entry for it, or if the entry isVisible
+            ? accumulator + sizeObj.size + ' '
+            : accumulator;
+      },
+      ' ',
+      sizesOrderedByIndex
+   );
+};
 
 const Sheet = props => {
    const isLoggedIn = useSelector(state => stateIsLoggedIn(state));
@@ -56,47 +97,16 @@ const Sheet = props => {
    const cellsLoaded = useSelector(state => stateSheetCellsLoaded(state));
    const totalRows = useSelector(state => stateTotalRows(state));
    const totalColumns = useSelector(state => stateTotalColumns(state));
+   
+   const cellsRenderCount = stateCellsRenderCount(managedStore.state); // not getting this value using useSelector as we don't want to retrigger a render when it changes (useEffect below manages the re-render)
+   console.log('Sheet.js got cellsRenderCount', cellsRenderCount);
 
-   const compareSizesByIndex = (size1, size2) => {
-      if (size1.index === size2.index) {
-         return 0;
-      }
-      return size1.index > size2.index ? 1 : -1;
-   };
-
-   const createDefaultAxisSizes = axis => {
-      // the following will generate a string like ' 2em 2em 2em 2em ' (as many values as there are items in the axis)
-      const totalItems = axis === ROW_AXIS ? stateTotalRows(managedStore.state) : stateTotalColumns(managedStore.state);
-      const defaultSize = axis === ROW_AXIS ? DEFAULT_ROW_HEIGHT : DEFAULT_COLUMN_WIDTH
-      return forLoopReduce(
-         (accumulator, index) => accumulator + defaultSize + ' ', 
-         ' ', 
-         totalItems
-      );
-   }
-
-   const createAxisSizes = (axisSizes = [], axisVisibility, axis) => {
-      if (!arrayContainsSomething(axisSizes)) {
-         return createDefaultAxisSizes(axis);
-      }
-      // the following will generate a string like ' 40px 100px 29px 51px '
-      const sizesOrderedByIndex = R.sort(compareSizesByIndex, axisSizes);
-      return R.reduce(
-         (accumulator, sizeObj) => {
-            const axisItemVisibility = getObjectFromArrayByKeyValue('index', sizeObj.index, axisVisibility);
-            return isNothing(axisItemVisibility) || axisItemVisibility.isVisible // a column/row is visible if either there is no axis visibility entry for it, or if the entry isVisible
-               ? accumulator + sizeObj.size + ' '
-               : accumulator;
-         },
-         ' ',
-         sizesOrderedByIndex
-      );
-   };
+   const memoizedCells = useMemo(() => <Cells />, [cellsRenderCount]);
 
    const getAxisSizing = axis =>
-      axis === COLUMN_AXIS
-         ? createAxisSizes(columnWidths, columnVisibility, COLUMN_AXIS)
-         : createAxisSizes(rowHeights, rowVisibility, ROW_AXIS);
+   axis === COLUMN_AXIS
+      ? createAxisSizes(columnWidths, columnVisibility, COLUMN_AXIS)
+      : createAxisSizes(rowHeights, rowVisibility, ROW_AXIS);
 
    const getGridSizingStyle = () => {
       const contentRows = getAxisSizing(ROW_AXIS);
@@ -126,16 +136,25 @@ const Sheet = props => {
 
    const renderGridSizingStyle = () => isVisibilityCalcutated() && isAxisSizingCalculated() ? memoizedGridSizingStyle : null;
 
-   const maybeRenderCells = () =>
-      cellsLoaded ? (
-         <div
-            className="grid-container pt-1"
-            style={renderGridSizingStyle()}
-            onDragOver={handleResizerDragOver}
-            onDrop={handleResizerDrop}>
-            <Cells />
-         </div>
-      ) : null;
+   const renderCells = () => (
+      <div
+         className="grid-container pt-1"
+         style={renderGridSizingStyle()}
+         onDragOver={handleResizerDragOver}
+         onDrop={handleResizerDrop}>
+         {memoizedCells}
+      </div>
+   );
+
+   /**
+    * useEffect runs after the DOM is updated, so then we can fire cellsRedrawCompleted which increments the cellsRenderCount
+    * that in turn will cause the useMemo above to redraw the cells next time through (perhaps incrementing cellsRenderCount causes a rerender?)
+    */
+   useEffect(() => {
+      if (cellsLoaded && haveCellsNeedingUpdate(managedStore.state)) {
+         cellsRedrawCompleted();
+      }
+   });
 
    const maybeRenderLoginOrFetchSheet = () => {
       const { userId, sessionId } = getUserInfoFromCookie();
@@ -172,7 +191,6 @@ const Sheet = props => {
             </div>
          );
       }
-
       return (
          <div className="px-1">
             <Header />
@@ -180,7 +198,7 @@ const Sheet = props => {
             {maybeRenderFilterModal()}
             {maybeRenderSortModal()}
             {maybeRenderLoginOrFetchSheet()}
-            {maybeRenderCells()}
+            {renderCells()}
          </div>
       );
    }

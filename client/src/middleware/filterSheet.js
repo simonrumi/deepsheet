@@ -8,9 +8,8 @@ import {
    HIDE_FILTERED,
    CLEAR_ALL_FILTERS,
 } from '../actions/metadataTypes';
-import { updatedColumnFilters, updatedRowFilters } from '../actions';
 import { toggledShowFilterModal } from '../actions/filterActions';
-import { hasChangedMetadata, } from '../actions/metadataActions';
+import { hasChangedMetadata, updatedColumnFilters, updatedRowFilters } from '../actions/metadataActions';
 import { updatedCell } from '../actions/cellActions';
 import { getObjectFromArrayByKeyValue, isNothing, isSomething, arrayContainsSomething, forLoopMap } from '../helpers';
 import { getTotalForAxis, getAxisVisibilityName } from '../helpers/visibilityHelpers';

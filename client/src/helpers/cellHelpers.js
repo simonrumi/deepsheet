@@ -4,12 +4,27 @@ import {
    indexToColumnLetter,
    indexToRowNumber,
    isSomething,
+   isNothing,
    arrayContainsSomething,
    S,
    toLeft,
    eitherIsSomething,
    compareIndexValues,
+   forLoopMap,
 } from './index';
+import {
+   UPDATED_COLUMN_WIDTH,
+   UPDATED_ROW_HEIGHT,
+   UPDATED_COLUMN_FILTERS,
+   UPDATED_ROW_FILTERS,
+   UPDATED_COLUMN_VISIBILITY,
+   UPDATED_ROW_VISIBILITY,
+   UPDATED_TOTAL_COLUMNS,
+   UPDATED_TOTAL_ROWS,
+   ROW_MOVED,
+   COLUMN_MOVED,
+} from '../actions/metadataTypes';
+import { UPDATED_CELL } from '../actions/cellTypes';
 import {
    cellRow,
    cellColumn,
@@ -27,9 +42,10 @@ import {
    statePresent,
    stateTotalColumns,
    stateColumnVisibility,
+   stateCellsUpdateInfo,
 } from './dataStructureHelpers';
 import { focusedCell } from '../actions/focusActions';
-import { THIN_COLUMN } from '../constants';
+import { THIN_COLUMN, ROW_AXIS, COLUMN_AXIS } from '../constants';
 
 export const getCellContent = cell =>
    isSomething(cell) && isSomething(cell.content) && isSomething(cell.content.text) ? cell.content.text : '';
@@ -43,6 +59,12 @@ export const createCellId = (rowIndex, columnIndex) =>
    R.concat(indexToColumnLetter(columnIndex), R.pipe(indexToRowNumber, R.toString)(rowIndex));
 
 export const createCellKey = R.curry((rowIndex, columnIndex) => 'cell_' + rowIndex + '_' + columnIndex);
+
+const getIndexFromCellKey = (axis, cellKey) => {
+   const indexRegex = /cell_(\d+)_(\d+)/i;
+   const matchArr = indexRegex.exec(cellKey); // returns e.g. ['cell_1_2', '1', '2'] where 1 is the row index and 2 is the column index
+   return axis === ROW_AXIS ? parseInt(matchArr[1]) : parseInt(matchArr[2])
+}
 
 export const renderWholeRowGridSizingStyle = numCols => {
    const rowsStyle = 'repeat(1, 1.5em)';
@@ -182,7 +204,6 @@ const isSameCell = R.curry(
       )(axisEqual(action)(cell)('row'))
 );
 
-
 // use: validateAction(S.Right(someAction), S.Right(someCell))
 export const validateAction = R.curry((action, cell) => R.pipe(
       R.useWith(isSameCell, [isCellAction, eitherIsSomething]),
@@ -217,3 +238,131 @@ export const tabToNextVisibleCell = (rowIndex, columnIndex, goBackwards) => R.pi
    cellKey => statePresent(managedStore.state)[cellKey],
    focusedCell
 )(managedStore.state);
+
+export const isCellInRange = (row, column, cellRange) => {
+   if (isNothing(cellRange)) {
+      return false;
+   }
+
+   //  cellRange = {
+   //    from: { row: 3, column: 0 },
+   //    to: { row: 4, column: 2 }
+   // }
+   const fromRow = cellRange.from.row < cellRange.to.row ? cellRange.from.row : cellRange.to.row;
+   const toRow = cellRange.from.row === fromRow ? cellRange.to.row : cellRange.from.row;
+   const fromColumn = cellRange.from.column < cellRange.to.column ? cellRange.from.column : cellRange.to.column;
+   const toColumn = cellRange.from.row === fromColumn ? cellRange.to.column : cellRange.from.column;
+
+   return row >= fromRow && row <= toRow && column >= fromColumn && column <= toColumn;
+}
+
+export const haveCellsNeedingUpdate = state => R.pipe(
+   stateCellsUpdateInfo,
+   arrayContainsSomething,
+)(state);
+   
+const getCellKeysInAxis = (axis, axisIndex, state) => R.filter(
+   cellKey => getIndexFromCellKey(axis, cellKey) === axisIndex, 
+   stateCellKeys(state)
+);
+
+// example: given start and end points (6,9) this makes an array [6,7,8]
+const makeArrOfIndices = (startingIndex, endingIndex) => forLoopMap(
+   index => startingIndex + index, 
+   endingIndex - startingIndex
+);
+
+const getCellKeysInAddedAxisItems = (axis, oldAxisTotal, newAxisTotal, state) => {
+   const indiciesArr = makeArrOfIndices(oldAxisTotal, newAxisTotal);
+   return R.reduce(
+      (accumulator, index) => R.pipe(
+         getCellKeysInAxis, 
+         R.concat(accumulator)
+      )(axis, index, state), 
+      [], 
+      indiciesArr
+   );
+}
+
+export const getCellsFromCellKeys = R.curry((state, cellKeys) => R.map(cellKey => stateCell(state, cellKey), cellKeys));
+
+// TODO doesn't seem like we are using this, so get rid of it if that's the case
+const getCellsForChangeType = (state, changeInfo) => {
+   const { changeType, data } = changeInfo;
+   switch (changeType) {
+      /**
+       * UPDATED_COLUMN_WIDTH & UPDATED_ROW_HEIGHT are likely not needed as only the grid needs to be re-rendered, not the cells themselves
+       * however leaving these here in case this proves useful in future 
+       */
+      case UPDATED_COLUMN_WIDTH:
+         return getCellKeysInAxis(COLUMN_AXIS, data, state); // data == index of the column
+
+      case UPDATED_ROW_HEIGHT:
+         return getCellKeysInAxis(ROW_AXIS, data, state); // data == index of the row
+
+      case UPDATED_COLUMN_FILTERS:
+         // data == newColumnFilter
+         // for now, when the filters are updated, we will say that all cells need to be updated. Could do some optimizaion later
+         return getAllCells(state);
+
+      case UPDATED_ROW_FILTERS: 
+         // data == newRowFilter
+         // for now, when the filters are updated, we will say that all cells need to be updated. Could do some optimizaion later
+         return getAllCells(state);
+
+      case UPDATED_COLUMN_VISIBILITY:
+         // data == newVisibility
+         return getAllCells(state);
+
+      case UPDATED_ROW_VISIBILITY:
+         // data == newVisibility
+         return getAllCells(state);
+
+      case UPDATED_TOTAL_COLUMNS:
+         // data == { oldTotalColumns, newTotalColumns }
+         return R.pipe(
+            getCellKeysInAddedAxisItems,
+            getCellsFromCellKeys(state)
+         )(COLUMN_AXIS, data.oldTotalColumns, data.newTotalColumns, state); 
+
+      case UPDATED_TOTAL_ROWS:
+         // data == { oldTotalRows, newTotalRows }
+         return R.pipe(
+            getCellKeysInAddedAxisItems,
+            getCellsFromCellKeys(state)
+         )(ROW_AXIS, data.oldTotalRows, data.newTotalRows, state);
+
+      case ROW_MOVED:
+         // data: { rowMoved, rowMovedTo }
+         break;
+      case COLUMN_MOVED:
+         // data: { columnMoved, columnMovedTo }
+         break;
+         
+      default:
+         return getAllCells(state);
+   }
+}
+
+// TODO remove getCellsToRender & renderChangedCells when sure they are not needed. Note that renderChangedCells was called from Sheet.js
+export const getCellsToRender = state => {
+   const cellsUpdateInfo = stateCellsUpdateInfo(state);
+
+   if (isSomething(cellsUpdateInfo)) {
+      /* if (arrayContainsSomething(cellsUpdateInfo.data) && cellsUpdateInfo.data[0] === ALL_CELLS) {
+         return getAllCells(state);
+      } */
+      const returnVal =  R.reduce(
+         (accumulator, changeInfo) => R.pipe(getCellsForChangeType, R.concat(accumulator), R.uniq)(state, changeInfo), 
+         [], 
+         cellsUpdateInfo
+      );
+      return returnVal;
+   }
+   return getAllCells(state); // by default render everything to be safe
+} 
+
+export const renderChangedCells = () => {
+   const cells = getCellsToRender(managedStore.state);
+   R.forEach(cell => managedStore.store.dispatch({ type: UPDATED_CELL, payload: cell }), cells);
+}

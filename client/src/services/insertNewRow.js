@@ -6,9 +6,8 @@
  **/
 import * as R from 'ramda';
 import managedStore from '../store';
-import { updatedTotalRows, updatedRowVisibility, } from '../actions';
 import { addedCellKeys } from '../actions/cellActions';
-import { hasChangedMetadata, updatedRowHeight } from '../actions/metadataActions';
+import { updatedRowVisibility, hasChangedMetadata, updatedRowHeight, updatedTotalRows, } from '../actions/metadataActions';
 import { startedUndoableAction, completedUndoableAction } from '../actions/undoActions';
 import { shouldShowColumn } from '../helpers/visibilityHelpers';
 import {
@@ -85,7 +84,7 @@ const insertNewRow = () => {
    addedCellKeys(updatedCellKeys);
    addNewCellsToStore(updatedCells);
    addNewCellsToCellDbUpdates(updatedCells);
-   updatedTotalRows(totalRows + 1);
+   updatedTotalRows(totalRows, totalRows + 1);
    updatedRowHeight(totalRows, DEFAULT_ROW_HEIGHT);
    hasChangedMetadata();
    completedUndoableAction('added row');

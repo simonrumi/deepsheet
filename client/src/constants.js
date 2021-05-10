@@ -32,3 +32,5 @@ export const SORT_TYPE_DATES = 'sort_type_dates';
 export const LOCAL_STORAGE_STATE_KEY = 'dds_state';
 export const LOCAL_STORAGE_ACTION_KEY = 'dds_action';
 export const LOCAL_STORAGE_TIME_KEY = 'dds_time';
+
+export const ALL_CELLS = 'all_cells'; // for use by cellsNeeding Update

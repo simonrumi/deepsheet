@@ -6,10 +6,9 @@
  **/
 import * as R from 'ramda';
 import managedStore from '../store';
-import { updatedTotalColumns, updatedColumnVisibility, } from '../actions';
 import { addedCellKeys } from '../actions/cellActions';
 import { startedUndoableAction, completedUndoableAction } from '../actions/undoActions';
-import { hasChangedMetadata, updatedColumnWidth } from '../actions/metadataActions';
+import { updatedColumnVisibility, hasChangedMetadata, updatedColumnWidth, updatedTotalColumns, } from '../actions/metadataActions';
 import { shouldShowRow } from '../helpers/visibilityHelpers';
 import {
    stateTotalColumns,
@@ -83,7 +82,7 @@ const insertNewColumn = () => {
    addedCellKeys(updatedCellKeys);
    addNewCellsToStore(updatedCells);
    addNewCellsToCellDbUpdates(updatedCells);
-   updatedTotalColumns(totalColumns + 1);
+   updatedTotalColumns(totalColumns, totalColumns + 1);
    updatedColumnWidth(totalColumns, DEFAULT_COLUMN_WIDTH);
    hasChangedMetadata();
    completedUndoableAction('added column');

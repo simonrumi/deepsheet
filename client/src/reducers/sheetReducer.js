@@ -1,13 +1,22 @@
-import { TRIGGERED_FETCH_SHEET, FETCHING_SHEET, FETCHED_SHEET, FETCH_SHEET_ERROR } from '../actions/sheetTypes';
-import { POSTING_CREATE_SHEET, COMPLETED_CREATE_SHEET, SHEET_CREATION_FAILED } from '../actions/sheetTypes';
-import { CELLS_LOADED } from '../actions/cellTypes';
-import { isNothing } from '../helpers';
+import * as R from 'ramda';
+import {
+   TRIGGERED_FETCH_SHEET,
+   FETCHING_SHEET,
+   FETCHED_SHEET,
+   FETCH_SHEET_ERROR,
+   POSTING_CREATE_SHEET,
+   COMPLETED_CREATE_SHEET,
+   SHEET_CREATION_FAILED,
+} from '../actions/sheetTypes';
+import { CELLS_LOADED, CELLS_UPDATED, CELLS_REDRAW_COMPLETED } from '../actions/cellTypes';
+import { isNothing, arrayContainsSomething } from '../helpers';
+import { ALL_CELLS } from '../constants';
 
 const sheetReducer = (state = null, action) => {
    switch (action.type) {
       case TRIGGERED_FETCH_SHEET:
          if (isNothing(action.payload)) {
-            return {...state, errorMessage: null };
+            return { ...state, errorMessage: null };
          }
          return { ...state, sheetId: action.payload, errorMessage: null };
 
@@ -18,6 +27,7 @@ const sheetReducer = (state = null, action) => {
             userId,
             isCallingDb: true,
             errorMessage: null,
+            cellsLoaded: false,
          };
 
       case POSTING_CREATE_SHEET:
@@ -55,7 +65,27 @@ const sheetReducer = (state = null, action) => {
       case CELLS_LOADED:
          return {
             ...state,
-            cellsLoaded: true
+            cellsLoaded: true,
+            cellsUpdateInfo: [{ changeType: CELLS_LOADED, data: [ALL_CELLS] }],
+            cellsRenderCount: state.cellsRenderCount === undefined ? 1 : state.cellsRenderCount + 1,
+         };
+
+      case CELLS_UPDATED:
+         // payload will be like this
+         // { changeType: UPDATED_COLUMN_WIDTH, data: { some data relating to the change type } }
+         const cellsUpdateInfo = R.has('cellsUpdateInfo', state) && arrayContainsSomething(state.cellsUpdateInfo)
+            ? [ ...state.cellsUpdateInfo, action.payload ]
+            : [ action.payload ];
+         return {
+            ...state,
+            cellsUpdateInfo,
+            cellsRenderCount: state.cellsRenderCount === undefined ? 1 : state.cellsRenderCount + 1,
+         };
+
+      case CELLS_REDRAW_COMPLETED:
+         return {
+            ...state,
+            cellsUpdateInfo: [],
          }
 
       default:

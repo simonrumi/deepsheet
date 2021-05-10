@@ -9,6 +9,8 @@ import {
    cellColumn,
    stateRowVisibility, 
    stateSheetCellsLoaded,
+   stateCellsUpdateInfo,
+   stateCellRange,
 } from '../helpers/dataStructureHelpers';
 import {
    shouldShowRow,
@@ -24,62 +26,64 @@ import LastRow from './organisms/LastRow';
 import Cell from './molecules/Cell';
 import managedStore from  '../store';
 
-const renderEmptyEndCell = cell => (
-   <Cell blankCell={true} cell={cell} classes={'border-r'} key={cellRow(cell) + '_endCell'} />
-);
+const Cells = () => {
+   const cellRange = useSelector(state => stateCellRange(state));
 
-const maybeEmptyEndCell = cell =>
-R.ifElse(
-   isLastVisibleItemInAxis(
-      COLUMN_AXIS, // we are rendering a row, so need to check if this is the last visible column in the row
-      stateTotalColumns(managedStore.state),
-      managedStore.state
-   ),
-   renderEmptyEndCell,
-   nothing
-)(cell); 
+   const renderEmptyEndCell = cell => (
+      <Cell blankCell={true} cell={cell} classes={'border-r'} key={cellRow(cell) + '_endCell'} cellRange={cellRange} />
+   );
 
-const renderRowHeader = cell => <RowHeader cell={cell} blankCell={false} key={'row_header_' + cellRow(cell)} />;
-
-const renderCell = cell => <Cell cell={cell} blankCell={false} key={cellRow(cell) + '_' + cellColumn(cell)} />;
-
-const maybeRowHeader = R.ifElse(isFirstColumn, renderRowHeader, nothing);
-
-const renderCellAndMaybeEdges = cell => {
-   return [
-      maybeRowHeader(cell), 
-      renderCell(cell), 
-      maybeEmptyEndCell(cell)
-   ];
-};
-
-const maybeCell = (state, cell) => R.ifElse(
-      shouldShowRow(stateRowVisibility(state)), 
-      renderCellAndMaybeEdges, 
+   const maybeEmptyEndCell = cell =>
+   R.ifElse(
+      isLastVisibleItemInAxis(
+         COLUMN_AXIS, // we are rendering a row, so need to check if this is the last visible column in the row
+         stateTotalColumns(managedStore.state),
+         managedStore.state
+      ),
+      renderEmptyEndCell,
       nothing
-   )(cell);
+   )(cell); 
 
-const renderCells = cells => {
-   if (
+   const renderRowHeader = cell => <RowHeader cell={cell} blankCell={false} key={'row_header_' + cellRow(cell)} />;
+
+   const renderCell = cell => <Cell 
+      cell={cell} 
+      blankCell={false} 
+      key={cellRow(cell) + '_' + cellColumn(cell)} 
+      cellRange={cellRange} 
+   />;
+
+   const maybeRowHeader = R.ifElse(isFirstColumn, renderRowHeader, nothing);
+
+   const renderCellAndMaybeEdges = cell => {
+      return [
+         maybeRowHeader(cell), 
+         renderCell(cell), 
+         maybeEmptyEndCell(cell)
+      ];
+   };
+
+   const maybeCell = (state, cell) => R.ifElse(
+         shouldShowRow(stateRowVisibility(state)), 
+         renderCellAndMaybeEdges, 
+         nothing
+      )(cell);
+
+   const renderAllCells = cells => cells?.length > 0 &&
       isVisibilityCalcutated() &&
       isSomething(stateTotalRows(managedStore.state)) &&
-      cells?.length > 0
-   ) {
-      return R.pipe(
-         orderCells(stateTotalRows(managedStore.state)),
-         R.map(cell => maybeCell(managedStore.state, cell)),
-         R.prepend(<ColumnHeaders key="columnHeaders" />),
-         R.append(<LastRow key="lastRow" />),
-      )(cells);
-   }
-   return null;
-};
+      isSomething(stateTotalColumns(managedStore.state))
+         ? R.pipe(
+            orderCells(stateTotalRows(managedStore.state)),
+            R.map(cell => maybeCell(managedStore.state, cell)),
+            R.prepend(<ColumnHeaders key="columnHeaders" />),
+            R.append(<LastRow key="lastRow" />),
+         )(cells)
+      : null;
 
-const Cells = () => {
-   useSelector(state => stateSheetCellsLoaded(state));
    return R.pipe(
-      getAllCells,
-      renderCells,
+      getAllCells, //getCellsToRender, TODO probably not going to do this anymore, so remove the function from cellHelpers
+      renderAllCells,
    )(managedStore.state)
 }
 export default Cells;

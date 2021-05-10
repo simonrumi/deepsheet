@@ -11,6 +11,7 @@ import {
    ADDED_CELL_KEYS,
    REMOVED_CELL_KEYS,
    CLEARED_ALL_CELL_KEYS,
+   CELLS_REDRAW_COMPLETED,
 } from './cellTypes';
 import { isNothing } from '../helpers';
 
@@ -19,7 +20,6 @@ export const updatedCell = cell => {
       console.warn('WARNING: updatedCell could not create an action. It received', cell);
       return;
    }
-
    managedStore.store.dispatch({
       type: UPDATED_CELL,
       payload: cell,
@@ -86,5 +86,11 @@ export const removedCellKeys = cellKey => {
 export const clearedAllCellKeys = () => {
    managedStore.store.dispatch({
       type: CLEARED_ALL_CELL_KEYS,
+   });
+}
+
+export const cellsRedrawCompleted = () => {
+   managedStore.store.dispatch({
+      type: CELLS_REDRAW_COMPLETED,
    });
 }
