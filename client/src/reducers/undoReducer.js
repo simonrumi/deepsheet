@@ -9,7 +9,7 @@ import {
    FINISHED_EDITING,
 } from '../actions/undoTypes';
 import { arrayContainsSomething } from '../helpers';
-import { stateOriginalValue } from '../helpers/dataStructureHelpers';
+import { stateOriginalValue, cellText, cellRow, cellColumn } from '../helpers/dataStructureHelpers';
 
 const undoReducer = reducer => {
    const initialState = {
@@ -55,12 +55,17 @@ const undoReducer = reducer => {
             }
 
          case STARTED_EDITING:
-            // action.payload contains just the original value
+            // this is used by CellInPlaceEditor, when the user starts editing a cell
+            // action.payload contains the cell
             return {
                ...state, // keep the past & future as is
                present: reducer(present, action), // update the present
                maybePast: {...present}, // this is not yet the official past
-               originalValue: action.payload // save the value we started editing for comparison when FINISHED_EDITING
+               original: {
+                  value: cellText(action.payload),
+                  row: cellRow(action.payload),
+                  column: cellColumn(action.payload),
+               } // save the value we started editing for comparison when FINISHED_EDITING
             }
          
          case FINISHED_EDITING:
@@ -76,13 +81,13 @@ const undoReducer = reducer => {
                   ...state, // keep the past & future as is
                   present: reducer(present, action), // update the present
                   maybePast: null, // reset this
-                  originalValue: null // reset this
+                  original: null // reset this
                }
                : {
                   ...state, // keep the future as is
                   past: R.append(state.maybePast, past), // the maybePast now becomes part of the real past
                   present: reducer(present, action), // update the present
-                  originalValue: null, //reset this
+                  original: null, //reset this
                   maybePast: null, // reset this
                }
 

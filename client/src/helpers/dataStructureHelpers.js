@@ -36,8 +36,13 @@ const pastLens = R.lensProp('past');
 export const statePast = R.view(pastLens);
 const futureLens = R.lensProp('future');
 export const stateFuture = R.view(futureLens);
-const originalValueLens = R.lensProp('originalValue');
+const originalValueLens = R.lensPath(['original', 'value']);
 export const stateOriginalValue = R.view(originalValueLens);
+const originalRowLens = R.lensPath(['original', 'row']);
+export const stateOriginalRow = R.view(originalRowLens);
+const originalColumnLens = R.lensPath(['original', 'column']);
+export const stateOriginalColumn = R.view(originalColumnLens);
+
 
 /************************************************ DB **********************************************/
 

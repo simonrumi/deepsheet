@@ -24,6 +24,13 @@ export const mapWithIndex = R.addIndex(R.map);
 // returns an array
 export const forLoopMap = (fn, length) => mapWithIndex((val, index) => fn(index), makeArr(length));
 
+// Not using this as of 5/10/21 but might be useful
+// example: given start and end points (6,9) this makes an array [6,7,8]
+export const makeArrOfIndices = (startingIndex, endingIndex) => forLoopMap(
+   index => startingIndex + index, 
+   endingIndex - startingIndex
+);
+
 export const reduceWithIndex = R.addIndex(R.reduce);
 
 // when you want to reduce, but you don't have an array, just a number of times to run the function supplied to reduce

@@ -1,13 +1,12 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import * as R from 'ramda';
-import { useSelector } from 'react-redux';
 import managedStore from '../../store';
 import { updatedCell, hasChangedCell } from '../../actions/cellActions';
 import { createdSheet } from '../../actions/sheetActions';
 import { clearedFocus } from '../../actions/focusActions';
 import { startedEditing, finishedEditing } from '../../actions/undoActions'; 
-import { isSomething } from '../../helpers';
-import { tabToNextVisibleCell, createCellKey, getCellsFromCellKeys } from '../../helpers/cellHelpers';
+import { isSomething, ifThen } from '../../helpers';
+import { tabToNextVisibleCell } from '../../helpers/cellHelpers';
 import { getUserInfoFromCookie } from '../../helpers/userHelpers';
 import { createDefaultAxisSizing } from '../../helpers/axisSizingHelpers';
 import {
@@ -16,6 +15,8 @@ import {
    cellRow,
    cellColumn,
    stateOriginalValue,
+   stateOriginalRow,
+   stateOriginalColumn
 } from '../../helpers/dataStructureHelpers';
 import IconNewDoc from '../atoms/IconNewDoc';
 import IconClose from '../atoms/IconClose';
@@ -23,50 +24,36 @@ import CheckmarkSubmitIcon from '../atoms/IconCheckmarkSubmit';
 import { DEFAULT_TOTAL_ROWS, DEFAULT_TOTAL_COLUMNS, DEFAULT_COLUMN_WIDTH, DEFAULT_ROW_HEIGHT } from '../../constants';
 
 const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
-   // the store's state is the source of truth for the cell's content, the cell value received as a prop seems not always in sync with that
-   // TODO test using cell instead of stateCell - maybe stateCEll is not needed
-   const stateCell = useSelector(state =>  R.pipe(
-         createCellKey,
-         R.append(R.__, []),
-         getCellsFromCellKeys(managedStore.state),
-         R.head
-      )(cell.row, cell.column)
-   );
-
    const keyBindings = event => {
       // use https://keycode.info/ to get key values
       switch(event.keyCode) {
-         case 27: // esc
-            handleCancel(event);
-            break;
-         case 13: // enter
-            handleSubmit(event, stateCell);
-            break;
-         case 9: // tab
-            handleSubmit(event);
-            tabToNextVisibleCell(cell.row, cell.column, event.shiftKey);
-            break;
-         default:
+          case 27: // esc
+              handleCancel(event);
+              break;
+          case 13: // enter
+              handleSubmit(event);
+              break;
+          case 9: // tab
+              handleSubmit(event);
+              tabToNextVisibleCell(cell.row, cell.column, event.shiftKey);
+              break;
+          default:
       }
-   }
+   };
 
-   const reinstateOriginalValue = () => {
-      updatedCell({
-         ...cell,
-         content: { ...cell.content, text: stateOriginalValue(managedStore.state) },
-         isStale: false,
-      });
-   }
-
-   const manageFocus = event => {
-      event.preventDefault();
-      document.addEventListener('keydown', keyBindings, false);
-      cellInPlaceEditorRef.current.selectionStart = 0;
-      cellInPlaceEditorRef.current.selectionEnd = cellText(cell).length;
-      startedEditing(cellText(cell));
-   }
-
-   const finalizeCellContent = () => {
+   const reinstateOriginalValue = cell => ifThen({
+      ifCond: cell.row === stateOriginalRow(managedStore.state) && cell.column === stateOriginalColumn(managedStore.state),
+      thenDo: updatedCell,
+      params: {
+         thenParams: {
+            ...cell,
+            content: { ...cell.content, text: stateOriginalValue(managedStore.state) },
+            isStale: false,
+         }
+      }
+   });
+   
+   const finalizeCellContent = (cell, cellInPlaceEditorRef) => {
       if (!R.equals(stateOriginalValue(managedStore.state), cellInPlaceEditorRef.current?.value)) {
          hasChangedCell({
             row: cellRow(cell),
@@ -79,10 +66,18 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
       });
    }
 
+   const manageFocus = event => {
+      event.preventDefault();
+      document.addEventListener('keydown', keyBindings, false);
+      cellInPlaceEditorRef.current.selectionStart = 0;
+      cellInPlaceEditorRef.current.selectionEnd = cellText(cell).length;
+      startedEditing(cell);
+   }
+
    const manageBlur = event => {
       event.preventDefault();
-      finalizeCellContent();
-      document.removeEventListener('keydown', keyBindings, false);
+      finalizeCellContent(cell, cellInPlaceEditorRef);
+      document.removeEventListener('keydown', keyBindings(cell), false);
       clearedFocus();
       updatedCell(cell);
    }
@@ -109,17 +104,17 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
       createdSheet({ rows, columns, title, parentSheetId, summaryCell, parentSheetCell, rowHeights, columnWidths, userId });
    }
 
-   const handleSubmit = (event, cell) => {
+   const handleSubmit = event => {
       event.preventDefault();
-      finalizeCellContent();
-      document.removeEventListener('keydown', keyBindings, false);
+      finalizeCellContent(cell, cellInPlaceEditorRef);
+      document.removeEventListener('keydown', keyBindings(cell), false);
       clearedFocus();
    }
 
    const handleCancel = event => {
       event.preventDefault();
-      reinstateOriginalValue(); // note: this does the updatedCell call
-      document.removeEventListener('keydown', keyBindings, false);
+      reinstateOriginalValue(cell); // note: this does the updatedCell call
+      document.removeEventListener('keydown', keyBindings(cell), false);
       clearedFocus();
    }
 
@@ -144,7 +139,7 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
 
    const renderTextForm = (editorRef, cell) => {
       const textArea = (
-         <form onSubmit={event => handleSubmit(event, cell)} >
+         <form onSubmit={handleSubmit} >
             {renderIcons()}
             <textarea
                className="focus:outline-none border-2 border-subdued-blue p-1 shadow-lg w-full h-full" 
@@ -173,7 +168,7 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
 
    return (
       <div style={positioning} className="absolute z-10 bg-white text-dark-dark-blue " >
-         {renderTextForm(cellInPlaceEditorRef, stateCell)}
+         {renderTextForm(cellInPlaceEditorRef, cell)}
       </div>
    );
 }

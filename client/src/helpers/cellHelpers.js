@@ -261,18 +261,13 @@ export const haveCellsNeedingUpdate = state => R.pipe(
    arrayContainsSomething,
 )(state);
    
-const getCellKeysInAxis = (axis, axisIndex, state) => R.filter(
+// not using this, but keeping since it could be useful
+export const getCellKeysInAxis = (axis, axisIndex, state) => R.filter(
    cellKey => getIndexFromCellKey(axis, cellKey) === axisIndex, 
    stateCellKeys(state)
 );
 
-// example: given start and end points (6,9) this makes an array [6,7,8]
-const makeArrOfIndices = (startingIndex, endingIndex) => forLoopMap(
-   index => startingIndex + index, 
-   endingIndex - startingIndex
-);
-
-const getCellKeysInAddedAxisItems = (axis, oldAxisTotal, newAxisTotal, state) => {
+/* const getCellKeysInAddedAxisItems = (axis, oldAxisTotal, newAxisTotal, state) => {
    const indiciesArr = makeArrOfIndices(oldAxisTotal, newAxisTotal);
    return R.reduce(
       (accumulator, index) => R.pipe(
@@ -282,18 +277,18 @@ const getCellKeysInAddedAxisItems = (axis, oldAxisTotal, newAxisTotal, state) =>
       [], 
       indiciesArr
    );
-}
+} */
 
 export const getCellsFromCellKeys = R.curry((state, cellKeys) => R.map(cellKey => stateCell(state, cellKey), cellKeys));
 
-// TODO doesn't seem like we are using this, so get rid of it if that's the case
+/* TODO doesn't seem like we are using this, so get rid of it if that's the case
 const getCellsForChangeType = (state, changeInfo) => {
    const { changeType, data } = changeInfo;
    switch (changeType) {
       /**
        * UPDATED_COLUMN_WIDTH & UPDATED_ROW_HEIGHT are likely not needed as only the grid needs to be re-rendered, not the cells themselves
        * however leaving these here in case this proves useful in future 
-       */
+       
       case UPDATED_COLUMN_WIDTH:
          return getCellKeysInAxis(COLUMN_AXIS, data, state); // data == index of the column
 
@@ -342,16 +337,16 @@ const getCellsForChangeType = (state, changeInfo) => {
       default:
          return getAllCells(state);
    }
-}
+} */
 
-// TODO remove getCellsToRender & renderChangedCells when sure they are not needed. Note that renderChangedCells was called from Sheet.js
+/* // TODO remove getCellsToRender & renderChangedCells when sure they are not needed. Note that renderChangedCells was called from Sheet.js
 export const getCellsToRender = state => {
    const cellsUpdateInfo = stateCellsUpdateInfo(state);
 
    if (isSomething(cellsUpdateInfo)) {
-      /* if (arrayContainsSomething(cellsUpdateInfo.data) && cellsUpdateInfo.data[0] === ALL_CELLS) {
-         return getAllCells(state);
-      } */
+      // if (arrayContainsSomething(cellsUpdateInfo.data) && cellsUpdateInfo.data[0] === ALL_CELLS) {
+      //    return getAllCells(state);
+      // }
       const returnVal =  R.reduce(
          (accumulator, changeInfo) => R.pipe(getCellsForChangeType, R.concat(accumulator), R.uniq)(state, changeInfo), 
          [], 
@@ -365,4 +360,4 @@ export const getCellsToRender = state => {
 export const renderChangedCells = () => {
    const cells = getCellsToRender(managedStore.state);
    R.forEach(cell => managedStore.store.dispatch({ type: UPDATED_CELL, payload: cell }), cells);
-}
+} */

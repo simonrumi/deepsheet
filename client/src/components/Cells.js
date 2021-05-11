@@ -82,7 +82,7 @@ const Cells = () => {
       : null;
 
    return R.pipe(
-      getAllCells, //getCellsToRender, TODO probably not going to do this anymore, so remove the function from cellHelpers
+      getAllCells,
       renderAllCells,
    )(managedStore.state)
 }
