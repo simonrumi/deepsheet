@@ -22,13 +22,12 @@ import {
    stateRowVisibility,
    stateTotalRows,
    stateTotalColumns,
-   stateCellsUpdateInfo,
    stateCellsRenderCount,
 } from '../helpers/dataStructureHelpers';
 import { isVisibilityCalcutated } from '../helpers/visibilityHelpers';
 import { isAxisSizingCalculated,handleResizerDragOver, handleResizerDrop } from '../helpers/axisSizingHelpers';
 import { getUserInfoFromCookie } from '../helpers/userHelpers';
-import { haveCellsNeedingUpdate, renderChangedCells } from '../helpers/cellHelpers';
+import { haveCellsNeedingUpdate } from '../helpers/cellHelpers';
 import {
    ROW_AXIS,
    COLUMN_AXIS,
@@ -36,7 +35,6 @@ import {
    THIN_ROW,
    DEFAULT_ROW_HEIGHT,
    DEFAULT_COLUMN_WIDTH,
-   ALL_CELLS,
 } from '../constants';
 import LoadingIcon from './atoms/IconLoading';
 import Header from './Header';
@@ -99,9 +97,13 @@ const Sheet = props => {
    const totalColumns = useSelector(state => stateTotalColumns(state));
    
    const cellsRenderCount = stateCellsRenderCount(managedStore.state); // not getting this value using useSelector as we don't want to retrigger a render when it changes (useEffect below manages the re-render)
-   console.log('Sheet.js got cellsRenderCount', cellsRenderCount);
+   // console.log('Sheet.js got cellsRenderCount', cellsRenderCount);
 
-   const memoizedCells = useMemo(() => <Cells />, [cellsRenderCount]);
+   const memoizedCells = useMemo(() => {
+      console.log('Sheet.js about to actually render <Cells />');
+      return <Cells renderCount={cellsRenderCount}/>;
+   }, [cellsRenderCount]);
+   
 
    const getAxisSizing = axis =>
    axis === COLUMN_AXIS
@@ -136,15 +138,17 @@ const Sheet = props => {
 
    const renderGridSizingStyle = () => isVisibilityCalcutated() && isAxisSizingCalculated() ? memoizedGridSizingStyle : null;
 
-   const renderCells = () => (
-      <div
+   const renderCells = () => {
+      console.log('Sheet.js renderCells will get memoizedCells');
+      return (<div
          className="grid-container pt-1"
          style={renderGridSizingStyle()}
          onDragOver={handleResizerDragOver}
          onDrop={handleResizerDrop}>
-         {memoizedCells}
-      </div>
-   );
+            {memoizedCells}
+      </div>);
+   }
+  
 
    /**
     * useEffect runs after the DOM is updated, so then we can fire cellsRedrawCompleted which increments the cellsRenderCount

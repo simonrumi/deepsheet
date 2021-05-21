@@ -57,6 +57,7 @@ const undoReducer = reducer => {
          case STARTED_EDITING:
             // this is used by CellInPlaceEditor, when the user starts editing a cell
             // action.payload contains the cell
+            console.log('undoReducer got STARTED_EDITING for cell', action.payload);
             return {
                ...state, // keep the past & future as is
                present: reducer(present, action), // update the present
@@ -76,6 +77,7 @@ const undoReducer = reducer => {
             * (hence the value doesn't get populated)
             * So here we need to check for the value being exactly null and treat it the same as when the original value and the payload.value are the same
              */
+            console.log('undoReducer got FINISHED_EDITING for action.payload.value', action.payload.value, 'with message', action.payload.message);
             return action.payload.value === null || R.equals(stateOriginalValue(state), action.payload.value)
                ? {
                   ...state, // keep the past & future as is

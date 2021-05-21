@@ -74,8 +74,12 @@ const cellReducerCreator = thunkifiedCreatorFunc => {
    store.replaceReducer(combineNewReducers);
 }
 
+const isCellAction = ({ action }) => isSomething(action?.type) && isSomething(action?.payload?.row) && isSomething(action?.payload?.column);
+const isMatchingCell = ({ cell, action }) => isCellAction({ action }) && cell.row === action.payload.row && cell.column === action.payload.column;
+
 const cellReducerFactory = (cell, sheetId) => 
-   (state = {}, action) => {
+   (state = {}, action) => isMatchingCell({ cell, action }) ? processCellAction(state, sheetId, action) : state;
+      /* TODO old version used Scantuary ....but probably caused performance issues....so get rid of validatedACtion
       return R.pipe(
          validateAction,
          validatedAction => S.isLeft(validatedAction) 
@@ -84,8 +88,7 @@ const cellReducerFactory = (cell, sheetId) =>
                getEitherValue,
                processCellAction(state, sheetId),
             )(validatedAction)
-      )(S.Right(action), S.Right(cell));
-   };
+      )(S.Right(action), S.Right(cell)); */
 
 export const createCellReducers = sheet => {
    const thunkifiedCreatorFunc = R.thunkify(

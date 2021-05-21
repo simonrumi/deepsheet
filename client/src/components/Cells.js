@@ -7,9 +7,7 @@ import {
    stateTotalColumns,
    cellRow,
    cellColumn,
-   stateRowVisibility, 
-   stateSheetCellsLoaded,
-   stateCellsUpdateInfo,
+   stateRowVisibility,
    stateCellRange,
 } from '../helpers/dataStructureHelpers';
 import {
@@ -30,7 +28,7 @@ const Cells = () => {
    const cellRange = useSelector(state => stateCellRange(state));
 
    const renderEmptyEndCell = cell => (
-      <Cell blankCell={true} cell={cell} classes={'border-r'} key={cellRow(cell) + '_endCell'} cellRange={cellRange} />
+      <Cell blankCell={true} row={cell.row} column={cell.column} classes={'border-r'} key={cellRow(cell) + '_endCell'} cellRange={cellRange} />
    );
 
    const maybeEmptyEndCell = cell =>
@@ -47,7 +45,8 @@ const Cells = () => {
    const renderRowHeader = cell => <RowHeader cell={cell} blankCell={false} key={'row_header_' + cellRow(cell)} />;
 
    const renderCell = cell => <Cell 
-      cell={cell} 
+      row={cell.row}
+      column={cell.column} 
       blankCell={false} 
       key={cellRow(cell) + '_' + cellColumn(cell)} 
       cellRange={cellRange} 
