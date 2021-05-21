@@ -145,7 +145,17 @@ export const spicyCurry = R.curry((func, templateObj, argObj) => {
       { argsSupplied: {}, argsPending: {} },
       Object.keys(templateObj)
    );
-   if (R.isEmpty(categorizedArgs.argsPending)) {
+   return R.isEmpty(categorizedArgs.argsPending)
+      ? func(categorizedArgs.argsSupplied)
+      : spicyCurry(
+         remainingArgs =>
+         func({
+            ...categorizedArgs.argsSupplied,
+            ...remainingArgs,
+         }),
+      categorizedArgs.argsPending
+      );
+   /*if (R.isEmpty(categorizedArgs.argsPending)) {
       return func(categorizedArgs.argsSupplied);
    }
    const partialFunc = remainingArgs =>
@@ -154,6 +164,7 @@ export const spicyCurry = R.curry((func, templateObj, argObj) => {
          ...remainingArgs,
       });
    return spicyCurry(partialFunc, categorizedArgs.argsPending);
+   */
 });
 
 const maybeConvertBoolToFunction = (maybeFunc, params) => R.cond([
