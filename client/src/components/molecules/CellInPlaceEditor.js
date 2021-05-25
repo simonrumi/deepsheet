@@ -47,9 +47,6 @@ const reinstateOriginalValue = cell => ifThen({
 // note that, related to the undoReducer, we have the maybePast which stores the focus of the cell. 
 // perhaps maybePast should be updated to have no focused cell
 
-
-// TODO get rid of cellInPlaceEditorRef if not needed
-
 const finalizeCellContent = (cell, cellInPlaceEditorRef) => {
    if (!R.equals(stateOriginalValue(managedStore.state), cellInPlaceEditorRef.current?.value)) {
       hasChangedCell({
