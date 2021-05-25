@@ -25,13 +25,6 @@ import SummaryCell from './SummaryCell';
 import BlankCell from './BlankCell';
 import CellInPlaceEditor from './CellInPlaceEditor';
 
-
-// TODO in the middle of using the diagram
-// https://app.diagrams.net/#G1OYD5_yBQFAiodyU8aDO42pz7UqV5YMb_
-// ...to organizing when the cells are rendering...seems like Sheet and Cells are good
-// ....Cell now has React.memo on it.....probably doing something but could use more testing
-// then need to look at CellInPlaceEditor and SubsheetCell and SummarycCell
-
 // TODO might be reinstating this when getting cell range selection to work
 /* const onCellClick = (event, cell) => {
    event.preventDefault();
