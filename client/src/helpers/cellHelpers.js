@@ -219,6 +219,7 @@ const getNextVisibleColumn = (columnIndex, goBackwards) => columnVisibilityArr =
          : columnIndex + 1
 
 export const tabToNextVisibleCell = (rowIndex, columnIndex, goBackwards) => R.pipe(
+   R.tap(data => console.log('cellHelpers.tabToNextVisibleCell got rowIndex', rowIndex, 'columnIndex', columnIndex)),
    stateColumnVisibility,
    getNextVisibleColumn(columnIndex, goBackwards),
    createCellKey(rowIndex),

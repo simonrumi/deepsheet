@@ -35,7 +35,7 @@ const reinstateOriginalValue = cell => ifThen({
    }
 });
 
-// TODO NOTE ...thought this was a bug in the past but seems to have gone away
+// TODO BUG
 // 1. click on cell 1, 1
 // 2. esc
 // 3. click on cell 1, 3
@@ -89,6 +89,11 @@ const handleCancel = (event, cell, cellInPlaceEditorRef) => {
    // cellInPlaceEditorRef.current.removeEventListener('keydown', evt => keyBindings(evt, cell, cellInPlaceEditorRef), false);
    document.removeEventListener('keydown', evt => keyBindings(evt, cell, cellInPlaceEditorRef), false);
    clearedFocus();
+   // TODO NOTE: added the following in; test esc with key and with icon.
+   finishedEditing({
+      value: isSomething(cellInPlaceEditorRef.current) ? cellInPlaceEditorRef.current.value : null,
+      message: 'cancelled editing row ' + cellRow(cell) + ', column ' + cellColumn(cell),
+   });
 }
 
 const keyBindings = (event, cell, cellInPlaceEditorRef) => {
@@ -102,6 +107,7 @@ const keyBindings = (event, cell, cellInPlaceEditorRef) => {
             break;
        case 9: // tab
             handleSubmit(event, cell, cellInPlaceEditorRef);
+            manageBlur(event, cell, cellInPlaceEditorRef);
             tabToNextVisibleCell(cell.row, cell.column, event.shiftKey);
             break;
        default:
@@ -122,6 +128,7 @@ const manageBlur = (event, cell, cellInPlaceEditorRef) => {
    event.preventDefault();
    finalizeCellContent(cell, cellInPlaceEditorRef);
    // cellInPlaceEditorRef.current.removeEventListener('keydown', evt => keyBindings(evt, cell, cellInPlaceEditorRef), false);
+   console.log('CellInPLaceEditor.manageBlur about to do document.removeEventListener for cell row', cell.row, 'column', cell.column);
    document.removeEventListener('keydown', evt => keyBindings(evt, cell, cellInPlaceEditorRef), false);
    clearedFocus();
    updatedCell(cell);

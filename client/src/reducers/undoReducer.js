@@ -54,6 +54,8 @@ const undoReducer = reducer => {
                future: [], // blow away the future, since we're now taking a new course of action
             }
 
+
+            // TODO confirm this change is ok, check in, then create a new branch for all the changes
          case STARTED_EDITING:
             // this is used by CellInPlaceEditor, when the user starts editing a cell
             // action.payload contains the cell
@@ -61,7 +63,7 @@ const undoReducer = reducer => {
             return {
                ...state, // keep the past & future as is
                present: reducer(present, action), // update the present
-               maybePast: {...present}, // this is not yet the official past
+               maybePast: R.assoc('focus', {}, present), // this might become the official past...note that the focus is reset to nothing: we don't want focus remembered when undoing
                original: {
                   value: cellText(action.payload),
                   row: cellRow(action.payload),
