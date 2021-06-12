@@ -24,6 +24,7 @@ import SubsheetCell from './SubsheetCell';
 import SummaryCell from './SummaryCell';
 import BlankCell from './BlankCell';
 import CellInPlaceEditor from './CellInPlaceEditor';
+import Blank from '../atoms/Blank';
 
 // TODO might be reinstating this when getting cell range selection to work
 /* const onCellClick = (event, cell) => {
@@ -46,18 +47,19 @@ import CellInPlaceEditor from './CellInPlaceEditor';
 const onCellClick = cell => {
    console.log('Cell.onCellClick about to call focusedCell() for cell row', cell.row, 'cell.column', cell.column);
    focusedCell(cell);
-   updatedCell(cell);
+   // updatedCell(cell); // TODO we haven't actually updated the cell, so try just taking this out
    hidePopups();
 }
 
-const createClassNames = (classes, row, column, cellRange) => {
-   const borderClasses = isCellInRange(row, column, cellRange) ? 'border-burnt-orange ' : '';
+// TODO might need to reinstate this cellRange stuff, but it is causing all cells to re-render unnecessarily, so need to select particular cells to re-render somehow
+const createClassNames = (classes, /*row, column cellRange */) => {
+   const borderClasses = ''; //isCellInRange(row, column, cellRange) ? 'border-burnt-orange ' : ''; 
    const cellBaseClasses = 'grid-item overflow-hidden text-dark-dark-blue border-t border-l ';
    const otherClasses = classes ? classes : '';
    return cellBaseClasses + borderClasses + otherClasses;
 };
 
-const Cell = React.memo(({ row, column, cellRange, classes, blankCell }) => {
+const Cell = React.memo(({ row, column, classes, blankCell }) => { // cellRange // TODO might need to reinstate cellRange, but it is causing unnecessary rerenderings so find a way to make it targeted
    const cellKey = createCellKey(row, column);
    const cell = useSelector(state => statePresent(state)[cellKey]);
    const cellHasFocus = useSelector(state => isCellFocused(cell, state));
@@ -65,7 +67,6 @@ const Cell = React.memo(({ row, column, cellRange, classes, blankCell }) => {
    const parentSheetId = useSelector(state => stateParentSheetId(state));
    // const cellRange = useSelector(state => stateCellRange(state)); // TODO remove if not needed
    const [cellRef, positioning] = usePositioning();
-
 
 // TODO - react to HIGHLIGHTED_CELL_RANGE action in some way that will put some border around the whole range
 // have started this BUT now we are running even more calcs on every cell each time the cellRange is updated, which is all the time
@@ -76,13 +77,15 @@ const Cell = React.memo(({ row, column, cellRange, classes, blankCell }) => {
       return (
          <div
             ref={cellRef}
-            className={createClassNames(classes, row, column, cellRange)}
+            className={createClassNames(classes)}
             onClick={() => onCellClick(cell)}
             id={createCellId(row, column)}>
             {text}
          </div>
       );
    }
+   //<Blank row={row} column={column} />
+   // TODO remove Blank.js when no longer using for testing
 
    const renderInPlaceEditor = cell => (
          <div className="w-full">
@@ -91,50 +94,14 @@ const Cell = React.memo(({ row, column, cellRange, classes, blankCell }) => {
          </div>
       );
 
-   const renderSummaryCell = cell => <SummaryCell cell={cell} cellHasFocus={cellHasFocus} />
+   const renderSummaryCell = cell => <SummaryCell cell={cell} />
       
    const isSummaryCell = () => isSomething(parentSheetId) && summaryCell?.row === row && summaryCell?.column === column;
 
    const renderBlankCell = () => <BlankCell classes={createClassNames(classes)} />;
 
-   const renderSubsheetCell = cell => <SubsheetCell cell={cell} />;
+   const renderSubsheetCell = cell => <SubsheetCell cell={cell} cellHasFocus={cellHasFocus}/>;
 
-// TODO memoized version doesn't seem to prevent any cell rendering, so get rid of this if not needed
-// ...using react.memo instead...seems to be doing the trick
-
-   // const cellNotVisible = R.pipe(isCellVisible, R.not);
-
-   /* const renderedCell = useMemo(() => {
-      const returnVal = R.cond([
-         [R.isNil, nothing],
-         [cellNotVisible, nothing],
-         [R.thunkify(R.identity)(blankCell), renderBlankCell],
-         [R.pipe(cellSubsheetId, isSomething), renderSubsheetCell],
-         [R.thunkify(R.identity)(cellHasFocus), renderInPlaceEditor],
-         [isSummaryCell, renderSummaryCell],
-         [R.pipe(cellSubsheetId, isNothing), renderRegularCell],
-      ])(cell);
-      console.log('cell actually being rendered (not memoized)');
-      return returnVal; // TODO tidy this up
-      },
-      [
-         cell, 
-         blankCell, 
-         cellHasFocus, 
-         isSummaryCell(), 
-         cellNotVisible(cell),
-         // functions below added to appease useMemo...these should never change
-         isSummaryCell, 
-         renderBlankCell,
-         renderInPlaceEditor,
-         renderRegularCell,
-         renderSummaryCell
-      ]
-   ); */
-
-   // return renderedCell;
-
-   // unmemozed version
    const renderCell =  R.cond([
       [R.isNil, nothing],
       [R.pipe(isCellVisible, R.not), nothing],
@@ -142,10 +109,12 @@ const Cell = React.memo(({ row, column, cellRange, classes, blankCell }) => {
       [R.pipe(cellSubsheetId, isSomething), renderSubsheetCell],
       [R.thunkify(R.identity)(cellHasFocus), renderInPlaceEditor],
       [isSummaryCell, renderSummaryCell],
-      [R.pipe(cellSubsheetId, isNothing), renderRegularCell],
+      [R.pipe(cellSubsheetId, isNothing), renderRegularCell], // TODO already checked for subsheet cell above, should be able to change this condition to R.T
    ]);
 
-   console.log('Cell.js rendering cell');
+   if (cell.row === 1 && cell.column === 4) {
+      console.log('Cell.js rendering cell, cellHasFocus is', cellHasFocus);
+   }
    return renderCell(cell);
 });
 

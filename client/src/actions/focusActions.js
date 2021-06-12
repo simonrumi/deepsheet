@@ -1,5 +1,11 @@
 import managedStore from '../store';
-import { UPDATED_FOCUS, CLEARED_FOCUS, HIGHLIGHTED_CELL_RANGE } from './focusTypes';
+import {
+   UPDATED_FOCUS,
+   UPDATED_FOCUS_REF,
+   UPDATED_FOCUS_ABORT_CONTROL,
+   CLEARED_FOCUS,
+   HIGHLIGHTED_CELL_RANGE,
+} from './focusTypes';
 
 export const focusedCell = cellData => {
    managedStore.store.dispatch({
@@ -7,6 +13,20 @@ export const focusedCell = cellData => {
       payload: { cell: cellData },
    });
 };
+
+export const updatedFocusRef = ref => {
+   managedStore.store.dispatch({
+      type: UPDATED_FOCUS_REF,
+      payload: { ref },
+   });
+}
+
+export const updatedFocusAbortControl = (abortControl, cell) => {
+   managedStore.store.dispatch({
+      type: UPDATED_FOCUS_ABORT_CONTROL,
+      payload: { abortControl, cell },
+   })
+}
 
 export const clearedFocus = () => {
    managedStore.store.dispatch({

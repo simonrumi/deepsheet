@@ -54,8 +54,6 @@ const undoReducer = reducer => {
                future: [], // blow away the future, since we're now taking a new course of action
             }
 
-
-            // TODO confirm this change is ok, check in, then create a new branch for all the changes
          case STARTED_EDITING:
             // this is used by CellInPlaceEditor, when the user starts editing a cell
             // action.payload contains the cell

@@ -3,7 +3,7 @@ import managedStore from '../store';
 import { completedSaveUpdates } from '../actions';
 import { triggeredFetchSheet } from '../actions/sheetActions';
 import { updatedCells, clearedAllCellKeys } from '../actions/cellActions';
-import { clearCells } from '../helpers/cellHelpers';
+import { clearedFocus } from '../actions/focusActions';
 import { updatedMetadata, clearMetadata } from '../actions/metadataActions';
 import {
    fetchingSheets,
@@ -16,14 +16,13 @@ import {
    deletedSheets,
    deleteSheetsError,
 } from '../actions/sheetsActions';
+import { clearCells } from '../helpers/cellHelpers';
 import { createSheetsTreeFromArray } from '../helpers/sheetsHelpers';
 import { updatedSheetsTree } from '../actions/sheetsActions';
-// import { LOGGED_IN, LOGGED_OUT } from '../actions/authTypes';
-// import { FETCHED_SHEETS } from '../actions/sheetsTypes'
 import { sheetQuery, sheetsQuery } from '../queries/sheetQueries';
 import { deleteSheetsMutation, deleteSheetMutation, sheetByUserIdMutation } from '../queries/sheetMutations';
 import titleMutation from '../queries/titleMutation';
-import { isSomething, arrayContainsSomething } from '../helpers';
+import { isSomething, arrayContainsSomething, ifThen } from '../helpers';
 import { getSaveableCellData, getCellFromStore } from '../helpers/cellHelpers';
 import { getUserInfoFromCookie } from '../helpers/userHelpers';
 import {
@@ -34,6 +33,7 @@ import {
    stateTitleIsStale,
    stateTitleText,
    stateSheets,
+   stateFocusAbortControl,
 } from '../helpers/dataStructureHelpers';
 
 // TODO return the response.data.thing for each query/mutation so the consumer doesn;t have to know that path
@@ -169,9 +169,15 @@ export const saveAllUpdates = async state => {
 };
 
 export const loadSheet = R.curry(async (state, sheetId) => {
+   ifThen({
+      ifCond: R.pipe(stateFocusAbortControl, isSomething),
+      thenDo: () => stateFocusAbortControl(state).abort(),
+      params: { ifParams: state }
+   }); // clears keydown listeners if any cell has focus
    saveAllUpdates(state); // save any changes to the current sheet
    clearCells(state); // clear out the current sheet's cells and cell keys
    clearMetadata();
    clearedAllCellKeys();
+   clearedFocus(); // make sure no cells are focused
    triggeredFetchSheet(sheetId); // then get the new sheet
 });
