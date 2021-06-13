@@ -6,9 +6,6 @@ import {
    isSomething,
    isNothing,
    arrayContainsSomething,
-   S, // TODO get rid of the Sanctuary stuff when certain not needed
-   toLeft,
-   eitherIsSomething,
    compareIndexValues,
    ifThenElse,
 } from './index';
@@ -24,8 +21,6 @@ import {
    cellSubsheetIdSetter,
    cellVisibleSetter,
    stateFocus,
-   stateFocusCell,
-   stateFocusCellRef,
    stateCellKeys,
    stateCell,
    statePresent,
@@ -33,7 +28,6 @@ import {
    stateColumnVisibility,
    stateCellsUpdateInfo,
 } from './dataStructureHelpers';
-import { focusedCell } from '../actions/focusActions';
 import { THIN_COLUMN, ROW_AXIS } from '../constants';
 
 export const getCellContent = cell =>

@@ -1,7 +1,7 @@
 import * as R from 'ramda';
 import managedStore from '../store';
-import { isSomething, isNothing, getEitherValue, S } from '../helpers';
-import { createUpdatedCellState, createCellKey, validateAction } from '../helpers/cellHelpers';
+import { isSomething, isNothing, S } from '../helpers';
+import { createUpdatedCellState, createCellKey } from '../helpers/cellHelpers';
 import { dbCells } from '../helpers/dataStructureHelpers';
 import { updatedCell, addedCellKeys } from '../actions/cellActions';
 import {
@@ -79,16 +79,6 @@ const isMatchingCell = ({ cell, action }) => isCellAction({ action }) && cell.ro
 
 const cellReducerFactory = (cell, sheetId) => 
    (state = {}, action) => isMatchingCell({ cell, action }) ? processCellAction(state, sheetId, action) : state;
-      /* TODO old version used Scantuary ....but probably caused performance issues....so get rid of validatedACtion
-      return R.pipe(
-         validateAction,
-         validatedAction => S.isLeft(validatedAction) 
-            ? state 
-            : R.pipe(
-               getEitherValue,
-               processCellAction(state, sheetId),
-            )(validatedAction)
-      )(S.Right(action), S.Right(cell)); */
 
 export const createCellReducers = sheet => {
    const thunkifiedCreatorFunc = R.thunkify(

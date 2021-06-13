@@ -24,7 +24,6 @@ import SubsheetCell from './SubsheetCell';
 import SummaryCell from './SummaryCell';
 import BlankCell from './BlankCell';
 import CellInPlaceEditor from './CellInPlaceEditor';
-import Blank from '../atoms/Blank';
 
 // TODO might be reinstating this when getting cell range selection to work
 /* const onCellClick = (event, cell) => {
@@ -45,9 +44,7 @@ import Blank from '../atoms/Blank';
 } */
 
 const onCellClick = cell => {
-   console.log('Cell.onCellClick about to call focusedCell() for cell row', cell.row, 'cell.column', cell.column);
    focusedCell(cell);
-   // updatedCell(cell); // TODO we haven't actually updated the cell, so try just taking this out
    hidePopups();
 }
 
@@ -84,8 +81,6 @@ const Cell = React.memo(({ row, column, classes, blankCell }) => { // cellRange 
          </div>
       );
    }
-   //<Blank row={row} column={column} />
-   // TODO remove Blank.js when no longer using for testing
 
    const renderInPlaceEditor = cell => (
          <div className="w-full">
@@ -109,12 +104,9 @@ const Cell = React.memo(({ row, column, classes, blankCell }) => { // cellRange 
       [R.pipe(cellSubsheetId, isSomething), renderSubsheetCell],
       [R.thunkify(R.identity)(cellHasFocus), renderInPlaceEditor],
       [isSummaryCell, renderSummaryCell],
-      [R.pipe(cellSubsheetId, isNothing), renderRegularCell], // TODO already checked for subsheet cell above, should be able to change this condition to R.T
+      [R.T, renderRegularCell]
    ]);
 
-   if (cell.row === 1 && cell.column === 4) {
-      console.log('Cell.js rendering cell, cellHasFocus is', cellHasFocus);
-   }
    return renderCell(cell);
 });
 

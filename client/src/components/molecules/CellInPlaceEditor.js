@@ -64,10 +64,8 @@ const manageChange = (event, cell) => {
 const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
    // this ref is applied to the text area (see below) so that we can manage its focus
    const cellInPlaceEditorRef = useRef();
-   console.log('CellInPlaceEditor got cellInPlaceEditorRef.current', cellInPlaceEditorRef?.current);
 
    const finalizeCellContent = (cell) => {
-      console.log('CellInPlaceEditor.finalizeCellContent will test these for equality: stateOriginalValue(managedStore.state)', stateOriginalValue(managedStore.state), 'cellInPlaceEditorRef.current?.value', cellInPlaceEditorRef.current?.value)
       if (!R.equals(stateOriginalValue(managedStore.state), cellInPlaceEditorRef.current?.value)) {
          hasChangedCell({
             row: cellRow(cell),
@@ -80,18 +78,8 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
       });
    }
 
-   const handleTab = event => {
-      // manageTab({ event, cell }) ? finalizeCellContent(cell, cellInPlaceEditorRef) : null;
-      const tabbedAway = manageTab({ event, cell, callback: () => finalizeCellContent(cell, cellInPlaceEditorRef) });
-      /* console.log('CellInPlaceEditor.handleTab called manageTab and got tabbedAway is', tabbedAway);
-      if (tabbedAway) {
-         finalizeCellContent(cell, cellInPlaceEditorRef);
-      } */
-   }
-
    const handleSubmit = event => {
       event.preventDefault();
-      // console.log('CellInPlaceEditor.handleSubmit cellInPlaceEditorRef.current', cellInPlaceEditorRef.current);
       stateFocusAbortControl(managedStore.state).abort();
       finalizeCellContent(cell, cellInPlaceEditorRef);
       clearedFocus();
@@ -100,7 +88,6 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
    const handleCancel = event => {
       event.preventDefault();
       stateFocusAbortControl(managedStore.state).abort();
-      // console.log('CellInPlaceEditor.handleCancel has aborted the event listener; now calling reinstateOriginalValue then finishedEditing with cellInPlaceEditorRef.current', cellInPlaceEditorRef.current);
       reinstateOriginalValue(cell); // note: this does the updatedCell call
       finishedEditing({
          value: isSomething(cellInPlaceEditorRef.current) ? cellInPlaceEditorRef.current.value : null,
@@ -119,8 +106,7 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
             handleSubmit(event);
             break;
          case 9: // tab
-            // console.log('*********TAB************ cellInPlaceEditorRef.current', cellInPlaceEditorRef.current)
-            handleTab(event);
+            manageTab({ event, cell, callback: () => finalizeCellContent(cell, cellInPlaceEditorRef) });
             break;
          default:
       }
@@ -128,12 +114,10 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
    
    const manageBlur = event => {
       event.preventDefault();
-      // console.log('CellInPLaceEditor.manageBlur about to do abortControl.abort for cell row', cell.row, 'column', cell.column);
       stateFocusAbortControl(managedStore.state).abort();
       finalizeCellContent(cell);
       updatedFocusRef({ ref: null }); // clear the existing focusRef
       clearedFocus();
-      updatedCell(cell); // TODO ...do we need this? we don't have it in SubsheetCell
    }
 
    const manageCellInPlaceEditorFocus = event => {
@@ -187,14 +171,12 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
    // need to do this setTimeout workaround so the cellInPlaceEditorRef can first be assigned to the textarea
    // then we set the focus on that text area 1 tick after. Replace this if a better way is found.
    window.setTimeout(() => {
-      // console.log('CellInPlaceEditor, in the setTimeout, has cellInPlaceEditorRef.current', cellInPlaceEditorRef.current);
       if (cellHasFocus && isSomething(cellInPlaceEditorRef.current)) {
          cellInPlaceEditorRef.current.focus();
          manageCellInPlaceEditorFocus(null);
       }
    }, 0);
 
-   // console.log('CellInPLaceEditor about to render, has cellInPlaceEditorRef.current', cellInPlaceEditorRef.current);
    return (
       <div style={positioning} className="absolute z-10 bg-white text-dark-dark-blue " >
          {renderTextForm()}

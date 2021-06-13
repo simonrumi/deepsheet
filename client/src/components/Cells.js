@@ -1,5 +1,4 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
 import * as R from 'ramda';
 import { nothing, isSomething } from '../helpers';
 import {
@@ -8,7 +7,6 @@ import {
    cellRow,
    cellColumn,
    stateRowVisibility,
-   stateCellRange,
 } from '../helpers/dataStructureHelpers';
 import {
    shouldShowRow,

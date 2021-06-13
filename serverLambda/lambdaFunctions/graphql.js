@@ -27,7 +27,10 @@ const handler = async (event, context, callback) => {
    ...however this causes the middleware onError to get an error saying
    "Promise resolver undefined is not a function"
 
-    got this version from somewhere....it solves the problem, but not clear why the (yay,nay) stuff fixes it
+   got this version from somewhere....it solves the problem
+   yay ~= resolve
+   nay ~= reject
+   so it is creating a callback that will resolve with args or reject with the error:
    return new Promise((yay, nay) => {
       const callbackFn = (err, args) => (err ? nay(err) : yay(args));
       server.createHandler()(event, context, callbackFn);
