@@ -1,17 +1,14 @@
-import React, { /* useMemo */ } from 'react';
+import React from 'react';
 // import managedStore from  '../../store';
 import { useSelector } from 'react-redux';
 import * as R from 'ramda';
 import { focusedCell, /* highlightedCellRange */ } from '../../actions/focusActions';
 import { hidePopups } from '../../actions';
-import { updatedCell } from '../../actions/cellActions';
-import { nothing, isSomething, isNothing } from '../../helpers';
-import { createCellId, isCellFocused, createCellKey, isCellInRange } from '../../helpers/cellHelpers';
+import { nothing, isSomething } from '../../helpers';
+import { createCellId, isCellFocused, createCellKey, /* isCellInRange */ } from '../../helpers/cellHelpers';
 import { isCellVisible } from '../../helpers/visibilityHelpers';
 import {
    cellSubsheetId,
-   cellRow,
-   cellColumn,
    cellText,
    statePresent,
    stateSummaryCell,

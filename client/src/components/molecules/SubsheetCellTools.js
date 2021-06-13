@@ -5,7 +5,7 @@ import managedStore from '../../store';
 import { loadSheet } from '../../services/sheetServices';
 import { deleteSubsheetId } from '../../actions/cellActions';
 import { clearedFocus } from '../../actions/focusActions';
-import { cellIsCallingDb, stateFocusAbortControl } from '../../helpers/dataStructureHelpers';
+import { cellIsCallingDb } from '../../helpers/dataStructureHelpers';
 import { getObjectFromArrayByKeyValue } from '../../helpers';
 import IconDownToSubsheet from '../atoms/IconDownToSubsheet';
 import IconUnlinkSubsheet from '../atoms/IconUnlinkSubsheet';

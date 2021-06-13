@@ -1,6 +1,6 @@
 import * as R from 'ramda';
 import managedStore from '../store';
-import { isSomething, isNothing, S } from '../helpers';
+import { isSomething, isNothing } from '../helpers';
 import { createUpdatedCellState, createCellKey } from '../helpers/cellHelpers';
 import { dbCells } from '../helpers/dataStructureHelpers';
 import { updatedCell, addedCellKeys } from '../actions/cellActions';

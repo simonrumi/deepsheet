@@ -5,7 +5,7 @@ import {
    CLEARED_FOCUS,
    HIGHLIGHTED_CELL_RANGE,
 } from '../actions/focusTypes';
-import { isSomething, isNothing } from '../helpers';
+import { isSomething } from '../helpers';
 
 export const focusReducer = (state = {}, action) => {
    switch (action.type) {

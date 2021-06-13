@@ -1,9 +1,4 @@
 import * as R from 'ramda';
-import * as Sanct from 'sanctuary';
-
-const SANCTUARY_TYPE_CHECKING_ON = false;
-
-// export const S = SANCTUARY_TYPE_CHECKING_ON ? Sanct : Sanct.unchecked;
 
 export const nothing = () => null;
 

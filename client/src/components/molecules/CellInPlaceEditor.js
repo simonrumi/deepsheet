@@ -3,10 +3,9 @@ import * as R from 'ramda';
 import managedStore from '../../store';
 import { updatedCell, hasChangedCell } from '../../actions/cellActions';
 import { createdSheet } from '../../actions/sheetActions';
-import { clearedFocus, updatedFocusRef, updatedFocusAbortControl, focusedCell } from '../../actions/focusActions';
+import { clearedFocus, updatedFocusRef } from '../../actions/focusActions';
 import { startedEditing, finishedEditing } from '../../actions/undoActions'; 
 import { isSomething, ifThen } from '../../helpers';
-import { tabToNextVisibleCell, isStateCellRefThisCell } from '../../helpers/cellHelpers';
 import { getUserInfoFromCookie } from '../../helpers/userHelpers';
 import { createDefaultAxisSizing } from '../../helpers/axisSizingHelpers';
 import { manageFocus, manageTab } from '../../helpers/focusHelpers';
@@ -18,8 +17,6 @@ import {
    stateOriginalValue,
    stateOriginalRow,
    stateOriginalColumn,
-   stateFocusCellRef,
-   stateFocusCell,
    stateFocusAbortControl,
 } from '../../helpers/dataStructureHelpers';
 import IconNewDoc from '../atoms/IconNewDoc';
@@ -143,9 +140,9 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
                Since the textarea has the focus, clicking on IconNewDoc will cause
                the editor's onBlur to fire...but we need to call another action before the onBlur,
                hence the use of onMouseDown */}
-               <IconNewDoc classes="mb-1" svgClasses="w-6" onMouseDownFn={() => triggerCreatedSheetAction(cell)} />
                <CheckmarkSubmitIcon classes="bg-white mb-1" svgClasses="w-6" onMouseDownFn={handleSubmit} />
-               <IconClose classes="bg-white" svgClasses="w-6" onMouseDownFn={handleCancel} />
+               <IconClose classes="bg-white mb-1" svgClasses="w-6" onMouseDownFn={handleCancel} />
+               <IconNewDoc classes="mb-1" svgClasses="w-6" onMouseDownFn={() => triggerCreatedSheetAction(cell)} />
             </div>
          </div>
       );
