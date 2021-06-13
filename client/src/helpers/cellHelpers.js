@@ -6,10 +6,8 @@ import {
    isSomething,
    isNothing,
    arrayContainsSomething,
-   S, // TODO get rid of the Sanctuary stuff when certain not needed
-   toLeft,
-   eitherIsSomething,
    compareIndexValues,
+   ifThenElse,
 } from './index';
 import {
    cellRow,
@@ -30,7 +28,6 @@ import {
    stateColumnVisibility,
    stateCellsUpdateInfo,
 } from './dataStructureHelpers';
-import { focusedCell } from '../actions/focusActions';
 import { THIN_COLUMN, ROW_AXIS } from '../constants';
 
 export const getCellContent = cell =>
@@ -157,48 +154,6 @@ export const removeAllCellReducers = () => R.pipe(
       managedStore.store.replaceReducer
    )();
 
-/**
- * TODO get rid of these when certain the are not needed
- * The following functions are used to make the final function validateAction which is used in cellReducers.js
-
-const isCellAction = actionEither => {
-   return S.isLeft(actionEither) 
-      ? actionEither
-      : R.pipe(
-         R.map(action => 
-            isSomething(action?.type) &&
-            isSomething(action?.payload?.row) &&
-            isSomething(action?.payload?.column)
-               ? action
-               : 'not a cell action'
-         ),
-         toLeft(R.includes('not a cell action'))
-      )(actionEither);
-};
-
-const axisEqual = actionEither => cellEither => axis => S.chain(action => 
-   S.map(cell => action.payload[axis] === cell[axis])(cellEither)
-   )(actionEither);
-
-const isSameCell = R.curry(
-   (action, cell) => S.isLeft(action) 
-   ? action
-   : S.isLeft(cell)
-      ? cell
-      : R.pipe(
-         S.lift2(S.and) (axisEqual(action)(cell)('column')),
-         toLeft(R.not)
-      )(axisEqual(action)(cell)('row'))
-);
-
-// use: validateAction(S.Right(someAction), S.Right(someCell))
-export const validateAction = R.curry((action, cell) => R.pipe(
-      R.useWith(isSameCell, [isCellAction, eitherIsSomething]),
-      answer => (S.isRight(answer) ? action : answer) // isSameCell will return Right(true) if the action is valid, or a Left if not
-   )(action, cell)
-);
-/* *** end of cell validation functions **** */
-
 const getNextVisibleColumn = (columnIndex, goBackwards) => columnVisibilityArr => arrayContainsSomething(columnVisibilityArr)
    ? R.pipe(
       R.sort(compareIndexValues),
@@ -212,20 +167,24 @@ const getNextVisibleColumn = (columnIndex, goBackwards) => columnVisibilityArr =
    )(columnVisibilityArr)
    : goBackwards 
       ? columnIndex === 0
-         ? columnIndex //we're already at the first column so stay where we are
+         ? 0 // we're already at the first column, so stay where we are
          : columnIndex - 1
       : columnIndex === (stateTotalColumns(managedStore.state) - 1)
-         ? columnIndex //we're already at the last column so stay where we are
+         ? columnIndex // we're already at the last column, so stay where we are
          : columnIndex + 1
 
 export const tabToNextVisibleCell = (rowIndex, columnIndex, goBackwards) => R.pipe(
-   R.tap(data => console.log('cellHelpers.tabToNextVisibleCell got rowIndex', rowIndex, 'columnIndex', columnIndex)),
    stateColumnVisibility,
    getNextVisibleColumn(columnIndex, goBackwards),
-   createCellKey(rowIndex),
-   cellKey => statePresent(managedStore.state)[cellKey],
-   R.tap(data => console.log('cellHelpers.tabToNextVisibleCell about to call focusedCell() for cell row', data.row, 'column', data.column)),
-   focusedCell
+   nextColumn => ifThenElse({
+      ifCond: nextColumn !== columnIndex,
+      thenDo: [
+         createCellKey(rowIndex),
+         cellKey => statePresent(managedStore.state)[cellKey]
+      ],
+      elseDo: () => null, // return null indicating that we are staying in the same cell
+      params: { thenParams: nextColumn }
+   })
 )(managedStore.state);
 
 export const isCellInRange = (row, column, cellRange) => {
@@ -256,4 +215,6 @@ export const getCellKeysInAxis = (axis, axisIndex, state) => R.filter(
    stateCellKeys(state)
 );
 
-export const getCellsFromCellKeys = R.curry((state, cellKeys) => R.map(cellKey => stateCell(state, cellKey), cellKeys));
+export const getCellsFromCellKeys = R.curry(
+   (state, cellKeys) => R.map(cellKey => stateCell(state, cellKey), cellKeys)
+);

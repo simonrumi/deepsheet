@@ -97,10 +97,8 @@ const Sheet = props => {
    const totalColumns = useSelector(state => stateTotalColumns(state));
    
    const cellsRenderCount = stateCellsRenderCount(managedStore.state); // not getting this value using useSelector as we don't want to retrigger a render when it changes (useEffect below manages the re-render)
-   // console.log('Sheet.js got cellsRenderCount', cellsRenderCount);
 
    const memoizedCells = useMemo(() => {
-      console.log('Sheet.js about to actually render <Cells />');
       return <Cells renderCount={cellsRenderCount}/>;
    }, [cellsRenderCount]);
    
@@ -139,7 +137,6 @@ const Sheet = props => {
    const renderGridSizingStyle = () => isVisibilityCalcutated() && isAxisSizingCalculated() ? memoizedGridSizingStyle : null;
 
    const renderCells = () => {
-      console.log('Sheet.js renderCells will get memoizedCells');
       return (<div
          className="grid-container pt-1"
          style={renderGridSizingStyle()}
