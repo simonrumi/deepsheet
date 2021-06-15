@@ -7,15 +7,14 @@ const SheetModel = mongoose.model('sheet');
 require('./models/UserModel');
 const UserModel = mongoose.model('user');
 require('./models/SessionModel');
-const { isSomething, isNothing, arrayContainsSomething, runIfSomething } = require('./helpers');
+const { isSomething, isNothing, arrayContainsSomething } = require('./helpers');
 const { getAllSheetsForUser, createNewSheet, getLatestSheet } = require('./helpers/sheetHelpers');
 const { addSheetToUser } = require('./helpers/userHelpers');
 const {
    updateAndAddCells,
    deleteSubsheetId,
    findCellByRowAndColumn,
-   maybeGetUpdatedSummaryCell,
-   updateSubsheetCellContent,
+   updateParentWithSubsheetTitle,
 } = require('./helpers/updateCellsHelpers');
 const { AuthenticationError } = require('apollo-server-lambda');
 const { log } = require('./helpers/logger');
@@ -130,6 +129,12 @@ module.exports = db => ({
             sheetDoc.title = title;
             sheetDoc.metadata.lastUpdated = new Date();
             const savedSheet = await sheetDoc.save();
+            if (isSomething(sheetDoc.metadata.parentSheetId)) {
+               console.log('***** resolvers.changeTitle found parentSheetId', sheetDoc.metadata.parentSheetId, 'and the new title is sheetDoc.title', sheetDoc.title);
+               const parentSheet = await SheetModel.findById(sheetDoc.metadata.parentSheetId);
+               parentSheet.cells = updateParentWithSubsheetTitle(parentSheet, sheetDoc);
+               await parentSheet.save();
+            }
             return savedSheet;
          } catch (err) {
             log({ level: LOG.ERROR }, 'resolvers.Mutation.changeTitle Error updating title:', err.message);
@@ -148,7 +153,6 @@ module.exports = db => ({
                      'totalRows',
                      'totalColumns',
                      'parentSheetId',
-                     'summaryCell',
                      'columnVisibility',
                      'rowVisibility',
                      'columnFilters',
@@ -191,21 +195,6 @@ module.exports = db => ({
                return new Error('User not authorized to update sheet');
             }
             const updatedCells = updateAndAddCells(sheetDoc.cells, cells);
-            const updatedSummaryCell = maybeGetUpdatedSummaryCell(sheetDoc, updatedCells);
-            if (isSomething(updatedSummaryCell)) {
-               const parentSheetId = sheetDoc.metadata.parentSheetId;
-               if (parentSheetId) {
-                  const parentSheetDoc = await SheetModel.findById(parentSheetId);
-                  const updatedParentCells = runIfSomething(
-                     updateSubsheetCellContent, // fn to run
-                     parentSheetDoc, // only run fn if this is not empty
-                     updatedSummaryCell, sheetId // additional parameters for updateSubsheetCellContent
-                  );
-                  parentSheetDoc.cells = updatedParentCells;
-                  parentSheetDoc.metadata.lastUpdated = new Date();
-                  await parentSheetDoc.save();
-               }
-            }
             sheetDoc.cells = updatedCells;
             sheetDoc.metadata.lastUpdated = new Date();
             return await sheetDoc.save();

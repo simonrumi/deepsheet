@@ -37,9 +37,8 @@ const saveParentSheetData = async (parentSheetCell, parentSheetId, newSheet) => 
    await updatedCells({ sheetId: parentSheetId, cells: [savableParentSheetCell] });
 };
 
-const createNewSheet = async ({ userId, rows, columns, title, parentSheetId, summaryCell, parentSheetCell, rowHeights, columnWidths }) => {
+const createNewSheet = async ({ userId, rows, columns, title, parentSheetId, parentSheetCell, rowHeights, columnWidths }) => {
    // note calling function must wrap createNewSheet in a try-catch block since we're not doing that here
-   const summaryCellText = cellText(parentSheetCell);
    rows = rows || DEFAULT_TOTAL_ROWS;
    columns = columns || DEFAULT_TOTAL_COLUMNS
    rowHeights = rowHeights || createDefaultAxisSizing(rows, DEFAULT_ROW_HEIGHT);
@@ -50,8 +49,6 @@ const createNewSheet = async ({ userId, rows, columns, title, parentSheetId, sum
       columns,
       title,
       parentSheetId,
-      summaryCell,
-      summaryCellText,
       rowHeights, 
       columnWidths,
    });

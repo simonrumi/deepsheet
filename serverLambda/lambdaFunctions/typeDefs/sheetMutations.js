@@ -29,7 +29,7 @@ const SheetMutations = gql`
 
    input SheetFilterInput {
       index: Int!
-      filterExpression: String!
+      filterExpression: String
       hideBlanks: Boolean
       caseSensitive: Boolean
       regex: Boolean
@@ -71,7 +71,6 @@ const SheetMutations = gql`
       title: String
       parentSheetId: ID
       summaryCell: SheetSummaryCellInput
-      summaryCellText: String
       rowHeights: [SheetSizingInput]
       columnWidths: [SheetSizingInput]
    }

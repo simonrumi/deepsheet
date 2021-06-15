@@ -6,7 +6,6 @@ const FilterModel = require('./FilterModel');
 const FreezeModel = require('./FreezeModel');
 const SizingModel = require('./SizingModel');
 const CellModel = require('./CellModel');
-const { isSomething } = require('../helpers');
 
 const sheetSchema = new Schema(
    {
@@ -26,10 +25,6 @@ const sheetSchema = new Schema(
          totalRows: { type: Number, required: true, default: 10 },
          totalColumns: { type: Number, required: true, default: 5 },
          parentSheetId: { type: Schema.Types.ObjectId, ref: 'Sheet' },
-         summaryCell: {
-            row: { type: Number },
-            column: { type: Number },
-         },
          columnFilters: [FilterModel],
          rowFilters: [FilterModel],
          frozenRows: [FreezeModel],
@@ -57,12 +52,7 @@ sheetSchema.path('cells').validate(cellsValidator, 'cannot have multiple cells a
 
 sheetSchema.statics.getSummaryCellContent = async function (id) {
    const data = await this.findById(id);
-   if (isSomething(data)) {
-      const { row, column } = data.metadata.summaryCell;
-      const cellData = await this.findOne({ _id: id }, { cells: { $elemMatch: { row: row, column: column } } });
-      return cellData.cells[0].content.text;
-   }
-   return '';
+   return data?.title;
 };
 
 mongoose.model('sheet', sheetSchema);

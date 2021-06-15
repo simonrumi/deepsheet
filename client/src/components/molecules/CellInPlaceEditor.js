@@ -41,12 +41,11 @@ const triggerCreatedSheetAction = cell => {
    const columns = DEFAULT_TOTAL_COLUMNS;
    const title = cellText(cell) || null;
    const parentSheetId = stateSheetId(managedStore.state);
-   const summaryCell = { row: 0, column: 0 }; // this would be to tell which cell in the new sheet is the summary cell. Default is 0,0
    const parentSheetCell = cell;
    const rowHeights = createDefaultAxisSizing(DEFAULT_TOTAL_ROWS, DEFAULT_ROW_HEIGHT);
    const columnWidths = createDefaultAxisSizing(DEFAULT_TOTAL_COLUMNS, DEFAULT_COLUMN_WIDTH);
    const { userId } = getUserInfoFromCookie();
-   createdSheet({ rows, columns, title, parentSheetId, summaryCell, parentSheetCell, rowHeights, columnWidths, userId });
+   createdSheet({ rows, columns, title, parentSheetId, parentSheetCell, rowHeights, columnWidths, userId });
 }
 
 const manageChange = (event, cell) => {

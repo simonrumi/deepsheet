@@ -15,7 +15,7 @@ const SheetType = gql`
 
    type SheetFilterType {
       index: Int!
-      filterExpression: String!
+      filterExpression: String
       hideBlanks: Boolean
       caseSensitive: Boolean
       regex: Boolean
@@ -31,11 +31,6 @@ const SheetType = gql`
       size: String!
    }
 
-   type SheetSummaryCellType {
-      row: Int
-      column: Int
-   }
-
    type SheetMetadataType {
       created: String
       lastUpdated: String
@@ -43,7 +38,6 @@ const SheetType = gql`
       totalRows: Int
       totalColumns: Int
       parentSheetId: ID
-      summaryCell: SheetSummaryCellType
       columnFilters: [SheetFilterType]
       rowFilters: [SheetFilterType]
       frozenColumns: [SheetFreezeType]

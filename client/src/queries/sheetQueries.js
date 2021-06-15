@@ -40,10 +40,6 @@ const SHEET_QUERY = gql`
             totalRows
             totalColumns
             parentSheetId
-            summaryCell {
-               row
-               column
-            }
             columnFilters {
                index
                filterExpression

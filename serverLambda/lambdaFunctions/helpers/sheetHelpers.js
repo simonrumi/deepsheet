@@ -25,7 +25,6 @@ const createNewSheet = ({
    title = DEFAULT_TITLE,
    parentSheetId = null,
    summaryCell = DEFAULT_SUMMARY_CELL,
-   summaryCellText = '',
    rowHeights = [],
    columnWidths = [],
    userId,
@@ -36,20 +35,16 @@ const createNewSheet = ({
    // need to make sure defaults are set here also, because the defaults above will only be set if the object keys are not present
    const totalRows = rows || DEFAULT_ROWS;
    const totalColumns = columns || DEFAULT_COLUMNS;
-   summaryCell = summaryCell || DEFAULT_SUMMARY_CELL;
    title = title || DEFAULT_TITLE;
    rowHeights = rowHeights || [];
    columnWidths = columnWidths || [];
    const cells = forLoopReduce(
       (cellsAccumulator, rowIndex) => {
          const rowOfCells = forLoopReduce(
-            (rowAccumulator, columnIndex) => {
-               const cell = createBlankCell(rowIndex, columnIndex);
-               if (summaryCell && summaryCell.row === rowIndex && summaryCell.column === columnIndex) {
-                  cell.content.text = summaryCellText || '';
-               }
-               return R.append(cell, rowAccumulator);
-            },
+            (rowAccumulator, columnIndex) => R.pipe(
+               createBlankCell, 
+               R.append(R.__, rowAccumulator)
+            )(rowIndex, columnIndex),
             [],
             totalColumns
          );
@@ -70,7 +65,7 @@ const createNewSheet = ({
          totalRows,
          totalColumns,
          parentSheetId,
-         summaryCell,
+         // summaryCell,
          rowHeights,
          columnWidths
       },

@@ -4,7 +4,7 @@ const { Schema } = mongoose;
 
 const filterSchema = new Schema({
    index: { type: Number, required: true },
-   filterExpression: { type: String, required: true, default: '' },
+   filterExpression: { type: String, default: '' },
    hideBlanks: { type: Boolean, default: false },
    caseSensitive: { type: Boolean, default: false },
    regex: { type: Boolean, default: false },

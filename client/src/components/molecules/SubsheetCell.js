@@ -19,12 +19,6 @@ import SubsheetCellTools from './SubsheetCellTools';
 // 3. go back up to parent sheet
 // result: filter not saved
 
-// TODO BUG
-// 1. click on subsheet cell to go to child
-// 2. update the summary cell
-// 3. return to parent
-// result: subsheetCell contents are not updated until the page is refreshed
-
 const innerDivClassNames = cellHasFocus => {
    const cellBaseClasses = 'p-px ';
    const borderClasses = cellHasFocus ? 'border-2 border-subdued-blue' : 'border border-pale-yellow';

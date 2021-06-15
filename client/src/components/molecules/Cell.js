@@ -11,14 +11,11 @@ import {
    cellSubsheetId,
    cellText,
    statePresent,
-   stateSummaryCell,
-   stateParentSheetId,
    // statePreviouslyFocusedCell,
    // stateCellRange,
 } from '../../helpers/dataStructureHelpers';
 import { usePositioning } from '../../helpers/hooks';
 import SubsheetCell from './SubsheetCell';
-import SummaryCell from './SummaryCell';
 import BlankCell from './BlankCell';
 import CellInPlaceEditor from './CellInPlaceEditor';
 
@@ -57,8 +54,6 @@ const Cell = React.memo(({ row, column, classes, blankCell }) => { // cellRange 
    const cellKey = createCellKey(row, column);
    const cell = useSelector(state => statePresent(state)[cellKey]);
    const cellHasFocus = useSelector(state => isCellFocused(cell, state));
-   const summaryCell = useSelector(state => stateSummaryCell(state));
-   const parentSheetId = useSelector(state => stateParentSheetId(state));
    // const cellRange = useSelector(state => stateCellRange(state)); // TODO remove if not needed
    const [cellRef, positioning] = usePositioning();
 
@@ -86,10 +81,6 @@ const Cell = React.memo(({ row, column, classes, blankCell }) => { // cellRange 
          </div>
       );
 
-   const renderSummaryCell = cell => <SummaryCell cell={cell} />
-      
-   const isSummaryCell = () => isSomething(parentSheetId) && summaryCell?.row === row && summaryCell?.column === column;
-
    const renderBlankCell = () => <BlankCell classes={createClassNames(classes)} />;
 
    const renderSubsheetCell = cell => <SubsheetCell cell={cell} cellHasFocus={cellHasFocus}/>;
@@ -100,7 +91,6 @@ const Cell = React.memo(({ row, column, classes, blankCell }) => { // cellRange 
       [R.thunkify(R.identity)(blankCell), renderBlankCell],
       [R.pipe(cellSubsheetId, isSomething), renderSubsheetCell],
       [R.thunkify(R.identity)(cellHasFocus), renderInPlaceEditor],
-      [isSummaryCell, renderSummaryCell],
       [R.T, renderRegularCell]
    ]);
 

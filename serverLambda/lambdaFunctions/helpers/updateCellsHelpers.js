@@ -33,23 +33,16 @@ const deleteSubsheetId = (originalCells, row, column, text = '') =>
       return cell;
    })(originalCells);
 
-const maybeGetUpdatedSummaryCell = (sheet, updatedCells) => {
-   const { row, column } = sheet.metadata.summaryCell;
-   const updatedSummaryCell = R.filter(cell => cell.row === row && cell.column === column, updatedCells);
-   return arrayContainsSomething(updatedSummaryCell) ? updatedSummaryCell[0] : null;
-}
-
-const updateSubsheetCellContent = (parentSheet, updatedSubsheetSummaryCell, sheetId) => R.map(
-      parentCell => parentCell.content.subsheetId == sheetId
-            ? { ...parentCell, content: { ...parentCell.content, text: updatedSubsheetSummaryCell?.content?.text } }
-            : parentCell,
-      parentSheet.cells
-   );
+const updateParentWithSubsheetTitle = (parentSheet, subsheet) => R.map(
+   parentCell => JSON.stringify(parentCell.content.subsheetId) === JSON.stringify(subsheet._id)
+      ? { ...parentCell, content: { ...parentCell.content, text: subsheet.title } }
+      : parentCell,
+   parentSheet.cells
+);
 
 module.exports = {
    findCellByRowAndColumn,
    updateAndAddCells,
    deleteSubsheetId,
-   maybeGetUpdatedSummaryCell,
-   updateSubsheetCellContent,
+   updateParentWithSubsheetTitle,
 };

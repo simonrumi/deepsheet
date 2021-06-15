@@ -8,8 +8,6 @@ const CREATE_SHEET_MUTATION = gql`
       $columns: Int
       $title: String
       $parentSheetId: ID
-      $summaryCell: SheetSummaryCellInput
-      $summaryCellText: String
       $rowHeights: [SheetSizingInput]
       $columnWidths: [SheetSizingInput]
    ) {
@@ -20,8 +18,6 @@ const CREATE_SHEET_MUTATION = gql`
             columns: $columns
             title: $title
             parentSheetId: $parentSheetId
-            summaryCell: $summaryCell
-            summaryCellText: $summaryCellText
             rowHeights: $rowHeights, 
             columnWidths: $columnWidths,
          }
@@ -42,10 +38,6 @@ const CREATE_SHEET_MUTATION = gql`
             totalRows
             totalColumns
             parentSheetId
-            summaryCell {
-               row
-               column
-            }
             columnFilters {
                index
                filterExpression
@@ -86,14 +78,12 @@ export const createSheetMutation = async ({
    columns,
    title,
    parentSheetId,
-   summaryCell,
-   summaryCellText,
    rowHeights, 
    columnWidths,
 }) => {
    const response = await apolloClient.mutate({
       mutation: CREATE_SHEET_MUTATION,
-      variables: { userId, rows, columns, title, parentSheetId, summaryCell, summaryCellText, rowHeights, columnWidths },
+      variables: { userId, rows, columns, title, parentSheetId, rowHeights, columnWidths },
    });
    return response.data.createSheet; // "createSheet" comes from mutation above
 };
@@ -159,10 +149,6 @@ const SHEET_BY_USER_ID_MUTATION = gql`
             totalRows
             totalColumns
             parentSheetId
-            summaryCell {
-               row
-               column
-            }
             columnFilters {
                index
                filterExpression
