@@ -23,7 +23,7 @@ import { isSomething } from '../helpers';
 import { getUserInfoFromCookie } from '../helpers/userHelpers';
 import { getSaveableCellData } from '../helpers/cellHelpers';
 import { createDefaultAxisSizing } from '../helpers/axisSizingHelpers';
-import { cellText, cellSubsheetIdSetter, dbSheetId } from '../helpers/dataStructureHelpers';
+import { cellSubsheetIdSetter, dbSheetId } from '../helpers/dataStructureHelpers';
 import { DEFAULT_TOTAL_ROWS, DEFAULT_TOTAL_COLUMNS, DEFAULT_ROW_HEIGHT, DEFAULT_COLUMN_WIDTH } from '../constants';
 
 // note that services/sheetServices.js has a bunch of db operations in it as well.
