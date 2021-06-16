@@ -7,11 +7,6 @@ import { cellText, stateFocusAbortControl} from '../../helpers/dataStructureHelp
 import { manageFocus, manageTab } from '../../helpers/focusHelpers';
 import SubsheetCellTools from './SubsheetCellTools';  
 
-// NOTE
-// see this discussion on preventing children getting re-rendered
-// https://spectrum.chat/react/help/updating-child-without-re-rendering-parent-in-react-hooks~abac18dc-019f-4954-8c3b-7ac8be672567
-// they suggest useRef & useCallback and refer to https://overreacted.io/a-complete-guide-to-useeffect
-
 // TODO BUG
 // 1. filter some cells
 // 2. don't save, but click on a subsheet cell & go to subsheet

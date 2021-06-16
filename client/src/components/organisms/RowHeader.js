@@ -1,6 +1,5 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
-import managedStore from '../../store';
 import { cellRow } from '../../helpers/dataStructureHelpers';
 import RowResizer from '../molecules/RowResizer';
 import RowHeaderDetail from '../molecules/RowHeaderDetail';

@@ -1,7 +1,6 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import managedStore from '../../store';
-import * as R from 'ramda';
 import { COLUMN_AXIS, TOOL_ICON_WIDTH } from '../../constants';
 import {
    stateColumnFilters,

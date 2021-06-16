@@ -1,7 +1,6 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import managedStore from '../../store';
-import * as R from 'ramda';
 import { ROW_AXIS } from '../../constants';
 import {
    stateRowFilters,
