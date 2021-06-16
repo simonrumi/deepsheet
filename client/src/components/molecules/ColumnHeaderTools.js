@@ -9,8 +9,7 @@ import {
    stateAxisItemToolAxis,
    stateAxisItemToolIndex,
 } from '../../helpers/dataStructureHelpers';
-import { isSomething, arrayContainsSomething } from '../../helpers';
-import { getInitialFilterValues } from '../../helpers/visibilityHelpers';
+import { getInitialFilterValues, isFilterEngaged } from '../../helpers/visibilityHelpers';
 import { hidePopups } from '../../actions';
 import { startedUndoableAction, completedUndoableAction } from '../../actions/undoActions';
 import { toggledShowFilterModal } from '../../actions/filterActions';
@@ -41,17 +40,6 @@ const ColumnHeaderTools = props => {
       );
       hidePopups();
    }
-
-   const isFilterEngaged = (columnIndex, columnFilters) => {
-      if (arrayContainsSomething(columnFilters)) {
-         return R.pipe(
-            R.find(R.pipe(R.prop('index'), R.equals(columnIndex))),
-            R.prop('filterExpression'),
-            isSomething
-         )(columnFilters);
-      }
-      return false;
-   };
 
    const toggleFreeze = () => {
       startedUndoableAction();

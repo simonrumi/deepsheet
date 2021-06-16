@@ -9,8 +9,7 @@ import {
    stateAxisItemToolAxis,
    stateAxisItemToolIndex,
 } from '../../helpers/dataStructureHelpers';
-import { isSomething, arrayContainsSomething } from '../../helpers';
-import { getInitialFilterValues } from '../../helpers/visibilityHelpers';
+import { getInitialFilterValues, isFilterEngaged } from '../../helpers/visibilityHelpers';
 import { hidePopups } from '../../actions';
 import { startedUndoableAction, completedUndoableAction } from '../../actions/undoActions';
 import { toggledShowFilterModal } from '../../actions/filterActions';
@@ -20,8 +19,7 @@ import FilterIcon from '../atoms/IconFilter';
 import SnowflakeIcon from '../atoms/IconSnowflake';
 import SortIcon from '../atoms/IconSort';
 
-const RowHeaderTools = props => {
-   const { index, frozen, } = props;
+const RowHeaderTools = ({ index, frozen }) => {
    const toolIsVisible = useSelector(state => stateAxisItemToolIsVisible(state));
    const toolAxis = useSelector(state => stateAxisItemToolAxis(state));
    const toolIndex = useSelector(state => stateAxisItemToolIndex(state));
@@ -41,18 +39,7 @@ const RowHeaderTools = props => {
          );
       hidePopups();
    }
-
-   const isFilterEngaged = (rowIndex, rowFilters) => {
-      if (arrayContainsSomething(rowFilters)) {
-         return R.pipe(
-            R.find(R.pipe(R.prop('index'), R.equals(rowIndex))),
-            R.prop('filterExpression'),
-            isSomething
-         )(rowFilters);
-      }
-      return false;
-   };
-
+   
    const toggleFreeze = () => {
       startedUndoableAction();
       updatedFrozenRows([{ index, isFrozen: !frozen }]);

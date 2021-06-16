@@ -3,6 +3,7 @@ import * as R from 'ramda';
 import managedStore from '../../store';
 import { COLUMN_AXIS, DRAGGABLE_COLUMN_LETTER } from '../../constants';
 import { indexToColumnLetter, isSomething, getObjectFromArrayByKeyValue } from '../../helpers';
+import { isFilterEngaged } from '../../helpers/visibilityHelpers';
 import {
    stateColumnFilters,
    stateFrozenColumns,
@@ -59,13 +60,6 @@ const ColumnHeaderDetail = props => {
       });
    }
 
-   const filterEngaged = () => R.pipe(
-      stateColumnFilters,
-      getObjectFromArrayByKeyValue('index', index),
-      R.prop('filterExpression'),
-      isSomething,
-   )(managedStore.state);
-
    const freezeEngaged = () => R.pipe(
       stateFrozenColumns,
       getObjectFromArrayByKeyValue('index', index),
@@ -73,7 +67,7 @@ const ColumnHeaderDetail = props => {
    )(managedStore.state)
  
    const gearClasses = 'p-1 self-center' + (
-      filterEngaged() || freezeEngaged()
+      isFilterEngaged(index, stateColumnFilters(managedStore.state)) || freezeEngaged()
          ? ' text-pale-purple hover:text-vibrant-purple'
          : ' text-grey-blue hover:text-vibrant-blue'
    );

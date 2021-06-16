@@ -10,6 +10,7 @@ import {
    stateDragType,
    stateDragData,
 } from '../../helpers/dataStructureHelpers';
+import { isFilterEngaged } from '../../helpers/visibilityHelpers';
 import { rowMoved } from '../../actions/metadataActions';
 import { updatedAxisItemTool } from '../../actions/metadataActions';
 import { startedUndoableAction, completedUndoableAction } from '../../actions/undoActions';
@@ -17,8 +18,7 @@ import RowHeaderTools from './RowHeaderTools';
 import GearIcon from '../atoms/IconGear';
 import DraggableRowNumber from '../atoms/DraggableRowNumber';
 
-const RowHeaderDetail = props => {
-   const { cell, frozen } = props;
+const RowHeaderDetail = ({ cell, frozen }) => {
    const index = cellRow(cell);
    const [ isOver, setIsOver ]  = useState(false);
 
@@ -62,13 +62,6 @@ const RowHeaderDetail = props => {
       });
    }
 
-   const filterEngaged = () => R.pipe(
-         stateRowFilters,
-         getObjectFromArrayByKeyValue('index', index),
-         R.prop('filterExpression'),
-         isSomething,
-      )(managedStore.state);
-
    const freezeEngaged = () => R.pipe(
       stateFrozenRows,
       getObjectFromArrayByKeyValue('index', index),
@@ -76,7 +69,7 @@ const RowHeaderDetail = props => {
    )(managedStore.state)
 
    const gearClasses = 'self-center pl-1 pr-1' + (
-      filterEngaged() || freezeEngaged()
+      isFilterEngaged(index, stateRowFilters(managedStore.state)) || freezeEngaged()
          ? ' text-pale-purple hover:text-vibrant-purple'
          : ' text-grey-blue hover:text-vibrant-blue'
    );

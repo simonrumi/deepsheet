@@ -233,3 +233,13 @@ export const getInitialFilterValues = ({ state, rowIndex, columnIndex }) => {
    }
    return null;
 };
+
+export const isFilterEngaged = (index, filters) => arrayContainsSomething(filters)
+   ? R.pipe(
+      R.find(R.pipe(
+         R.prop('index'), 
+         R.equals(index)
+      )),
+      filterObj => isSomething(filterObj?.filterExpression) || filterObj?.hideBlanks
+   )(filters)
+   : false;
