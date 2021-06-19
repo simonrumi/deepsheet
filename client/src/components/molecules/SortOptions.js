@@ -15,9 +15,8 @@ import SortUpIcon from '../atoms/IconSortUp';
 import SortDownIcon from '../atoms/IconSortDown';
 import RadioButton from '../atoms/RadioButton';
 
-const SortOptions = props => {
-   const { classes, rowIndex, columnIndex } = props;
-   const [sortType, setSortType] = useState('SORT_TYPE_TEXT');
+const SortOptions = ({ classes, rowIndex, columnIndex }) => {
+   const [sortType, setSortType] = useState(SORT_TYPE_TEXT);
 
    const onClickSortText = () => setSortType(SORT_TYPE_TEXT);
    const onClickSortNumbers = () => setSortType(SORT_TYPE_NUMBERS);
@@ -61,6 +60,19 @@ const SortOptions = props => {
             <Label label="Sort" />
             <div className="flex flex-col items-end justify-evenly px-2 py-2 w-3/4">
                <div className={rowClasses}>
+                  <RadioButton changeHandler={onClickSortText} isSelected={sortType === SORT_TYPE_TEXT} />
+                  <span className={nonClickableTextClasses}>sort as text</span>
+               </div>
+               <div className={rowClasses}>
+                  <RadioButton changeHandler={onClickSortNumbers} isSelected={sortType === SORT_TYPE_NUMBERS} />
+                  <span className={nonClickableTextClasses}>sort as numbers</span>
+               </div>
+               <div className={rowClasses}>
+                  <RadioButton changeHandler={onClickSortDates} isSelected={sortType === SORT_TYPE_DATES} />
+                  <span className={nonClickableTextClasses}>sort as dates</span>
+               </div>
+               <hr className="border-grey-blue border-t w-full py-2" />
+               <div className={rowClasses}>
                   <SortDownIcon onClickFn={onClickLowToHigh} />
                   <span className={nonClickableTextClasses} onClick={onClickLowToHigh}>
                      low to high
@@ -73,19 +85,6 @@ const SortOptions = props => {
                      onClick={onClickHighToLow}>
                      high to low
                   </span>
-               </div>
-               <hr className="border-grey-blue border-t w-full py-2" />
-               <div className={rowClasses}>
-                  <RadioButton changeHandler={onClickSortText} value={sortType === SORT_TYPE_TEXT} />
-                  <span className={nonClickableTextClasses}>sort as text</span>
-               </div>
-               <div className={rowClasses}>
-                  <RadioButton changeHandler={onClickSortNumbers} value={sortType === SORT_TYPE_NUMBERS} />
-                  <span className={nonClickableTextClasses}>sort as numbers</span>
-               </div>
-               <div className={rowClasses}>
-                  <RadioButton changeHandler={onClickSortDates} value={sortType === SORT_TYPE_DATES} />
-                  <span className={nonClickableTextClasses}>sort as dates</span>
                </div>
             </div>
          </div>

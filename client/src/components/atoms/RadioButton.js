@@ -5,7 +5,7 @@ const RadioButton = ({
    style = {},
    classes = '',
    changeHandler,
-   value
+   isSelected
 }) => {
    const parentClasses =
       'cursor-pointer rounded-full border-2 border-subdued-blue hover:border-vibrant-blue flex justify-center items-center' +
@@ -16,7 +16,7 @@ const RadioButton = ({
       width: parentSize,
       height: parentSize,
    };
-   const childClasses = value 
+   const childClasses = isSelected 
       ? 'rounded-full bg-subdued-blue hover:bg-vibrant-blue'
       : 'hidden';
    const childSize = (parseInt(TOOL_ICON_WIDTH) * 0.4) + 'em';
