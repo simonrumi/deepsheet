@@ -43,12 +43,14 @@ const SHEET_QUERY = gql`
             columnFilters {
                index
                filterExpression
+               hideBlanks
                caseSensitive
                regex
             }
             rowFilters {
                index
                filterExpression
+               hideBlanks
                caseSensitive
                regex
             }

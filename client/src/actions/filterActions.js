@@ -11,6 +11,8 @@ import {
    FILTER_EDIT_CANCELLED
 } from './filterTypes';
 import { STARTED_UNDOABLE_ACTION, COMPLETED_UNDOABLE_ACTION } from './undoTypes';
+import { CELLS_UPDATED } from './cellTypes';
+import { REPLACED_COLUMN_FILTERS, REPLACED_ROW_FILTERS } from './metadataTypes';
 
 export const toggledShowFilterModal = (rowIndex, columnIndex, initialValues) => {
    const showModal = isSomething(rowIndex) || isSomething(columnIndex);
@@ -38,6 +40,14 @@ export const updatedFilter = (filterOptions, isInitializingSheet) => {
 export const clearedAllFilters = () => {
    managedStore.store.dispatch({
       type: CLEAR_ALL_FILTERS,
+   });
+   managedStore.store.dispatch({
+      type: CELLS_UPDATED,
+      payload: { changeType: REPLACED_COLUMN_FILTERS, data: [] }
+   });
+   managedStore.store.dispatch({
+      type: CELLS_UPDATED,
+      payload: { changeType: REPLACED_ROW_FILTERS, data: [] }
    });
 };
 

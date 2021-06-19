@@ -5,9 +5,8 @@ import {
    REPLACED_COLUMN_VISIBILITY,
    REPLACED_ROW_VISIBILITY,
    RESET_VISIBLITY,
-   HIDE_FILTERED,
-   CLEAR_ALL_FILTERS,
 } from '../actions/metadataTypes';
+import { HIDE_FILTERED, CLEAR_ALL_FILTERS, } from '../actions/filterTypes';
 import { toggledShowFilterModal } from '../actions/filterActions';
 import { hasChangedMetadata, updatedColumnFilters, updatedRowFilters } from '../actions/metadataActions';
 import { updatedCell } from '../actions/cellActions';

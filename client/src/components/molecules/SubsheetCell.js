@@ -5,14 +5,7 @@ import { focusedCell, clearedFocus, updatedFocusRef } from '../../actions/focusA
 import { isSomething, ifThen } from '../../helpers';
 import { cellText, stateFocusAbortControl} from '../../helpers/dataStructureHelpers';
 import { manageFocus, manageTab } from '../../helpers/focusHelpers';
-import SubsheetCellTools from './SubsheetCellTools';  
-
-// TODO BUG
-// 1. filter some cells
-// 2. don't save, but click on a subsheet cell & go to subsheet
-// result: forced to log in
-// 3. go back up to parent sheet
-// result: filter not saved
+import SubsheetCellTools from './SubsheetCellTools';
 
 const innerDivClassNames = cellHasFocus => {
    const cellBaseClasses = 'p-px ';
