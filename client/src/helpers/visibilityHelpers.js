@@ -92,14 +92,14 @@ export const getRequiredNumItemsForAxis = (axis, state) => R.converge(
 /****
  * row visibility, for use by Sheet.js
  *****/
-export const shouldShowRow = R.curry((rowVisibility, cell) => {
-   if (isNothing(rowVisibility) || !arrayContainsSomething(rowVisibility)) {
-      return true;
-   }
-   const row = cellRow(cell);
-   const rowVisibilityObj = getObjectFromArrayByKeyValue('index', row, rowVisibility);
-   return isSomething(rowVisibilityObj) ? rowVisibilityObj.isVisible : true;
-});
+export const shouldShowRow = R.curry((rowVisibility, cell) => arrayContainsSomething(rowVisibility)
+   ? R.pipe(
+      cellRow,
+      getObjectFromArrayByKeyValue('index', R.__, rowVisibility),
+      rowVisibilityObj => isSomething(rowVisibilityObj) ? rowVisibilityObj.isVisible : true
+   )(cell)
+   : true // ie if the visibility arr is empty that means show everything
+);
 
 /*****
  * column visibility, for use by ColumnHeaders.js.
@@ -107,13 +107,13 @@ export const shouldShowRow = R.curry((rowVisibility, cell) => {
  * different structure of data available to ColumnHeaders.js compared with Sheet.js,
  * consequently it doesn't seem worthwhile trying to generalize any of these functions
  ****/
-export const shouldShowColumn = R.curry((colVisibilityArr, columnIndex) => {
-   if (isNothing(colVisibilityArr) || !arrayContainsSomething(colVisibilityArr)) {
-      return true;
-   }
-   const colVisibilityObj = getObjectFromArrayByKeyValue('index', columnIndex, colVisibilityArr);
-   return isSomething(colVisibilityObj) ? colVisibilityObj.isVisible : true;
-});
+export const shouldShowColumn = R.curry((colVisibilityArr, columnIndex) => arrayContainsSomething(colVisibilityArr)
+   ? R.pipe(
+      getObjectFromArrayByKeyValue,
+      colVisibilityObj => isSomething(colVisibilityObj) ? colVisibilityObj.isVisible : true
+   )('index', columnIndex, colVisibilityArr)
+   : true // ie if the visibility arr is empty that means show everything
+);
 
 /* isFirstColumn for use by Sheet.js */
 export const isFirstColumn = cell => cell?.column === 0;

@@ -180,6 +180,10 @@ export const replacedColumnVisibility = newVisibility => {
       type: REPLACED_COLUMN_VISIBILITY,
       payload: newVisibility,
    });
+   managedStore.store.dispatch({
+      type: CELLS_UPDATED,
+      payload: { changeType: REPLACED_COLUMN_VISIBILITY, data: newVisibility }
+   });
 };
 
 export const updatedRowVisibility = newVisibility => {
@@ -197,6 +201,10 @@ export const replacedRowVisibility = newVisibility => {
    managedStore.store.dispatch({
       type: REPLACED_ROW_VISIBILITY,
       payload: newVisibility,
+   });
+   managedStore.store.dispatch({
+      type: CELLS_UPDATED,
+      payload: { changeType: REPLACED_ROW_VISIBILITY, data: newVisibility }
    });
 };
 

@@ -17,7 +17,7 @@ const updateIndiciesOfSheetItem = (originalArr, mapOfChangedIndicies) =>
         })(originalArr);
 
 // these 3 functions are just aliases for updateIndiciesOfSheetItem. The names of the aliases make their function clearer
-export const createNewAxisVisibility = (axisVisibility, mapOfChangedIndicies) =>
+export const createNewAxisVisibility = (axisVisibility, mapOfChangedIndicies) => 
    updateIndiciesOfSheetItem(axisVisibility, mapOfChangedIndicies);
 
 export const createNewAxisFilters = (axisFilters, mapOfChangedIndicies) =>
