@@ -1,7 +1,7 @@
 import * as R from 'ramda';
 import managedStore from '../store';
 import { isSomething, isNothing } from '../helpers';
-import { createUpdatedCellState, createCellKey } from '../helpers/cellHelpers';
+import { createUpdatedCellState, createCellKey, decodeCellText } from '../helpers/cellHelpers';
 import { dbCells } from '../helpers/dataStructureHelpers';
 import { updatedCell, addedCellKeys } from '../actions/cellActions';
 import {
@@ -120,7 +120,10 @@ export const populateCellsInStore = sheet => {
       addedCellKeys
    ) (sheet);
    
-   R.forEach(cell => updatedCell(cell)) (dbCells(sheet));
+   R.forEach(cell => {
+      const decodedCell = decodeCellText(cell);
+      return updatedCell(decodedCell);
+   })(dbCells(sheet));
 }
 
 export const cellDbUpdatesReducer = (state = {}, action) => {

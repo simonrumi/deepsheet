@@ -218,3 +218,22 @@ export const getCellKeysInAxis = (axis, axisIndex, state) => R.filter(
 export const getCellsFromCellKeys = R.curry(
    (state, cellKeys) => R.map(cellKey => stateCell(state, cellKey), cellKeys)
 );
+
+export const encodeCellText = cell => R.pipe(
+      cellText,
+      text => text.replaceAll(/([^a-zA-Z0-9\s])/g, '\\$1'),
+      cellTextSetter(R.__, cell)
+   )(cell);
+
+export const decodeCellText = cell => R.pipe(
+   cellText,
+   text => ifThenElse({
+      ifCond: isSomething,
+      thenDo: [
+         text => text.replaceAll(/\\/g, ''),
+         cellTextSetter(R.__, cell),
+      ],
+      elseDo: R.identity,
+      params: { ifParams: text, thenParams: text, elseParams: cell }
+   })
+)(cell);

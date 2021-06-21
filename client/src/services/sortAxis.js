@@ -34,14 +34,9 @@ export const compareCellContent = R.curry((state, isDecreasing, cell1, cell2) =>
    switch (sortType) {
       case SORT_TYPE_DATES:
          return compareValues(createDate(cell1Content), createDate(cell2Content), isDecreasing);
-         // ***********TODO date sorting issue
-         /* const cell1Date = new Date(cell1Content).getTime();
-         const cell2Date = new Date(cell2Content).getTime();
-         return compareValues(cell1Date, cell2Date, isDecreasing); */
       
       case SORT_TYPE_NUMBERS:
-         const returnValue = compareValues(createNumber(cell1Content), createNumber(cell2Content), isDecreasing);
-         return returnValue; // TODO tidy up
+         return compareValues(createNumber(cell1Content), createNumber(cell2Content), isDecreasing);
 
       default:
          return compareValues(R.toLower(cell1Content), R.toLower(cell2Content), isDecreasing);
