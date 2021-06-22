@@ -14,7 +14,6 @@ import {
    CELLS_REDRAW_COMPLETED,
 } from './cellTypes';
 import { isNothing } from '../helpers';
-import { encodeCellText } from '../helpers/cellHelpers';
 
 export const updatedCell = cell => {
    if (isNothing(cell) || R.not(R.has('content', cell))) {
