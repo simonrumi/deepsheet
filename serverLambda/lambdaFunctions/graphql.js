@@ -1,7 +1,9 @@
 const { createServer, withAuth } = require('./helpers/graphqlHelpers');
+const { log } = require('./helpers/logger');
+const { LOG } = require('../constants');
 
 const handler = async (event, context, callback) => {
-   // console.log('lambda ENVIRONMENT VARIABLES\n' + JSON.stringify(process.env, null, 2));
+   log({ level: LOG.VERBOSE }, 'lambda ENVIRONMENT VARIABLES\n' + JSON.stringify(process.env, null, 2));
 
    const server = await createServer();
 

@@ -1,4 +1,6 @@
 const R = require('ramda');
+const { log } = require('./logger');
+const { LOG } = require('../../constants');
 const mongoose = require('mongoose');
 mongoose.Promise = global.Promise; // Per Stephen Grider: Mongoose's built in promise library is deprecated, replace it with ES2015 Promise
 const { arrayContainsSomething } = require('./index');
@@ -32,7 +34,7 @@ const createStateCheck = async () => {
       await newStateCheck.save();
       return newStateCheck;
    } catch (err) {
-      console.log('Error creating state check:', err);
+      log({ level: LOG.ERROR }, 'error making stateCheck:', err.message);
       return err;
    }
 };
@@ -45,7 +47,7 @@ const confirmStateCheck = async stateCheckValue => {
    try {
       await StateCheckModel.deleteOne({ stateCheckValue });
    } catch(err) {
-      console.log('Warning: error deleting used stateCheck (however it will be auto-deleted)', err);
+      log({ level: LOG.WARNING }, 'Warning: error deleting used stateCheck (however it will be auto-deleted):', err.message);
    }
    return true;
 }

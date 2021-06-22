@@ -12,7 +12,7 @@ function log({ printTime, startTime, level }, message) {
       msgArr => timeElapsed ? R.append(timeElapsed, msgArr) : msgArr,
    )([...arguments]);
 
-   if (level >= keys.loggingLevel) {
+   if (level <= keys.loggingLevel) {
       console.log(...messages);
       return timeNow.getTime();
    }

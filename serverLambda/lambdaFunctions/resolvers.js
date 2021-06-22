@@ -130,7 +130,6 @@ module.exports = db => ({
             sheetDoc.metadata.lastUpdated = new Date();
             const savedSheet = await sheetDoc.save();
             if (isSomething(sheetDoc.metadata.parentSheetId)) {
-               console.log('***** resolvers.changeTitle found parentSheetId', sheetDoc.metadata.parentSheetId, 'and the new title is sheetDoc.title', sheetDoc.title);
                const parentSheet = await SheetModel.findById(sheetDoc.metadata.parentSheetId);
                parentSheet.cells = updateParentWithSubsheetTitle(parentSheet, sheetDoc);
                await parentSheet.save();
@@ -258,55 +257,3 @@ module.exports = db => ({
       },
    },
 });
-
-// createUser: async (parent, args, context) => {
-//    const { isValid, error } = await validateNewUser(args.input);
-//    if (!isValid) {
-//       return error;
-//    }
-//    try {
-//       const newUser = await new UserModel(args.input).save();
-//       return newUser;
-//    } catch (err) {
-//       console.log('Error creating user:', err);
-//       return err;
-//    }
-// },
-
-// note that we haven't ended up using this because sessions are handled by authReturn.js which is talking directly to mongodb
-/* createUserSession: async (parent, args, context) => {
-         const { userId, email, userIdFromProvider } = args.input;
-
-         const createSession = async () => {
-            try {
-               const newSession = await new SessionModel().save();
-               return newSession;
-            } catch (err) {
-               console.log('Error creating session:', err);
-               return err;
-            }
-         };
-
-         const returnError = () => {
-            console.log('could not create session');
-            return new Error('could not create session');
-         };
-
-         return R.ifElse(arrayContainsSomething, createSession, returnError)([userId, email, userIdFromProvider]);
-      }, */
-
-// note that we haven't ended up using this because sessions are handled by authReturn.js which is talking directly to mongodb
-/* refreshUserSession: async (parent, args, context) => {
-         try {
-            const currentSession = await SessionModel.findById(args.sessionId);
-            if (currentSession) {
-               currentSession.lastAccessed = Date.now();
-               const refreshsedSession = await currentSession.save();
-               return refreshsedSession;
-            }
-            return null; // will need to create a new session in this case
-         } catch (err) {
-            console.log('error refreshing session', err);
-            return err;
-         }
-      }, */

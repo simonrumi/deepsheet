@@ -3,6 +3,8 @@ const { standardAuthError } = require('./helpers/userHelpers');
 const { createStateCheck } = require('./helpers/authHelpers');
 const { makeGoogleAuthCall } = require('./helpers/googleAuthHelpers');
 const { makeFacebookAuthCall } = require('./helpers/facebookAuthHelpers');
+const { log } = require('./helpers/logger');
+const { LOG } = require('../constants');
 
 export async function handler(event, context, callback) {
    await dbConnector();
@@ -11,7 +13,7 @@ export async function handler(event, context, callback) {
    try {
       stateCheck = await createStateCheck();
    } catch(err) {
-      console.log('error making stateCheck', err);
+      log({ level: LOG.ERROR }, 'error making stateCheck:', err.message);
       return standardAuthError;
    }
 
@@ -22,7 +24,7 @@ export async function handler(event, context, callback) {
             const fbResponse = await makeFacebookAuthCall(stateCheck.stateCheckValue);
             return fbResponse;
          } catch (err) {
-            console.log('error making fb auth call', err);
+            log({ level: LOG.ERROR }, 'error making fb auth call:', err.message);
             return standardAuthError;
          }
 
@@ -31,13 +33,13 @@ export async function handler(event, context, callback) {
             const googleResponse = await makeGoogleAuthCall(stateCheck.stateCheckValue);
             return googleResponse;
          } catch (err) {
-            console.log('error making google auth call', err);
+            log({ level: LOG.ERROR }, 'error making google auth call:', err.message);
          }
          break;
 
       default:
          // shouldn't get to here but leaving this just in case
-         console.log('auth failed for provider', provider);
+         log({ level: LOG.ERROR }, 'auth failed for provider:', provider);
          return standardAuthError;
    }
   

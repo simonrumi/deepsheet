@@ -1,5 +1,7 @@
 const axios = require('axios');
 const keys = require('../../config/keys');
+const { log } = require('../helpers/logger');
+const { LOG } = require('../../constants');
 
 const getFacebookToken = async code => {
    const fbAccessTokenEndpoint =
@@ -12,7 +14,7 @@ const getFacebookToken = async code => {
       const fbAccessRes = await axios.get(fbAccessTokenEndpoint);
       return { error: null, ...fbAccessRes.data };
    } catch (err) {
-      console.log('Error getting fb access token:', err);
+      log({ level: LOG.ERROR }, 'Error getting fb access token:', err.message);
       return { token_error: err };
    }
 };

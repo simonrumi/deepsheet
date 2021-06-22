@@ -10,12 +10,13 @@ import {
 import { FETCHED_SHEET } from '../actions/sheetTypes';
 import { COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
 import { isSomething } from '../helpers';
+import { decodeText } from '../helpers/cellHelpers';
 
 const titleReducer = (state = {}, action) => {
    switch (action.type) {
       case FETCHED_SHEET:
          return {
-            text: action.payload.title,
+            text: decodeText(action.payload.title),
             initialValue: action.payload.title,
             isEditingTitle: false,
             isCallingDb: false,
