@@ -4,7 +4,6 @@ import {
    indexToColumnLetter,
    indexToRowNumber,
    isSomething,
-   isNothing,
    arrayContainsSomething,
    compareIndexValues,
    ifThenElse,
@@ -187,23 +186,6 @@ export const tabToNextVisibleCell = (rowIndex, columnIndex, goBackwards) => R.pi
    })
 )(managedStore.state);
 
-export const isCellInRange = (row, column, cellRange) => {
-   if (isNothing(cellRange)) {
-      return false;
-   }
-
-   //  cellRange = {
-   //    from: { row: 3, column: 0 },
-   //    to: { row: 4, column: 2 }
-   // }
-   const fromRow = cellRange.from.row < cellRange.to.row ? cellRange.from.row : cellRange.to.row;
-   const toRow = cellRange.from.row === fromRow ? cellRange.to.row : cellRange.from.row;
-   const fromColumn = cellRange.from.column < cellRange.to.column ? cellRange.from.column : cellRange.to.column;
-   const toColumn = cellRange.from.row === fromColumn ? cellRange.to.column : cellRange.from.column;
-
-   return row >= fromRow && row <= toRow && column >= fromColumn && column <= toColumn;
-}
-
 export const haveCellsNeedingUpdate = state => R.pipe(
    stateCellsUpdateInfo,
    arrayContainsSomething,
@@ -241,3 +223,8 @@ export const decodeCellText = cell => R.pipe(
       params: { ifParams: text, thenParams: text, elseParams: cell }
    })
 )(cell);
+
+export const removeCellFromArray = (cell, arr) => R.filter(
+   cellFromArr => cell.row !== cellFromArr.row || cell.column !== cellFromArr.column, 
+   arr
+);

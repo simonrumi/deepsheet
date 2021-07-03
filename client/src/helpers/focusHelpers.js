@@ -4,10 +4,15 @@ import {
     stateFocusCellRef,
     stateFocusCell,
     stateFocusAbortControl,
+    stateCellRangeFrom,
+    stateCellRangeTo,
+    stateTotalColumns,
+    statePresent,
 } from './dataStructureHelpers';
-import { tabToNextVisibleCell } from './cellHelpers';
-import { isSomething, ifThen, ifThenElse } from '.';
-import { updatedFocusRef, updatedFocusAbortControl, focusedCell } from '../actions/focusActions';
+import { tabToNextVisibleCell, createCellKey } from './cellHelpers';
+import { isSomething, isNothing, ifThen, ifThenElse, } from '.';
+import { updatedFocusRef, updatedFocusAbortControl, focusedCell, highlightedCellRange } from '../actions/focusActions';
+import { addCellToRange, removeCellFromRange } from '../actions/cellActions';
 
 export const isStateCellRefThisCell = (cellRef, cell) => {
     const currentFocusedCell = stateFocusCell(managedStore.state);
@@ -18,7 +23,7 @@ export const isStateCellRefThisCell = (cellRef, cell) => {
        && cellRef?.current === currentFocusedCellRef.current;
 }
 
-export const manageFocus = ({ event, cell, cellRef, keyBindings }) => {
+export const manageKeyBindings = ({ event, cell, cellRef, keyBindings }) => {
     ifThen({
        ifCond: isSomething(event),
        thenDo: () => event.preventDefault(),
@@ -57,3 +62,65 @@ export const manageTab = ({ event, cell, callback }) => {
         params: {}
     });
 }
+
+export const updateCellsInRange = addingCells => {
+    const fromCell = stateCellRangeFrom(managedStore.state);
+    const toCell = stateCellRangeTo(managedStore.state);
+    if (isNothing(fromCell) || isNothing(toCell)) {
+        return;
+    }
+    const lastColumn = stateTotalColumns(managedStore.state) - 1;
+    
+    // if the 'from' cell comes after the 'to' cell, then we will swap what we're calling from and to 
+    const directionForward = (fromCell.row < toCell.row) || (fromCell.row === toCell.row && fromCell.column <= toCell.column);
+    const fromRow = directionForward ? fromCell.row : toCell.row; 
+    const toRow = directionForward ? toCell.row : fromCell.row;
+    const fromColumn = directionForward ? fromCell.column : toCell.column;
+    const toColumn = directionForward ? toCell.column : fromCell.column;
+    if (isNothing(fromRow) || isNothing(toRow) || isNothing(fromColumn) || isNothing(toColumn)) {
+        // this should never happen
+        console.error('focusHelpers.updateCellsInRange cannot proceed because it got fromRow', fromRow, 'toRow', toRow, 'fromColumn', fromColumn, 'toColumn', toColumn);
+        return;
+    }
+
+    const listCellsInRow = R.curry((accumulator, row, column, endColumn) => {
+        const cellKey = createCellKey(row, column);
+        const cell = statePresent(managedStore.state)[cellKey];
+        if (column === endColumn) {
+            addingCells ? addCellToRange(cell) : removeCellFromRange(cell);
+            return R.append(cell, accumulator);
+        }
+        addingCells ? addCellToRange(cell) : removeCellFromRange(cell);
+        return listCellsInRow(R.append(cell, accumulator), row, ++column, endColumn);
+    });
+
+    const listCellsInRange = R.curry((accumulator, row) => {
+        if (row === toRow) {
+            const startingColumn = row === fromRow ? fromColumn : 0; // if the fromRow and the toRow are one in the same, include cells starting at the fromColumn, otherwise start at the first column 
+            return R.append(row, listCellsInRow(accumulator, toRow, startingColumn, toColumn));
+        }
+        if (row === fromRow) {
+            return R.pipe(
+                listCellsInRow,
+                listCellsInRange(R.__, row + 1)
+            )(accumulator, fromRow, fromColumn, lastColumn);
+        }
+        return R.pipe(
+            listCellsInRow,
+            listCellsInRange(R.__, row + 1)
+        )(accumulator, row, 0, lastColumn);
+    });
+    listCellsInRange([], fromRow);
+}
+
+export const rangeSelected  = toCell => {
+    const fromCell = stateCellRangeFrom(managedStore.state);
+    if (fromCell && (fromCell.row !== toCell.row || fromCell.column !== toCell.column)) {
+        document.getSelection().removeAllRanges(); // this stops the content within each cell in the range from getting highlighted. There's a bit of flashing, but no big deal
+        highlightedCellRange(toCell);
+        updateCellsInRange(true); // true means we're finding and adding all the cells in the range
+        return true;
+    }
+    return false;
+}
+    

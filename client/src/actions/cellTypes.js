@@ -15,4 +15,6 @@ export const REMOVED_CELL_KEYS = 'removed_cell_keys';
 export const CLEARED_ALL_CELL_KEYS = 'cleared_all_cell_keys';
 export const CELLS_UPDATED = 'cells_updated';
 export const CELLS_REDRAW_COMPLETED = 'cells_redraw_completed';
+export const ADDED_CELL_TO_RANGE = 'added_cell_to_range';
+export const REMOVED_CELL_FROM_RANGE = 'removed_cell_from_range';
 

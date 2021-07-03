@@ -12,6 +12,7 @@ import {
    REMOVED_CELL_KEYS,
    CLEARED_ALL_CELL_KEYS,
    CELLS_REDRAW_COMPLETED,
+   ADDED_CELL_TO_RANGE,
 } from './cellTypes';
 import { isNothing } from '../helpers';
 
@@ -92,5 +93,23 @@ export const clearedAllCellKeys = () => {
 export const cellsRedrawCompleted = () => {
    managedStore.store.dispatch({
       type: CELLS_REDRAW_COMPLETED,
+   });
+}
+
+export const addCellToRange = cell => {
+   managedStore.store.dispatch({
+      type: UPDATED_CELL,
+      payload: { ...cell, inCellRange: true },
+   });
+   managedStore.store.dispatch({
+      type: ADDED_CELL_TO_RANGE,
+      payload: cell,
+   });
+}
+
+export const removeCellFromRange = cell => {
+   managedStore.store.dispatch({
+      type: UPDATED_CELL,
+      payload: { ...cell, inCellRange: false },
    });
 }

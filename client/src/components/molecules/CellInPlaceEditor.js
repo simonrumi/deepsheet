@@ -1,14 +1,14 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import * as R from 'ramda';
 import managedStore from '../../store';
 import { updatedCell, hasChangedCell } from '../../actions/cellActions';
 import { createdSheet } from '../../actions/sheetActions';
-import { clearedFocus, updatedFocusRef } from '../../actions/focusActions';
+import { clearedFocus, updatedFocusRef, clearedCellRange } from '../../actions/focusActions';
 import { startedEditing, finishedEditing } from '../../actions/undoActions'; 
 import { isSomething, ifThen } from '../../helpers';
 import { getUserInfoFromCookie } from '../../helpers/userHelpers';
 import { createDefaultAxisSizing } from '../../helpers/axisSizingHelpers';
-import { manageFocus, manageTab } from '../../helpers/focusHelpers';
+import { manageKeyBindings, manageTab, updateCellsInRange } from '../../helpers/focusHelpers';
 import {
    stateSheetId,
    cellText,
@@ -18,6 +18,8 @@ import {
    stateOriginalRow,
    stateOriginalColumn,
    stateFocusAbortControl,
+   stateCellRangeFrom,
+   stateCellRangeTo,
 } from '../../helpers/dataStructureHelpers';
 import IconNewDoc from '../atoms/IconNewDoc';
 import IconClose from '../atoms/IconClose';
@@ -50,6 +52,11 @@ const triggerCreatedSheetAction = cell => {
 
 const manageChange = (event, cell) => {
    event.preventDefault();
+   ifThen({
+      ifCond: isSomething(stateCellRangeFrom(managedStore.state)) && isSomething(stateCellRangeTo(managedStore.state)),
+      thenDo: [ () => updateCellsInRange(false), clearedCellRange ],
+      params: { thenParams: {cell} }
+   });
    updatedCell({
       ...cell,
       content: { ...cell.content, text: event.target.value },
@@ -89,6 +96,7 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
          value: isSomething(cellInPlaceEditorRef.current) ? cellInPlaceEditorRef.current.value : null,
          message: 'cancelled editing row ' + cellRow(cell) + ', column ' + cellColumn(cell),
       });
+      updateCellsInRange(false); // false means we're finding then removing all the cells from the range
       clearedFocus();
    }
    
@@ -113,12 +121,13 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
       stateFocusAbortControl(managedStore.state).abort();
       finalizeCellContent(cell);
       updatedFocusRef({ ref: null }); // clear the existing focusRef
+      updateCellsInRange(false); // false means we're finding then removing all the cells from the range
       clearedFocus();
    }
 
    const manageCellInPlaceEditorFocus = event => {
       ifThen({
-         ifCond: manageFocus, // returns true if the focus needed to be updated
+         ifCond: manageKeyBindings, // returns true if the focus needed to be updated
          thenDo: [
             () => cellInPlaceEditorRef.current.selectionStart = 0,
             () => cellInPlaceEditorRef.current.selectionEnd = cellText(cell).length,
@@ -164,14 +173,14 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
       return textArea;
    };
 
-   // need to do this setTimeout workaround so the cellInPlaceEditorRef can first be assigned to the textarea
-   // then we set the focus on that text area 1 tick after. Replace this if a better way is found.
-   window.setTimeout(() => {
+   // TODO replace setTimeouts with useEffect elsewhere
+   // need to useEffect so the cellInPlaceEditorRef can first be assigned to the textarea
+   useEffect(() => {
       if (cellHasFocus && isSomething(cellInPlaceEditorRef.current)) {
          cellInPlaceEditorRef.current.focus();
          manageCellInPlaceEditorFocus(null);
       }
-   }, 0);
+   });
 
    return (
       <div style={positioning} className="absolute z-10 bg-white text-dark-dark-blue " >

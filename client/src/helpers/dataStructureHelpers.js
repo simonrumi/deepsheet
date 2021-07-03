@@ -290,18 +290,18 @@ const stateFocusLens = R.compose(presentLens, focusLens);
 export const stateFocus = R.view(stateFocusLens);
 const stateFocusCellLens = R.compose(stateFocusLens, R.lensProp('cell'));
 export const stateFocusCell = R.view(stateFocusCellLens);
-const statePreviouslyFocusedCellLens = R.compose(stateFocusLens, R.lensProp('previouslyFocusedCell'));
-export const statePreviouslyFocusedCell = R.view(statePreviouslyFocusedCellLens);
 const stateFocusCellRefLens = R.compose(stateFocusLens, R.lensProp('ref'));
 export const stateFocusCellRef = R.view(stateFocusCellRefLens);
 const stateFocusAbortControlLens = R.compose(stateFocusLens, R.lensProp('abortControl'));
 export const stateFocusAbortControl = R.view(stateFocusAbortControlLens);
-
-
-/************************************************ STATE OTHER **********************************************/
 const stateCellRangeLens = R.compose(stateFocusLens, R.lensProp('cellRange'));
 export const stateCellRange = R.view(stateCellRangeLens);
+const stateCellRangeFromLens = R.compose(stateCellRangeLens, R.lensProp('from'));
+export const stateCellRangeFrom = R.view(stateCellRangeFromLens);
+const stateCellRangeToLens = R.compose(stateCellRangeLens, R.lensProp('to'));
+export const stateCellRangeTo = R.view(stateCellRangeToLens);
 
+/************************************************ STATE OTHER **********************************************/
 const titleLens = R.lensProp('title');
 const stateTitleLens = R.compose(presentLens, titleLens);
 export const stateTitleIsCallingDb = subObjectGetter(stateTitleLens, 'isCallingDb');

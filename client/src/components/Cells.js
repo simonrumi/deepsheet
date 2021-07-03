@@ -23,10 +23,8 @@ import Cell from './molecules/Cell';
 import managedStore from  '../store';
 
 const Cells = () => {
-   // const cellRange = useSelector(state => stateCellRange(state)); // TODO might need to reinstate use of cellRange, but it is causing unnecessary re-rendering of cells, so find a way to make it more targeted
-
    const renderEmptyEndCell = cell => (
-      <Cell blankCell={true} row={cell.row} column={cell.column} classes={'border-r'} key={cellRow(cell) + '_endCell'}  /> // cellRange={cellRange}
+      <Cell blankCell={true} endCell={true} row={cell.row} column={cell.column} classes={'border-r'} key={cellRow(cell) + '_endCell'}  />
    );
 
    const maybeEmptyEndCell = cell =>
@@ -45,11 +43,9 @@ const Cells = () => {
    const renderCell = cell => <Cell 
       row={cell.row}
       column={cell.column} 
-      blankCell={false} 
+      blankCell={false}
       key={cellRow(cell) + '_' + cellColumn(cell)} 
    />;
-   // cellRange={cellRange} 
-   // TODO might need to reinstate use of cellRange, but it is causing unnecessary re-rendering of cells, so find a way to make it more targeted
 
    const maybeRowHeader = R.ifElse(isFirstColumn, renderRowHeader, nothing);
 

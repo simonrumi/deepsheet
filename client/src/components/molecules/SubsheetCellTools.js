@@ -55,7 +55,7 @@ const SubsheetCellTools = props => {
       }
       if (cellHasFocus) {
          return (
-            <div className="relative">
+            <div className="relative" >
                <div className={parentClasses} style={leftPositioning}>
                   <IconDownToSubsheet
                      classes="w-6 flex-1 mb-1"
