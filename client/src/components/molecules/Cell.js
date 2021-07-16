@@ -6,7 +6,7 @@ import { hidePopups } from '../../actions';
 import { nothing, isSomething, ifThenElse } from '../../helpers';
 import { createCellId, isCellFocused, createCellKey } from '../../helpers/cellHelpers';
 import { isCellVisible } from '../../helpers/visibilityHelpers';
-import { updateCellsInRange, rangeSelected } from '../../helpers/focusHelpers';
+import { updateCellsInRange, rangeSelected, atEndOfRange } from '../../helpers/focusHelpers';
 import {
    cellSubsheetId,
    cellText,
@@ -16,12 +16,16 @@ import { usePositioning } from '../../helpers/hooks';
 import SubsheetCell from './SubsheetCell';
 import BlankCell from './BlankCell';
 import CellInPlaceEditor from './CellInPlaceEditor';
+import RangeTools from './RangeTools';
 
 const onCellClick = (event, cell) => {
    event.preventDefault();
    ifThenElse({
       ifCond: event.shiftKey,
-      thenDo: [ rangeSelected, hidePopups ],
+      thenDo: [ 
+         rangeSelected, 
+         hidePopups
+      ],
       elseDo: [
          () => updateCellsInRange(false),
          () => focusedCell(cell),
@@ -33,7 +37,7 @@ const onCellClick = (event, cell) => {
 
 const createClassNames = (classes, cell, isEndCell) => {
    const backgroundClasses = cell.inCellRange && !isEndCell ? 'bg-light-light-blue ' : ''; 
-   const cellBaseClasses = 'grid-item overflow-hidden text-dark-dark-blue border-t border-l ';
+   const cellBaseClasses = 'regular-cell grid-item overflow-hidden text-dark-dark-blue border-t border-l ';
    const otherClasses = classes ? classes : '';
    return cellBaseClasses + backgroundClasses + otherClasses;
 };
@@ -68,9 +72,19 @@ const Cell = React.memo(({ row, column, classes, blankCell, endCell }) => {
 
    const renderSubsheetCell = cell => <SubsheetCell cell={cell} cellHasFocus={cellHasFocus} />;
 
+   const renderEndOfRangeCell = cell => {
+      return (
+         <div className="w-full h-full relative bg-light-light-blue">
+            {renderRegularCell(cell)}
+            <RangeTools cell={cell} />
+         </div>
+      );
+   }
+
    const renderCell =  R.cond([
       [R.isNil, nothing],
       [R.pipe(isCellVisible, R.not), nothing],
+      [atEndOfRange, renderEndOfRangeCell],
       [R.thunkify(R.identity)(blankCell), renderBlankCell],
       [R.pipe(cellSubsheetId, isSomething), renderSubsheetCell],
       [R.thunkify(R.identity)(cellHasFocus), renderInPlaceEditor],

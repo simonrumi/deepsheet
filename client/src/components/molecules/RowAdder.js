@@ -1,27 +1,23 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
-import insertNewRow from '../../services/insertNewRow';
+import React from 'react';
+import insertNewRows from '../../services/insertNewRows';
 import IconAdd from '../atoms/IconAdd';
 
-class RowAdder extends Component {
-   render() {
-      return (
-         <div className={this.props.classes} data-testid="rowAdder">
-            <div className="flex items-center px-2 py-2">
-               <IconAdd
-                  classes={'flex-1 h-3 w-3'}
-                  onClickFn={insertNewRow}
-               />
-            </div>
+const onClickRowAdder = evt => {
+   evt.preventDefault();
+   insertNewRows();
+};
+
+const RowAdder = ({ classes }) => {
+   return (
+      <div className={classes} data-testid="rowAdder">
+         <div className="flex items-center px-2 py-2">
+            <IconAdd
+               classes={'flex-1 h-3 w-3'}
+               onClickFn={onClickRowAdder}
+            />
          </div>
-      );
-   }
+      </div>
+   );
 }
 
-function mapStateToProps(state, ownProps) {
-   return {
-      classes: ownProps.classes,
-   };
-}
-
-export default connect(mapStateToProps)(RowAdder);
+export default RowAdder;

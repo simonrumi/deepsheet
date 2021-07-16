@@ -285,7 +285,7 @@ const stateSheetCellsRenderCountLens = R.compose(stateSheetLens, cellsRenderCoun
 export const stateCellsRenderCount = R.view(stateSheetCellsRenderCountLens);
 
 /************************************************ STATE FOCUS **********************************************/
-const focusLens = R.lensProp('focus'); // there's a property called focus which is used to track which UI element currently has focus
+const focusLens = R.lensProp('focus'); // used to track which UI element currently has focus
 const stateFocusLens = R.compose(presentLens, focusLens);
 export const stateFocus = R.view(stateFocusLens);
 const stateFocusCellLens = R.compose(stateFocusLens, R.lensProp('cell'));
@@ -300,6 +300,21 @@ const stateCellRangeFromLens = R.compose(stateCellRangeLens, R.lensProp('from'))
 export const stateCellRangeFrom = R.view(stateCellRangeFromLens);
 const stateCellRangeToLens = R.compose(stateCellRangeLens, R.lensProp('to'));
 export const stateCellRangeTo = R.view(stateCellRangeToLens);
+const stateCellRangeCellsLens = R.compose(stateCellRangeLens, R.lensProp('cells'));
+export const stateCellRangeCells = R.view(stateCellRangeCellsLens);
+
+/************************************************ STATE CLIPBOARD **********************************************/
+const clipboardLens = R.lensProp('clipboard');
+const stateClipboardLens = R.compose(presentLens, clipboardLens);
+export const stateClipboard = R.view(stateClipboardLens);
+const stateClipboardTextLens = R.compose(stateClipboardLens, R.lensProp('text'));
+export const stateClipboardText = R.view(stateClipboardTextLens);
+const stateClipboardRangeFromLens = R.compose(stateClipboardLens, R.lensPath(['cellRange', 'from']));
+export const stateClipboardRangeFrom = R.view(stateClipboardRangeFromLens);
+const stateClipboardRangeToLens = R.compose(stateClipboardLens, R.lensPath(['cellRange', 'to']));
+export const stateClipboardRangeTo = R.view(stateClipboardRangeToLens);
+const stateClipboardRangeCellsLens = R.compose(stateClipboardLens, R.lensPath(['cellRange', 'cells']));
+export const stateClipboardRangeCells = R.view(stateClipboardRangeCellsLens);
 
 /************************************************ STATE OTHER **********************************************/
 const titleLens = R.lensProp('title');
@@ -316,7 +331,7 @@ const stateMenuLens = R.compose(presentLens, menuLens);
 export const stateShowMenu = subObjectGetter(stateMenuLens, 'showMenu');
 
 const editorLens = R.lensProp('editor');
-export const stateEditorLens = R.compose(presentLens, editorLens);
+const stateEditorLens = R.compose(presentLens, editorLens);
 export const stateEditor = R.view(stateEditorLens);
 export const stateEditorRow = subObjectGetter(stateEditorLens, 'row');
 export const stateEditorColumn = subObjectGetter(stateEditorLens, 'column');

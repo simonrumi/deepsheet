@@ -135,7 +135,7 @@ const arrayIsNothing = array => isNothing(array) || !arrayContainsSomething(arra
 
 const getVisibilityArr = R.curry((axis, state) => R.pipe(getAxisVisibilityName, stateMetadataProp(state))(axis));
 
-export const isLastVisibleItemInAxis = R.curry((axis, totalInAxis, state, cell) => {   
+export const isLastVisibleItemInAxis = R.curry((axis, totalInAxis, state, cell) => { 
    const endIndex = totalInAxis - 1;
    return R.ifElse(
       // if the visiblity object is empty

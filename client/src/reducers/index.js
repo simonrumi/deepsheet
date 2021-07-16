@@ -1,5 +1,6 @@
 import authReducer from './authReducers';
 import { cellDbUpdatesReducer, cellKeysReducer } from './cellReducers';
+import clipboardReducer from './clipboardReducer';
 import dragMonitorReducer from './dragMonitorReducer';
 import filterModalReducer from './filterModalReducer';
 import { focusReducer } from './focusReducer';
@@ -14,6 +15,7 @@ export const staticReducers = {
    auth: authReducer,
    cellDbUpdates: cellDbUpdatesReducer,
    cellKeys: cellKeysReducer,
+   clipboard: clipboardReducer,
    dragMonitor: dragMonitorReducer,
    filterModal: filterModalReducer,
    focus: focusReducer,

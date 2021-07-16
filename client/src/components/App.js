@@ -52,6 +52,7 @@ const stateKeys = [
    'auth',
    'cellKeys',
    'cellDbUpdates',
+   'clipboard',
    'dragMonitor',
    'filterModal',
    'focus',

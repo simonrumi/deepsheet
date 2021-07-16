@@ -16,7 +16,7 @@ const TextInput = props => {
 				value={value} 
 				onChange={changeHandler} 
 				error={error}
-            onBlur={blurHandler}
+            	onBlur={blurHandler}
 			/>
 		</div>
 	);

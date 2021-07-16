@@ -25,3 +25,5 @@ export const menuDeleteSheetError = () => 'Aw sheet, couldn\'t delete it - try a
 export const loginModalText = () => 'Log me in so I can save my sheet:'
 
 export const networkErrorText = () => '(Your session probably timed out)';
+
+export const cellRangePasteError = () => 'You can\'t paste over cells that link to other sheets';

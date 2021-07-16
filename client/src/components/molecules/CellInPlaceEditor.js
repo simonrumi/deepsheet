@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import * as R from 'ramda';
 import managedStore from '../../store';
 import { updatedCell, hasChangedCell } from '../../actions/cellActions';
@@ -9,6 +9,7 @@ import { isSomething, ifThen } from '../../helpers';
 import { getUserInfoFromCookie } from '../../helpers/userHelpers';
 import { createDefaultAxisSizing } from '../../helpers/axisSizingHelpers';
 import { manageKeyBindings, manageTab, updateCellsInRange } from '../../helpers/focusHelpers';
+import { pasteCellRangeToTarget } from '../../helpers/clipboardHelpers';
 import {
    stateSheetId,
    cellText,
@@ -20,9 +21,11 @@ import {
    stateFocusAbortControl,
    stateCellRangeFrom,
    stateCellRangeTo,
+   stateClipboard,
 } from '../../helpers/dataStructureHelpers';
-import IconNewDoc from '../atoms/IconNewDoc';
-import IconClose from '../atoms/IconClose';
+import NewDocIcon from '../atoms/IconNewDoc';
+import CloseIcon from '../atoms/IconClose';
+import PasteIcon from '../atoms/IconPaste';
 import CheckmarkSubmitIcon from '../atoms/IconCheckmarkSubmit';
 import { DEFAULT_TOTAL_ROWS, DEFAULT_TOTAL_COLUMNS, DEFAULT_COLUMN_WIDTH, DEFAULT_ROW_HEIGHT } from '../../constants';
 
@@ -67,6 +70,7 @@ const manageChange = (event, cell) => {
 const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
    // this ref is applied to the text area (see below) so that we can manage its focus
    const cellInPlaceEditorRef = useRef();
+   const [error, setError] = useState(null);
 
    const finalizeCellContent = (cell) => {
       if (!R.equals(stateOriginalValue(managedStore.state), cellInPlaceEditorRef.current?.value)) {
@@ -137,20 +141,29 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
       });
    }
 
+   
+
+   const renderPasteIcon = () => isSomething(stateClipboard(managedStore.state))
+      ? <PasteIcon classes="bg-white mb-1" svgClasses="w-6" onMouseDownFn={() => pasteCellRangeToTarget(cell, setError)}/>
+      : null;
+
    const renderIcons = () => {
       const leftPositioning = {
          left: positioning.width
       }
+
       return (
          <div className="relative w-full">
             <div className="absolute top-0 z-10 flex flex-col bg-white border border-grey-blue p-1" style={leftPositioning}>
                {/* onMouseDown is fired before onBlur, whereas onClick is after onBlur. 
-               Since the textarea has the focus, clicking on IconNewDoc will cause
+               Since the textarea has the focus, clicking on NewDocIcon will cause
                the editor's onBlur to fire...but we need to call another action before the onBlur,
                hence the use of onMouseDown */}
                <CheckmarkSubmitIcon classes="bg-white mb-1" svgClasses="w-6" onMouseDownFn={handleSubmit} />
-               <IconClose classes="bg-white mb-1" svgClasses="w-6" onMouseDownFn={handleCancel} />
-               <IconNewDoc classes="mb-1" svgClasses="w-6" onMouseDownFn={() => triggerCreatedSheetAction(cell)} />
+               <CloseIcon classes="bg-white mb-1" svgClasses="w-6" onMouseDownFn={handleCancel} />
+               { renderPasteIcon() }
+               <div>{error}</div> {/* TODO this isn't displaying because the CellInPlaceEditor disappears on click of the paste icon...need to fix that */}
+               <NewDocIcon classes="mb-1" svgClasses="w-6" onMouseDownFn={() => triggerCreatedSheetAction(cell)} />
             </div>
          </div>
       );

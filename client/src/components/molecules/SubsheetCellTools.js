@@ -21,8 +21,7 @@ import {
    stateColumnWidths
 } from '../../helpers/dataStructureHelpers';
 
-const SubsheetCellTools = props => {
-   const { cell, cellHasFocus } = props;
+const SubsheetCellTools = ({ cell, cellHasFocus }) => {
    const columnWidths = useSelector(state => stateColumnWidths(state));
    const subsheetId = cellSubsheetId(cell);
 

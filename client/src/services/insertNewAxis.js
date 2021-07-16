@@ -15,10 +15,8 @@ export const addNewCellsToCellDbUpdates = R.map(cell => {
 export const maybeAddAxisVisibilityEntry = (axisIndex, axisVisibilityObj, updatedAxisVisibilityFn) =>
    R.when(
       R.both(
-         // axisVisibilityObj is not empty and...
-         R.pipe(isSomething), // was (R.isEmpty, R.not),
-         // axisVisibilityObj doesn't have an entry for the Item we're adding
-         R.pipe(R.has(axisIndex), R.not)
+         isSomething, // axisVisibilityObj is not empty and...
+         R.pipe(R.has(axisIndex), R.not) // axisVisibilityObj doesn't have an entry for the Item we're adding
       ),
       R.pipe(
          () => ({ index: axisIndex, isVisible: true }),

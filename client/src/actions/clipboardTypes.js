@@ -1,0 +1,1 @@
+export const UPDATED_CLIPBOARD = 'updated_clipboard';

@@ -6,7 +6,6 @@ import {
     stateFocusAbortControl,
     stateCellRangeFrom,
     stateCellRangeTo,
-    stateTotalColumns,
     statePresent,
 } from './dataStructureHelpers';
 import { tabToNextVisibleCell, createCellKey } from './cellHelpers';
@@ -63,16 +62,17 @@ export const manageTab = ({ event, cell, callback }) => {
     });
 }
 
+export const isRangeDirectionForward = (fromCell, toCell) => (fromCell.row < toCell.row) || (fromCell.row === toCell.row && fromCell.column <= toCell.column);
+
 export const updateCellsInRange = addingCells => {
     const fromCell = stateCellRangeFrom(managedStore.state);
     const toCell = stateCellRangeTo(managedStore.state);
     if (isNothing(fromCell) || isNothing(toCell)) {
         return;
     }
-    const lastColumn = stateTotalColumns(managedStore.state) - 1;
     
     // if the 'from' cell comes after the 'to' cell, then we will swap what we're calling from and to 
-    const directionForward = (fromCell.row < toCell.row) || (fromCell.row === toCell.row && fromCell.column <= toCell.column);
+    const directionForward = isRangeDirectionForward(fromCell, toCell);
     const fromRow = directionForward ? fromCell.row : toCell.row; 
     const toRow = directionForward ? toCell.row : fromCell.row;
     const fromColumn = directionForward ? fromCell.column : toCell.column;
@@ -83,37 +83,27 @@ export const updateCellsInRange = addingCells => {
         return;
     }
 
-    const listCellsInRow = R.curry((accumulator, row, column, endColumn) => {
-        const cellKey = createCellKey(row, column);
-        const cell = statePresent(managedStore.state)[cellKey];
-        if (column === endColumn) {
+    const listCellsInRow = R.curry((row, column) => {
+        if (column >= fromColumn && column <= toColumn) {
+            const cellKey = createCellKey(row, column);
+            const cell = statePresent(managedStore.state)[cellKey];
             addingCells ? addCellToRange(cell) : removeCellFromRange(cell);
-            return R.append(cell, accumulator);
+            listCellsInRow(row, ++column, fromColumn, toColumn);
         }
-        addingCells ? addCellToRange(cell) : removeCellFromRange(cell);
-        return listCellsInRow(R.append(cell, accumulator), row, ++column, endColumn);
     });
 
-    const listCellsInRange = R.curry((accumulator, row) => {
-        if (row === toRow) {
-            const startingColumn = row === fromRow ? fromColumn : 0; // if the fromRow and the toRow are one in the same, include cells starting at the fromColumn, otherwise start at the first column 
-            return R.append(row, listCellsInRow(accumulator, toRow, startingColumn, toColumn));
-        }
-        if (row === fromRow) {
-            return R.pipe(
-                listCellsInRow,
-                listCellsInRange(R.__, row + 1)
-            )(accumulator, fromRow, fromColumn, lastColumn);
-        }
-        return R.pipe(
-            listCellsInRow,
-            listCellsInRange(R.__, row + 1)
-        )(accumulator, row, 0, lastColumn);
+    const listCellsInRange = row => ifThen({
+        ifCond: row <= toRow,
+        thenDo: [
+            () => listCellsInRow(row, fromColumn),
+            () => listCellsInRange(row + 1)
+        ],
+        params: {}
     });
-    listCellsInRange([], fromRow);
+    listCellsInRange(fromRow);
 }
 
-export const rangeSelected  = toCell => {
+export const rangeSelected = toCell => {
     const fromCell = stateCellRangeFrom(managedStore.state);
     if (fromCell && (fromCell.row !== toCell.row || fromCell.column !== toCell.column)) {
         document.getSelection().removeAllRanges(); // this stops the content within each cell in the range from getting highlighted. There's a bit of flashing, but no big deal
@@ -123,4 +113,11 @@ export const rangeSelected  = toCell => {
     }
     return false;
 }
-    
+
+export const atEndOfRange = cell => {
+    const toCell = stateCellRangeTo(managedStore.state);
+    return isSomething(stateCellRangeFrom(managedStore.state)) &&
+    isSomething(toCell) && 
+    cell.row === toCell.row && 
+    cell.column === toCell.column;
+}

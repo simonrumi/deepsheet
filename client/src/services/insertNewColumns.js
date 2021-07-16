@@ -9,6 +9,7 @@ import managedStore from '../store';
 import { addedCellKeys } from '../actions/cellActions';
 import { startedUndoableAction, completedUndoableAction } from '../actions/undoActions';
 import { updatedColumnVisibility, hasChangedMetadata, updatedColumnWidth, updatedTotalColumns, } from '../actions/metadataActions';
+import { forLoopMap, forLoopReduce } from '../helpers';
 import { shouldShowRow } from '../helpers/visibilityHelpers';
 import {
    stateTotalColumns,
@@ -38,54 +39,69 @@ const makeNewColumnCell = R.curry((rowIndex, columnIndex, rowVisibility) => {
    )(partialCell);
 });
 
-const addOneCell = (columnIndex, rowIndex, state, cells) => R.pipe(
-      stateRowVisibility, // get the visibility for the row
+const addOneCell = ({ columnIndex, rowIndex, cells }) => R.pipe(
+      stateRowVisibility,
       makeNewColumnCell(rowIndex, columnIndex), // make the cell with the visibility set
       R.append(R.__, cells), // add the cell to the array of cells
-   )(state);
+   )(managedStore.state);
 
-const createUpdatesForNewCells = (
+const createUpdatesForNewCells = ({
    cells,
-   state,
    columnIndex,
    totalRows,
-   rowIndex = 0
-) => {
+   rowIndex = 0,
+}) => {
    if (totalRows === rowIndex) {
       return cells;
    }
-   return createUpdatesForNewCells(
-      addOneCell(columnIndex, rowIndex, state, cells),
-      state,
+   return createUpdatesForNewCells({
+      cells: addOneCell({ columnIndex, rowIndex, cells }),
       columnIndex,
       totalRows,
-      rowIndex + 1
-   );
+      rowIndex: rowIndex + 1,
+   });
 };
 
-const insertNewColumn = () => {
+const insertNewColumns = (additionalColumns = 1) => {
    startedUndoableAction();
    const totalColumns = stateTotalColumns(managedStore.state);
-   const updatedCells = createUpdatesForNewCells(
-      [], // initial value for updatedCells
-      managedStore.state,
-      totalColumns, // being the count of existing columns, this gives us the index of the next column
-      stateTotalRows(managedStore.state)
-   ); 
-   const updatedCellKeys = createUpdatesForNewCellKeys(updatedCells);
-   maybeAddAxisVisibilityEntry(
-      totalColumns, 
-      stateColumnVisibility(managedStore.state), 
-      updatedColumnVisibility
+
+   const allUpdatedCells = forLoopReduce(
+      (accumulator, columnCount) => R.pipe(
+            createUpdatesForNewCells,
+            R.concat(accumulator)
+         )({
+            cells: [], // initial value
+            columnIndex: totalColumns + columnCount, // totalColumns, being the count of existing columns, gives us the index of the first additional column
+            totalRows: stateTotalRows(managedStore.state)
+         }),
+      [], // initial value of allUpdatedCells
+      additionalColumns // number of times through the loop
    );
-   addCellReducers(updatedCells);
+   const updatedCellKeys = createUpdatesForNewCellKeys(allUpdatedCells);
+   
+   forLoopMap(
+      columnCount => {
+         maybeAddAxisVisibilityEntry(
+            totalColumns + columnCount, // totalColumns, being the count of existing columns, gives us the index of the first additional column
+            stateColumnVisibility(managedStore.state), 
+            updatedColumnVisibility
+         );
+      },
+      additionalColumns
+   );
+   
+   addCellReducers(allUpdatedCells);
    addedCellKeys(updatedCellKeys);
-   addNewCellsToStore(updatedCells);
-   addNewCellsToCellDbUpdates(updatedCells);
-   updatedTotalColumns(totalColumns, totalColumns + 1);
-   updatedColumnWidth(totalColumns, DEFAULT_COLUMN_WIDTH);
+   addNewCellsToStore(allUpdatedCells);
+   addNewCellsToCellDbUpdates(allUpdatedCells);
+   updatedTotalColumns(totalColumns, (totalColumns + additionalColumns));
+   forLoopMap(
+      columnCount => updatedColumnWidth((totalColumns + columnCount), DEFAULT_COLUMN_WIDTH),
+      additionalColumns
+   );
    hasChangedMetadata();
-   completedUndoableAction('added column');
+   completedUndoableAction(`added ${additionalColumns} column(s)`);
 };
 
-export default insertNewColumn;
+export default insertNewColumns;
