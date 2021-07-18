@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import managedStore from '../store';
 import { triggeredFetchSheet } from '../actions/sheetActions';
 import { cellsRedrawCompleted } from '../actions/cellActions';
-import { isNothing, arrayContainsSomething, forLoopReduce, getObjectFromArrayByKeyValue } from '../helpers';
+import { isNothing, isSomething, arrayContainsSomething, forLoopReduce, getObjectFromArrayByKeyValue } from '../helpers';
 import {
    stateIsLoggedIn,
    stateShowLoginModal,
@@ -23,6 +23,7 @@ import {
    stateTotalRows,
    stateTotalColumns,
    stateCellsRenderCount,
+   stateMetadataErrorMessage,
 } from '../helpers/dataStructureHelpers';
 import { isVisibilityCalcutated } from '../helpers/visibilityHelpers';
 import { isAxisSizingCalculated,handleResizerDragOver, handleResizerDrop } from '../helpers/axisSizingHelpers';
@@ -42,6 +43,7 @@ import Cells from './Cells';
 import FilterModal from './organisms/FilterModal';
 import SortModal from './organisms/SortModal';
 import LoginModal from './organisms/LoginModal';
+import GlobalErrorModal from './organisms/GlobalErrorModal';
 
 const compareSizesByIndex = (size1, size2) => {
    if (size1.index === size2.index) {
@@ -81,6 +83,7 @@ const createAxisSizes = (axisSizes = [], axisVisibility, axis) => {
 
 const Sheet = props => {
    const isLoggedIn = useSelector(state => stateIsLoggedIn(state));
+   const metadataError = useSelector(state => stateMetadataErrorMessage(state));
    const showFilterModal = useSelector(state => stateShowFilterModal(state));
    const showSortModal = useSelector(state => stateShowSortModal(state));
    const showLoginModal = useSelector(state => stateShowLoginModal(state));
@@ -176,6 +179,8 @@ const Sheet = props => {
 
    const maybeRenderSortModal = () => (showSortModal ? <SortModal /> : null);
 
+   const maybeRenderGlobalErrorModal = () => isSomething(metadataError) ? <GlobalErrorModal error={metadataError} /> : null;
+
    // the header is in a fixed position, but we want the spreadsheet to get pushed down below the header, so we use this spacer
    // when scrolling the spreadhsheet appears to scroll under the header
    const renderHeaderSpacer = () => {
@@ -196,6 +201,7 @@ const Sheet = props => {
          <div className="px-1">
             <Header />
             {renderHeaderSpacer()}
+            {maybeRenderGlobalErrorModal()}
             {maybeRenderFilterModal()}
             {maybeRenderSortModal()}
             {maybeRenderLoginOrFetchSheet()}

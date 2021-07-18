@@ -32,3 +32,5 @@ export const UPDATED_ROW_HEIGHT = 'updated_row_height';
 export const UPDATED_AXIS_ITEM_TOOL = 'updated_axis_item_tool';
 export const HIDE_AXIS_ITEM_TOOL = 'hide_axis_item_tool';
 export const UPDATED_PARENT_SHEET_ID = 'updatd_parent_sheet_id';
+export const UPDATED_METADATA_ERROR_MESSAGE = 'updated_metadata_error_message';
+export const CLEARED_METADATA_ERROR_MESSAGE = 'cleared_metadata_error_message';

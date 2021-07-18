@@ -17,7 +17,7 @@ export const mapWithIndex = R.addIndex(R.map);
 // when you want to map, but you don't have an array, just a number of times to run the function supplied to map
 // the function gets the index as a param each time
 // returns an array
-export const forLoopMap = (fn, length) => mapWithIndex((val, index) => fn(index), makeArr(length));
+export const forLoopMap = R.curry((fn, length) => mapWithIndex((val, index) => fn(index), makeArr(length)));
 
 // Not using this as of 5/10/21 but might be useful
 // example: given start and end points (6,9) this makes an array [6,7,8]
@@ -31,8 +31,10 @@ export const reduceWithIndex = R.addIndex(R.reduce);
 // when you want to reduce, but you don't have an array, just a number of times to run the function supplied to reduce
 // the function gets the params (accumulator, index)
 // returns the final result collected by the accumulator
-export const forLoopReduce = (fn, initialVal, length) =>
-   reduceWithIndex((accumulator, value, index) => fn(accumulator, index), initialVal, makeArr(length));
+export const forLoopReduce = R.curry(
+   (fn, initialVal, length) =>
+      reduceWithIndex((accumulator, value, index) => fn(accumulator, index), initialVal, makeArr(length))
+);
 
 export const isNothing = R.either(R.isNil, R.isEmpty);
 export const isSomething = R.pipe(isNothing, R.not);

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import * as R from 'ramda';
 import managedStore from '../../store';
 import { updatedCell, hasChangedCell } from '../../actions/cellActions';
@@ -70,7 +70,6 @@ const manageChange = (event, cell) => {
 const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
    // this ref is applied to the text area (see below) so that we can manage its focus
    const cellInPlaceEditorRef = useRef();
-   const [error, setError] = useState(null);
 
    const finalizeCellContent = (cell) => {
       if (!R.equals(stateOriginalValue(managedStore.state), cellInPlaceEditorRef.current?.value)) {
@@ -144,7 +143,7 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
    
 
    const renderPasteIcon = () => isSomething(stateClipboard(managedStore.state))
-      ? <PasteIcon classes="bg-white mb-1" svgClasses="w-6" onMouseDownFn={() => pasteCellRangeToTarget(cell, setError)}/>
+      ? <PasteIcon classes="bg-white mb-1" svgClasses="w-6" onMouseDownFn={() => pasteCellRangeToTarget(cell)}/>
       : null;
 
    const renderIcons = () => {
@@ -162,7 +161,6 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
                <CheckmarkSubmitIcon classes="bg-white mb-1" svgClasses="w-6" onMouseDownFn={handleSubmit} />
                <CloseIcon classes="bg-white mb-1" svgClasses="w-6" onMouseDownFn={handleCancel} />
                { renderPasteIcon() }
-               <div>{error}</div> {/* TODO this isn't displaying because the CellInPlaceEditor disappears on click of the paste icon...need to fix that */}
                <NewDocIcon classes="mb-1" svgClasses="w-6" onMouseDownFn={() => triggerCreatedSheetAction(cell)} />
             </div>
          </div>

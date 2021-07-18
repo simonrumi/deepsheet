@@ -31,6 +31,8 @@ import {
    UPDATED_ROW_ORDER,
    UPDATED_COLUMN_ORDER,
    UPDATED_PARENT_SHEET_ID,
+   UPDATED_METADATA_ERROR_MESSAGE,
+   CLEARED_METADATA_ERROR_MESSAGE,
 } from './metadataTypes';
 
 import { CELLS_UPDATED } from './cellTypes';
@@ -285,5 +287,18 @@ export const updatedParentSheetId = parentSheetId => {
    managedStore.store.dispatch({
       type: UPDATED_PARENT_SHEET_ID,
       payload: parentSheetId,
+   });
+}
+
+export const updatedMetadataErrorMessage = errorMessage => {
+   managedStore.store.dispatch({
+      type: UPDATED_METADATA_ERROR_MESSAGE,
+      payload: errorMessage,
+   });
+}
+
+export const clearedMetataErrorMessage = () => {
+   managedStore.store.dispatch({
+      type: CLEARED_METADATA_ERROR_MESSAGE
    });
 }

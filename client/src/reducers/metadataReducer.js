@@ -34,6 +34,8 @@ import {
    UPDATED_ROW_HEIGHT,
    UPDATED_AXIS_ITEM_TOOL,
    HIDE_AXIS_ITEM_TOOL,
+   UPDATED_METADATA_ERROR_MESSAGE,
+   CLEARED_METADATA_ERROR_MESSAGE,
 } from '../actions/metadataTypes';
 import { UPDATED_SORT_OPTIONS, CLEARED_SORT_OPTIONS } from '../actions/sortTypes';
 import { FETCHED_SHEET, COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
@@ -247,6 +249,20 @@ const metadataReducer = (state = {}, action) => {
             errorMessage: isSomething(action.payload.errorMessage) ? action.payload.errorMessage : null,
             lastUpdated: isSomething(state.lastUpdated) ? state.lastUpdated : null,
          };
+
+      case UPDATED_METADATA_ERROR_MESSAGE: {
+         return {
+            ...state,
+            errorMessage: action.payload
+         }
+      }
+
+      case CLEARED_METADATA_ERROR_MESSAGE: {
+         return {
+            ...state,
+            errorMessage: null
+         }
+      }
 
       default:
          return state;
