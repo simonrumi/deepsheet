@@ -12,7 +12,7 @@ import {
    shouldShowRow,
    isFirstColumn,
    isLastVisibleItemInAxis,
-   isVisibilityCalcutated,
+   isVisibilityCalculated,
 } from '../helpers/visibilityHelpers';
 import { orderCells, getAllCells } from '../helpers/cellHelpers';
 import { COLUMN_AXIS } from '../constants';
@@ -64,7 +64,7 @@ const Cells = () => {
       )(cell);
 
    const renderAllCells = cells => cells?.length > 0 &&
-      isVisibilityCalcutated() &&
+      isVisibilityCalculated(managedStore.state) &&
       isSomething(stateTotalRows(managedStore.state)) &&
       isSomething(stateTotalColumns(managedStore.state))
          ? R.pipe(

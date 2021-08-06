@@ -1,6 +1,14 @@
 import * as R from 'ramda';
 import managedStore from '../store';
-import { isNothing, isSomething, compareIndexValues, forLoopReduce, reduceWithIndex, forLoopMap, ifThenElse, getObjectFromArrayByKeyValue } from '.';
+import {
+   isNothing,
+   isSomething,
+   compareIndexValues,
+   forLoopReduce,
+   reduceWithIndex,
+   ifThenElse,
+   getObjectFromArrayByKeyValue,
+} from '.';
 import { isRangeDirectionForward } from './focusHelpers';
 import { createCellKey } from './cellHelpers';
 import { 
@@ -20,7 +28,7 @@ import {
     stateColumnVisibility,
     stateRowVisibility,
 } from './dataStructureHelpers';
-import { updatedCell } from '../actions/cellActions';
+import { updatedCell, hasChangedCell } from '../actions/cellActions';
 import { updatedMetadataErrorMessage } from '../actions/metadataActions';
 import insertNewColumns from '../services/insertNewColumns';
 import insertNewRows from '../services/insertNewRows';
@@ -124,16 +132,19 @@ const orderClipboardCells = () => R.pipe(
     R.sort(compareIndexValues)
 )(managedStore.state);
 
-const pasteToTargetCells = targetMap => {
-    R.forEach(
-        ([ sourceCell, targetCell ]) => R.pipe(
-            cellRowSetter(cellRow(targetCell)),
-            cellColumnSetter(cellColumn(targetCell)),
-            updatedCell
-        )(sourceCell), // start with the sourceCell and then update the row and column to that of the targetCell
+const registerUpdatedCells = targetMap => R.forEach(
+        ([ sourceCell, targetCell ]) => hasChangedCell({ row: cellRow(targetCell), column: cellColumn(targetCell) }),
         targetMap
-    )
-};
+    );
+
+const pasteToTargetCells = targetMap => R.forEach(
+    ([ sourceCell, targetCell ]) => R.pipe(
+        cellRowSetter(cellRow(targetCell)),
+        cellColumnSetter(cellColumn(targetCell)),
+        updatedCell
+    )(sourceCell), // start with the sourceCell object, but update the row and column to that of the targetCell
+    targetMap
+);
 
 const makeRoomForTargetCells = ({ cellMapping, extraRows, extraColumns }) => {
     insertNewColumns(extraColumns);
@@ -215,7 +226,7 @@ export const pasteCellRangeToTarget = cell => R.pipe(
     ({ cellMapping, extraRows, extraColumns }) => ifThenElse({
         ifCond: hasSubsheetCells,
         thenDo: R.pipe(cellRangePasteError, updatedMetadataErrorMessage),
-        elseDo: [ makeRoomForTargetCells, pasteToTargetCells ],
+        elseDo: [ makeRoomForTargetCells, pasteToTargetCells, registerUpdatedCells ],
         params: { ifParams: [cellMapping], elseParams: { cellMapping, extraRows, extraColumns } }
     }),
 )();

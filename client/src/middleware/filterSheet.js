@@ -229,6 +229,9 @@ const addNewFilter = data => {
 /* getDataFromActionAndStore - creates a data object for passing to subsequent functions in hideFiltered's pipe */
 const getDataFromActionAndStore = (actionData, isInitializingSheet, store) => R.mergeAll([actionData, { store, isInitializingSheet }]);
 
+
+// TODO got bug with filtering, see sheet called "filtering not working after range pasting"
+// How about setting up some unit tests for this file?
 const hideFiltered = R.pipe(
    getDataFromActionAndStore,
    addNewFilter, 

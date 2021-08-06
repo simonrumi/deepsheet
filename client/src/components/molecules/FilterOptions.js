@@ -24,6 +24,9 @@ import {
    stateFilterRegex,
 } from '../../helpers/dataStructureHelpers';
 
+// TODO remove
+import managedStore from '../../store';
+
 const FilterOptions = props => {
    const rowIndex = useSelector(state => stateFilterRowIndex(state));
    const columnIndex = useSelector(state => stateFilterColumnIndex(state));
@@ -88,7 +91,7 @@ const FilterOptions = props => {
       event.preventDefault();
       changedFilterValue(event.target.value);
    }
-//justify-between
+
    const render = () => {
       const allClasses =
          'border-t border-r border-b border-l border-solid border-grey-blue flex items-start px-2 py-2 ' +
@@ -104,7 +107,8 @@ const FilterOptions = props => {
                         value: filterExpression || '', 
                         blurHandler: handleBlur, 
                         error: errors.filterExpression,
-                        classes: 'w-full'
+                        classes: 'w-full',
+                        testId: 'filterText'
                      }} 
                   />
                   <ErrorText error={errors.filterExpression} />
@@ -115,6 +119,7 @@ const FilterOptions = props => {
                         changeHandler={handleChangeHideBlanks}
                         value={hideBlanks}
                         blurHandler={handleBlur}
+                        testId="hideBlanksCheckbox"
                      />
                      <Label label="Hide blanks" classes="pl-2" />
                   </div>
@@ -125,6 +130,7 @@ const FilterOptions = props => {
                         changeHandler={handleChangeCaseSensitive}
                         value={caseSensitive}
                         blurHandler={handleBlur}
+                        testId="caseSensitiveCheckbox"
                      />
                      <Label label="Case sensitive" classes="pl-2" />
                   </div>
@@ -135,6 +141,7 @@ const FilterOptions = props => {
                         changeHandler={handleChangeRegex} 
                         value={regex}
                         blurHandler={handleBlur}
+                        testId="regexCheckbox"
                      />
                      <Label label="Regular expression" classes="pl-2" />
                   </div>
@@ -145,6 +152,7 @@ const FilterOptions = props => {
                         classes="pr-2"
                         label="Filter it!"
                         disabled={submitDisabled}
+                        testId="submitFilterOptions"
                      />
                      <Button 
                            buttonType="button" 

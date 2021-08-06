@@ -111,6 +111,7 @@ export const shouldShowColumn = R.curry((colVisibilityArr, columnIndex) => array
    ? R.pipe(
       getObjectFromArrayByKeyValue,
       colVisibilityObj => isSomething(colVisibilityObj) ? colVisibilityObj.isVisible : true
+      // R.tap(data => console.log('visibilityHelpers.shouldShowColumn got columnIndex', columnIndex, 'colVisibilityArr', colVisibilityArr, 'will return', data))
    )('index', columnIndex, colVisibilityArr)
    : true // ie if the visibility arr is empty that means show everything
 );
@@ -204,21 +205,22 @@ export const initializeAxesVisibility = () => {
    replacedColumnVisibility([]);
 } 
 
-export const isVisibilityCalcutated = () => 
-   stateColumnVisibility(managedStore.state) 
-   && stateRowVisibility(managedStore.state);
+export const isVisibilityCalculated = state => 
+   stateColumnVisibility(state) 
+   && stateRowVisibility(state);
 
 export const updateOrAddPayloadToState = (payload, state) => {
-   const filterState = R.filter(stateItem =>
-      R.pipe(
-        R.find(payloadItem => payloadItem.index === stateItem.index), // if the state has an entry with the same index as payloadItem
-         isNothing // filter that entry out of the state
-      )(payload)
-   );
-   return R.pipe(
-      filterState, 
-      R.concat(payload) // concat the added or updated frozen rows (from the payload) with the filtered state
-   )(state || []); 
+   return arrayContainsSomething(payload)
+      ? R.pipe(
+         R.filter(stateItem =>
+            R.pipe(
+            R.find(payloadItem => payloadItem.index === stateItem.index), // if the state has an entry with the same index as payloadItem
+               isNothing // filter that entry out of the state
+            )(payload)
+         ),
+         R.concat(payload)
+      )(state || [])
+      : state || [];
 }
 
 // for use by filterModalReducer
@@ -240,6 +242,8 @@ export const isFilterEngaged = (index, filters) => arrayContainsSomething(filter
          R.prop('index'), 
          R.equals(index)
       )),
-      filterObj => isSomething(filterObj?.filterExpression) || filterObj?.hideBlanks
+      filterObj => isNothing(filterObj?.filterExpression) && isNothing(filterObj?.hideBlanks)
+         ? false
+         : isSomething(filterObj?.filterExpression) || filterObj?.hideBlanks
    )(filters)
    : false;

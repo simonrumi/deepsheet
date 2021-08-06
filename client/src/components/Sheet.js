@@ -25,7 +25,7 @@ import {
    stateCellsRenderCount,
    stateMetadataErrorMessage,
 } from '../helpers/dataStructureHelpers';
-import { isVisibilityCalcutated } from '../helpers/visibilityHelpers';
+import { isVisibilityCalculated } from '../helpers/visibilityHelpers';
 import { isAxisSizingCalculated,handleResizerDragOver, handleResizerDrop } from '../helpers/axisSizingHelpers';
 import { getUserInfoFromCookie } from '../helpers/userHelpers';
 import { haveCellsNeedingUpdate } from '../helpers/cellHelpers';
@@ -100,11 +100,9 @@ const Sheet = props => {
    const totalColumns = useSelector(state => stateTotalColumns(state));
    
    const cellsRenderCount = stateCellsRenderCount(managedStore.state); // not getting this value using useSelector as we don't want to retrigger a render when it changes (useEffect below manages the re-render)
-
    const memoizedCells = useMemo(() => {
       return <Cells renderCount={cellsRenderCount}/>;
    }, [cellsRenderCount]);
-   
 
    const getAxisSizing = axis =>
    axis === COLUMN_AXIS
@@ -137,7 +135,7 @@ const Sheet = props => {
       ]
    );
 
-   const renderGridSizingStyle = () => isVisibilityCalcutated() && isAxisSizingCalculated() ? memoizedGridSizingStyle : null;
+   const renderGridSizingStyle = () => isVisibilityCalculated(managedStore.state) && isAxisSizingCalculated() ? memoizedGridSizingStyle : null;
 
    const renderCells = () => {
       return (<div

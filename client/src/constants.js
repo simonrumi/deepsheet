@@ -34,3 +34,18 @@ export const LOCAL_STORAGE_ACTION_KEY = 'dds_action';
 export const LOCAL_STORAGE_TIME_KEY = 'dds_time';
 
 export const ALL_CELLS = 'all_cells'; // for use by cellsNeeding Update
+
+// logging levels
+export const LOG = {
+    ERROR: 0,
+    WARN: 1,
+    INFO: 2,
+    HTTP: 3,
+    VERBOSE: 4,
+    DEBUG: 5,
+    SILLY: 6,
+}
+
+export const CLIENT_LOG_LEVEL = LOG.WARN;
+
+

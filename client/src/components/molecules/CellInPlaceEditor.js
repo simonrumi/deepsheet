@@ -140,8 +140,6 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
       });
    }
 
-   
-
    const renderPasteIcon = () => isSomething(stateClipboard(managedStore.state))
       ? <PasteIcon classes="bg-white mb-1" svgClasses="w-6" onMouseDownFn={() => pasteCellRangeToTarget(cell)}/>
       : null;

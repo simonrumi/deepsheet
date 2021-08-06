@@ -2,7 +2,7 @@ import React from 'react';
 import * as R from 'ramda';
 
 const TextInput = props => {
-	const { changeHandler, blurHandler, value = '', error = '', classes = '' } = props.props;
+	const { changeHandler, blurHandler, value = '', error = '', classes = '', testId } = props.props;
 	const borderColor = error ? ' border-vibrant-burnt-orange' : ' border-dark-dark-blue';
 	const baseClasses =
 		classes +
@@ -17,6 +17,7 @@ const TextInput = props => {
 				onChange={changeHandler} 
 				error={error}
             	onBlur={blurHandler}
+				data-testid={testId}
 			/>
 		</div>
 	);
