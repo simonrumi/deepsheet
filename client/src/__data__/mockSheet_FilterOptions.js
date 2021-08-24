@@ -1,4 +1,4 @@
-module.exports = {
+export const mockSheet = {
     future: [],
     past: [],
     present: {

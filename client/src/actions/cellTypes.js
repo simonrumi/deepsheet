@@ -1,6 +1,7 @@
 export const HAS_CHANGED_CELL = 'has_changed_cell';
 export const HAS_ADDED_CELL = 'has_added_cell';
 export const UPDATED_CELL = 'updated_cell';
+export const UPDATED_CELL_VISIBILITY = 'updated_cell_visibility';
 export const UPDATED_CONTENT_OF_CELL = 'updated_content_of_cell';
 export const POSTING_UPDATED_CELLS = 'posting_updated_cells';
 export const COMPLETED_SAVE_CELLS = 'completed_save_cells';

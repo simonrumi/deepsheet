@@ -17,6 +17,7 @@ import { updatedFrozenRows, updatedAxisItemTool } from '../../actions/metadataAc
 import FilterIcon from '../atoms/IconFilter';
 import SnowflakeIcon from '../atoms/IconSnowflake';
 import SortIcon from '../atoms/IconSort';
+import { ROW_FILTER_ICON_TEST_ID } from '../../__tests__/testHelpers/constants';
 
 const RowHeaderTools = ({ index, frozen }) => {
    const toolIsVisible = useSelector(state => stateAxisItemToolIsVisible(state));
@@ -90,6 +91,7 @@ const RowHeaderTools = ({ index, frozen }) => {
                   classes="p-1"
                   fitlerEngaged={isFilterEngaged(index, stateRowFilters(managedStore.state))}
                   onClickFn={() => showFilterModalForRow(index)}
+                  testId={ROW_FILTER_ICON_TEST_ID + index}
                />
             </div>
             <div className={iconColumnClasses}>

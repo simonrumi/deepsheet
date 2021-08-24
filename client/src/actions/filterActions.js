@@ -10,7 +10,7 @@ import {
    CHANGED_CASE_SENSITIVE_VALUE,
    FILTER_EDIT_CANCELLED
 } from './filterTypes';
-import { STARTED_UNDOABLE_ACTION, COMPLETED_UNDOABLE_ACTION } from './undoTypes';
+import { STARTED_UNDOABLE_ACTION, CANCELLED_UNDOABLE_ACTION } from './undoTypes';
 import { CELLS_UPDATED } from './cellTypes';
 import { REPLACED_COLUMN_FILTERS, REPLACED_ROW_FILTERS } from './metadataTypes';
 
@@ -18,9 +18,9 @@ export const toggledShowFilterModal = (rowIndex, columnIndex, initialValues) => 
    const showModal = isSomething(rowIndex) || isSomething(columnIndex);
    if (showModal) {
       managedStore.store.dispatch({ type: STARTED_UNDOABLE_ACTION });
-   } else {
-      managedStore.store.dispatch({ type: COMPLETED_UNDOABLE_ACTION, payload: 'updated the filter' });
-   }
+   } // note that COMPLETED_UNDOABLE_ACTION is fired by metadataActions--hasChangedMetadata 
+   // and filterEditCancelled below fires CANCELLED_UNDOABLE_ACTION
+
    managedStore.store.dispatch({
       type: TOGGLED_SHOW_FILTER_MODAL,
       payload: { showModal, rowIndex, columnIndex, initialValues },
@@ -82,4 +82,5 @@ export const changedCaseSensitiveValue = newCaseSensitive => {
 
 export const filterEditCancelled = wasStale => {
    managedStore.store.dispatch({ type: FILTER_EDIT_CANCELLED, payload: wasStale });
+   managedStore.store.dispatch({ type: CANCELLED_UNDOABLE_ACTION });
 };

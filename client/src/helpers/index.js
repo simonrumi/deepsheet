@@ -172,7 +172,7 @@ const maybeConvertArrToFunction = (maybeArr, params) => R.cond([
       arrOrFunc => Array.isArray(arrOrFunc), 
       arrOrFunc => () => Array.isArray(params) ? R.pipe(...arrOrFunc)(...params) : R.pipe(...arrOrFunc)(params), // note: if there are more than one param then params is an array 
    ],
-   // if it is a function return a function that executes maybeArr with the params
+   // if it is a function return a function that executes it with the params
    [
       arrOrFunc => typeof arrOrFunc ==='function', 
       arrOrFunc => () => Array.isArray(params) ? arrOrFunc(...params) : arrOrFunc(params)

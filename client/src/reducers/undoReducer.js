@@ -5,6 +5,7 @@ import {
    REDO,
    STARTED_UNDOABLE_ACTION,
    COMPLETED_UNDOABLE_ACTION,
+   CANCELLED_UNDOABLE_ACTION,
    STARTED_EDITING,
    FINISHED_EDITING,
 } from '../actions/undoTypes';
@@ -52,6 +53,15 @@ const undoReducer = reducer => {
                ...state, // keep the past as-is (see STARTED_UNDOABLE_ACTION above)
                present: reducer(present, action), // update the present
                future: [], // blow away the future, since we're now taking a new course of action
+            }
+
+         case CANCELLED_UNDOABLE_ACTION:
+            if (!arrayContainsSomething(past)) {
+               return state;
+            }
+            return {
+               ...state, // keep the present and future as-is
+               past: R.slice(0, past.length - 1, past), // remove the last element from the past
             }
 
          case STARTED_EDITING:

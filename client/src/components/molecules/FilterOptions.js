@@ -23,9 +23,14 @@ import {
    stateFilterCaseSensitive,
    stateFilterRegex,
 } from '../../helpers/dataStructureHelpers';
-
-// TODO remove
-import managedStore from '../../store';
+import { 
+   FILTER_TEXT_TEST_ID, 
+   FILTER_HIDE_BLANKS_TEST_ID,
+   FILTER_CASE_SENSITIVE_TEST_ID,
+   FILTER_REGEX_TEST_ID,
+   FILTER_SUBMIT_TEST_ID,
+   FILTER_CLEAR_ALL_TEST_ID
+} from '../../__tests__/testHelpers/constants';
 
 const FilterOptions = props => {
    const rowIndex = useSelector(state => stateFilterRowIndex(state));
@@ -108,7 +113,7 @@ const FilterOptions = props => {
                         blurHandler: handleBlur, 
                         error: errors.filterExpression,
                         classes: 'w-full',
-                        testId: 'filterText'
+                        testId: FILTER_TEXT_TEST_ID
                      }} 
                   />
                   <ErrorText error={errors.filterExpression} />
@@ -119,7 +124,7 @@ const FilterOptions = props => {
                         changeHandler={handleChangeHideBlanks}
                         value={hideBlanks}
                         blurHandler={handleBlur}
-                        testId="hideBlanksCheckbox"
+                        testId={FILTER_HIDE_BLANKS_TEST_ID}
                      />
                      <Label label="Hide blanks" classes="pl-2" />
                   </div>
@@ -130,7 +135,7 @@ const FilterOptions = props => {
                         changeHandler={handleChangeCaseSensitive}
                         value={caseSensitive}
                         blurHandler={handleBlur}
-                        testId="caseSensitiveCheckbox"
+                        testId={FILTER_CASE_SENSITIVE_TEST_ID}
                      />
                      <Label label="Case sensitive" classes="pl-2" />
                   </div>
@@ -141,7 +146,7 @@ const FilterOptions = props => {
                         changeHandler={handleChangeRegex} 
                         value={regex}
                         blurHandler={handleBlur}
-                        testId="regexCheckbox"
+                        testId={FILTER_REGEX_TEST_ID}
                      />
                      <Label label="Regular expression" classes="pl-2" />
                   </div>
@@ -152,13 +157,14 @@ const FilterOptions = props => {
                         classes="pr-2"
                         label="Filter it!"
                         disabled={submitDisabled}
-                        testId="submitFilterOptions"
+                        testId={FILTER_SUBMIT_TEST_ID}
                      />
                      <Button 
                            buttonType="button" 
                            classes="" 
                            onClickFn={clearedAllFilters} 
                            label="Clear All Filtering" 
+                           testId={FILTER_CLEAR_ALL_TEST_ID}
                         />
                   </div>
                </div>

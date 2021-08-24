@@ -6,6 +6,7 @@ import { dbCells } from '../helpers/dataStructureHelpers';
 import { updatedCell, addedCellKeys } from '../actions/cellActions';
 import {
    UPDATED_CELL,
+   UPDATED_CELL_VISIBILITY,
    UPDATED_CONTENT_OF_CELL,
    POSTING_UPDATED_CELLS,
    COMPLETED_SAVE_CELLS,
@@ -27,6 +28,9 @@ const processCellAction = R.curry((state, sheetId, action) => {
    switch (action.type) {
       case UPDATED_CELL:
          return { ...state, ...action.payload };
+
+      case UPDATED_CELL_VISIBILITY:
+         return { ...state, visible: action.payload.visible }
 
       case UPDATED_CONTENT_OF_CELL:
          return { ...state, ...action.payload, isStale: true };

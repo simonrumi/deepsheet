@@ -28,7 +28,7 @@ import sortAxis from '../services/sortAxis';
 import { hasChangedCell } from '../actions/cellActions';
 import { runIfSomething, isSomething, arrayContainsSomething } from '../helpers';
 import { stateMetadataProp } from '../helpers/dataStructureHelpers';
-import { ROW_AXIS, COLUMN_AXIS } from '../constants';
+import { ROW_AXIS, COLUMN_AXIS, ORDERED_COLUMN, ORDERED_ROW } from '../constants';
 
 export default store => next => async action => {
    const clearMoveData = () => {
@@ -103,7 +103,7 @@ export default store => next => async action => {
          runIfSomething(replacedRowVisibility, newRowVisibility);
          runIfSomething(replacedRowHeights, newRowHeights);
          runIfSomething(replacedFrozenRows, newFrozenRows);
-         hasChangedMetadata();
+         hasChangedMetadata(ORDERED_ROW);
          if (arrayContainsSomething(newRowCellsArr)) {
             completedUndoableAction();
          }
@@ -126,7 +126,7 @@ export default store => next => async action => {
          runIfSomething(replacedColumnVisibility, newColumnVisibility);
          runIfSomething(replacedColumnWidths, newColumnWidths);
          runIfSomething(replacedFrozenColumns, newFrozenColumns);
-         hasChangedMetadata();
+         hasChangedMetadata(ORDERED_COLUMN);
          if (arrayContainsSomething(newColumnCellsArr)) {
             completedUndoableAction();
          }

@@ -6,6 +6,7 @@ const FilterIcon = ({
    classes = '',
    onClickFn,
    fitlerEngaged = false,
+   testId
 }) => {
    const allClasses =
       classes +
@@ -13,7 +14,7 @@ const FilterIcon = ({
       (fitlerEngaged ? 'text-pale-purple hover:text-vibrant-purple' : 'text-grey-blue hover:text-vibrant-blue');
 
    return (
-      <div className={allClasses} onClick={onClickFn} >
+      <div className={allClasses} onClick={onClickFn} data-testid={testId}>
          <svg
             style={style}
             width={TOOL_ICON_WIDTH}

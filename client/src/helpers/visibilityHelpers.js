@@ -6,9 +6,13 @@ import {
    isSomething,
    arrayContainsSomething,
    getObjectFromArrayByKeyValue,
+   ifThen,
+   compareIndexValues,
+   spicyCurry
 } from './index';
 import { replacedRowVisibility, replacedColumnVisibility } from '../actions/metadataActions';
 import { updatedFilter } from '../actions/filterActions';
+import { updatedCellVisibility, hasChangedCell } from '../actions/cellActions';
 import {
    stateMetadataProp,
    dbRowFilters,
@@ -22,8 +26,11 @@ import {
    stateColumnVisibility,
    stateRowVisibility,
    stateColumnFilters,
-   stateRowFilters
+   stateRowFilters,
+   statePastColumnVisibility,
+   statePastRowVisibility,
 } from './dataStructureHelpers';
+import { cellsInRow, cellsInColumn } from './cellHelpers';
 import { ROW_AXIS, COLUMN_AXIS } from '../constants';
 
 export const getAxisFilterName = axis => R.concat(axis, 'Filters');
@@ -111,7 +118,6 @@ export const shouldShowColumn = R.curry((colVisibilityArr, columnIndex) => array
    ? R.pipe(
       getObjectFromArrayByKeyValue,
       colVisibilityObj => isSomething(colVisibilityObj) ? colVisibilityObj.isVisible : true
-      // R.tap(data => console.log('visibilityHelpers.shouldShowColumn got columnIndex', columnIndex, 'colVisibilityArr', colVisibilityArr, 'will return', data))
    )('index', columnIndex, colVisibilityArr)
    : true // ie if the visibility arr is empty that means show everything
 );
@@ -247,3 +253,74 @@ export const isFilterEngaged = (index, filters) => arrayContainsSomething(filter
          : isSomething(filterObj?.filterExpression) || filterObj?.hideBlanks
    )(filters)
    : false;
+
+const sendUpdatesForChangedCells = ({ changedCells }) => {
+   if (arrayContainsSomething(changedCells)) {
+      R.forEach(
+         cell => {
+            updatedCellVisibility(cell);
+            hasChangedCell({ row: cellRow(cell), column: cellColumn(cell) });
+         }, 
+         changedCells
+      );
+   }
+}
+
+const findChangedCells = spicyCurry(
+      ({ axis, changedVisibilityItems }) => { 
+      const changedCells = R.reduce(
+         (accumulator, visibilityItem) => {
+            const cellsInAxisItem = axis === ROW_AXIS 
+               ? cellsInRow({ state: managedStore.state, rowIndex: visibilityItem.index }) 
+               : cellsInColumn({ state: managedStore.state, columnIndex: visibilityItem.index });
+            return R.concat(accumulator, cellsInAxisItem);
+         },
+         [],
+         changedVisibilityItems
+      );
+      return { changedCells };
+   }, 
+   { axis: 'row', changedVisibilityItems: [ { index: 3, isVisible: false } ] }
+);
+
+const findChangedVisibilityItems = ({ oldVisibility, newVisibility }) => {
+   const changedVisibilityItems = R.reduce(
+      (accumulator, visibilityItem) => {
+         const oldVisibilityItem = getObjectFromArrayByKeyValue('index', visibilityItem.index, oldVisibility);
+         return oldVisibilityItem?.isVisible === visibilityItem.isVisible
+            ? accumulator
+            : R.append(visibilityItem, accumulator)
+      }, 
+      [], 
+      newVisibility
+   );
+   return { changedVisibilityItems };
+}
+
+// this will be called in metadataActions--hasChangedMetadata
+export const updateFilteredCells = () => {   
+   // to see what visibility items have changed, compare the most recent past to the present
+   // (all these need to be sorted so they are in the same order for the R.equals comparison below)
+   const oldColumnVisibility = R.sort(compareIndexValues, statePastColumnVisibility(managedStore.state));
+   const newColumnVisibility = R.sort(compareIndexValues, stateColumnVisibility(managedStore.state));
+   const oldRowVisibility = R.sort(compareIndexValues, statePastRowVisibility(managedStore.state));
+   const newRowVisibility = R.sort(compareIndexValues, stateRowVisibility(managedStore.state));
+
+   ifThen({
+      ifCond: R.pipe(R.equals, R.not),
+      thenDo: [ findChangedVisibilityItems, findChangedCells({axis: COLUMN_AXIS}), sendUpdatesForChangedCells ],
+      params: { 
+         ifParams: [oldColumnVisibility, newColumnVisibility], 
+         thenParams: { oldVisibility: oldColumnVisibility, newVisibility: newColumnVisibility }
+      }
+   });
+
+   ifThen({
+      ifCond: R.pipe(R.equals, R.not),
+      thenDo: [ findChangedVisibilityItems, findChangedCells({axis: ROW_AXIS}), sendUpdatesForChangedCells ],
+      params: { 
+         ifParams: [oldRowVisibility, newRowVisibility],
+         thenParams: { oldVisibility: oldRowVisibility, newVisibility: newRowVisibility },
+      }
+   });
+}

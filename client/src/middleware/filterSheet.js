@@ -10,10 +10,22 @@ import { HIDE_FILTERED, CLEAR_ALL_FILTERS, } from '../actions/filterTypes';
 import { toggledShowFilterModal } from '../actions/filterActions';
 import { hasChangedMetadata, updatedColumnFilters, updatedRowFilters } from '../actions/metadataActions';
 import { updatedCell } from '../actions/cellActions';
-import { getObjectFromArrayByKeyValue, isNothing, isSomething, arrayContainsSomething, forLoopMap } from '../helpers';
+import {
+   getObjectFromArrayByKeyValue,
+   isNothing,
+   isSomething,
+   arrayContainsSomething,
+   forLoopMap,
+   ifThenElse,
+} from '../helpers';
 import { getTotalForAxis, getAxisVisibilityName } from '../helpers/visibilityHelpers';
 import { getCellFromStore, getAllCells } from '../helpers/cellHelpers';
-import { stateMetadataProp, stateFrozenRows, stateFrozenColumns } from '../helpers/dataStructureHelpers';
+import {
+   stateMetadataProp,
+   stateFrozenRows,
+   stateFrozenColumns,
+} from '../helpers/dataStructureHelpers';
+import { CHANGED_FILTER } from '../constants';
 
 /* these are used by multiple functions below */
 const getAxis = data =>
@@ -200,6 +212,7 @@ const filterCells = data => {
 /**** end filterCells and related functions ******/
 
 /**** functions related to addNewFilter *****/
+
 const getFilterIndex = data => (R.isNil(data.rowIndex) ? data.columnIndex : data.rowIndex);
 
 const getNewFilter = data =>
@@ -208,19 +221,25 @@ const getNewFilter = data =>
       R.pick(['filterExpression', 'caseSensitive', 'regex', 'hideBlanks'])(data),
    ]);
 
-// this was hard to figure out!
-// R.ifElse wants to get 3 functions, not 3 values, so R.thunkify takes a function and the parameters, but doesn't
-// actually call the function. So ifElse gets a function that, when run, has all the right parameters ready to go.
-// Encasing all that is R.useWtih which takes the 3 parameters passed to it, and passes one param to each function
-// in the array, then each of the 3 functions in the array are used by R.ifElse
 const addNewFilter = data => {
    if (!data.isInitializingSheet) {
-      const newFilter = getNewFilter(data);
-      R.useWith(R.ifElse, [
-         R.thunkify(R.equals(ROW_AXIS)),
-         R.thunkify(updatedRowFilters),
-         R.thunkify(updatedColumnFilters),
-      ])(getAxis(data), newFilter, newFilter)();
+      ifThenElse({
+         ifCond: R.equals(ROW_AXIS),
+         thenDo: () => {
+            R.pipe(
+               getNewFilter,
+               updatedRowFilters
+            )(data)
+         },
+         elseDo: () => {
+            R.pipe(
+               getNewFilter,
+               updatedColumnFilters
+            )(data)
+         },
+         params: { ifParams: getAxis(data) }
+      });
+
    }
    return data;
 };
@@ -229,13 +248,10 @@ const addNewFilter = data => {
 /* getDataFromActionAndStore - creates a data object for passing to subsequent functions in hideFiltered's pipe */
 const getDataFromActionAndStore = (actionData, isInitializingSheet, store) => R.mergeAll([actionData, { store, isInitializingSheet }]);
 
-
-// TODO got bug with filtering, see sheet called "filtering not working after range pasting"
-// How about setting up some unit tests for this file?
 const hideFiltered = R.pipe(
    getDataFromActionAndStore,
-   addNewFilter, 
-   filterAxes, 
+   addNewFilter,
+   filterAxes,
    filterCells
 );
 
@@ -265,12 +281,12 @@ export default store => next => async action => {
          const { filterOptions, isInitializingSheet } = action.payload;
          hideFiltered(filterOptions, isInitializingSheet, store);
          if (!isInitializingSheet) {
-            hasChangedMetadata();
+            hasChangedMetadata(CHANGED_FILTER);
          }
          break;
       case CLEAR_ALL_FILTERS:
          clearAllFilters(store);
-         hasChangedMetadata();
+         hasChangedMetadata(CHANGED_FILTER);
          break;
       default:
    }

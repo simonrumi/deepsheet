@@ -29,15 +29,13 @@ const keyBindings = event => {
    }
 }
 
-// TODO - follow what happens when App loads and write tests accordingly
-// start with when it initiializes a sheet and get it some mocked data instead of calling db
-
 const App = props => {
    useEffect(() => {
       document.addEventListener('keydown', keyBindings, false);
    }, []);
 
    logState(props.state);
+   
    return (
       <div>
          <ModalBackground />

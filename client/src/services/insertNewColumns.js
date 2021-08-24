@@ -24,7 +24,7 @@ import {
    createUpdatesForNewCellKeys,
 } from './insertNewAxis';
 import { addCellReducers } from '../reducers/cellReducers';
-import { DEFAULT_COLUMN_WIDTH } from '../constants';
+import { DEFAULT_COLUMN_WIDTH, INSERTED_COLUMN } from '../constants';
 
 const makeNewColumnCell = R.curry((rowIndex, columnIndex, rowVisibility) => {
    const partialCell = {
@@ -100,7 +100,7 @@ const insertNewColumns = (additionalColumns = 1) => {
       columnCount => updatedColumnWidth((totalColumns + columnCount), DEFAULT_COLUMN_WIDTH),
       additionalColumns
    );
-   hasChangedMetadata();
+   hasChangedMetadata(INSERTED_COLUMN);
    completedUndoableAction(`added ${additionalColumns} column(s)`);
 };
 

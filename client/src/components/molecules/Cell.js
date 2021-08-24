@@ -42,7 +42,7 @@ const createClassNames = (classes, cell, isEndCell) => {
    return cellBaseClasses + backgroundClasses + otherClasses;
 };
 
-const Cell = React.memo(({ row, column, classes, blankCell, endCell }) => {
+const Cell = React.memo(({ row, column, classes, blankCell, endCell, isVisible }) => {
    const cellKey = createCellKey(row, column);
    const cell = useSelector(state => statePresent(state)[cellKey]);
    const cellHasFocus = useSelector(state => isCellFocused(cell, state));
@@ -50,12 +50,15 @@ const Cell = React.memo(({ row, column, classes, blankCell, endCell }) => {
 
    const renderRegularCell = cell => {
       const text = cellText(cell);
+      const cellId = createCellId(row, column);
       return (
          <div
             ref={cellRef}
             className={createClassNames(classes, cell)}
             onClick={event => onCellClick(event, cell)}
-            id={createCellId(row, column)}>
+            id={cellId}
+            data-testid={cellId}
+         >
             {text}
          </div>
       );

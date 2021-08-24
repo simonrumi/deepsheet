@@ -1,0 +1,10 @@
+export const ROW_FILTER_ICON_TEST_ID = 'rowFilterIcon_';
+export const COLUMN_FILTER_ICON_TEST_ID = 'columnFilterIcon_';
+export const ROW_HEADER_TEST_ID = 'rowHeader_';
+export const COLUMN_HEADER_TEST_ID = 'columnHeader_';
+export const FILTER_TEXT_TEST_ID = 'filterText';
+export const FILTER_HIDE_BLANKS_TEST_ID = 'filterHideBlanks';
+export const FILTER_CASE_SENSITIVE_TEST_ID = 'filterCaseSensitive';
+export const FILTER_REGEX_TEST_ID = 'filterRegex';
+export const FILTER_SUBMIT_TEST_ID = 'filterSubmit';
+export const FILTER_CLEAR_ALL_TEST_ID = 'filterClearAll';

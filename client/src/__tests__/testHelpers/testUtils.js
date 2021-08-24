@@ -2,7 +2,7 @@ import React from 'react';
 import { render as rtlRender } from '@testing-library/react';
 // import { configureStore } from '@reduxjs/toolkit'; // FYI this was the original version, but we want to use our own managedStore
 import { Provider } from 'react-redux';
-import managedStore from './store';
+import managedStore from '../../store';
 
 const getStore = () => {
     managedStore.init();

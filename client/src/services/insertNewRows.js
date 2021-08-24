@@ -24,7 +24,7 @@ import {
    stateRowVisibility,
 } from '../helpers/dataStructureHelpers';
 import { addCellReducers } from '../reducers/cellReducers';
-import { DEFAULT_ROW_HEIGHT } from '../constants';
+import { DEFAULT_ROW_HEIGHT, INSERTED_ROW } from '../constants';
 
 const makeNewRowCell = R.curry((rowIndex, columnIndex, columnVisibility) => {
    const partialCell = {
@@ -101,7 +101,7 @@ const insertNewRows = (additionalRows = 1) => {
       rowCount => updatedRowHeight((totalRows + rowCount), DEFAULT_ROW_HEIGHT),
       additionalRows
    );
-   hasChangedMetadata();
+   hasChangedMetadata(INSERTED_ROW);
    completedUndoableAction(`added ${additionalRows} row(s)`);
 };
 

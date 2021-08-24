@@ -1,4 +1,5 @@
 import managedStore from '../store';
+import { updateFilteredCells } from '../helpers/visibilityHelpers';
 import { 
    REPLACED_ALL_METADATA,
    POSTING_UPDATED_METADATA, 
@@ -34,8 +35,15 @@ import {
    UPDATED_METADATA_ERROR_MESSAGE,
    CLEARED_METADATA_ERROR_MESSAGE,
 } from './metadataTypes';
-
 import { CELLS_UPDATED } from './cellTypes';
+import { COMPLETED_UNDOABLE_ACTION } from './undoTypes';
+import {
+   CHANGED_FILTER,
+   ORDERED_COLUMN,
+   ORDERED_ROW,
+   INSERTED_COLUMN,
+   INSERTED_ROW,
+} from '../constants';
 
 export const replacedAllMetadata = metadata => {
    managedStore.store.dispatch({
@@ -57,10 +65,24 @@ export const clearMetadata = () => {
    });
 }
 
-export const hasChangedMetadata = () => {
+export const hasChangedMetadata = changeType => {
    managedStore.store.dispatch({
       type: HAS_CHANGED_METADATA,
    });
+   switch (changeType) {
+      case CHANGED_FILTER:
+         updateFilteredCells();
+         managedStore.store.dispatch({ type: COMPLETED_UNDOABLE_ACTION, payload: 'updated the filter' });
+         break;
+
+      case ORDERED_COLUMN:
+      case ORDERED_ROW:
+      case INSERTED_COLUMN:
+      case INSERTED_ROW:
+         break;
+      
+      default:
+   }
 };
 
 export const updatedFrozenRows = frozenRows => {
@@ -142,6 +164,7 @@ export const updatedRowFilters = newRowFilter => {
       type: CELLS_UPDATED,
       payload: { changeType: UPDATED_ROW_FILTERS, data: newRowFilter }
    });
+   return newRowFilter; // filterSheet needs this to be passed through
 };
 
 export const replacedColumnFilters = columnFilters => {

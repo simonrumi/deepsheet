@@ -201,7 +201,7 @@ export const getCellsFromCellKeys = R.curry(
    (state, cellKeys) => R.map(cellKey => stateCell(state, cellKey), cellKeys)
 );
 
-export const encodeText = text => text.replaceAll(/([^a-zA-Z0-9\s])/g, '\\$1');
+export const encodeText = text => isSomething(text) ? text.replace(/([^a-zA-Z0-9\s])/g, '\\$1') : '';
 
 export const encodeCellText = cell => R.pipe(
       cellText,
@@ -209,7 +209,7 @@ export const encodeCellText = cell => R.pipe(
       cellTextSetter(R.__, cell)
    )(cell);
 
-export const decodeText = text => text.replaceAll(/\\/g, '');
+export const decodeText = text => isSomething(text) ? text.replace(/\\/g, '') : '';
 
 export const decodeCellText = cell => R.pipe(
    cellText,
@@ -228,3 +228,21 @@ export const removeCellFromArray = (cell, arr) => R.filter(
    cellFromArr => cell.row !== cellFromArr.row || cell.column !== cellFromArr.column, 
    arr
 );
+
+export const cellsInColumn = ({ state, columnIndex }) =>
+   R.reduce(
+      (accumulator, cell) => cellColumn(cell) === columnIndex 
+         ? [...accumulator, cell] 
+         : accumulator,
+      [],
+      getAllCells(state)
+   );
+
+export const cellsInRow = ({ state, rowIndex }) =>
+   R.reduce(
+      (accumulator, cell) => cellRow(cell) === rowIndex 
+         ? [...accumulator, cell] 
+         : accumulator,
+      [],
+      getAllCells(state)
+   );

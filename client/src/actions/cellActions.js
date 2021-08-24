@@ -2,6 +2,7 @@ import * as R from 'ramda';
 import managedStore from '../store';
 import {
    UPDATED_CELL,
+   UPDATED_CELL_VISIBILITY,
    UPDATED_CONTENT_OF_CELL,
    POSTING_UPDATED_CELLS,
    HAS_ADDED_CELL,
@@ -26,6 +27,13 @@ export const updatedCell = cell => {
       payload: cell,
    });
 };
+
+export const updatedCellVisibility = cell => {
+   managedStore.store.dispatch({
+      type: UPDATED_CELL_VISIBILITY,
+      payload: cell,
+   });
+}
 
 export const updatedCellBeingEdited = cell => {
    managedStore.store.dispatch({ type: UPDATED_CONTENT_OF_CELL, payload: cell }); 

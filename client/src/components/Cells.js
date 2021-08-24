@@ -7,6 +7,7 @@ import {
    cellRow,
    cellColumn,
    stateRowVisibility,
+   cellVisible,
 } from '../helpers/dataStructureHelpers';
 import {
    shouldShowRow,
@@ -41,11 +42,12 @@ const Cells = () => {
    const renderRowHeader = cell => <RowHeader cell={cell} blankCell={false} key={'row_header_' + cellRow(cell)} />;
 
    const renderCell = cell => <Cell 
-      row={cell.row}
-      column={cell.column} 
+      row={cellRow(cell)}
+      column={cellColumn(cell)} 
       blankCell={false}
+      isVisible={cellVisible(cell)}
       key={cellRow(cell) + '_' + cellColumn(cell)} 
-   />;
+   />; // note the key is needed by React, otherwise it complains
 
    const maybeRowHeader = R.ifElse(isFirstColumn, renderRowHeader, nothing);
 

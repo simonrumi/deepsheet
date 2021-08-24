@@ -144,6 +144,18 @@ export const stateFrozenColumns = subObjectGetter(stateMetadataLens, 'frozenColu
 export const stateRowHeights = subObjectGetter(stateMetadataLens, 'rowHeights');
 export const stateColumnWidths = subObjectGetter(stateMetadataLens, 'columnWidths');
 
+/***** these are to get the previous version of various metadata items *****/
+export const statePastColumnVisibility = R.pipe(
+   R.prop('past'),
+   R.last,
+   R.path(['metadata', 'columnVisibility'])
+);
+export const statePastRowVisibility = R.pipe(
+   R.prop('past'),
+   R.last,
+   R.path(['metadata', 'rowVisibility'])
+);
+
 /* the axisItemTool is the popup that can show for each column and each row.
 The following metadata says which one is visible and which column/row it is for
 metadata {
