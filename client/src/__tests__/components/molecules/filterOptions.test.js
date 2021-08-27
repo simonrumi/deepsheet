@@ -1,23 +1,26 @@
 import { screen } from '@testing-library/react';
 import  * as R from 'ramda';
-import { /* render, */ fireEvent } from '../../testHelpers/testUtils';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
-// import { getUserInfoFromCookie } from '../../../helpers/userHelpers';
 import { createCellId } from '../../../helpers/cellHelpers';
 import { mockDb } from '../../../__data__/mockDb';
 import { 
-    ROW_FILTER_ICON_TEST_ID, 
     ROW_HEADER_TEST_ID,
+    ROW_GEAR_ICON_TEST_ID,
+    ROW_FILTER_ICON_TEST_ID, 
     COLUMN_HEADER_TEST_ID,
+    COLUMN_GEAR_ICON_TEST_ID,
+    COLUMN_FILTER_ICON_TEST_ID,
     FILTER_TEXT_TEST_ID, 
     FILTER_HIDE_BLANKS_TEST_ID,
     FILTER_CASE_SENSITIVE_TEST_ID,
     FILTER_REGEX_TEST_ID,
     FILTER_SUBMIT_TEST_ID,
-    FILTER_CLEAR_ALL_TEST_ID
+    FILTER_CLEAR_ALL_TEST_ID,
+    UNDO_TEST_ID,
  } from '../../testHelpers/constants';
 import { setupApp } from '../../testHelpers';
+// import { waitFor, fireEvent, waitForElementToBeRemoved } from '../../testHelpers/testUtils';
 import { isSomething, ifThenElse } from '../../../helpers';
 
 jest.mock('../../../helpers/userHelpers', () => ({
@@ -85,13 +88,22 @@ const checkRowsAndColumnsVisibility = (screen, { visibleRows, hiddenRows, visibl
 
 const launchRowFilterModal = async (screen, rowIndex) => {
     // click the cog in the row row
-    const rowHeaderIndex = await screen.findByTestId(ROW_HEADER_TEST_ID + rowIndex);
-    const rowIndexCog = rowHeaderIndex.querySelector('div:nth-child(1) > div:nth-child(2) > svg');
-    userEvent.click(rowIndexCog);
+    const rowCog = await screen.findByTestId(ROW_GEAR_ICON_TEST_ID + rowIndex);
+    userEvent.click(rowCog);
 
     // click the filter icon to launch the filter modal
-    const rowFilterIconIndex = await screen.findByTestId(ROW_FILTER_ICON_TEST_ID + rowIndex);
-    userEvent.click(rowFilterIconIndex);
+    const rowFilterIcon = await screen.findByTestId(ROW_FILTER_ICON_TEST_ID + rowIndex);
+    userEvent.click(rowFilterIcon);
+}
+
+const launchColumnFilterModal = async (screen, columnIndex) => {
+    // click the cog in the row row
+    const columnCog = await screen.findByTestId(COLUMN_GEAR_ICON_TEST_ID + columnIndex);
+    userEvent.click(columnCog);
+
+    // click the filter icon to launch the filter modal
+    const columnFilterIcon = await screen.findByTestId(COLUMN_FILTER_ICON_TEST_ID + columnIndex);
+    userEvent.click(columnFilterIcon);
 }
 
 describe('FilterOptions', () => {
@@ -150,40 +162,157 @@ describe('FilterOptions', () => {
         unmount();
     });
 
-    test.skip('filter input is updated correctly', () => {
-        const { container, unmount, inputField } = setupApp();
-        fireEvent.change(inputField, {target: {value: 'my filter text'}}); // TODO replace this with userEvent
-        expect(inputField.value).toBe('my filter text');
-        unmount();
-    });
+    test('filter column C with "hide blanks"', async () => {
+        const { unmount } = setupApp();
 
-    test.skip('"hide blanks" checkmark is updated correctly when clicked', () => {
-        const { unmount, getByTestId } = setupApp();
-        const hideBlanksCheckbox = getByTestId('hideBlanksCheckbox');
+        // launch the filter modal and click hide blanks
+        await launchColumnFilterModal(screen, 2);
+        const hideBlanksCheckbox = await screen.findByTestId(FILTER_HIDE_BLANKS_TEST_ID);
         userEvent.click(hideBlanksCheckbox);
         expect(hideBlanksCheckbox.value).toBe("true");
-        userEvent.click(hideBlanksCheckbox);
-        expect(hideBlanksCheckbox.value).toBe("false");
+
+        // click the submit button
+        const submitFilterOptionsBtn = await screen.findByTestId(FILTER_SUBMIT_TEST_ID);
+        userEvent.click(submitFilterOptionsBtn);
+
+        checkRowsAndColumnsVisibility(screen, { 
+            visibleRows: [1,2,3,4],
+            hiddenRows: [0,5,6,7],
+            visibleColumns: [0,1,2,3,4,5,6,7,8],
+            hiddenColumns: []
+        });
+
         unmount();
     });
 
-    test.skip('"case sensitive" checkmark is updated correctly when clicked', () => {
-        const { unmount, getByTestId } = setupApp();
-        const caseSensitiveCheckbox = getByTestId('caseSensitiveCheckbox');
-        userEvent.click(caseSensitiveCheckbox);
-        expect(caseSensitiveCheckbox.value).toBe("true");
-        userEvent.click(caseSensitiveCheckbox);
-        expect(caseSensitiveCheckbox.value).toBe("false");
+    test('The "case sensitive" option works correctly (including use of undo)', async () => {
+        const { unmount } = setupApp();
+
+        // open the filter modal for row 5
+        await launchRowFilterModal(screen, 4);
+
+        // type "SHOW" into the text field
+        const textFieldRow5 = await screen.findByTestId(FILTER_TEXT_TEST_ID);
+        userEvent.type(textFieldRow5, 'SHOW');
+        expect(textFieldRow5.value).toBe('SHOW');
+
+        //check the case sensitive option
+        const caseSensitiveRow5 = await screen.findByTestId(FILTER_CASE_SENSITIVE_TEST_ID);
+        userEvent.click(caseSensitiveRow5);
+        expect(caseSensitiveRow5.value).toBe("true");
+
+        // click the submit button
+        const submitFilterRow5 = await screen.findByTestId(FILTER_SUBMIT_TEST_ID);
+        userEvent.click(submitFilterRow5);
+        expect(screen.queryByText('hide')).toBeNull();
+
+        // since all the values of the word "show" are lowercase, no columns should be visible
+        checkRowsAndColumnsVisibility(screen, { 
+            visibleRows: [0,1,2,3,4,5,6,7],
+            hiddenRows: [],
+            visibleColumns: [],
+            hiddenColumns: [0,1,2,3,4,5,6,7,8]
+        });
+
+        // click the undo button
+        const undoBtn = await screen.findByTestId(UNDO_TEST_ID);
+        userEvent.click(undoBtn);
+
+        // all cells should be visible again
+        checkRowsAndColumnsVisibility(screen, { 
+            visibleRows: [0,1,2,3,4,5,6,7],
+            hiddenRows: [],
+            visibleColumns: [0,1,2,3,4,5,6,7,8],
+            hiddenColumns: []
+        });
+
+        // open the filter modal for column B
+        await launchColumnFilterModal(screen, 1);
+
+        // type "A" into the text field
+        const textFieldColumnB = await screen.findByTestId(FILTER_TEXT_TEST_ID);
+        userEvent.type(textFieldColumnB, 'A');
+        expect(textFieldColumnB.value).toBe('A');
+
+        //check the case sensitive option
+        const caseSensitiveColumnB = await screen.findByTestId(FILTER_CASE_SENSITIVE_TEST_ID);
+        userEvent.click(caseSensitiveColumnB);
+        expect(caseSensitiveColumnB.value).toBe("true");
+
+        // click the submit button
+        const submitFilterColumnB = await screen.findByTestId(FILTER_SUBMIT_TEST_ID);
+        userEvent.click(submitFilterColumnB);
+
+        // only rows with indexes 1,2,3 should be visible
+        checkRowsAndColumnsVisibility(screen, { 
+            visibleRows: [1,2,3],
+            hiddenRows: [0,4,5,6,7],
+            visibleColumns: [0,1,2,3,4,5,6,7,8],
+            hiddenColumns: []
+        });
+
         unmount();
     });
 
-    test.skip('"regular expression" checkmark is updated correctly when clicked', () => {
-        const { unmount, getByTestId } = setupApp();
-        const regexCheckbox = getByTestId('regexCheckbox');
+    test('another test for case sensitivity', async () => {
+        const { unmount } = setupApp();
+
+        // open the filter modal for column B
+        await launchColumnFilterModal(screen, 1);
+
+        // type "a" into the text field
+        const textFieldColumnB = await screen.findByTestId(FILTER_TEXT_TEST_ID);
+        userEvent.type(textFieldColumnB, 'a');
+        expect(textFieldColumnB.value).toBe('a');
+
+        //check the case sensitive option
+        const caseSensitiveColumnB = await screen.findByTestId(FILTER_CASE_SENSITIVE_TEST_ID);
+        userEvent.click(caseSensitiveColumnB);
+        expect(caseSensitiveColumnB.value).toBe("true");
+
+        // click the submit button
+        const submitFilterColumnB = await screen.findByTestId(FILTER_SUBMIT_TEST_ID);
+        userEvent.click(submitFilterColumnB);
+
+        // no rows should be visible since there are no lower case "a"s
+        checkRowsAndColumnsVisibility(screen, { 
+            visibleRows: [],
+            hiddenRows: [0,1,2,3,4,5,6,7],
+            visibleColumns: [0,1,2,3,4,5,6,7,8],
+            hiddenColumns: []
+        });
+
+        unmount();
+    })
+
+    test('filtering by a regular expression works', async () => {
+        const { unmount } = setupApp();
+
+        // open the filter modal for column A
+        await launchColumnFilterModal(screen, 0);
+
+        // type regex into the text field
+        const textField = await screen.findByTestId(FILTER_TEXT_TEST_ID);
+        userEvent.type(textField, 'i.*s$'); // cell A1 contains "using for testing of copy-pasting ranges" which will match this regex
+        expect(textField.value).toBe('i.*s$');
+
+        //check the regex option
+        const regexCheckbox = await screen.findByTestId(FILTER_REGEX_TEST_ID);
         userEvent.click(regexCheckbox);
         expect(regexCheckbox.value).toBe("true");
-        userEvent.click(regexCheckbox);
-        expect(regexCheckbox.value).toBe("false");
+
+        // click the submit button
+        const submitFilter = await screen.findByTestId(FILTER_SUBMIT_TEST_ID);
+        userEvent.click(submitFilter);
+
+        // only row 1 should be visible
+        checkRowsAndColumnsVisibility(screen, { 
+            visibleRows: [0],
+            hiddenRows: [1,2,3,4,5,6,7],
+            visibleColumns: [0,1,2,3,4,5,6,7,8],
+            hiddenColumns: []
+        });
+
         unmount();
     });
 });

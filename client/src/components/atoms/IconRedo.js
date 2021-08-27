@@ -7,10 +7,11 @@ const RedoIcon = ({
    classes = '',
    viewBox = '0 0 40.5 40.5',
    onClickFn,
+   testId,
 }) => {
    const allClasses = '' + classes; // leaving this here as a reminder that we have taken out the usual base classes for an icon
    return (
-      <div className={allClasses} onClick={onClickFn}>
+      <div className={allClasses} onClick={onClickFn} data-testid={testId}>
          <svg
             style={style}
             height={height}

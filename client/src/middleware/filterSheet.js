@@ -24,6 +24,7 @@ import {
    stateMetadataProp,
    stateFrozenRows,
    stateFrozenColumns,
+   cellText,
 } from '../helpers/dataStructureHelpers';
 import { CHANGED_FILTER } from '../constants';
 
@@ -40,9 +41,7 @@ const getOtherAxis = axis => (axis === ROW_AXIS ? COLUMN_AXIS : ROW_AXIS);
 const getVisibilityActionTypeByAxis = axis =>
    axis === ROW_AXIS ? REPLACED_ROW_VISIBILITY : REPLACED_COLUMN_VISIBILITY;
 
-const getStateFromData = data => {
-   return R.path(['store', 'getState'], data)();
-}
+const getStateFromData = data => R.path(['store', 'getState'], data)(); // note that we are running the getState() function once we have it
 
 const getFilters = (axisName, state) => R.pipe(R.concat(R.__, 'Filters'), stateMetadataProp(state))(axisName);
 
@@ -80,7 +79,7 @@ const isCellShownByFilter = R.curry((cell, filter, axisOfFilter) => {
    if (cell[axisOfFilter] !== filter.index) {
       return true; // because this filter does not apply to this cell
    }
-   if (filter.hideBlanks && isNothing(cell.content.text)) {
+   if (filter.hideBlanks && (isNothing(cellText(cell)) || /^\s+$/.test(cellText(cell)))) {
       return false;
    }
    const flags = filter.caseSensitive ? '' : 'i';
@@ -201,12 +200,15 @@ const setVisibilityForCell = (data, cell) => {
    )(newCellVisibility);
 };
 
-const getCellsFromData = R.pipe(getStateFromData, getAllCells);
+const getCellsFromData = data => R.pipe(
+      getStateFromData, 
+      getAllCells 
+   )(data); // TODO BUG here
 
 const filterCells = data => {
    const cells = getCellsFromData(data);
-   R.map(cell => {
-      return setVisibilityForCell(data, cell);
+   R.forEach(cell => {
+      setVisibilityForCell(data, cell);
    }, cells);
 };
 /**** end filterCells and related functions ******/
@@ -239,7 +241,6 @@ const addNewFilter = data => {
          },
          params: { ifParams: getAxis(data) }
       });
-
    }
    return data;
 };

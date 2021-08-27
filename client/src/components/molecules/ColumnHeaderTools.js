@@ -2,6 +2,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import managedStore from '../../store';
 import { COLUMN_AXIS, TOOL_ICON_WIDTH } from '../../constants';
+import { COLUMN_FILTER_ICON_TEST_ID } from '../../__tests__/testHelpers/constants';
 import {
    stateColumnFilters,
    stateAxisItemToolIsVisible,
@@ -18,8 +19,7 @@ import FilterIcon from '../atoms/IconFilter';
 import SnowflakeIcon from '../atoms/IconSnowflake';
 import SortIcon from '../atoms/IconSort';
 
-const ColumnHeaderTools = props => {
-   const { index, frozen } = props;
+const ColumnHeaderTools = ({ index, frozen }) => {
    const toolIsVisible = useSelector(state => stateAxisItemToolIsVisible(state));
    const toolAxis = useSelector(state => stateAxisItemToolAxis(state));
    const toolIndex = useSelector(state => stateAxisItemToolIndex(state));
@@ -91,6 +91,7 @@ const ColumnHeaderTools = props => {
                   classes="p-1"
                   fitlerEngaged={isFilterEngaged(index, stateColumnFilters(managedStore.state))}
                   onClickFn={() => showFilterModalForColumn(index)}
+                  testId={COLUMN_FILTER_ICON_TEST_ID + index}
                />
             </div>
             <div className={iconColumnClasses}>

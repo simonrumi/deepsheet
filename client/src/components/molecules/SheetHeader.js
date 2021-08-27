@@ -23,6 +23,7 @@ import SaveIcon from '../atoms/IconSave';
 import LoadingIcon from '../atoms/IconLoading';
 import UndoIcon from '../atoms/IconUndo';
 import RedoIcon from '../atoms/IconRedo';
+import { UNDO_TEST_ID, REDO_TEST_ID } from '../../__tests__/testHelpers/constants';
 
 const SheetHeader = props => {
    const title = useSelector(state => stateTitleText(state));
@@ -66,8 +67,8 @@ const SheetHeader = props => {
       const redoClasses = arrayContainsSomething(future) ? 'text-subdued-blue hover:text-vibrant-blue' : 'text-grey-blue';
       return (
          <div className="flex items-center justify-between pr-2">
-            <UndoIcon height="1.5em" width="1.5em" classes={undoClasses} onClickFn={undid} />
-            <RedoIcon height="1.5em" width="1.5em" classes={redoClasses} onClickFn={redid} />
+            <UndoIcon height="1.5em" width="1.5em" classes={undoClasses} onClickFn={undid} testId={UNDO_TEST_ID} />
+            <RedoIcon height="1.5em" width="1.5em" classes={redoClasses} onClickFn={redid} testId={REDO_TEST_ID} />
          </div>
       );
    }

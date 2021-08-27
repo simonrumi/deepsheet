@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import * as R from 'ramda';
 import managedStore from  '../../store';
 import { DRAGGABLE_ROW_NUMBER, ROW_AXIS } from '../../constants';
+import { ROW_GEAR_ICON_TEST_ID } from '../../__tests__/testHelpers/constants';
 import { indexToRowNumber, isSomething, getObjectFromArrayByKeyValue } from '../../helpers';
 import {
    cellRow,
@@ -90,6 +91,7 @@ const RowHeaderDetail = ({ cell, frozen }) => {
                <GearIcon
                   classes={gearClasses}
                   onClickFn={showToolForRow}
+                  testId={ROW_GEAR_ICON_TEST_ID + index}
                />
                <RowHeaderTools index={index} frozen={frozen} />
          </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import * as R from 'ramda';
 import managedStore from '../../store';
 import { COLUMN_AXIS, DRAGGABLE_COLUMN_LETTER } from '../../constants';
+import { COLUMN_GEAR_ICON_TEST_ID } from '../../__tests__/testHelpers/constants';
 import { indexToColumnLetter, isSomething, getObjectFromArrayByKeyValue } from '../../helpers';
 import { isFilterEngaged } from '../../helpers/visibilityHelpers';
 import {
@@ -17,8 +18,7 @@ import DraggableColumnLetter from '../atoms/DraggableColumnLetter';
 import GearIcon from '../atoms/IconGear';
 import ColumnHeaderTools from './ColumnHeaderTools';
 
-const ColumnHeaderDetail = props => {
-   const { index, frozen } = props;
+const ColumnHeaderDetail = ({ index, frozen }) => {
    const [ isOver, setIsOver ]  = useState(false);
 
    const isDroppable = columnMovingIndex => 
@@ -88,6 +88,7 @@ const ColumnHeaderDetail = props => {
             <GearIcon
                classes={gearClasses}
                onClickFn={showToolForColumn}
+               testId={COLUMN_GEAR_ICON_TEST_ID + index}
             />
             <ColumnHeaderTools index={index} frozen={frozen} />
          </div>

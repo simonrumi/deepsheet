@@ -1,10 +1,14 @@
-export const ROW_FILTER_ICON_TEST_ID = 'rowFilterIcon_';
-export const COLUMN_FILTER_ICON_TEST_ID = 'columnFilterIcon_';
 export const ROW_HEADER_TEST_ID = 'rowHeader_';
+export const ROW_GEAR_ICON_TEST_ID = 'rowGear_';
+export const ROW_FILTER_ICON_TEST_ID = 'rowFilterIcon_';
 export const COLUMN_HEADER_TEST_ID = 'columnHeader_';
+export const COLUMN_GEAR_ICON_TEST_ID = 'columnGear_';
+export const COLUMN_FILTER_ICON_TEST_ID = 'columnFilterIcon_';
 export const FILTER_TEXT_TEST_ID = 'filterText';
 export const FILTER_HIDE_BLANKS_TEST_ID = 'filterHideBlanks';
 export const FILTER_CASE_SENSITIVE_TEST_ID = 'filterCaseSensitive';
 export const FILTER_REGEX_TEST_ID = 'filterRegex';
 export const FILTER_SUBMIT_TEST_ID = 'filterSubmit';
 export const FILTER_CLEAR_ALL_TEST_ID = 'filterClearAll';
+export const UNDO_TEST_ID = 'undo_icon';
+export const REDO_TEST_ID = 'redo_icon'

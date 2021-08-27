@@ -75,6 +75,9 @@ export const hasChangedMetadata = changeType => {
          managedStore.store.dispatch({ type: COMPLETED_UNDOABLE_ACTION, payload: 'updated the filter' });
          break;
 
+      //note: these ones are already have the COMPLETED_UNDOABLE_ACTION 
+      // and the cellDbUpdates.changedCells are getting recorded correctly in the store, so no need to do anything
+      // however leaving these here in case of a future need
       case ORDERED_COLUMN:
       case ORDERED_ROW:
       case INSERTED_COLUMN:

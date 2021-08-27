@@ -7,12 +7,13 @@ const GearIcon = ({
    onClickFn,
    onMouseOverFn,
    onMouseLeaveFn,
+   testId,
 }) => {
 	const allClasses = 'cursor-pointer ' + classes;
 	const enforcedHeight = '1.25em';
 	const enforcedWidth = '1.25em';
 	return (
-		<div className={allClasses} onClick={onClickFn} onMouseOver={onMouseOverFn} onMouseLeave={onMouseLeaveFn}>
+		<div className={allClasses} onClick={onClickFn} onMouseOver={onMouseOverFn} onMouseLeave={onMouseLeaveFn} data-testid={testId}>
 			<svg
 				style={style}
 				height={enforcedHeight}
