@@ -6,30 +6,3 @@
 
 @tailwind components;
 @tailwind utilities;
-
-/* Note: this grid stuff is breaking tailwind's atomic approach to classes, but it's just these 3 items and it hasn't really hurt anything to leave it as is */
-
-/*! purgecss ignore */
-.grid-container {
-   display: grid;
-   grid-column-gap: 0;
-   grid-row-gap: 0;
-   justify-items: start;
-   align-items: start;
-}
-
-/*! purgecss ignore */
-.grid-item,
-.grid-header-item {
-   grid-column: span 1;
-   grid-row: span 1;
-   width: 100%;
-   height: 100%;
-   padding: 1%;
-}
-
-/*! purgecss ignore */
-.grid-header-item {
-   vertical-align: middle;
-   text-align: center;
-}

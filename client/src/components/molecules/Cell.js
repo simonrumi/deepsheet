@@ -37,7 +37,7 @@ const onCellClick = (event, cell) => {
 
 const createClassNames = (classes, cell, isEndCell) => {
    const backgroundClasses = cell.inCellRange && !isEndCell ? 'bg-light-light-blue ' : ''; 
-   const cellBaseClasses = 'regular-cell grid-item overflow-hidden text-dark-dark-blue border-t border-l ';
+   const cellBaseClasses = 'regular-cell col-span-1 row-span-1 w-full h-full p-0.5 overflow-hidden text-dark-dark-blue border-t border-l ';
    const otherClasses = classes ? classes : '';
    return cellBaseClasses + backgroundClasses + otherClasses;
 };

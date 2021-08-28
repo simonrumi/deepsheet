@@ -67,10 +67,10 @@ const SubsheetCell = React.memo(({ cell, cellHasFocus }) => {
       });
    });
 
-   // note the class grid-item makes this cell an item within the large grid which is the spreadsheet
+   // note this cell is an item within the large grid which is the spreadsheet
    // while these classes create a 1x1 grid that takes up the full space within that:
    // grid items-stretch
-   const baseClasses = 'grid-item grid items-stretch cursor-pointer border-t border-l';
+   const baseClasses = 'col-span-1 row-span-1 w-full h-full p-0.5 grid items-stretch cursor-pointer border-t border-l';
    const backgroundClasses = cell.inCellRange ? ' bg-light-light-blue' : '';
    return (
       <div

@@ -14,12 +14,12 @@ class LastRow extends Component {
       }
       if (index === 0) {
          return R.prepend(
-            <RowAdder key="rowAdder" classes="grid-item text-dark-dark-blue border-t border-b border-l border-r" />,
+            <RowAdder key="rowAdder" classes="col-span-1 row-span-1 w-full h-full p-0.5 text-dark-dark-blue border-t border-b border-l border-r" />,
             this.makeLastRowArray(totalColumns, index + 1, cells)
          );
       } else {
          return R.prepend(
-            <div className="grid-item border-t border-b border-r" key={this.generateKey(index)} />,
+            <div className="col-span-1 row-span-1 w-full h-full p-0.5 border-t border-b border-r" key={this.generateKey(index)} />,
             this.makeLastRowArray(totalColumns, index + 1, cells)
          );
       }

@@ -139,7 +139,7 @@ const Sheet = props => {
 
    const renderCells = () => {
       return (<div
-         className="grid-container pt-1"
+         className="grid gap-x-0 gap-y-0 justify-items-start items-start pt-1"
          style={renderGridSizingStyle()}
          onDragOver={handleResizerDragOver}
          onDrop={handleResizerDrop}>

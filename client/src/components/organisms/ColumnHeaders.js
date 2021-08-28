@@ -7,7 +7,7 @@ import ColumnHeader from './ColumnHeader';
 import TopLeftHeader from '../atoms/TopLeftHeader';
 import ColumnAdder from '../molecules/ColumnAdder';
 
-const COLUMN_HEADER_CLASSES = 'grid-header-item text-grey-blue border-t border-l';
+const COLUMN_HEADER_CLASSES = 'col-span-1 row-span-1 w-full h-full p-0.5 align-middle text-center text-grey-blue border-t border-l';
 
 class ColumnHeaders extends Component {
    constructor(props) {

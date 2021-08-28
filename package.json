@@ -17,8 +17,10 @@
    },
    "dependencies": {
       "@reduxjs/toolkit": "^1.6.1",
+      "autoprefixer": "^10.3.3",
       "netlify-cli": "^2.59.2",
-      "tailwindcss": "^1.2.0"
+      "postcss": "^8.3.6",
+      "tailwindcss": "^2.2.8"
    },
    "devDependencies": {
       "concurrently": "^4.1.2",
