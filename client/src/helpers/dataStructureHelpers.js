@@ -376,5 +376,5 @@ export const stateIsStale = state =>
 // return true if we have an issue with any state objects that tried to save to the db but got error messages
 export const stateErrorMessages = state =>
    stateCellDbUpdatesErrorMessage(state) 
-      || (stateTitleIsStale(state) && !stateTitleIsCallingDb(state) && !stateTitleIsEditingTitle(state))
+      // || (stateTitleIsStale(state) && !stateTitleIsCallingDb(state) && !stateTitleIsEditingTitle(state))
       || stateMetadataErrorMessage(state);

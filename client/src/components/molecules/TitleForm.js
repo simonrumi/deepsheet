@@ -31,11 +31,6 @@ const TitleForm = props => {
    };
 
    const validateFormValue = text => {
-      //specifically disallow alert box code
-      if (/alert\(.*\)/.test(text)) {
-         titleErrorDetected('do not enter code');
-         return false;
-      }
       if (isNothing(text)) {
          titleErrorDetected('please enter a title');
          return false;
@@ -46,17 +41,7 @@ const TitleForm = props => {
 
    const handleSubmit = event => {
       event.preventDefault();
-      try {
-         updatedTitle({
-            text: titleText,
-            isEditingTitle: false,
-            sheetId,
-         });
-      } catch (err) {
-         throw new Error({
-            title: 'title was not updated: ' + err,
-         });
-      }
+      updatedTitle(titleText);
    };
 
    const handleBlur = event => {

@@ -5,6 +5,7 @@ import managedStore from '../../store';
 import { openedTitleEditor } from '../../actions/titleActions';
 import { hidePopups } from '../../actions';
 import { undid, redid } from '../../actions/undoActions';
+import { startedEditingTitle } from '../../actions/titleActions';
 import { loadSheet, saveAllUpdates } from '../../services/sheetServices';
 import { isSomething, arrayContainsSomething } from '../../helpers';
 import {
@@ -24,6 +25,12 @@ import LoadingIcon from '../atoms/IconLoading';
 import UndoIcon from '../atoms/IconUndo';
 import RedoIcon from '../atoms/IconRedo';
 import { UNDO_TEST_ID, REDO_TEST_ID } from '../../__tests__/testHelpers/constants';
+
+const handleEditTitleClick = (event, initialValue) => {
+   event.preventDefault();
+   startedEditingTitle(initialValue);
+   openedTitleEditor(true);
+}
 
 const SheetHeader = props => {
    const title = useSelector(state => stateTitleText(state));
@@ -62,6 +69,7 @@ const SheetHeader = props => {
       }
    }
 
+
    const renderUndoRedoIcons = () => {
       const undoClasses = arrayContainsSomething(past) ? 'text-subdued-blue hover:text-vibrant-blue pr-2' : 'text-grey-blue pr-2';
       const redoClasses = arrayContainsSomething(future) ? 'text-subdued-blue hover:text-vibrant-blue' : 'text-grey-blue';
@@ -79,7 +87,7 @@ const SheetHeader = props => {
          <div className="flex items-end justify-between">
             {renderSaveIcon()}
             {renderUndoRedoIcons()}
-            <IconEdit height="1.5em" width="1.5em" onClickFn={() => openedTitleEditor(true)} />
+            <IconEdit height="1.5em" width="1.5em" onClickFn={event => handleEditTitleClick(event, title)} />
             {renderUpArrow()}
          </div>
       </div>

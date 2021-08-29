@@ -15,13 +15,14 @@ import {
    DELETE_SUBSHEET_ID_FAILED,
 } from '../actions/cellTypes';
 import { updatedCells } from '../actions/cellActions';
+import { finishedEditingTitle } from '../actions/titleActions';
 import { updateTitleInDB, fetchSheets, saveAllUpdates } from '../services/sheetServices';
 import { updateMetadataMutation } from '../queries/metadataMutations';
 import { updateCellsMutation, deleteSubsheetIdMutation } from '../queries/cellMutations';
 import { createSheetMutation } from '../queries/sheetMutations';
 import { isSomething } from '../helpers';
 import { getUserInfoFromCookie } from '../helpers/userHelpers';
-import { getSaveableCellData } from '../helpers/cellHelpers';
+import { getSaveableCellData, decodeText } from '../helpers/cellHelpers';
 import { createDefaultAxisSizing } from '../helpers/axisSizingHelpers';
 import { cellSubsheetIdSetter, dbSheetId } from '../helpers/dataStructureHelpers';
 import { DEFAULT_TOTAL_ROWS, DEFAULT_TOTAL_COLUMNS, DEFAULT_ROW_HEIGHT, DEFAULT_COLUMN_WIDTH } from '../constants';
@@ -58,6 +59,7 @@ const createNewSheet = async ({ userId, rows, columns, title, parentSheetId, par
    return createSheetResult;
 };
 
+
 export default store => next => async action => {
    switch (action.type) {
       case POSTING_UPDATED_TITLE:
@@ -65,10 +67,11 @@ export default store => next => async action => {
          const { sheetId, text } = action.payload;
          try {
             const data = await updateTitleInDB(sheetId, text);
+            const decodedText = decodeText(data.title);
             managedStore.store.dispatch({
                type: COMPLETED_TITLE_UPDATE,
                payload: {
-                  text: data.title,
+                  text: decodedText,
                   lastUpdated: Date.now(),
                },
             });
@@ -79,6 +82,7 @@ export default store => next => async action => {
                type: TITLE_UPDATE_FAILED,
                payload: { ...action.payload, errorMessage: 'title was not updated' },
             });
+            finishedEditingTitle(decodeText(text)); // even though the db update failed, the title has been changed locally
          }
          break;
 

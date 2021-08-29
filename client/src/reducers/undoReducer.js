@@ -9,6 +9,7 @@ import {
    STARTED_EDITING,
    FINISHED_EDITING,
 } from '../actions/undoTypes';
+import { TITLE_EDIT_CANCELLED, STARTED_EDITING_TITLE, FINISHED_EDITING_TITLE } from '../actions/titleTypes';
 import { arrayContainsSomething } from '../helpers';
 import { stateOriginalValue, cellText, cellRow, cellColumn } from '../helpers/dataStructureHelpers';
 
@@ -99,6 +100,38 @@ const undoReducer = reducer => {
                   present: reducer(present, action), // update the present
                   original: null, //reset this
                   maybePast: null, // reset this
+               }
+
+         case STARTED_EDITING_TITLE:
+            return {
+               ...state, // keep the past & future as is
+               present: reducer(present, action), // update the present
+               maybePast: present, // this might become the official past, provided the user doesn't cancel
+               original: { value: action.payload }, // save the value we started editing for comparison when FINISHED_EDITING_TITLE
+            }
+
+            case FINISHED_EDITING_TITLE:
+               return R.equals(stateOriginalValue(state), action.payload)
+                  ? {
+                     ...state, // keep the past & future as is
+                     present: reducer(present, action), // update the present
+                     maybePast: null, // reset this
+                     original: null // reset this
+                  }
+                  : {
+                     ...state, // keep the future as is
+                     past: R.append(state.maybePast, past), // the maybePast now becomes part of the real past
+                     present: reducer(present, action), // update the present
+                     original: null, //reset this
+                     maybePast: null, // reset this
+                  }
+
+            case TITLE_EDIT_CANCELLED:
+               return {
+                  ...state, // keep the past & future as is
+                  present: reducer(present, action), // update the present
+                  maybePast: null, // reset this
+                  original: null // reset this
                }
 
          case COMPLETED_SAVE_UPDATES:

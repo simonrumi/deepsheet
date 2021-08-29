@@ -53,6 +53,6 @@ export const LOG = {
     SILLY: 6,
 }
 
-export const CLIENT_LOG_LEVEL = LOG.WARN;
+export const CLIENT_LOG_LEVEL = LOG.DEBUG;
 
 

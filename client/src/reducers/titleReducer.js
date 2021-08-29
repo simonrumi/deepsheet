@@ -7,6 +7,7 @@ import {
    TITLE_EDIT_CANCELLED,
    TITLE_ERROR_DETECTED,
 } from '../actions/titleTypes';
+import { FINISHED_EDITING_TITLE } from '../actions/titleTypes';
 import { FETCHED_SHEET } from '../actions/sheetTypes';
 import { COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
 import { isSomething } from '../helpers';
@@ -40,10 +41,20 @@ const titleReducer = (state = {}, action) => {
       case CHANGED_TITLE_VALUE:
          return { ...state, text: action.payload, isStale: true }
 
+      case FINISHED_EDITING_TITLE:
+         return {
+            ...state,
+            text: decodeText(action.payload.value),
+            isStale: true,
+            isEditingTitle: false,
+            isCallingDb: false,
+            lastUpdated: Date.now()
+         }
+
       case POSTING_UPDATED_TITLE:
          return {
             ...state,
-            isEditingTitle: true,
+            isEditingTitle: false,
             isCallingDb: true,
             isStale: true,
             errorMessage: null,
@@ -82,7 +93,7 @@ const titleReducer = (state = {}, action) => {
       case TITLE_EDIT_CANCELLED:
          return {
             ...state,
-            text: state.initialValue, // restoring the value prior to editing
+            text: decodeText(state.initialValue), // restoring the value prior to editing
             isEditingTitle: false,
             isCallingDb: false,
             isStale: false,

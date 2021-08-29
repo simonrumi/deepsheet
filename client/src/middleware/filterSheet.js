@@ -203,7 +203,7 @@ const setVisibilityForCell = (data, cell) => {
 const getCellsFromData = data => R.pipe(
       getStateFromData, 
       getAllCells 
-   )(data); // TODO BUG here
+   )(data);
 
 const filterCells = data => {
    const cells = getCellsFromData(data);

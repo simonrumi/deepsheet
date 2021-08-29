@@ -1,5 +1,12 @@
 import managedStore from '../store';
-import { UNDO, REDO, STARTED_UNDOABLE_ACTION, COMPLETED_UNDOABLE_ACTION, STARTED_EDITING, FINISHED_EDITING } from './undoTypes';
+import {
+   UNDO,
+   REDO,
+   STARTED_UNDOABLE_ACTION,
+   COMPLETED_UNDOABLE_ACTION,
+   STARTED_EDITING,
+   FINISHED_EDITING,
+} from './undoTypes';
 import { hideAllPopups } from './index';
 
 export const undid = () => {

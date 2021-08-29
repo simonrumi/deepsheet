@@ -1,5 +1,7 @@
 export const OPENED_TITLE_EDITOR = 'opened_title_editor';
 export const CHANGED_TITLE_VALUE = 'changed_title_value';
+export const STARTED_EDITING_TITLE = 'started_editing_title';
+export const FINISHED_EDITING_TITLE = 'finsihed_editing_title';
 export const POSTING_UPDATED_TITLE = 'posting_updated_title';
 export const COMPLETED_TITLE_UPDATE = 'completed_title_update';
 export const TITLE_UPDATE_FAILED = 'title_update_failed';

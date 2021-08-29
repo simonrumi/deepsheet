@@ -16,6 +16,7 @@ import {
    deletedSheets,
    deleteSheetsError,
 } from '../actions/sheetsActions';
+import { postingUpdatedTitle } from '../actions/titleActions';
 import { clearCells } from '../helpers/cellHelpers';
 import { createSheetsTreeFromArray } from '../helpers/sheetsHelpers';
 import { updatedSheetsTree } from '../actions/sheetsActions';
@@ -110,8 +111,8 @@ const saveTitleUpdate = async state => {
    if (stateTitleIsStale(state)) {
       try {
          const sheetId = stateSheetId(state);
-         const titleText = stateTitleText(state);
-         await updateTitleInDB(sheetId, titleText);
+         const text = stateTitleText(state);
+         postingUpdatedTitle({ sheetId, text });
       } catch (err) {
          console.error('error updating title in db');
          throw new Error('Error updating title in db', err);
@@ -132,7 +133,7 @@ const getUpdatedCells = R.curry((state, updatedCellCoordinates) => {
 
 const getChangedCells = state => R.pipe(stateChangedCells, getUpdatedCells(state))(state);
 
-export const saveCellUpdates = async state => {
+const saveCellUpdates = async state => {
    const changedCells = getChangedCells(state);
    const sheetId = stateSheetId(state);
    if (changedCells) {
@@ -147,7 +148,7 @@ export const saveCellUpdates = async state => {
 
 const getChangedMetadata = state => (stateMetadataIsStale(state) ? saveableStateMetadata(state) : null);
 
-export const saveMetadataUpdates = async state => {
+const saveMetadataUpdates = async state => {
    const changedMetadata = getChangedMetadata(state);
    if (changedMetadata) {
       try {
@@ -160,6 +161,8 @@ export const saveMetadataUpdates = async state => {
    }
 };
 
+
+// TODO move this and all related functions to dbOperations.js
 export const saveAllUpdates = async state => {
    // TODO we are calling saveMetadataUpdates & saveCellUpdates serially -- yeech!
    await saveMetadataUpdates(state);
