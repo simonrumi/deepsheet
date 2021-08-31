@@ -1,10 +1,9 @@
 import * as R from 'ramda';
 import managedStore from '../store';
-import { POSTING_UPDATED_TITLE, COMPLETED_TITLE_UPDATE, TITLE_UPDATE_FAILED } from '../actions/titleTypes';
+import { log } from '../clientLogger';
+import { LOG } from '../constants';
 import { POSTING_CREATE_SHEET, COMPLETED_CREATE_SHEET, SHEET_CREATION_FAILED } from '../actions/sheetTypes';
 import { POSTING_UPDATED_METADATA, COMPLETED_SAVE_METADATA, METADATA_UPDATE_FAILED } from '../actions/metadataTypes';
-import { TRIGGERED_FETCH_SHEET } from '../actions/sheetTypes';
-import { FETCHING_SHEETS } from '../actions/sheetsTypes';
 import {
    POSTING_UPDATED_CELLS,
    COMPLETED_SAVE_CELLS,
@@ -15,20 +14,16 @@ import {
    DELETE_SUBSHEET_ID_FAILED,
 } from '../actions/cellTypes';
 import { updatedCells } from '../actions/cellActions';
-import { finishedEditingTitle } from '../actions/titleActions';
-import { updateTitleInDB, fetchSheets, saveAllUpdates } from '../services/sheetServices';
+import { fetchSheets, saveAllUpdates } from '../services/sheetServices';
 import { updateMetadataMutation } from '../queries/metadataMutations';
 import { updateCellsMutation, deleteSubsheetIdMutation } from '../queries/cellMutations';
 import { createSheetMutation } from '../queries/sheetMutations';
 import { isSomething } from '../helpers';
 import { getUserInfoFromCookie } from '../helpers/userHelpers';
-import { getSaveableCellData, decodeText } from '../helpers/cellHelpers';
+import { getSaveableCellData } from '../helpers/cellHelpers';
 import { createDefaultAxisSizing } from '../helpers/axisSizingHelpers';
 import { cellSubsheetIdSetter, dbSheetId } from '../helpers/dataStructureHelpers';
 import { DEFAULT_TOTAL_ROWS, DEFAULT_TOTAL_COLUMNS, DEFAULT_ROW_HEIGHT, DEFAULT_COLUMN_WIDTH } from '../constants';
-
-// note that services/sheetServices.js has a bunch of db operations in it as well.
-// they should be not coming via an action....TODO investigate this situation...should they be in here?
 
 const saveParentSheetData = async (parentSheetCell, parentSheetId, newSheet) => {
    const savableParentSheetCell = R.pipe(
@@ -59,33 +54,8 @@ const createNewSheet = async ({ userId, rows, columns, title, parentSheetId, par
    return createSheetResult;
 };
 
-
 export default store => next => async action => {
    switch (action.type) {
-      case POSTING_UPDATED_TITLE:
-         next(action); // get this action to the reducer before we do the next steps
-         const { sheetId, text } = action.payload;
-         try {
-            const data = await updateTitleInDB(sheetId, text);
-            const decodedText = decodeText(data.title);
-            managedStore.store.dispatch({
-               type: COMPLETED_TITLE_UPDATE,
-               payload: {
-                  text: decodedText,
-                  lastUpdated: Date.now(),
-               },
-            });
-            await fetchSheets(); // this will update the sheetsTree in the store, since some sheet in that tree has a new name
-         } catch (err) {
-            // console.error('did not successfully update the title: err:', err);
-            managedStore.store.dispatch({
-               type: TITLE_UPDATE_FAILED,
-               payload: { ...action.payload, errorMessage: 'title was not updated' },
-            });
-            finishedEditingTitle(decodeText(text)); // even though the db update failed, the title has been changed locally
-         }
-         break;
-
       case POSTING_CREATE_SHEET:
          next(action); // get this action to the reducer before we do the next steps
          try {
@@ -97,10 +67,10 @@ export default store => next => async action => {
             });
             await fetchSheets(); // this will update the sheetsTree in the store, since there's a new sheet to add
          } catch (err) {
-            // console.error('did not successfully create the sheet in the db: err:', err);
+            log({ level: LOG.INFO }, 'did not successfully create the sheet in the db:', err);
             managedStore.store.dispatch({
                type: SHEET_CREATION_FAILED,
-               payload: { errorMessage: 'sheet was not created in the db' },
+               payload: { errorMessage: 'sheet was not created in the db'},
             });
          }
          break;
@@ -118,7 +88,7 @@ export default store => next => async action => {
                },
             });
          } catch (err) {
-            // console.error('Did not successfully update the metadata in the db:', err);
+            log({ level: LOG.INFO }, 'Did not successfully update the metadata in the db:', err);
             managedStore.store.dispatch({
                type: METADATA_UPDATE_FAILED,
                payload: { errorMessage: 'metadata was not updated in the db' },
@@ -149,7 +119,7 @@ export default store => next => async action => {
                return null; // no return value needed - putting here to stop a warning from showing in the console
             })(action.payload.cells);
          } catch (err) {
-            console.error('dbOperations tried to update cells but failed');
+            log({ level: LOG.INFO }, 'dbOperations tried to update cells but failed', err);
             managedStore.store.dispatch({
                type: CELLS_UPDATE_FAILED,
                payload: { errorMessage: 'cells were not updated in the db'}, // don't publish the exact error, err for security reasons
@@ -167,7 +137,7 @@ export default store => next => async action => {
             });
             await fetchSheets(); // this will update the sheetsTree in the store, since a sheet has been unlinked from its parent
          } catch (err) {
-            // console.error('Error deleting subsheetId:', err);
+            log({ level: LOG.INFO }, 'Error deleting subsheetId:', err);
             managedStore.store.dispatch({
                type: DELETE_SUBSHEET_ID_FAILED,
                payload: {
@@ -179,14 +149,14 @@ export default store => next => async action => {
          }
          break;
 
-      case TRIGGERED_FETCH_SHEET:
+      /* case TRIGGERED_FETCH_SHEET:
          next(action); // get this action to the reducer before we do the next steps, so the UI can display "waiting" state
          break;
 
       case FETCHING_SHEETS:
          next(action); // get this action to the reducer before we do the next steps, so the UI can display "waiting" state
          // TODO maybe this needs to have teh functionality moved here from sheetServices
-         break;
+         break; */
 
       default:
          return next(action);

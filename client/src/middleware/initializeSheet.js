@@ -70,7 +70,6 @@ const getOrFindSheet = async (store, sheetId) => {
 };
 
 export default store => next => async action => {
-   // console.log('initializeSheet got action.type', action.type, 'action.payload', action.payload);
    switch (action.type) {
       case TRIGGERED_FETCH_SHEET:
          const state = store.getState();

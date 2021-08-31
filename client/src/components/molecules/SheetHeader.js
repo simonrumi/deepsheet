@@ -26,7 +26,7 @@ import UndoIcon from '../atoms/IconUndo';
 import RedoIcon from '../atoms/IconRedo';
 import { UNDO_TEST_ID, REDO_TEST_ID } from '../../__tests__/testHelpers/constants';
 
-const handleEditTitleClick = (event, initialValue) => {
+const handleEditTitle = (event, initialValue) => {
    event.preventDefault();
    startedEditingTitle(initialValue);
    openedTitleEditor(true);
@@ -83,15 +83,16 @@ const SheetHeader = props => {
 
    return (
       <div className="flex items-center justify-between px-2 py-1" onClick={hidePopups} key="SheetHeader">
-         <Heading text={title} classes="pr-2" />
+         <Heading text={title} classes="pr-2" onClickFn={event => handleEditTitle(event, title)} />
          <div className="flex items-end justify-between">
             {renderSaveIcon()}
             {renderUndoRedoIcons()}
-            <IconEdit height="1.5em" width="1.5em" onClickFn={event => handleEditTitleClick(event, title)} />
             {renderUpArrow()}
          </div>
       </div>
    );
 }
+
+//<IconEdit height="1.5em" width="1.5em" onClickFn={event => handleEditTitle(event, title)} />
 
 export default SheetHeader;

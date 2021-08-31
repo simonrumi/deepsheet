@@ -1,5 +1,7 @@
 import * as R from 'ramda';
 import managedStore from '../store';
+import { log } from '../clientLogger';
+import { LOG } from '../constants';
 import { completedSaveUpdates } from '../actions';
 import { triggeredFetchSheet } from '../actions/sheetActions';
 import { updatedCells, clearedAllCellKeys } from '../actions/cellActions';
@@ -16,8 +18,9 @@ import {
    deletedSheets,
    deleteSheetsError,
 } from '../actions/sheetsActions';
-import { postingUpdatedTitle } from '../actions/titleActions';
-import { clearCells } from '../helpers/cellHelpers';
+import { postingUpdatedTitle, finishedEditingTitle } from '../actions/titleActions';
+import { COMPLETED_TITLE_UPDATE, TITLE_UPDATE_FAILED } from '../actions/titleTypes';
+import { clearCells, decodeText } from '../helpers/cellHelpers';
 import { createSheetsTreeFromArray } from '../helpers/sheetsHelpers';
 import { updatedSheetsTree } from '../actions/sheetsActions';
 import { sheetQuery, sheetsQuery } from '../queries/sheetQueries';
@@ -103,19 +106,33 @@ export const deleteSheet = async (sheetId, userId) => {
    }
 };
 
-export const updateTitleInDB = async (id, title) => {
-   return await titleMutation(id, title);
+const updateTitleInDB = async ({id, title}) => {
+   const data = await titleMutation(id, title);
+   const decodedText = decodeText(data.title);
+   managedStore.store.dispatch({
+      type: COMPLETED_TITLE_UPDATE,
+      payload: {
+         text: decodedText,
+         lastUpdated: Date.now(),
+      },
+   });
 };
 
 const saveTitleUpdate = async state => {
    if (stateTitleIsStale(state)) {
+      const sheetId = stateSheetId(state);
+      const text = stateTitleText(state);
+      postingUpdatedTitle({ sheetId, text });
       try {
-         const sheetId = stateSheetId(state);
-         const text = stateTitleText(state);
-         postingUpdatedTitle({ sheetId, text });
+         await updateTitleInDB({ id: sheetId, title: text });
+         await fetchSheets(); // this will update the sheetsTree in the store, since some sheet in that tree has a new name
       } catch (err) {
-         console.error('error updating title in db');
-         throw new Error('Error updating title in db', err);
+         managedStore.store.dispatch({
+            type: TITLE_UPDATE_FAILED,
+            payload: { errorMessage: 'title was not updated: ' + err },
+         });
+         finishedEditingTitle(decodeText(text)); // even though the db update failed, the title has been changed locally
+         log({ level: LOG.INFO }, 'error updating title in db', err);
       }
       
    }
@@ -161,10 +178,8 @@ const saveMetadataUpdates = async state => {
    }
 };
 
-
-// TODO move this and all related functions to dbOperations.js
 export const saveAllUpdates = async state => {
-   // TODO we are calling saveMetadataUpdates & saveCellUpdates serially -- yeech!
+   // TODO we are calling these updates serially -- yeech!
    await saveMetadataUpdates(state);
    await saveCellUpdates(state);
    await saveTitleUpdate(state);
@@ -177,7 +192,7 @@ export const loadSheet = R.curry(async (state, sheetId) => {
       thenDo: () => stateFocusAbortControl(state).abort(),
       params: { ifParams: state }
    }); // clears keydown listeners if any cell has focus
-   saveAllUpdates(state); // save any changes to the current sheet
+   await saveAllUpdates(state); // save any changes to the current sheet
    clearCells(state); // clear out the current sheet's cells and cell keys
    clearMetadata();
    clearedAllCellKeys();

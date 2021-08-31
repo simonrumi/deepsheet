@@ -8,7 +8,6 @@ import {
 } from '../../actions/titleActions';
 import { isSomething, isNothing } from '../../helpers';
 import {
-   stateSheetId,
    stateTitleText,
    stateTitleErrorMessage,
    stateTitleIsCallingDb,
@@ -19,7 +18,6 @@ import TextInput from './TextInput';
 import ErrorText from '../atoms/ErrorText';
 
 const TitleForm = props => {
-   const sheetId = useSelector(state => stateSheetId(state));
    const titleError = useSelector(state => stateTitleErrorMessage(state));
    const titleText = useSelector(state => stateTitleText(state));
    const isCallingDb = useSelector(state => stateTitleIsCallingDb(state));
@@ -93,7 +91,6 @@ const TitleForm = props => {
          </form>
       );
    }
-
    return render();
 }
 
