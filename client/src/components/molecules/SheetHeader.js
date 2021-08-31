@@ -18,7 +18,6 @@ import {
    stateFuture,
 } from '../../helpers/dataStructureHelpers';
 import Heading from '../atoms/Heading';
-import IconEdit from '../atoms/IconEdit';
 import IconUpArrow from '../atoms/IconUpArrow';
 import SaveIcon from '../atoms/IconSave';
 import LoadingIcon from '../atoms/IconLoading';
@@ -92,7 +91,5 @@ const SheetHeader = props => {
       </div>
    );
 }
-
-//<IconEdit height="1.5em" width="1.5em" onClickFn={event => handleEditTitle(event, title)} />
 
 export default SheetHeader;
