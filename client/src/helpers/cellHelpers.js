@@ -246,3 +246,11 @@ export const cellsInRow = ({ state, rowIndex }) =>
       [],
       getAllCells(state)
    );
+
+export const prepCellsForDb = cells => R.map(
+   R.pipe(
+      encodeCellText, 
+      R.pick(['row', 'column', 'visible', 'content']) // leave out unnecessary fields, like isStale
+   ), 
+   cells // each call to R.pipe will be giving it a cell
+);

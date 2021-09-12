@@ -1,7 +1,6 @@
-import * as R from 'ramda';
 import { gql } from 'apollo-boost';
 import apolloClient from '../services/apolloClient';
-import { encodeCellText } from '../helpers/cellHelpers';
+import { prepCellsForDb } from '../helpers/cellHelpers';
 
 
 const UPDATE_CELLS_MUTATION = gql`
@@ -21,10 +20,10 @@ const UPDATE_CELLS_MUTATION = gql`
 `;
 
 export const updateCellsMutation = async ({ sheetId, cells, userId }) => {
-   const encodedCells = R.map(cell => encodeCellText(cell), cells);
+   const preppedCells = prepCellsForDb(cells);
    const result = await apolloClient.mutate({
       mutation: UPDATE_CELLS_MUTATION,
-      variables: { sheetId, cells: encodedCells, userId },
+      variables: { sheetId, cells: preppedCells, userId },
    });
    return result.data?.updateCells || null; // .updateCells comes from the name in the mutation above
 };

@@ -3,12 +3,51 @@ import { useSelector } from 'react-redux';
 import * as R from 'ramda';
 import managedStore from '../../store';
 import { DEFAULT_COLUMN_WIDTH } from '../../constants';
+import { DEFAULT_TITLE_FOR_SUBSHEET_FROM_CELL_RANGE } from '../displayText';
 import { getObjectFromArrayByKeyValue, ifThen, isSomething, arrayContainsSomething } from '../../helpers';
-import { stateColumnWidths, stateCellRangeCells, stateCellRange, cellText } from '../../helpers/dataStructureHelpers';
+import { getUserInfoFromCookie } from '../../helpers/userHelpers';
+import {
+   stateColumnWidths,
+   stateCellRangeCells,
+   stateCellRange,
+   cellText,
+   stateSheetId,
+} from '../../helpers/dataStructureHelpers';
+import {
+   calculateTotalForRow,
+   calculateTotalForColumn,
+   orderCellsInRange,
+   createRowHeights,
+   createColumnWidths,
+} from '../../helpers/rangeToolHelpers';
 import { updatedClipboard } from '../../actions/clipboardActions';
+import { createdSheet } from '../../actions/sheetActions';
 import CopyIcon from '../atoms/IconCopy';
 import NewDocIcon from '../atoms/IconNewDoc';
 import Clipboard from '../organisms/Clipboard';
+
+const triggerCreatedSheetAction = ({ cellRange }) => {
+    const rows = calculateTotalForRow({ cells: cellRange.cells });
+    const columns = calculateTotalForColumn({ cells: cellRange.cells });
+    const orderedCells = orderCellsInRange(cellRange.cells);
+    const title = DEFAULT_TITLE_FOR_SUBSHEET_FROM_CELL_RANGE;
+    const parentSheetId = stateSheetId(managedStore.state);
+    const parentSheetCell = orderedCells[0];
+    const rowHeights = createRowHeights({ totalRows: rows, orderedCellRange: orderedCells });
+    const columnWidths = createColumnWidths({ totalColumns: columns, orderedCellRange: orderedCells }); 
+    const { userId } = getUserInfoFromCookie();
+    createdSheet({
+        rows,
+        columns,
+        title,
+        parentSheetId,
+        parentSheetCell,
+        rowHeights,
+        columnWidths,
+        userId,
+        cellRange: orderedCells,
+    });
+};
 
 const parentClasses = 'absolute top-0 z-10 flex flex-col border border-grey-blue p-1 bg-white';
 
@@ -46,9 +85,7 @@ const RangeTools = ({ cell }) => {
             </div>
             <NewDocIcon
                 classes="w-6 flex-1 mb-1"
-                onMouseDownFn={() => {
-                    alert('clicked new doc icon');
-                }}
+                onMouseDownFn={() => triggerCreatedSheetAction({ cellRange: stateCellRange(managedStore.state),  })}
             />
         </div>
      );

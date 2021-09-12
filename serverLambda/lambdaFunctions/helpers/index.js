@@ -2,6 +2,9 @@ const R = require('ramda');
 
 const isNothing = R.either(R.isNil, R.isEmpty);
 const isSomething = R.pipe(isNothing, R.not);
+
+const isObject = R.pipe(R.type, R.equals('Object'));
+
 const arrayContainsSomething = arr => 
    isSomething(arr) && 
    R.reduce(
@@ -9,6 +12,14 @@ const arrayContainsSomething = arr =>
       false,
       arr
    );
+
+const getObjectFromArrayByKeyValue = R.curry((key, value, arr) =>
+   isSomething(arr) ? R.find(item => isObject(item) && R.propEq(key, value, item), arr) || null : null
+);
+
+const getCellFromCells = ({ row, column, cells }) => arrayContainsSomething(cells) 
+    ? R.find(cell => isObject(cell) && R.propEq('row', row, cell) && R.propEq('column', column, cell), cells)
+   : null;
    
 // use like this:
 // runIfSomething(myFn, thingToTest, extraParameters)
@@ -40,7 +51,10 @@ module.exports = {
    isNothing,
    isSomething,
    arrayContainsSomething,
+   getObjectFromArrayByKeyValue,
+   getCellFromCells,
    runIfSomething,
+   mapWithIndex,
    forLoopMap,
    forLoopReduce,
 };

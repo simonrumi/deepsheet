@@ -158,7 +158,7 @@ const maybeConvertBoolToFunction = (maybeFunc, params) => R.cond([
    // if already a function, return a function which executes maybeFn with the params 
    [
       funcOrBool => typeof funcOrBool === 'function', 
-      funcOrBool => () => Array.isArray(params) ? funcOrBool(...params) : funcOrBool(params), // note: if there are more than one param then params is an array
+      funcOrBool => () => Array.isArray(params) ? funcOrBool(...params) : funcOrBool(params)
    ],
    // if a boolean, return a function that returns the boolean
    [funcOrBool => typeof funcOrBool === 'boolean', funcOrBool => () => funcOrBool],
@@ -196,6 +196,10 @@ const maybeConvertArrToFunction = (maybeArr, params) => R.cond([
  *    ],
  *    params: { ifParams: [2,3], thenParams: 42 }
  * });
+ * 
+ * CAUTION if any of the individual params are arrays, then they should be submitted within a parent array, 
+ * otherwise ifThen will assume each element of the array is a separate param.. for example:
+ *    params: { ifParams: [ ['array', 'param'] ], thenParams: [ [1,2,3] ] }
  */
 export const ifThen = spicyCurry(
    ({ ifCond, thenDo, params }) => {
@@ -227,6 +231,10 @@ export const ifThen = spicyCurry(
  *    elseDo: ({ failMessage }) => 'Error: ' + failMessage,
  *    params: { ifParams: [2, 3], thenParams: 42, elseParams: 'was not equal to the ifValue' }
  * });
+ * 
+ * CAUTION if any of the individual params are arrays, then they should be submitted within a parent array, 
+ * otherwise ifThenElse will assume each element of the array is a separate param.. for example:
+ *    params: { ifParams: [ ['array', 'param'] ], thenParams: [ [1,2,3] ], elseParams: 'foo' }
  */
 export const ifThenElse = spicyCurry(
    ({ ifCond, thenDo, elseDo, params }) => {

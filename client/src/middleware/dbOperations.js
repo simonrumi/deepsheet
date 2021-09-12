@@ -18,38 +18,59 @@ import { fetchSheets, saveAllUpdates } from '../services/sheetServices';
 import { updateMetadataMutation } from '../queries/metadataMutations';
 import { updateCellsMutation, deleteSubsheetIdMutation } from '../queries/cellMutations';
 import { createSheetMutation } from '../queries/sheetMutations';
-import { isSomething } from '../helpers';
+import { isSomething, arrayContainsSomething, ifThenElse } from '../helpers';
 import { getUserInfoFromCookie } from '../helpers/userHelpers';
 import { getSaveableCellData } from '../helpers/cellHelpers';
 import { createDefaultAxisSizing } from '../helpers/axisSizingHelpers';
-import { cellSubsheetIdSetter, dbSheetId } from '../helpers/dataStructureHelpers';
+import { cellSubsheetIdSetter, cellTextSetter, dbSheetId } from '../helpers/dataStructureHelpers';
 import { DEFAULT_TOTAL_ROWS, DEFAULT_TOTAL_COLUMNS, DEFAULT_ROW_HEIGHT, DEFAULT_COLUMN_WIDTH } from '../constants';
+import { DEFAULT_TITLE_FOR_SUBSHEET_FROM_CELL_RANGE } from '../components/displayText';
 
-const saveParentSheetData = async (parentSheetCell, parentSheetId, newSheet) => {
-   const savableParentSheetCell = R.pipe(
+const saveParentSheetData = async ({ parentSheetCell, parentSheetId, newSheet, cellRange }) => {
+   const parentCellWithSubsheetId = R.pipe(
       getSaveableCellData,
-      R.pipe(dbSheetId, cellSubsheetIdSetter)(newSheet)
+      R.pipe(dbSheetId, cellSubsheetIdSetter)(newSheet),
    )(parentSheetCell);
+   const savableParentSheetCell = ifThenElse({
+      ifCond: arrayContainsSomething, thenDo: cellTextSetter, elseDo: R.identity,
+      params: { 
+         ifParams: [cellRange],
+         thenParams: [ DEFAULT_TITLE_FOR_SUBSHEET_FROM_CELL_RANGE, parentCellWithSubsheetId ],
+         elseParams: parentCellWithSubsheetId
+      }
+   });
    await updatedCells({ sheetId: parentSheetId, cells: [savableParentSheetCell] });
 };
 
-const createNewSheet = async ({ userId, rows, columns, title, parentSheetId, parentSheetCell, rowHeights, columnWidths }) => {
+const createNewSheet = async ({
+   userId,
+   rows,
+   columns,
+   title,
+   parentSheetId,
+   parentSheetCell,
+   rowHeights,
+   columnWidths,
+   cellRange,
+}) => {
    // note calling function must wrap createNewSheet in a try-catch block since we're not doing that here
    rows = rows || DEFAULT_TOTAL_ROWS;
-   columns = columns || DEFAULT_TOTAL_COLUMNS
+   columns = columns || DEFAULT_TOTAL_COLUMNS;
    rowHeights = rowHeights || createDefaultAxisSizing(rows, DEFAULT_ROW_HEIGHT);
    columnWidths = columnWidths || createDefaultAxisSizing(columns, DEFAULT_COLUMN_WIDTH);
+   cellRange = cellRange || [];
    const createSheetResult = await createSheetMutation({
       userId,
       rows,
       columns,
       title,
       parentSheetId,
-      rowHeights, 
+      rowHeights,
       columnWidths,
+      cellRange
    });
    if (isSomething(parentSheetId)) {
-      await saveParentSheetData(parentSheetCell, parentSheetId, createSheetResult);
+      await saveParentSheetData({ parentSheetCell, parentSheetId, newSheet: createSheetResult, cellRange });
    }
    return createSheetResult;
 };
@@ -61,6 +82,7 @@ export default store => next => async action => {
          try {
             await saveAllUpdates(store.getState());
             const response = await createNewSheet(action.payload);
+            console.log('dbOperations--POSTING_CREATE_SHEET got response', response); // note that we get the expected sheet object here (not buried within some hierarchy)
             managedStore.store.dispatch({
                type: COMPLETED_CREATE_SHEET,
                payload: { sheet: response },
@@ -148,15 +170,6 @@ export default store => next => async action => {
             });
          }
          break;
-
-      /* case TRIGGERED_FETCH_SHEET:
-         next(action); // get this action to the reducer before we do the next steps, so the UI can display "waiting" state
-         break;
-
-      case FETCHING_SHEETS:
-         next(action); // get this action to the reducer before we do the next steps, so the UI can display "waiting" state
-         // TODO maybe this needs to have teh functionality moved here from sheetServices
-         break; */
 
       default:
          return next(action);

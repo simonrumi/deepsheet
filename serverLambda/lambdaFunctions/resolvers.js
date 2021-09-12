@@ -94,6 +94,7 @@ module.exports = db => ({
                }
                return err;
             }
+            log({ level: LOG.DEBUG}, 'resolvers.Mutation.createSheet will return newSheet:', newSheet);
             return newSheet;
          } catch (err) {
             log({ level: LOG.ERROR}, 'resolvers.Mutation.createSheet Error creating sheet:', err.message);

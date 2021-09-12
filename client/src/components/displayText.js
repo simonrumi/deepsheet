@@ -1,4 +1,7 @@
 import React from 'react';
+
+export const DEFAULT_TITLE_FOR_SUBSHEET_FROM_CELL_RANGE = 'Sub-sheet created from a cell range';
+
 export const menuSaveText = () => (
    <span>
       <span className="underline">Save</span> my Sheet!
@@ -27,3 +30,5 @@ export const loginModalText = () => 'Log me in so I can save my sheet:'
 export const networkErrorText = () => '(Your session probably timed out)';
 
 export const cellRangePasteError = () => 'You can\'t paste over cells that link to other sheets';
+
+

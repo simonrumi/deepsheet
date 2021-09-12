@@ -7,8 +7,8 @@ import { deleteSubsheetId } from '../../actions/cellActions';
 import { clearedFocus } from '../../actions/focusActions';
 import { cellIsCallingDb } from '../../helpers/dataStructureHelpers';
 import { getObjectFromArrayByKeyValue } from '../../helpers';
-import IconDownToSubsheet from '../atoms/IconDownToSubsheet';
-import IconUnlinkSubsheet from '../atoms/IconUnlinkSubsheet';
+import DownToSubsheetIcon from '../atoms/IconDownToSubsheet';
+import UnlinkSubsheetIcon from '../atoms/IconUnlinkSubsheet';
 import IconLoading from '../atoms/IconLoading';
 import { DEFAULT_COLUMN_WIDTH } from '../../constants';
 
@@ -56,13 +56,13 @@ const SubsheetCellTools = ({ cell, cellHasFocus }) => {
          return (
             <div className="relative" >
                <div className={parentClasses} style={leftPositioning}>
-                  <IconDownToSubsheet
+                  <DownToSubsheetIcon
                      classes="w-6 flex-1 mb-1"
                      onMouseDownFn={() => {
                         loadSheet(managedStore.state, subsheetId);
                      }}
                   />
-                  <IconUnlinkSubsheet classes="w-6 flex-1" onMouseDownFn={unlinkSubsheet} />
+                  <UnlinkSubsheetIcon classes="w-6 flex-1" onMouseDownFn={unlinkSubsheet} />
                </div>
             </div>
          );

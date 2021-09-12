@@ -3,7 +3,7 @@ const { log } = require('./helpers/logger');
 const { LOG } = require('../constants');
 
 const handler = async (event, context, callback) => {
-   log({ level: LOG.VERBOSE }, 'lambda ENVIRONMENT VARIABLES\n' + JSON.stringify(process.env, null, 2));
+   log({ level: LOG.SILLY }, 'lambda ENVIRONMENT VARIABLES\n' + JSON.stringify(process.env, null, 2));
 
    const server = await createServer();
 

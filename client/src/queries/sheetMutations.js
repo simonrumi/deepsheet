@@ -1,5 +1,6 @@
 import { gql } from 'apollo-boost';
 import apolloClient from '../services/apolloClient';
+import { prepCellsForDb } from '../helpers/cellHelpers';
 
 const CREATE_SHEET_MUTATION = gql`
    mutation CreateSheet(
@@ -10,6 +11,7 @@ const CREATE_SHEET_MUTATION = gql`
       $parentSheetId: ID
       $rowHeights: [SheetSizingInput]
       $columnWidths: [SheetSizingInput]
+      $cellRange: [CellInput]
    ) {
       createSheet(
          input: {
@@ -20,6 +22,7 @@ const CREATE_SHEET_MUTATION = gql`
             parentSheetId: $parentSheetId
             rowHeights: $rowHeights, 
             columnWidths: $columnWidths,
+            cellRange: $cellRange,
          }
       ) {
          id
@@ -80,10 +83,20 @@ export const createSheetMutation = async ({
    parentSheetId,
    rowHeights, 
    columnWidths,
+   cellRange,
 }) => {
    const response = await apolloClient.mutate({
       mutation: CREATE_SHEET_MUTATION,
-      variables: { userId, rows, columns, title, parentSheetId, rowHeights, columnWidths },
+      variables: {
+         userId,
+         rows,
+         columns,
+         title,
+         parentSheetId,
+         rowHeights,
+         columnWidths,
+         cellRange: prepCellsForDb(cellRange),
+      },
    });
    return response.data.createSheet; // "createSheet" comes from mutation above
 };
