@@ -22,7 +22,7 @@ import {
    stateSheetId,
 } from '../../helpers/dataStructureHelpers';
 import { updatedClipboard } from '../../actions/clipboardActions';
-import { clearedCellRange, clearedFocus } from '../../actions/focusActions';
+import { clearedCellRange } from '../../actions/focusActions';
 import { createdSheet } from '../../actions/sheetActions';
 import CopyIcon from '../atoms/IconCopy';
 import NewDocIcon from '../atoms/IconNewDoc';
