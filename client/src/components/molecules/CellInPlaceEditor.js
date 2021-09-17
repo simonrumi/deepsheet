@@ -115,6 +115,14 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
          case 9: // tab
             manageTab({ event, cell, callback: () => finalizeCellContent(cell, cellInPlaceEditorRef) });
             break;
+         case 86: // "V" for paste (copy is in RangeTools)
+            if (event.ctrlKey) {
+               event.preventDefault();
+               pasteCellRangeToTarget(cell);
+               manageBlur(event);
+            }
+            break;
+            
          default:
       }
    };

@@ -35,26 +35,32 @@ const onCellClick = (event, cell) => {
    });
 }
 
-const createClassNames = (classes, cell, isEndCell) => {
-   const backgroundClasses = cell.inCellRange && !isEndCell ? 'bg-light-light-blue ' : ''; 
+const createClassNames = ({ classes, inCellRange, isEndCell }) => {
+   const backgroundClasses = inCellRange && !isEndCell ? 'bg-light-light-blue ' : ''; 
    const cellBaseClasses = 'regular-cell col-span-1 row-span-1 w-full h-full p-0.5 overflow-hidden text-dark-dark-blue border-t border-l ';
    const otherClasses = classes ? classes : '';
    return cellBaseClasses + backgroundClasses + otherClasses;
 };
 
-const Cell = React.memo(({ row, column, classes, blankCell, endCell, isVisible }) => {
+// TODO the cell range is clears properly when a new cell is clicked on, so simply need to find out
+// what that path is, and make sure the same thing happens when tabbing
+const Cell = React.memo(({ row, column, classes, blankCell, endCell, isVisible  }) => {
    const cellKey = createCellKey(row, column);
    const cell = useSelector(state => statePresent(state)[cellKey]);
    const cellHasFocus = useSelector(state => isCellFocused(cell, state));
    const [cellRef, positioning] = usePositioning();
 
+   const inCellRange = cell.inCellRange;
+   console.log('Cell.js row', cell.row, 'column', cell.column, 'got inCellRange', inCellRange);
+
    const renderRegularCell = cell => {
+      console.log('Cell.js--renderRegularCell row', cell.row, 'column', cell.column, 'will get createClassNames({ classes, inCellRange })', createClassNames({ classes, inCellRange }));
       const text = cellText(cell);
       const cellId = createCellId(row, column);
       return (
          <div
             ref={cellRef}
-            className={createClassNames(classes, cell)}
+            className={createClassNames({ classes, inCellRange })}
             onClick={event => onCellClick(event, cell)}
             id={cellId}
             data-testid={cellId}
@@ -71,7 +77,7 @@ const Cell = React.memo(({ row, column, classes, blankCell, endCell, isVisible }
          </div>
       );
 
-   const renderBlankCell = () => <BlankCell classes={createClassNames(classes, cell, endCell)}/>;
+   const renderBlankCell = () => <BlankCell classes={createClassNames({ classes, inCellRange, isEndCell: endCell })}/>;
 
    const renderSubsheetCell = cell => <SubsheetCell cell={cell} cellHasFocus={cellHasFocus} />;
 

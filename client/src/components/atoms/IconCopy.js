@@ -9,10 +9,11 @@ const IconCopy = ({
    viewBox = '0 0 512 512',
    onClickFn,
    onMouseDownFn,
+   copiedRange,
 }) => {
     const allSvgClasses = 'fill-current ' + svgClasses;
-
-    const copyIconClasses = 'cursor-pointer w-6 flex-1 mb-1 text-subdued-blue hover:text-vibrant-blue';
+    const colorClasses = copiedRange ? 'text-burnt-orange' : 'text-subdued-blue hover:text-vibrant-blue';
+    const copyIconClasses = 'cursor-pointer w-6 flex-1 mb-1 ' + colorClasses;
     return (
     <div className={copyIconClasses} onClick={onClickFn} onMouseDown={onMouseDownFn}>
             <svg

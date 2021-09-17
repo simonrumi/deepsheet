@@ -147,8 +147,12 @@ const pasteToTargetCells = targetMap => R.forEach(
 );
 
 const makeRoomForTargetCells = ({ cellMapping, extraRows, extraColumns }) => {
-    insertNewColumns(extraColumns);
-    insertNewRows(extraRows);
+    if (extraColumns > 0) {
+        insertNewColumns(extraColumns);
+    }
+    if (extraRows > 0) {
+        insertNewRows(extraRows);
+    }
     return cellMapping;
 }
 

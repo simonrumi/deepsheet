@@ -37,6 +37,10 @@ const createColumnWidthItem = ({ oneCellPerColumn, columnIndex }) => R.pipe(
     R.assoc('size', R.__, { index: columnIndex }) // keep the size property but replace the index with columnIndex, because we're remapping the cellRange to start at cell A1
 )(oneCellPerColumn, managedStore.state);
 
+// note that here on the client, the columnWidths and the rowHeights are being moved from their original 
+// range positions to start at cell A1
+// however the same transformation of the cells is done on the server
+// this is yeechy...it would probably be more in keeping with the thin-server approach to do it all on the client 
 export const createColumnWidths = ({ totalColumns, orderedCellRange }) => {
     const oneCellPerColumn = getOneCellPerColumn(orderedCellRange);
     return forLoopMap(columnIndex =>

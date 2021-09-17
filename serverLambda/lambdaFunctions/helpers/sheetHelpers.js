@@ -56,6 +56,9 @@ const remapRows = ({ cellRange, rowRemapIndex = 0, remappedCells = [] }) => {
       : allRemappedCells;
 }
 
+// note that here on the server, the cells are being moved from their original range positions to start at cell A1
+// however the same transformation of the columnWidths and the rowHeights is done on the clien
+// this is yeechy...it would probably be more in keeping with the thin-server approach to do it all on the client 
 const createAllCells = ({ cellRange, totalColumns, totalRows }) => {
    const remappedCells = remapRows({ cellRange });
    return forLoopReduce(
