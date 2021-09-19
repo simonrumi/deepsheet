@@ -22,6 +22,8 @@ import {
    stateCellRangeFrom,
    stateCellRangeTo,
    stateClipboard,
+   stateClipboardRangeFrom,
+   stateClipboardRangeTo,
 } from '../../helpers/dataStructureHelpers';
 import NewDocIcon from '../atoms/IconNewDoc';
 import CloseIcon from '../atoms/IconClose';
@@ -102,6 +104,10 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
       updateCellsInRange(false); // false means we're finding then removing all the cells from the range
       clearedFocus();
    }
+
+   const checkForCellRange = () => 
+      R.pipe(stateClipboardRangeFrom, isSomething)(managedStore.state) && 
+      R.pipe(stateClipboardRangeTo, isSomething)(managedStore.state);
    
    const keyBindingsCellInPlaceEditor = event => {
       // use https://keycode.info/ to get key values
@@ -116,7 +122,7 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
             manageTab({ event, cell, callback: () => finalizeCellContent(cell, cellInPlaceEditorRef) });
             break;
          case 86: // "V" for paste (copy is in RangeTools)
-            if (event.ctrlKey) {
+            if (event.ctrlKey && checkForCellRange()) {
                event.preventDefault();
                pasteCellRangeToTarget(cell);
                manageBlur(event);

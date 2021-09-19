@@ -77,7 +77,6 @@ export const updateCellsInRange = addingCells => {
     const toRow = directionForward ? toCell.row : fromCell.row;
     const fromColumn = directionForward ? fromCell.column : toCell.column;
     const toColumn = directionForward ? toCell.column : fromCell.column;
-    console.log('focusHelpers--updateCellsInRange got toColumn', toColumn, 'toRow', toRow);
     if (isNothing(fromRow) || isNothing(toRow) || isNothing(fromColumn) || isNothing(toColumn)) {
         // this should never happen
         console.error('focusHelpers.updateCellsInRange cannot proceed because it got fromRow', fromRow, 'toRow', toRow, 'fromColumn', fromColumn, 'toColumn', toColumn);
@@ -88,7 +87,6 @@ export const updateCellsInRange = addingCells => {
         if (column >= fromColumn && column <= toColumn) {
             const cellKey = createCellKey(row, column);
             const cell = statePresent(managedStore.state)[cellKey];
-            console.log('focusHelpers.updateCellsInRange.listCellsInRow for cell at row', row, 'column', column, 'got addingCells', addingCells);
             addingCells ? addCellToRange(cell) : removeCellFromRange(cell);
             listCellsInRow(row, ++column, fromColumn, toColumn);
         }

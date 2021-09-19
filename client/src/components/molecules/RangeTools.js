@@ -70,14 +70,9 @@ const copyRange = () => {
     updatedClipboard({ text: allTextInRange, cellRange: stateCellRange(managedStore.state) });
 }
 
-// TODO this isn't quite working to clear the cell range...should just do what CellInPLaceEditor does
-// seems like everything is happening correctly...but somehow the last cell isn't getting the trigger to re-render
 const tabAwayFromRange = () => {
-    console.log('**** TAB ****');
     updateCellsInRange(false); // false means we're finding then removing all the cells from the range
-    console.log('**** TAB updateCellsInRange finished ****');
     clearedCellRange();
-    console.log('**** TAB clearedCellRange finished ****');
 }
 
 const RangeTools = ({ cell }) => {

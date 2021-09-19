@@ -42,20 +42,16 @@ const createClassNames = ({ classes, inCellRange, isEndCell }) => {
    return cellBaseClasses + backgroundClasses + otherClasses;
 };
 
-// TODO the cell range is clears properly when a new cell is clicked on, so simply need to find out
-// what that path is, and make sure the same thing happens when tabbing
-const Cell = React.memo(({ row, column, classes, blankCell, endCell, isVisible  }) => {
+const Cell = React.memo(({ row, column, classes, blankCell, endCell, isVisible }) => {
    const cellKey = createCellKey(row, column);
    const cell = useSelector(state => statePresent(state)[cellKey]);
    const cellHasFocus = useSelector(state => isCellFocused(cell, state));
    const [cellRef, positioning] = usePositioning();
 
    const inCellRange = cell.inCellRange;
-   console.log('Cell.js row', cell.row, 'column', cell.column, 'got inCellRange', inCellRange);
 
    const renderRegularCell = cell => {
-      console.log('Cell.js--renderRegularCell row', cell.row, 'column', cell.column, 'will get createClassNames({ classes, inCellRange })', createClassNames({ classes, inCellRange }));
-      const text = cellText(cell);
+     const text = cellText(cell);
       const cellId = createCellId(row, column);
       return (
          <div
@@ -83,7 +79,7 @@ const Cell = React.memo(({ row, column, classes, blankCell, endCell, isVisible  
 
    const renderEndOfRangeCell = cell => {
       return (
-         <div className="w-full h-full relative bg-light-light-blue">
+         <div className="w-full h-full relative">
             {renderRegularCell(cell)}
             <RangeTools cell={cell} />
          </div>

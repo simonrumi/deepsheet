@@ -243,6 +243,10 @@ const cellVisibleLens = R.lensProp('visible');
 export const cellVisible = cell => R.view(cellVisibleLens, cell);
 export const cellVisibleSetter = R.curry((newVisibility, cell) => R.set(cellVisibleLens, newVisibility, cell));
 
+const cellInCellRangeLens = R.lensProp('inCellRange');
+export const cellInCellRange = cell => R.view(cellInCellRangeLens, cell);
+export const cellInCellRangeSetter = R.curry((newValue, cell) => R.set(cellInCellRangeLens, newValue, cell));
+
 const cellIsCallingDbLens = R.lensProp('isCallingDb');
 export const cellIsCallingDb = cell => R.view(cellIsCallingDbLens, cell);
 export const cellIsCallingDbSetter = R.curry((value, cell) => R.set(cellIsCallingDbLens, value, cell));
