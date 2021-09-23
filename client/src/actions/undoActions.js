@@ -20,12 +20,10 @@ export const redid = () => {
 };
 
 export const startedUndoableAction = message => {
-   console.log('undoActions--startedUndoableAction got message', message);
    managedStore.store.dispatch({ type: STARTED_UNDOABLE_ACTION, payload: message });
 };
 
 export const completedUndoableAction = message => {
-   console.log('undoActions--completedUndoableAction got message', message);
    managedStore.store.dispatch({ type: COMPLETED_UNDOABLE_ACTION, payload: message });
 };
 

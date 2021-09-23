@@ -6,7 +6,7 @@ import { DEFAULT_COLUMN_WIDTH } from '../../constants';
 import { DEFAULT_TITLE_FOR_SUBSHEET_FROM_CELL_RANGE } from '../displayText';
 import { getObjectFromArrayByKeyValue, ifThen, isSomething, arrayContainsSomething } from '../../helpers';
 import { getUserInfoFromCookie } from '../../helpers/userHelpers';
-import { manageKeyBindings, manageTab, updateCellsInRange } from '../../helpers/focusHelpers';
+import { manageKeyBindings, manageTab, updateCellsInRange, orderFromAndToAxes } from '../../helpers/focusHelpers';
 import {
     calculateTotalForRow,
     calculateTotalForColumn,
@@ -15,11 +15,16 @@ import {
     createColumnWidths,
  } from '../../helpers/rangeToolHelpers';
 import {
-   stateColumnWidths,
-   stateCellRangeCells,
-   stateCellRange,
-   cellText,
-   stateSheetId,
+    stateColumnWidths,
+    stateCellRangeCells,
+    stateCellRangeFrom,
+    stateCellRangeTo,
+    stateCellRange,
+    cellText,
+    cellRow,
+    cellColumn,
+    cellInCellRange,
+    stateSheetId,
 } from '../../helpers/dataStructureHelpers';
 import { updatedClipboard } from '../../actions/clipboardActions';
 import { clearedCellRange } from '../../actions/focusActions';
@@ -54,12 +59,24 @@ const triggerCreatedSheetAction = ({ cellRange }) => {
 const parentClasses = 'absolute top-0 z-10 flex flex-col border border-grey-blue p-1 bg-white';
 
 const getCellRangeAsText = () => {
+    const { toRow, toColumn } = R.converge(
+        orderFromAndToAxes, 
+        [ stateCellRangeFrom, stateCellRangeTo ]
+    )(managedStore.state); // this param is passed to both stateCellRangeFrom & stateCellRangeTo
+
     const cells = stateCellRangeCells(managedStore.state);
     return ifThen({
         ifCond: arrayContainsSomething,
         thenDo: R.reduce(
-            (accumulator, cell) => isSomething(cellText(cell)) ? accumulator + cellText(cell) + '\t' : accumulator,
-            ''
+            (accumulator, cell) => {
+                const cellEndChar = cellColumn(cell) === toColumn
+                    ? cellRow(cell) === toRow 
+                        ? '' // at the very last cell so no end char is needed
+                        : '\n' // at the end of a row, so add a newline
+                    : '\t'; // in the middle of a row, so add a tab
+                return isSomething(cellText(cell)) ? accumulator + cellText(cell) + cellEndChar : accumulator + cellEndChar
+            },
+            '' // initial value is an empty string
         ),
         params: { ifParams: [cells], thenParams: [cells] } // since cells is an array and since params could be arrays of individual parameters, need to put cells into a parent array for ifThen to send cells as a single parameter, rather than many
     });
@@ -67,6 +84,7 @@ const getCellRangeAsText = () => {
 
 const copyRange = () => {
     const allTextInRange = getCellRangeAsText();
+    console.log('RangeTools--copyRange got allTextInRange', allTextInRange);
     updatedClipboard({ text: allTextInRange, cellRange: stateCellRange(managedStore.state) });
 }
 
@@ -84,6 +102,7 @@ const RangeTools = ({ cell }) => {
         left: widthObj?.size || DEFAULT_COLUMN_WIDTH,
         top: 0
     }
+    const inCellRange = cellInCellRange(cell);
 
     const keyBindingsRangeTool = event => {
         // use https://keycode.info/ to get key values
@@ -109,10 +128,13 @@ const RangeTools = ({ cell }) => {
     }
 
     useEffect(() => {
-        manageKeyBindings({ event: null, cell, rangeToolsRef, keyBindings: keyBindingsRangeTool });
-    })
+        if (inCellRange) {
+            manageKeyBindings({ event: null, cell, rangeToolsRef, keyBindings: keyBindingsRangeTool });
+        }
+    });
     
-    return (
+    return inCellRange 
+        ? (
         <div className={parentClasses} style={topLeftPositioning}>
             <div onMouseDown={handleCopyRange}>
                 <Clipboard />
@@ -122,8 +144,8 @@ const RangeTools = ({ cell }) => {
                 classes="w-6 flex-1 mb-1"
                 onMouseDownFn={() => triggerCreatedSheetAction({ cellRange: stateCellRange(managedStore.state) })}
             />
-        </div>
-     );
+        </div>)
+        : null; // if we're not in a cell range don't do anything
      /* Note that onMouseDown is fired before onBlur, whereas onClick is after onBlur. 
      * this used to be critical when the editor was separated from the cell. Might not be now, but using
      * onMouseDown is not hurting */
