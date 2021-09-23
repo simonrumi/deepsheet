@@ -5,6 +5,7 @@ import { updatedCell, hasChangedCell } from '../../actions/cellActions';
 import { createdSheet } from '../../actions/sheetActions';
 import { clearedFocus, updatedFocusRef, clearedCellRange } from '../../actions/focusActions';
 import { startedEditing, finishedEditing } from '../../actions/undoActions'; 
+import { updatedClipboard } from '../../actions/clipboardActions';
 import { isSomething, ifThen } from '../../helpers';
 import { getUserInfoFromCookie } from '../../helpers/userHelpers';
 import { createDefaultAxisSizing } from '../../helpers/axisSizingHelpers';
@@ -12,6 +13,7 @@ import { manageKeyBindings, manageTab, updateCellsInRange } from '../../helpers/
 import { pasteCellRangeToTarget } from '../../helpers/clipboardHelpers';
 import {
    stateSheetId,
+   stateCell,
    cellText,
    cellRow,
    cellColumn,
@@ -25,6 +27,7 @@ import {
    stateClipboardRangeFrom,
    stateClipboardRangeTo,
 } from '../../helpers/dataStructureHelpers';
+import Clipboard from '../organisms/Clipboard';
 import NewDocIcon from '../atoms/IconNewDoc';
 import CloseIcon from '../atoms/IconClose';
 import PasteIcon from '../atoms/IconPaste';
@@ -121,7 +124,14 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
          case 9: // tab
             manageTab({ event, cell, callback: () => finalizeCellContent(cell, cellInPlaceEditorRef) });
             break;
-         case 86: // "V" for paste (copy is in RangeTools)
+
+         case 67: // "C" for copy
+            if (event.ctrlKey) {
+               const text = R.pipe(stateCell, cellText)(managedStore.state);
+               updatedClipboard({ text, cellRange: null });
+            }
+            break;
+         case 86: // "V" for paste 
             if (event.ctrlKey && checkForCellRange()) {
                event.preventDefault();
                pasteCellRangeToTarget(cell);
@@ -174,6 +184,7 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
                <CloseIcon classes="bg-white mb-1" svgClasses="w-6" onMouseDownFn={handleCancel} />
                { renderPasteIcon() }
                <NewDocIcon classes="mb-1" svgClasses="w-6" onMouseDownFn={() => triggerCreatedSheetAction(cell)} />
+               <Clipboard />
             </div>
          </div>
       );

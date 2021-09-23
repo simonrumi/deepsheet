@@ -82,7 +82,6 @@ export default store => next => async action => {
          try {
             await saveAllUpdates(store.getState());
             const response = await createNewSheet(action.payload);
-            console.log('dbOperations--POSTING_CREATE_SHEET got response', response); // note that we get the expected sheet object here (not buried within some hierarchy)
             managedStore.store.dispatch({
                type: COMPLETED_CREATE_SHEET,
                payload: { sheet: response },

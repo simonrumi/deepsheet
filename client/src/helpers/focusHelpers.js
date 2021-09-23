@@ -7,6 +7,8 @@ import {
     stateCellRangeFrom,
     stateCellRangeTo,
     statePresent,
+    cellRow,
+    cellColumn,
 } from './dataStructureHelpers';
 import { tabToNextVisibleCell, createCellKey } from './cellHelpers';
 import { isSomething, isNothing, ifThen, ifThenElse, } from '.';
@@ -62,7 +64,20 @@ export const manageTab = ({ event, cell, callback }) => {
     });
 }
 
-export const isRangeDirectionForward = (fromCell, toCell) => (fromCell.row < toCell.row) || (fromCell.row === toCell.row && fromCell.column <= toCell.column);
+export const isRowDirectionForward = (fromCell, toCell) => cellRow(fromCell) <= cellRow(toCell);
+export const isColumnDirectionForward = (fromCell, toCell) => cellColumn(fromCell) <= cellColumn(toCell);
+
+export const orderFromAndToAxes = (fromCell, toCell) => {
+    // if the 'from' cell comes after the 'to' cell, then we will swap what we're calling from and to 
+    const rowDirectionForward = isRowDirectionForward(fromCell, toCell);
+    const columnDirectionForward = isColumnDirectionForward(fromCell, toCell);
+    return {
+        fromRow: rowDirectionForward ? fromCell.row : toCell.row,
+        toRow: rowDirectionForward ? toCell.row : fromCell.row,
+        fromColumn: columnDirectionForward ? fromCell.column : toCell.column,
+        toColumn: columnDirectionForward ? toCell.column : fromCell.column,
+    } 
+}
 
 export const updateCellsInRange = addingCells => {
     const fromCell = stateCellRangeFrom(managedStore.state);
@@ -71,12 +86,8 @@ export const updateCellsInRange = addingCells => {
         return;
     }
     
-    // if the 'from' cell comes after the 'to' cell, then we will swap what we're calling from and to 
-    const directionForward = isRangeDirectionForward(fromCell, toCell);
-    const fromRow = directionForward ? fromCell.row : toCell.row; 
-    const toRow = directionForward ? toCell.row : fromCell.row;
-    const fromColumn = directionForward ? fromCell.column : toCell.column;
-    const toColumn = directionForward ? toCell.column : fromCell.column;
+    const { fromRow, toRow, fromColumn, toColumn } = orderFromAndToAxes(fromCell, toCell);
+    console.log('focusHelpers--updateCellsInRange got fromRow', fromRow, 'toRow', toRow, 'fromColumn', fromColumn, 'toColumn', toColumn);
     if (isNothing(fromRow) || isNothing(toRow) || isNothing(fromColumn) || isNothing(toColumn)) {
         // this should never happen
         console.error('focusHelpers.updateCellsInRange cannot proceed because it got fromRow', fromRow, 'toRow', toRow, 'fromColumn', fromColumn, 'toColumn', toColumn);

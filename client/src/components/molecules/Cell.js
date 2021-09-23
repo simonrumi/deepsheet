@@ -10,6 +10,7 @@ import { updateCellsInRange, rangeSelected, atEndOfRange } from '../../helpers/f
 import {
    cellSubsheetId,
    cellText,
+   cellInCellRange,
    statePresent,
 } from '../../helpers/dataStructureHelpers';
 import { usePositioning } from '../../helpers/hooks';
@@ -47,8 +48,9 @@ const Cell = React.memo(({ row, column, classes, blankCell, endCell, isVisible }
    const cell = useSelector(state => statePresent(state)[cellKey]);
    const cellHasFocus = useSelector(state => isCellFocused(cell, state));
    const [cellRef, positioning] = usePositioning();
+   const isSubsheetCell = R.pipe(cellSubsheetId, isSomething); // expects to get cell as a param
 
-   const inCellRange = cell.inCellRange;
+   const inCellRange = cellInCellRange(cell);
 
    const renderRegularCell = cell => {
      const text = cellText(cell);
@@ -80,7 +82,7 @@ const Cell = React.memo(({ row, column, classes, blankCell, endCell, isVisible }
    const renderEndOfRangeCell = cell => {
       return (
          <div className="w-full h-full relative">
-            {renderRegularCell(cell)}
+            {isSubsheetCell(cell) ? renderSubsheetCell(cell) : renderRegularCell(cell)}
             <RangeTools cell={cell} />
          </div>
       );
@@ -91,7 +93,7 @@ const Cell = React.memo(({ row, column, classes, blankCell, endCell, isVisible }
       [R.pipe(isCellVisible, R.not), nothing],
       [atEndOfRange, renderEndOfRangeCell],
       [R.thunkify(R.identity)(blankCell), renderBlankCell],
-      [R.pipe(cellSubsheetId, isSomething), renderSubsheetCell],
+      [isSubsheetCell, renderSubsheetCell],
       [R.thunkify(R.identity)(cellHasFocus), renderInPlaceEditor],
       [R.T, renderRegularCell]
    ]);

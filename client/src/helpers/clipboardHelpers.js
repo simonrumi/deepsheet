@@ -9,7 +9,7 @@ import {
    ifThenElse,
    getObjectFromArrayByKeyValue,
 } from '.';
-import { isRangeDirectionForward } from './focusHelpers';
+import { isRowDirectionForward, isColumnDirectionForward } from './focusHelpers';
 import { createCellKey } from './cellHelpers';
 import { 
     statePresent,
@@ -214,13 +214,14 @@ const getRangeShape = () => {
         console.warn('could not get a complete range from the clipboard');
         return;
     }
-    const rangeDirection = isRangeDirectionForward(fromCell, toCell);
-    const columnSpan = rangeDirection
+    const columnSpan = isColumnDirectionForward(fromCell, toCell)
         ? cellColumn(toCell) + 1 - cellColumn(fromCell)
         : cellColumn(fromCell) + 1 - cellColumn(toCell);
-    const rowSpan = rangeDirection
+
+    const rowSpan = isRowDirectionForward(fromCell, toCell)
         ? cellRow(toCell) + 1 - cellRow(fromCell)
         : cellRow(fromCell) + 1 - cellRow(toCell);
+
     return { columnSpan, rowSpan }
 };
 
