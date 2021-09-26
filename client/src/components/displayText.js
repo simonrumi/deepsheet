@@ -31,4 +31,10 @@ export const networkErrorText = () => '(Your session probably timed out)';
 
 export const cellRangePasteError = () => 'You can\'t paste over cells that link to other sheets';
 
+export const pasteInfoModalText = ({ fromCellName, toCellName }) => 
+   <div>
+      <p>{`The cell range from ${fromCellName} to ${toCellName} has been copied to the clipboard.`}</p>
+      <p>To paste it, click on the top-left cell, where you want the range to start, then either click the cell's paste icon or type Ctrl-V</p>
+   </div>;
+
 

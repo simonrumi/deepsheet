@@ -24,6 +24,7 @@ import {
    stateTotalColumns,
    stateCellsRenderCount,
    stateMetadataErrorMessage,
+   stateGlobalInfoModalIsVisible,
 } from '../helpers/dataStructureHelpers';
 import { isVisibilityCalculated } from '../helpers/visibilityHelpers';
 import { isAxisSizingCalculated,handleResizerDragOver, handleResizerDrop } from '../helpers/axisSizingHelpers';
@@ -44,6 +45,7 @@ import FilterModal from './organisms/FilterModal';
 import SortModal from './organisms/SortModal';
 import LoginModal from './organisms/LoginModal';
 import GlobalErrorModal from './organisms/GlobalErrorModal';
+import GlobalInfoModal from './organisms/GlobalInfoModal';
 
 const compareSizesByIndex = (size1, size2) => {
    if (size1.index === size2.index) {
@@ -98,6 +100,7 @@ const Sheet = props => {
    const cellsLoaded = useSelector(state => stateSheetCellsLoaded(state));
    const totalRows = useSelector(state => stateTotalRows(state));
    const totalColumns = useSelector(state => stateTotalColumns(state));
+   const globalInfoModalIsVisible = useSelector(state => stateGlobalInfoModalIsVisible(state));
    
    const cellsRenderCount = stateCellsRenderCount(managedStore.state); // not getting this value using useSelector as we don't want to retrigger a render when it changes (useEffect below manages the re-render)
    const memoizedCells = useMemo(() => {
@@ -179,6 +182,8 @@ const Sheet = props => {
 
    const maybeRenderGlobalErrorModal = () => isSomething(metadataError) ? <GlobalErrorModal error={metadataError} /> : null;
 
+   const maybeRenderGlobalInfoModal = () => isNothing(metadataError) && globalInfoModalIsVisible ? <GlobalInfoModal /> : null;
+
    // the header is in a fixed position, but we want the spreadsheet to get pushed down below the header, so we use this spacer
    // when scrolling the spreadhsheet appears to scroll under the header
    const renderHeaderSpacer = () => {
@@ -200,6 +205,7 @@ const Sheet = props => {
             <Header />
             {renderHeaderSpacer()}
             {maybeRenderGlobalErrorModal()}
+            {maybeRenderGlobalInfoModal()}
             {maybeRenderFilterModal()}
             {maybeRenderSortModal()}
             {maybeRenderLoginOrFetchSheet()}

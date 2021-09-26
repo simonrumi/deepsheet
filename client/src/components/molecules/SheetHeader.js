@@ -1,29 +1,31 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
 import * as R from 'ramda';
 import managedStore from '../../store';
 import { openedTitleEditor } from '../../actions/titleActions';
 import { hidePopups } from '../../actions';
 import { undid, redid } from '../../actions/undoActions';
 import { startedEditingTitle } from '../../actions/titleActions';
+import { updatedInfoModalVisibility, updatedInfoModalContent } from '../../actions/infoModalActions';
 import { loadSheet, saveAllUpdates } from '../../services/sheetServices';
-import { isSomething, arrayContainsSomething } from '../../helpers';
+import { isSomething, arrayContainsSomething, ifThen } from '../../helpers';
+import { createCellId } from '../../helpers/cellHelpers';
 import {
    stateParentSheetId,
-   stateIsStale,
-   stateIsCallingDb,
    stateErrorMessages,
-   stateTitleText,
-   statePast,
-   stateFuture,
+   stateClipboardRangeFrom,
+   stateClipboardRangeTo,
+   cellRow,
+   cellColumn,
 } from '../../helpers/dataStructureHelpers';
 import Heading from '../atoms/Heading';
 import IconUpArrow from '../atoms/IconUpArrow';
 import SaveIcon from '../atoms/IconSave';
+import PasteIcon from '../atoms/IconPaste';
 import LoadingIcon from '../atoms/IconLoading';
 import UndoIcon from '../atoms/IconUndo';
 import RedoIcon from '../atoms/IconRedo';
 import { UNDO_TEST_ID, REDO_TEST_ID } from '../../__tests__/testHelpers/constants';
+import { pasteInfoModalText } from '../displayText';
 
 const handleEditTitle = (event, initialValue) => {
    event.preventDefault();
@@ -31,14 +33,7 @@ const handleEditTitle = (event, initialValue) => {
    openedTitleEditor(true);
 }
 
-const SheetHeader = props => {
-   const title = useSelector(state => stateTitleText(state));
-   const past = useSelector(state => statePast(state));
-   const future = useSelector(state => stateFuture(state));
-   const isStale = useSelector(state => stateIsStale(state));
-   const isCallingDb = useSelector(state => stateIsCallingDb(state));
-   const parentSheetId = useSelector(state => stateParentSheetId(state));
-
+const SheetHeader = ({ title, past, future, isStale, isCallingDb, parentSheetId, clipboardRangeCells }) => {
    const handleSave = async () => {
       await saveAllUpdates(managedStore.state);
    }
@@ -57,6 +52,33 @@ const SheetHeader = props => {
       }
       return null;
    }
+
+   const createPasteInfoText = ({ fromCell, toCell }) => {
+      const fromCellName = createCellId(cellRow(fromCell), cellColumn(fromCell));
+      const toCellName = createCellId(cellRow(toCell), cellColumn(toCell));
+      return pasteInfoModalText({ fromCellName, toCellName });
+   }
+
+   const handlePasteIconClick = () => {
+      const fromCell = stateClipboardRangeFrom(managedStore.state);
+      const toCell = stateClipboardRangeTo(managedStore.state);
+      return isSomething(fromCell) && isSomething(toCell)
+         ? R.pipe(
+            createPasteInfoText,
+            updatedInfoModalContent,
+            () => updatedInfoModalVisibility(true)
+         )({ fromCell, toCell })
+         : null;
+   }
+
+   const renderPasteIcon = () => ifThen({
+      ifCond: arrayContainsSomething,
+      thenDo: () => { 
+         return <PasteIcon height="1.5em" width="1.5em" classes="pr-2" onClickFn={handlePasteIconClick} />
+      },
+      params: { ifParams: [clipboardRangeCells] }
+   });
+
 
    const renderSaveIcon = () => {
       if (isCallingDb) {
@@ -84,6 +106,7 @@ const SheetHeader = props => {
       <div className="flex items-center justify-between px-2 py-1" onClick={hidePopups} key="SheetHeader">
          <Heading text={title} classes="pr-2" onClickFn={event => handleEditTitle(event, title)} />
          <div className="flex items-end justify-between">
+            {renderPasteIcon()}
             {renderSaveIcon()}
             {renderUndoRedoIcons()}
             {renderUpArrow()}

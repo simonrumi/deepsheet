@@ -87,7 +87,6 @@ export const updateCellsInRange = addingCells => {
     }
     
     const { fromRow, toRow, fromColumn, toColumn } = orderFromAndToAxes(fromCell, toCell);
-    console.log('focusHelpers--updateCellsInRange got fromRow', fromRow, 'toRow', toRow, 'fromColumn', fromColumn, 'toColumn', toColumn);
     if (isNothing(fromRow) || isNothing(toRow) || isNothing(fromColumn) || isNothing(toColumn)) {
         // this should never happen
         console.error('focusHelpers.updateCellsInRange cannot proceed because it got fromRow', fromRow, 'toRow', toRow, 'fromColumn', fromColumn, 'toColumn', toColumn);
