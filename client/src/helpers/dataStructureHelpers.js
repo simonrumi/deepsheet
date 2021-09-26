@@ -332,6 +332,16 @@ export const stateClipboardRangeTo = R.view(stateClipboardRangeToLens);
 const stateClipboardRangeCellsLens = R.compose(stateClipboardLens, R.lensPath(['cellRange', 'cells']));
 export const stateClipboardRangeCells = R.view(stateClipboardRangeCellsLens);
 
+/************************************************ STATE GLOBAL INFO MODAL **********************************************/
+const globalInfoModalLens = R.lensProp('globalInfoModal');
+const stateGlobalInfoModalLens = R.compose(presentLens, globalInfoModalLens);
+const stateGlobalInfoModalIsVisibleLens = R.compose(stateGlobalInfoModalLens, R.lensProp('isVisible'));
+export const stateGlobalInfoModalIsVisible = R.view(stateGlobalInfoModalIsVisibleLens);
+const stateGlobalInfoModalContentLens = R.compose(stateGlobalInfoModalLens, R.lensProp('content'));
+export const stateGlobalInfoModalContent = R.view(stateGlobalInfoModalContentLens);
+const stateGlobalInfoModalCloseFnLens = R.compose(stateGlobalInfoModalLens, R.lensProp('closeFn'));
+export const stateGlobalInfoModalCloseFn = R.view(stateGlobalInfoModalCloseFnLens);
+
 /************************************************ STATE OTHER **********************************************/
 const titleLens = R.lensProp('title');
 const stateTitleLens = R.compose(presentLens, titleLens);

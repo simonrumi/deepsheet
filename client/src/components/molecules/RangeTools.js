@@ -84,7 +84,6 @@ const getCellRangeAsText = () => {
 
 const copyRange = () => {
     const allTextInRange = getCellRangeAsText();
-    console.log('RangeTools--copyRange got allTextInRange', allTextInRange);
     updatedClipboard({ text: allTextInRange, cellRange: stateCellRange(managedStore.state) });
 }
 

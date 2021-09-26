@@ -15,6 +15,7 @@ const stateKeys = [
     'sheets',
     'sortModal',
     'title',
+    'globalInfoModal',
 ];
  
 export const logState = wrappedState => {

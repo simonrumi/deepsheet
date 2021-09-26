@@ -10,6 +10,7 @@ import sheetReducer from './sheetReducer';
 import sheetsReducer from './sheetsReducer';
 import sortModalReducer from './sortModalReducer';
 import titleReducer from './titleReducer';
+import globalInfoModalReducer from './globalInfoModalReducer';
 
 export const staticReducers = {
    auth: authReducer,
@@ -25,4 +26,5 @@ export const staticReducers = {
    sheets: sheetsReducer,
    sortModal: sortModalReducer,
    title: titleReducer,
+   globalInfoModal: globalInfoModalReducer,
 };
