@@ -31,6 +31,6 @@ export const startedEditing = initialValue => {
    managedStore.store.dispatch({ type: STARTED_EDITING, payload: initialValue });
 };
 
-export const finishedEditing = finalValue => {
-   managedStore.store.dispatch({ type: FINISHED_EDITING, payload: finalValue });
+export const finishedEditing = editData => {
+   managedStore.store.dispatch({ type: FINISHED_EDITING, payload: editData });
 };

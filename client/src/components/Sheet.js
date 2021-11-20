@@ -43,6 +43,7 @@ import Header from './Header';
 import Cells from './Cells';
 import FilterModal from './organisms/FilterModal';
 import SortModal from './organisms/SortModal';
+import PasteOptionsModal from './molecules/PasteOptionsModal';
 import LoginModal from './organisms/LoginModal';
 import GlobalErrorModal from './organisms/GlobalErrorModal';
 import GlobalInfoModal from './organisms/GlobalInfoModal';
@@ -208,6 +209,7 @@ const Sheet = props => {
             {maybeRenderGlobalInfoModal()}
             {maybeRenderFilterModal()}
             {maybeRenderSortModal()}
+				<PasteOptionsModal />
             {maybeRenderLoginOrFetchSheet()}
             {renderCells()}
          </div>

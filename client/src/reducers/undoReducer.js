@@ -43,6 +43,7 @@ const undoReducer = reducer => {
             }
 
          case STARTED_UNDOABLE_ACTION:
+				console.log('undoReducer STARTED_UNDOABLE_ACTION');
             return {
                ...state, // keep the future as is
                past: R.append(present, past), // put the current "present" at the end of the past
@@ -50,6 +51,7 @@ const undoReducer = reducer => {
             }
 
          case COMPLETED_UNDOABLE_ACTION:
+				console.log('undoReducer COMPLETED_UNDOABLE_ACTION');
             return {
                ...state, // keep the past as-is (see STARTED_UNDOABLE_ACTION above)
                present: reducer(present, action), // update the present
@@ -57,6 +59,7 @@ const undoReducer = reducer => {
             }
 
          case CANCELLED_UNDOABLE_ACTION:
+				console.log('undoReducer CANCELLED_UNDOABLE_ACTION');
             if (!arrayContainsSomething(past)) {
                return state;
             }
@@ -66,6 +69,7 @@ const undoReducer = reducer => {
             }
 
          case STARTED_EDITING:
+				console.log('undoReducer STARTED_EDITING for cell', action.payload);
             // this is used by CellInPlaceEditor, when the user starts editing a cell
             // action.payload contains the cell
             return {
@@ -78,16 +82,20 @@ const undoReducer = reducer => {
                   column: cellColumn(action.payload),
                } // save the value we started editing for comparison when FINISHED_EDITING
             }
-         
+
          case FINISHED_EDITING:
+				console.log('undoReducer FINISHED_EDITING got action.payload', action.payload);
             /**
-            * 1. Note that action.payload contains { value, message }, which is different from what it is for STARTED_EDITING
+            * 1. Note that action.payload contains { value, message, isPastingCellRange }, which is different from what it is for STARTED_EDITING
             * 2. Note that in CellInPLaceEditor.js, the manageBlur() function may call finishedEditing() with the payload.value of null
             * This is to handle the situation where the user hits the esc key without ever having typed in the cell editor 
             * (hence the value doesn't get populated)
-            * So here we need to check for the value being exactly null and treat it the same as when the original value and the payload.value are the same
+            * So then we need to check for the value being exactly null and treat it the same as when the original value 
+				* and the payload.value are the same - i.e. don't change the undo history
+				* 3. if isPastingCellRange is true, then we should ignore the payload.value and update the past
              */
-            return action.payload.value === null || R.equals(stateOriginalValue(state), action.payload.value)
+            return !action.payload.isPastingCellRange &&
+					(action.payload.value === null || R.equals(stateOriginalValue(state), action.payload.value))
                ? {
                   ...state, // keep the past & future as is
                   present: reducer(present, action), // update the present

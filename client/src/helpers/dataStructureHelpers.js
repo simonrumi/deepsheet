@@ -310,14 +310,21 @@ const stateFocusCellRefLens = R.compose(stateFocusLens, R.lensProp('ref'));
 export const stateFocusCellRef = R.view(stateFocusCellRefLens);
 const stateFocusAbortControlLens = R.compose(stateFocusLens, R.lensProp('abortControl'));
 export const stateFocusAbortControl = R.view(stateFocusAbortControlLens);
-const stateCellRangeLens = R.compose(stateFocusLens, R.lensProp('cellRange'));
+
+/************************************************ STATE CELL RANGE **********************************************/
+const cellRangeLens = R.lensProp('cellRange');
+const stateCellRangeLens = R.compose(presentLens, cellRangeLens);
 export const stateCellRange = R.view(stateCellRangeLens);
+const stateCellRangeMaybeFromLens = R.compose(stateCellRangeLens, R.lensProp('maybeFrom'));
+export const stateCellRangeMaybeFrom = R.view(stateCellRangeMaybeFromLens);
 const stateCellRangeFromLens = R.compose(stateCellRangeLens, R.lensProp('from'));
 export const stateCellRangeFrom = R.view(stateCellRangeFromLens);
 const stateCellRangeToLens = R.compose(stateCellRangeLens, R.lensProp('to'));
 export const stateCellRangeTo = R.view(stateCellRangeToLens);
 const stateCellRangeCellsLens = R.compose(stateCellRangeLens, R.lensProp('cells'));
 export const stateCellRangeCells = R.view(stateCellRangeCellsLens);
+const stateRangeWasCopiedLens = R.compose(stateCellRangeLens, R.lensProp('rangeWasCopied'));
+export const stateRangeWasCopied = R.view(stateRangeWasCopiedLens);
 
 /************************************************ STATE CLIPBOARD **********************************************/
 const clipboardLens = R.lensProp('clipboard');
@@ -325,12 +332,18 @@ const stateClipboardLens = R.compose(presentLens, clipboardLens);
 export const stateClipboard = R.view(stateClipboardLens);
 const stateClipboardTextLens = R.compose(stateClipboardLens, R.lensProp('text'));
 export const stateClipboardText = R.view(stateClipboardTextLens);
-const stateClipboardRangeFromLens = R.compose(stateClipboardLens, R.lensPath(['cellRange', 'from']));
-export const stateClipboardRangeFrom = R.view(stateClipboardRangeFromLens);
-const stateClipboardRangeToLens = R.compose(stateClipboardLens, R.lensPath(['cellRange', 'to']));
-export const stateClipboardRangeTo = R.view(stateClipboardRangeToLens);
-const stateClipboardRangeCellsLens = R.compose(stateClipboardLens, R.lensPath(['cellRange', 'cells']));
-export const stateClipboardRangeCells = R.view(stateClipboardRangeCellsLens);
+
+/************************************************ STATE PASTE OPTIONS MODAL **********************************************/
+const pasteOptionsModalLens = R.lensProp('pasteOptionsModal');
+const statePasteOptionsModalLens = R.compose(presentLens, pasteOptionsModalLens);
+const stateSystemClipboardLens = R.compose(statePasteOptionsModalLens, R.lensProp('systemClipboard'));
+export const stateSystemClipboard = R.view(stateSystemClipboardLens);
+const stateShowPasteOptionsModalLens = R.compose(statePasteOptionsModalLens, R.lensProp('showModal'));
+export const stateShowPasteOptionsModal = R.view(stateShowPasteOptionsModalLens);
+const statePasteOptionsModalPositioningLens = R.compose(statePasteOptionsModalLens, R.lensProp('positioning'));
+export const statePasteOptionsModalPositioning = R.view(statePasteOptionsModalPositioningLens);
+const stateBlurEditorFunctionLens = R.compose(statePasteOptionsModalLens, R.lensProp('blurEditorFunction'));
+export const stateBlurEditorFunction = R.view(stateBlurEditorFunctionLens);
 
 /************************************************ STATE GLOBAL INFO MODAL **********************************************/
 const globalInfoModalLens = R.lensProp('globalInfoModal');

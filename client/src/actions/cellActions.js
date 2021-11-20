@@ -3,7 +3,6 @@ import managedStore from '../store';
 import {
    UPDATED_CELL,
    UPDATED_CELL_VISIBILITY,
-   UPDATED_CONTENT_OF_CELL,
    POSTING_UPDATED_CELLS,
    HAS_ADDED_CELL,
    HAS_CHANGED_CELL,
@@ -13,8 +12,9 @@ import {
    REMOVED_CELL_KEYS,
    CLEARED_ALL_CELL_KEYS,
    CELLS_REDRAW_COMPLETED,
-   ADDED_CELL_TO_RANGE,
+	UPDATED_END_OF_ROW_CELL,
 } from './cellTypes';
+import { ADDED_CELL_TO_RANGE, } from './cellRangeTypes';
 import { isNothing } from '../helpers';
 
 export const updatedCell = cell => {
@@ -34,10 +34,6 @@ export const updatedCellVisibility = cell => {
       payload: cell,
    });
 }
-
-export const updatedCellBeingEdited = cell => {
-   managedStore.store.dispatch({ type: UPDATED_CONTENT_OF_CELL, payload: cell }); 
-};
 
 export const updatedCells = async ({ sheetId, cells }) => {
    managedStore.store.dispatch({ type: POSTING_UPDATED_CELLS, payload: { sheetId, cells } });
@@ -119,5 +115,16 @@ export const removeCellFromRange = cell => {
    managedStore.store.dispatch({
       type: UPDATED_CELL,
       payload: { ...cell, inCellRange: false },
+   });
+	/* managedStore.store.dispatch({
+      type: REMOVED_CELL_FROM_RANGE,
+      payload: cell,
+   }); */ // TODO surely we need to implement this here???
+}
+
+export const updatedEndOfRowCell = isEndOfRowCell => {
+	managedStore.store.dispatch({
+      type: UPDATED_END_OF_ROW_CELL,
+      payload: isEndOfRowCell,
    });
 }

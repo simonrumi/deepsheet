@@ -12,8 +12,8 @@ import { createCellId } from '../../helpers/cellHelpers';
 import {
    stateParentSheetId,
    stateErrorMessages,
-   stateClipboardRangeFrom,
-   stateClipboardRangeTo,
+   stateCellRangeFrom,
+   stateCellRangeTo,
    cellRow,
    cellColumn,
 } from '../../helpers/dataStructureHelpers';
@@ -33,7 +33,7 @@ const handleEditTitle = (event, initialValue) => {
    openedTitleEditor(true);
 }
 
-const SheetHeader = ({ title, past, future, isStale, isCallingDb, parentSheetId, clipboardRangeCells }) => {
+const SheetHeader = ({ title, past, future, isStale, isCallingDb, parentSheetId, rangeWasCopied }) => {
    const handleSave = async () => {
       await saveAllUpdates(managedStore.state);
    }
@@ -60,8 +60,8 @@ const SheetHeader = ({ title, past, future, isStale, isCallingDb, parentSheetId,
    }
 
    const handlePasteIconClick = () => {
-      const fromCell = stateClipboardRangeFrom(managedStore.state);
-      const toCell = stateClipboardRangeTo(managedStore.state);
+      const fromCell = stateCellRangeFrom(managedStore.state);
+      const toCell = stateCellRangeTo(managedStore.state);
       return isSomething(fromCell) && isSomething(toCell)
          ? R.pipe(
             createPasteInfoText,
@@ -72,12 +72,10 @@ const SheetHeader = ({ title, past, future, isStale, isCallingDb, parentSheetId,
    }
 
    const renderPasteIcon = () => ifThen({
-      ifCond: arrayContainsSomething,
-      thenDo: () => { 
-         return <PasteIcon height="1.5em" width="1.5em" classes="pr-2" onClickFn={handlePasteIconClick} />
-      },
-      params: { ifParams: [clipboardRangeCells] }
-   });
+		ifCond: () => rangeWasCopied ? true : false,
+		thenDo: () => <PasteIcon height="1.5em" width="1.5em" classes="pr-2" onClickFn={handlePasteIconClick} />,
+		params: { }
+	});
 
 
    const renderSaveIcon = () => {

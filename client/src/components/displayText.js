@@ -1,6 +1,7 @@
 import React from 'react';
 
 export const DEFAULT_TITLE_FOR_SUBSHEET_FROM_CELL_RANGE = 'Sub-sheet created from a cell range';
+export const SYSTEM_CLIPBOARD_UNAVAILABLE_MSG = 'This browser does not support reading from the system clipbaord, so copy-pasting will be limited';
 
 export const menuSaveText = () => (
    <span>

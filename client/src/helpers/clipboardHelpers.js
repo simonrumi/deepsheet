@@ -7,17 +7,21 @@ import {
    forLoopReduce,
    reduceWithIndex,
    ifThenElse,
+   ifThen, 
+   arrayContainsSomething,
    getObjectFromArrayByKeyValue,
 } from '.';
-import { isRowDirectionForward, isColumnDirectionForward } from './focusHelpers';
+import { isRowDirectionForward, isColumnDirectionForward } from './rangeToolHelpers';
+import { orderFromAndToAxes } from './rangeToolHelpers';
 import { createCellKey } from './cellHelpers';
 import { 
     statePresent,
-    stateClipboardRangeFrom,
-    stateClipboardRangeTo, 
-    stateClipboardRangeCells,
+    stateCellRangeCells,
+    stateCellRangeFrom,
+    stateCellRangeTo,
     cellColumn,
     cellRow,
+    cellText,
     cellSubsheetId,
     cellRowSetter,
     cellColumnSetter,
@@ -29,11 +33,13 @@ import {
     stateRowVisibility,
 } from './dataStructureHelpers';
 import { updatedCell, hasChangedCell } from '../actions/cellActions';
+import { updatedClipboardError } from '../actions/clipboardActions';
 import { updatedMetadataErrorMessage } from '../actions/metadataActions';
 import insertNewColumns from '../services/insertNewColumns';
 import insertNewRows from '../services/insertNewRows';
-import { cellRangePasteError } from '../components/displayText';
-import { ROW_AXIS, COLUMN_AXIS } from '../constants';
+import { cellRangePasteError, SYSTEM_CLIPBOARD_UNAVAILABLE_MSG } from '../components/displayText';
+import { ROW_AXIS, COLUMN_AXIS, LOG } from '../constants';
+import { log } from '../clientLogger';
 
 const createPlaceholderCell = (row, column) => R.pipe(
         cellRowSetter(row),
@@ -128,7 +134,7 @@ const getExtraSpaceNeeded = (startCellRowIndex, startCellColumnIndex, rangeShape
 }
 
 const orderClipboardCells = () => R.pipe(
-    stateClipboardRangeCells,
+    stateCellRangeCells,
     R.sort(compareIndexValues)
 )(managedStore.state);
 
@@ -168,10 +174,14 @@ const hasSubsheetCells = cellMapping => R.reduce(
 );
 
 const mapTargetCells = R.curry((targetStartCell, rangeShape) => {
-    if (isNothing(targetStartCell) || isNothing(rangeShape)) {
-        console.warn('mapTargetCells did not get all the required parameters');
-        return;
+    if (isNothing(targetStartCell)) {
+		log({ level: LOG.WARN }, 'mapTargetCells did not get all the required parameters');
+      return;
     }
+	 if (isNothing(rangeShape) || isNothing(rangeShape.rowSpan) || isNothing(rangeShape.columnSpan)) {
+		 // we didn't get a legit (rectangular) rangeShape
+		return;
+	 }
     const orderedSourceCells = orderClipboardCells();
     const startCellRowIndex = cellRow(targetStartCell);
     const starCellColumnIndex = cellColumn(targetStartCell);
@@ -208,30 +218,183 @@ const mapTargetCells = R.curry((targetStartCell, rangeShape) => {
 });
 
 const getRangeShape = () => {
-    const fromCell = stateClipboardRangeFrom(managedStore.state);
-    const toCell = stateClipboardRangeTo(managedStore.state);
-    if (isNothing(fromCell) || isNothing(toCell)) {
-        console.warn('could not get a complete range from the clipboard');
-        return;
-    }
-    const columnSpan = isColumnDirectionForward(fromCell, toCell)
-        ? cellColumn(toCell) + 1 - cellColumn(fromCell)
-        : cellColumn(fromCell) + 1 - cellColumn(toCell);
+	const fromCell = stateCellRangeFrom(managedStore.state);
+	const toCell = stateCellRangeTo(managedStore.state);
+	if (isNothing(fromCell) || isNothing(toCell)) {
+		const cellRangeArr = stateCellRangeCells(managedStore.state);
 
-    const rowSpan = isRowDirectionForward(fromCell, toCell)
-        ? cellRow(toCell) + 1 - cellRow(fromCell)
-        : cellRow(fromCell) + 1 - cellRow(toCell);
+		if (!arrayContainsSomething(cellRangeArr)) {
+			log({ level: LOG.WARN }, 'could not get a complete range from the clipboard');
+			return;
+		}
 
-    return { columnSpan, rowSpan }
+/* 
+foo	bar	fee
+fii	foe	fum
+mee	too	the	thing
+one	thing
+*/ // TIDY when no longer testing
+
+
+		// we have some cells in the cellRange, likely created fom the system clipboard, so get the row and column span from them
+		// note that this array is assumed to be in order of rows then columns (convertTextToCellRange in CellInPlaceEditor should do this)
+		const rangeShapeFromCells = R.reduce(
+			(accumulator, cell) => {
+				const { columnSpan, rowSpan, currentRow, currentColumnSpan } = accumulator;
+				// Note: it would be nicer not to have all these nested if-clauses, but is easiest to follow this way
+				if (currentRow === null) {
+					//initial row
+					return { columnSpan: 1, rowSpan: 1, currentRow: cellRow(cell), currentColumnSpan: 1 }
+				}
+				if (cellRow(cell) === currentRow) {
+					if (rowSpan === 1) {
+						// this is the first row, so we are adding columns to determine the column span
+						return { columnSpan: columnSpan + 1, rowSpan, currentRow, currentColumnSpan: currentColumnSpan + 1 }
+					}
+					if (columnSpan > currentColumnSpan) {
+						// in a row other than the first row, so keep adding to the currentColumnSpan as we move through it
+						return { columnSpan, rowSpan, currentRow, currentColumnSpan: currentColumnSpan + 1 }
+					}
+					log({ level: LOG.DEBUG }, 'clipboardHelpers--getRangeShape range shape of cells is not a rectangle', cellRangeArr);
+					return R.reduced({ columnSpan: null, rowSpan: null });
+				}
+				if (rowSpan > 1 && currentColumnSpan !== columnSpan) {
+					// at the end of the previous row, and currentColumnSpan should be === columnSpan...but it is not, which is not allowed
+					log({ level: LOG.DEBUG }, 'clipboardHelpers--getRangeShape range shape of cells is not a rectangle', cellRangeArr);
+					return R.reduced({ columnSpan: null, rowSpan: null });
+				}
+				// start of a new row
+				return { columnSpan, rowSpan: rowSpan + 1, currentRow: currentRow + 1, currentColumnSpan: 1 }				
+			},
+			{ columnSpan: 0, rowSpan: 0, currentRow: null, currentColumnSpan: 0 }, // initial values
+			cellRangeArr
+		)
+		return R.pick(['columnSpan', 'rowSpan'], rangeShapeFromCells);
+	}
+
+	
+	const columnSpan = isColumnDirectionForward(fromCell, toCell)
+		? cellColumn(toCell) + 1 - cellColumn(fromCell)
+		: cellColumn(fromCell) + 1 - cellColumn(toCell);
+
+	const rowSpan = isRowDirectionForward(fromCell, toCell)
+		? cellRow(toCell) + 1 - cellRow(fromCell)
+		: cellRow(fromCell) + 1 - cellRow(toCell);
+
+	return { columnSpan, rowSpan }
 };
 
-export const pasteCellRangeToTarget = cell => R.pipe(
-    getRangeShape,
-    mapTargetCells(cell),
-    ({ cellMapping, extraRows, extraColumns }) => ifThenElse({
-        ifCond: hasSubsheetCells,
-        thenDo: R.pipe(cellRangePasteError, updatedMetadataErrorMessage),
-        elseDo: [ makeRoomForTargetCells, pasteToTargetCells, registerUpdatedCells ],
-        params: { ifParams: [cellMapping], elseParams: { cellMapping, extraRows, extraColumns } }
-    }),
-)();
+export const pasteCellRangeToTarget = cell =>
+   R.pipe(
+      getRangeShape,
+      mapTargetCells(cell), // will output { cellMapping, extraRows, extraColumns } or undefined
+      R.cond([
+			[ (mappedTargetCellsParams) => isNothing(mappedTargetCellsParams), R.F ],
+			[ ({ cellMapping = null }) => hasSubsheetCells(cellMapping), R.pipe(cellRangePasteError, updatedMetadataErrorMessage, R.T) ],
+			[ ({ cellMapping }) => !hasSubsheetCells(cellMapping), R.pipe(makeRoomForTargetCells, pasteToTargetCells, registerUpdatedCells, R.T) ]
+		])
+   )();
+
+export const updateSystemClipboard = text => {
+    if (typeof navigator.clipboard.readText !== 'function') {
+        log({ level: LOG.WARN }, SYSTEM_CLIPBOARD_UNAVAILABLE_MSG);
+    }
+
+    // this does not work for firefox, but it does work for Chrome & Edge
+    // could potentially do something where cells aren't copied to the clipboard, but they are in the range store object
+    // so could still be pasted within the app
+    navigator.permissions.query({name: "clipboard-write"})
+    .then(result => {
+        if (result.state === 'granted' || result.state === 'prompt') {
+            navigator.clipboard.writeText(text)
+            .then(
+                () => {
+                    // clipboard successfully set 
+                    log({ level: LOG.INFO }, 'Clipboard successfully updated with value', text);
+                },
+                () => {
+                    // clipboard write failed 
+                    log({ level: LOG.ERROR }, 'Clipboard write failed');
+                    updatedClipboardError('No sheet copied to the clipboard, sorry!');
+                }
+            )
+            .catch(err => {
+                log({ level: LOG.DEBUG }, 'Clipboard write failed', err);
+                updatedClipboardError('No sheet copied to the clipboard, sorry!');
+            });
+        } else {
+            log({ level: LOG.DEBUG }, 'Clipboard write failed as result.state was', result.state);
+            updatedClipboardError('No sheet copied to the clipboard, sorry!');
+        }
+    })
+    .catch(err => {
+        log({ level: LOG.DEBUG }, 'Clipboard write failed. Might be browser iseue. Error was:', err);
+        updatedClipboardError('This browser doesn\'t like copying your sheet to the clipboard, sorry! Perhaps try another browser');
+    });
+}
+
+export const getCellRangeAsText = () => {
+    const { toRow, toColumn } = R.converge(
+        orderFromAndToAxes, 
+        [ stateCellRangeFrom, stateCellRangeTo ]
+    )(managedStore.state); // this param is passed to both stateCellRangeFrom & stateCellRangeTo
+
+    const cells = stateCellRangeCells(managedStore.state);
+    return ifThen({
+        ifCond: arrayContainsSomething,
+        thenDo: R.reduce(
+            (accumulator, cell) => {
+                const cellEndChar = cellColumn(cell) === toColumn
+                    ? cellRow(cell) === toRow 
+                        ? '' // at the very last cell so no end char is needed
+                        : '\n' // at the end of a row, so add a newline
+                    : '\t'; // in the middle of a row, so add a tab
+                return isSomething(cellText(cell)) ? accumulator + cellText(cell) + cellEndChar : accumulator + cellEndChar
+            },
+            '' // initial value is an empty string
+        ),
+        params: { ifParams: [cells], thenParams: [cells] } // since cells is an array and since params could be arrays of individual parameters, need to put cells into a parent array for ifThen to send cells as a single parameter, rather than many
+    });
+}
+
+const createCell = ({ text, rowIndex, columnIndex }) => R.pipe(
+        cellColumnSetter(columnIndex),
+        cellRowSetter(rowIndex),
+        cellTextSetter(text),
+    )({});
+
+const createCellsInRow = ({ rowTextArr, rowIndex, columnIndex }) => {
+    if ( rowTextArr.length === 0 || isNothing(rowIndex) || isNothing(columnIndex)) {
+        log({ level: LOG.DEBUG }, 'clipboardHelpers--createCellsInRow unable to continue, rowTextArr', rowTextArr, 'rowIndex', rowIndex, 'columnIndex', columnIndex);
+        return;
+    }
+    const nextCell = createCell({ text: rowTextArr[0], rowIndex, columnIndex });
+    return rowTextArr.length > 1
+        ? R.pipe(
+            createCellsInRow,
+            R.prepend(nextCell)
+        )({ rowTextArr: R.tail(rowTextArr), rowIndex, columnIndex: columnIndex + 1 })
+        : [ nextCell ];
+}
+
+const createRowsOfCells = ({ rowsArr, rowIndex, firstColumnIndex }) => {
+    if ( rowsArr.length === 0 || isNothing(rowIndex) || isNothing(firstColumnIndex)) {
+        log({ level: LOG.DEBUG }, 'clipboardHelpers--createRowsOfCells unable to continue, rowsArr', rowsArr, 'rowIndex', rowIndex, 'firstColumnIndex', firstColumnIndex);
+        return;
+    }
+    const rowTextArr = rowsArr[0].split('\t'); // TIDY and myabe use spicyCurry
+    const cellsInRow = createCellsInRow({ rowTextArr, rowIndex, columnIndex: firstColumnIndex });
+    return rowsArr.length > 1
+        ? R.pipe(
+            createRowsOfCells,
+            R.concat(cellsInRow)
+        )({ rowsArr: R.tail(rowsArr), rowIndex: rowIndex + 1, firstColumnIndex })
+        : cellsInRow;
+}
+
+export const convertTextToCellRange = ({ text, startingCellRowIndex, startingCellColumnIndex }) =>
+   createRowsOfCells({
+      rowsArr: text.split(/(?:\n\r|\r\n|\n|\r)/), // these are the various possibilities for end-of-line characters
+      rowIndex: startingCellRowIndex,
+      firstColumnIndex: startingCellColumnIndex,
+   });
