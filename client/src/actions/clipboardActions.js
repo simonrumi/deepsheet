@@ -1,5 +1,5 @@
 import managedStore from '../store';
-import { UPDATED_CLIPBOARD, UPDATED_CLIPBOARD_ERROR } from './clipboardTypes';
+import { UPDATED_CLIPBOARD, UPDATED_CLIPBOARD_ERROR, CLEARED_CLIPBOARD } from './clipboardTypes';
 
 export const updatedClipboard = clipboardString => {
    managedStore.store.dispatch({
@@ -14,3 +14,9 @@ export const updatedClipboardError = err => {
       payload: err,
    });
 }
+
+export const clearedClipboard = () => {
+   managedStore.store.dispatch({
+      type: CLEARED_CLIPBOARD,
+   });
+};

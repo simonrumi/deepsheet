@@ -26,7 +26,6 @@ import managedStore from  '../store';
 
 const Cells = () => {
    const renderEmptyEndCell = cell => {
-		console.log('Cells--renderEmptyEndCell for cell', cell);
 		return (
       <Cell blankCell={true} endCell={true} row={cell.row} column={cell.column} classes={'border-r'} key={cellRow(cell) + '_endCell'}  />
    )}; // TIDY
@@ -65,7 +64,6 @@ const Cells = () => {
    const maybeRowHeader = R.ifElse(isFirstColumn, renderRowHeader, nothing);
 
    const renderCellAndMaybeEdges = cell => {
-		console.log('Cells--renderCellAndMaybeEdges will call maybeEmptyEndCell');
       return [
          maybeRowHeader(cell), 
          renderCell(cell), 

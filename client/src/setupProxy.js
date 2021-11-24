@@ -10,11 +10,4 @@ module.exports = function (app) {
          // but both http://localhost:9000/.netlify/functions/hello and http://localhost:9000/hello work
       })
    );
-   // may want to do something like this for auth stuff
-   // app.use(
-   //    proxy(['/.netlify/functions/auth'], {
-   //       target: 'http://localhost:9000/.netlify/functions',
-   //       pathRewrite: { '^/\\.netlify/functions': '' },
-   //    })
-   // );
 };

@@ -30,7 +30,6 @@ const onCellClick = (event, cell) => {
       thenDo: [rangeSelected, maybeClearSubsheetCellFocus, hidePopups],
       elseDo: [
          () => {
-				console.log('Cell--onCellClick: we are not highlighting a range, so about to call focusedCell for cell', cell);
 				focusedCell(cell)
 			},
          () => ifThen({
@@ -45,8 +44,7 @@ const onCellClick = (event, cell) => {
 }
 
 const createClassNames = ({ classes, inCellRange, isEndCell }) => {
-   const backgroundClasses = inCellRange && !isEndCell ? 'bg-light-light-blue ' : ''; 
-	console.log('Cell--createClassNames isEndCell', isEndCell, 'inCellRange', inCellRange, 'backgroundClasses', backgroundClasses);
+   const backgroundClasses = inCellRange && !isEndCell ? 'bg-light-light-blue ' : '';
    const cellBaseClasses = 'regular-cell col-span-1 row-span-1 w-full h-full p-0.5 overflow-hidden text-dark-dark-blue border-t border-l ';
    const otherClasses = classes ? classes : '';
    return cellBaseClasses + backgroundClasses + otherClasses;
@@ -88,10 +86,7 @@ const Cell = React.memo(({ row, column, classes, blankCell, endCell, isVisible }
 
    const renderBlankCell = () => <BlankCell classes={createClassNames({ classes, inCellRange, isEndCell: endCell })}/>;
 
-   const renderSubsheetCell = cell => {
-		console.log('Cell--renderSubsheetCell is about to render with cellHasFocus =', cellHasFocus);
-		return <SubsheetCell cell={cell} cellHasFocus={cellHasFocus} />
-	};
+   const renderSubsheetCell = cell => <SubsheetCell cell={cell} cellHasFocus={cellHasFocus} />;
 
    const renderEndOfRangeCell = cell => {
       return (
@@ -113,7 +108,6 @@ const Cell = React.memo(({ row, column, classes, blankCell, endCell, isVisible }
       [R.thunkify(R.identity)(cellHasFocus), renderInPlaceEditor],
       [R.T, renderRegularCell]
    ]);
-	console.log('Cell-- will call renderCell for cell', cell);
    return renderCell(cell);
 });
 

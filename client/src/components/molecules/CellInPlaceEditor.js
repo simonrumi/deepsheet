@@ -75,7 +75,6 @@ const triggerCreatedSheetAction = cell => {
 
 const manageChange = (event, cell) => {
    event.preventDefault();
-	console.log('CellInPlaceEditor--manageChange will call updatedCell with the event.target.value', event.target.value);
    updatedCell({
       ...cell,
       content: { ...cell.content, text: event.target.value },
@@ -87,17 +86,13 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
    // this ref is applied to the text area (see below) so that we can manage its focus
    const cellInPlaceEditorRef = useRef();
 
-	console.log('CellInPLaceEditor got positioning', positioning);
-
    const finalizeCellContent = (cell, isPastingCellRange) => {
       if (!R.equals(stateOriginalValue(managedStore.state), cellInPlaceEditorRef.current?.value)) {
-			console.log('CellInPlaceEditor--finalizeCellContent found that the original content of the cell has changed, so will fire hasChangedCell');
          hasChangedCell({
             row: cellRow(cell),
             column: cellColumn(cell),
          });
       }
-		console.log('CellInPlaceEditor--finalizeCellContent will fire finishedEditing', 'cellInPlaceEditorRef.current?.value', cellInPlaceEditorRef.current?.value);
       finishedEditing({
          value: isSomething(cellInPlaceEditorRef.current) ? cellInPlaceEditorRef.current.value : null,
          message: 'edited row ' + cellRow(cell) + ', column ' + cellColumn(cell),
@@ -113,7 +108,6 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
    }
    
    const handleCancel = event => {
-		console.log('CellInPLaceEditor--handleCancel started');
       event.preventDefault();
       stateFocusAbortControl(managedStore.state).abort();
       reinstateOriginalValue(cell); // note: this does the updatedCell call
@@ -121,7 +115,6 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
          value: isSomething(cellInPlaceEditorRef.current) ? cellInPlaceEditorRef.current.value : null,
          message: 'cancelled editing row ' + cellRow(cell) + ', column ' + cellColumn(cell),
       });
-		console.log('CellInPlaceEditor--handleCancel got (stateRangeWasCopied(managedStore.state)', stateRangeWasCopied(managedStore.state));
 		if (!stateRangeWasCopied(managedStore.state)) {
 			updateCellsInRange(false); // false means we're finding then removing all the cells from the range
 		}
@@ -129,7 +122,6 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
    }
 
 	const pasteText = text => {
-		console.log('CellInPlaceEditor--pasteText will just paste text:', text);
 		updatedCell({
 			...cell,
 			content: { ...cell.content, text },
@@ -143,14 +135,12 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
       
       const fromCell = stateCellRangeFrom(managedStore.state);
       const toCell = stateCellRangeTo(managedStore.state);
-      console.log('CellInPlaceEditor--handlePaste got fromCell', fromCell, 'toCell', toCell);
 
 		if (typeof navigator.clipboard.readText === 'function') {
 			updatedCellEditorPositioning({ ...positioning }); // this is needed, in some circumstances, by PasteOptionsModal
 			updatedBlurEditorFunction(manageBlur); // this is needed, in some circumstances, by PasteOptionsModal
 			navigator.clipboard.readText().then(
 				systemClipboardText => {
-					console.log('CellInPlaceEditor--handlePaste got systemClipboardText', systemClipboardText);
 					capturedSystemClipboard(systemClipboardText);
 
 					if (isSomething(fromCell) && isSomething(toCell)) {
@@ -166,7 +156,6 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
 						}
 
 						// there is a cell range and something in the clipboard, so covert the clipboard to an array of cells, then compare it to the actual cell range
-						console.log('CellInPlaceEditor--handlePaste about to convertTextToCellRange for systemClipboardText', systemClipboardText);
 						const clipboardCellsArr = convertTextToCellRange({ 
 							text: systemClipboardText, 
 							startingCellRowIndex: cellRow(fromCell), 
@@ -189,13 +178,11 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
 					}
 			
 					// at this point there's no cell range, only something in the clipbaord
-					console.log('CellInPlaceEditor--handlePaste no cell range so using the system clipboard');
 					const clipboardAsCells = convertTextToCellRange({ 
 						text: systemClipboardText,
 						startingCellRowIndex: cellRow(cell), 
 						startingCellColumnIndex: cellColumn(cell)
 					});
-					console.log('CellInPlaceEditor--handlePaste got clipboardAsCells', clipboardAsCells);
 					if (clipboardAsCells.length > 1) {
 						replacedCellsInRage(clipboardAsCells);
 						return pasteCellRangeToTarget(cell)

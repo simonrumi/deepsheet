@@ -1,4 +1,4 @@
-import { UPDATED_CLIPBOARD, UPDATED_CLIPBOARD_ERROR } from '../actions/clipboardTypes';
+import { UPDATED_CLIPBOARD, UPDATED_CLIPBOARD_ERROR, CLEARED_CLIPBOARD } from '../actions/clipboardTypes';
 
 const clipboardReducer = (state = null, action) => {
     switch (action.type) {
@@ -9,6 +9,10 @@ const clipboardReducer = (state = null, action) => {
         case UPDATED_CLIPBOARD_ERROR:
             console.log('clipboardReducer--UPDATED_CLIPBOARD_ERROR got action.payload', action.payload);
             return { ...state, error: action.payload }
+
+			case CLEARED_CLIPBOARD:
+				console.log('clipboardReducer--CLEARED_CLIPBOARD');
+            return { text: null }
 
         default:
             return state;

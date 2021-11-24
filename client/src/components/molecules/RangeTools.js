@@ -1,25 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import managedStore from '../../store';
 import { DEFAULT_COLUMN_WIDTH } from '../../constants';
 import { getObjectFromArrayByKeyValue, } from '../../helpers';
 import { manageKeyBindings, manageTab, } from '../../helpers/focusHelpers';
 import { triggerCreatedSheetAction, copyRange, clearRangeHighlight, maybeAbortFocus } from '../../helpers/rangeToolHelpers';
-import {
-   stateColumnWidths,
-   stateCellRange,
-   cellInCellRange,
-} from '../../helpers/dataStructureHelpers';
+import { stateColumnWidths, cellInCellRange } from '../../helpers/dataStructureHelpers';
 import { clearedFocus } from '../../actions/focusActions';
 import CopyIcon from '../atoms/IconCopy';
 import NewDocIcon from '../atoms/IconNewDoc';
-
-// TODO BUG
-// create range
-// create subsheet from range
-// go back up to parent sheet
-// click on subsheet cell
-// Result: editor pops up. clicking away removes the subsheet highlight, but refreshing screen fixes it
 
 const parentClasses = 'absolute top-0 z-10 flex flex-col border border-grey-blue p-1 bg-white';
 
@@ -82,7 +70,7 @@ const RangeTools = ({ cell }) => {
          </div>
          <NewDocIcon
             classes="w-6 flex-1 mb-1"
-            onMouseDownFn={() => triggerCreatedSheetAction({ cellRange: stateCellRange(managedStore.state) })}
+            onMouseDownFn={triggerCreatedSheetAction}
          />
       </div>
    ) : null; // if we're not in a cell range don't do anything

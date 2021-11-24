@@ -24,9 +24,9 @@ import {
    stateSheetId,
    stateRangeWasCopied,
 	stateFocusAbortControl,
+	stateCellRangeCells,
 	stateCellRangeFrom,
 	stateCellRangeTo,
-	stateCellRangeCells,
 	statePresent,
 } from './dataStructureHelpers';
 import { createdSheet } from '../actions/sheetActions';
@@ -132,11 +132,11 @@ export const compareCellsArrays = (cellRange1, cellRange2) => {
    );
 };
 
-export const triggerCreatedSheetAction = ({ cellRange }) => {
-   const rows = calculateTotalForRow({ cells: cellRange.cells });
-   const columns = calculateTotalForColumn({ cells: cellRange.cells });
-   const orderedCells = orderCellsInRange(cellRange.cells);
-   const title = DEFAULT_TITLE_FOR_SUBSHEET_FROM_CELL_RANGE;
+export const triggerCreatedSheetAction = () => {
+	const cellRangeCells = stateCellRangeCells(managedStore.state);
+   const rows = calculateTotalForRow({ cells: cellRangeCells });
+   const columns = calculateTotalForColumn({ cells: cellRangeCells });
+   const orderedCells = orderCellsInRange(cellRangeCells);
    const parentSheetId = stateSheetId(managedStore.state);
    const parentSheetCell = orderedCells[0];
    const rowHeights = createRowHeights({ totalRows: rows, orderedCellRange: orderedCells });
@@ -145,7 +145,7 @@ export const triggerCreatedSheetAction = ({ cellRange }) => {
    createdSheet({
       rows,
       columns,
-      title,
+      title: DEFAULT_TITLE_FOR_SUBSHEET_FROM_CELL_RANGE,
       parentSheetId,
       parentSheetCell,
       rowHeights,
@@ -172,9 +172,7 @@ export const clearRangeHighlight = () =>
 
 export const maybeAbortFocus = () => ifThen({
    ifCond: R.pipe(
-      R.tap(data => console.log('rangeToolHelpers--maybeAbortFocus ifCond got the param', data)),
       stateFocusAbortControl,
-		R.tap(data => console.log('rangeToolHelpers--maybeAbortFocus ifCond after stateFocusAbortControl got', data)),
       isSomething
    ),
    thenDo: [stateFocusAbortControl, abortControl => abortControl.abort()],
@@ -207,8 +205,6 @@ const clearPriorCellRange = () => {
 }
 
 export const updateCellsInRange = addingCells => {
-	console.log('rangeToolHelpers--updateCellsInRange got addingCells', addingCells);
-
 	const fromCell = stateCellRangeFrom(managedStore.state);
 	const toCell = stateCellRangeTo(managedStore.state);
 	if (isNothing(fromCell) || isNothing(toCell)) {

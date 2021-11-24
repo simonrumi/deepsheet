@@ -72,6 +72,7 @@ const createNewSheet = async ({
    if (isSomething(parentSheetId)) {
       await saveParentSheetData({ parentSheetCell, parentSheetId, newSheet: createSheetResult, cellRange });
    }
+	console.log('dbOperations--createNewSheet got createSheetResult', createSheetResult);
    return createSheetResult;
 };
 

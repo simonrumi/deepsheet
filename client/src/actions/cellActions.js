@@ -116,10 +116,6 @@ export const removeCellFromRange = cell => {
       type: UPDATED_CELL,
       payload: { ...cell, inCellRange: false },
    });
-	/* managedStore.store.dispatch({
-      type: REMOVED_CELL_FROM_RANGE,
-      payload: cell,
-   }); */ // TODO surely we need to implement this here???
 }
 
 export const updatedEndOfRowCell = isEndOfRowCell => {

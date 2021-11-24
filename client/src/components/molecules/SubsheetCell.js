@@ -78,8 +78,6 @@ const SubsheetCell = ({ cell, cellHasFocus }) => {
 		console.log(
          'SubsheetCell about to render; got cellIsCurrentlyFocused',
          cellIsCurrentlyFocused,
-         /* 'vs cellHasFocus',
-         cellHasFocus, */
 			'cell.inCellRange',
 			cell.inCellRange,
          'for cell',
