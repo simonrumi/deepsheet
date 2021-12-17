@@ -14,6 +14,8 @@ import {
 import { columnMoved } from '../../actions/metadataActions';
 import { startedUndoableAction, completedUndoableAction } from '../../actions/undoActions';
 import { updatedAxisItemTool } from '../../actions/metadataActions';
+import { COLUMN_MOVED } from '../../actions/metadataTypes';
+import { createColumnDropMessage } from '../displayText';
 import DraggableColumnLetter from '../atoms/DraggableColumnLetter';
 import GearIcon from '../atoms/IconGear';
 import ColumnHeaderTools from './ColumnHeaderTools';
@@ -29,10 +31,14 @@ const ColumnHeaderDetail = ({ index, frozen }) => {
       if (isDroppable(columnMovingIndex)) {
          event.preventDefault();
          if (isSomething(columnMovingIndex)) {
-            startedUndoableAction();
+            startedUndoableAction({ undoableType: COLUMN_MOVED, timestamp: Date.now() });
             columnMoved({ columnMoved: columnMovingIndex, columnMovedTo: index });
             setIsOver(false);
-            completedUndoableAction('moved column ' + columnMovingIndex + ' to ' + index);
+				completedUndoableAction({
+               undoableType: COLUMN_MOVED,
+               message: createColumnDropMessage({ columnMovingIndex, toIndex: index }),
+               timestamp: Date.now(),
+            });
          }
       }
    }

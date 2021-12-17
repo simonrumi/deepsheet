@@ -5,6 +5,7 @@ import clipboardReducer from './clipboardReducer';
 import dragMonitorReducer from './dragMonitorReducer';
 import filterModalReducer from './filterModalReducer';
 import { focusReducer } from './focusReducer';
+import globalInfoModalReducer from './globalInfoModalReducer';
 import menuReducer from './menuReducer';
 import metadataReducer from './metadataReducer';
 import pasteOptionsModalReducer from './pasteOptionsModalReducer';
@@ -12,7 +13,7 @@ import sheetReducer from './sheetReducer';
 import sheetsReducer from './sheetsReducer';
 import sortModalReducer from './sortModalReducer';
 import titleReducer from './titleReducer';
-import globalInfoModalReducer from './globalInfoModalReducer';
+
 
 export const staticReducers = {
    auth: authReducer,
@@ -23,6 +24,7 @@ export const staticReducers = {
    dragMonitor: dragMonitorReducer,
    filterModal: filterModalReducer,
    focus: focusReducer,
+   globalInfoModal: globalInfoModalReducer,
    menu: menuReducer,
    metadata: metadataReducer,
 	pasteOptionsModal: pasteOptionsModalReducer,
@@ -30,5 +32,4 @@ export const staticReducers = {
    sheets: sheetsReducer,
    sortModal: sortModalReducer,
    title: titleReducer,
-   globalInfoModal: globalInfoModalReducer,
 };

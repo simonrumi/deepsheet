@@ -178,6 +178,7 @@ const mapTargetCells = R.curry((targetStartCell, rangeShape) => {
 		log({ level: LOG.WARN }, 'mapTargetCells did not get all the required parameters');
       return;
     }
+	 console.log('clipboardHelpers--mapTargetCells got targetStartCell', targetStartCell, 'rangeShape', rangeShape);
 	 if (isNothing(rangeShape) || isNothing(rangeShape.rowSpan) || isNothing(rangeShape.columnSpan)) {
 		 // we didn't get a legit (rectangular) rangeShape
 		return;
@@ -220,6 +221,7 @@ const mapTargetCells = R.curry((targetStartCell, rangeShape) => {
 const getRangeShape = () => {
 	const fromCell = stateCellRangeFrom(managedStore.state);
 	const toCell = stateCellRangeTo(managedStore.state);
+	console.log('clipboardHelpers--getRangeShape got fromCell', fromCell, 'toCell', toCell);
 	if (isNothing(fromCell) || isNothing(toCell)) {
 		const cellRangeArr = stateCellRangeCells(managedStore.state);
 
@@ -227,14 +229,6 @@ const getRangeShape = () => {
 			log({ level: LOG.WARN }, 'could not get a complete range from the clipboard');
 			return;
 		}
-
-/* 
-foo	bar	fee
-fii	foe	fum
-mee	too	the	thing
-one	thing
-*/ // TIDY when no longer testing
-
 
 		// we have some cells in the cellRange, likely created fom the system clipboard, so get the row and column span from them
 		// note that this array is assumed to be in order of rows then columns (convertTextToCellRange in CellInPlaceEditor should do this)
@@ -272,7 +266,6 @@ one	thing
 		return R.pick(['columnSpan', 'rowSpan'], rangeShapeFromCells);
 	}
 
-	
 	const columnSpan = isColumnDirectionForward(fromCell, toCell)
 		? cellColumn(toCell) + 1 - cellColumn(fromCell)
 		: cellColumn(fromCell) + 1 - cellColumn(toCell);
@@ -382,7 +375,7 @@ const createRowsOfCells = ({ rowsArr, rowIndex, firstColumnIndex }) => {
         log({ level: LOG.DEBUG }, 'clipboardHelpers--createRowsOfCells unable to continue, rowsArr', rowsArr, 'rowIndex', rowIndex, 'firstColumnIndex', firstColumnIndex);
         return;
     }
-    const rowTextArr = rowsArr[0].split('\t'); // TIDY and myabe use spicyCurry
+    const rowTextArr = rowsArr[0].split('\t');
     const cellsInRow = createCellsInRow({ rowTextArr, rowIndex, columnIndex: firstColumnIndex });
     return rowsArr.length > 1
         ? R.pipe(
@@ -398,3 +391,11 @@ export const convertTextToCellRange = ({ text, startingCellRowIndex, startingCel
       rowIndex: startingCellRowIndex,
       firstColumnIndex: startingCellColumnIndex,
    });
+
+export const pasteText = ({ text, cell }) => {
+	updatedCell({
+		...cell,
+		content: { ...cell.content, text },
+		isStale: true,
+	});
+}

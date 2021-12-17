@@ -137,8 +137,6 @@ const SubsheetCell = ({ cell, cellHasFocus }) => {
    // not adding an onFocus handler into the div as we are handling focus with the useEffect
 	
 	return memoizedSubsheetCell;
-	// return renderSubsheetCell();
 };
-// ); // TIDY
 
 export default SubsheetCell;

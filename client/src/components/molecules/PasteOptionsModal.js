@@ -1,8 +1,8 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { isSomething } from '../../helpers';
+import { isSomething, ifThenElse } from '../../helpers';
 import { createCellId } from '../../helpers/cellHelpers';
-import { pasteCellRangeToTarget } from '../../helpers/clipboardHelpers';
+import { pasteCellRangeToTarget, convertTextToCellRange, pasteText } from '../../helpers/clipboardHelpers';
 import {
    stateCellRangeFrom,
    stateCellRangeTo,
@@ -15,9 +15,13 @@ import {
 	stateBlurEditorFunction,
 } from '../../helpers/dataStructureHelpers';
 import { updatedCell } from '../../actions/cellActions';
+import { updatedPastingCellRange, replacedCellsInRange, clearedCellRange } from '../../actions/cellRangeActions';
 import { updatedShowPasteOptionsModal } from '../../actions/pasteOptionsModalActions';
+import { PASTE_RANGE } from '../../actions/pasteOptionsModalTypes';
+import { PASTE_CLIPBOARD } from '../../actions/clipboardTypes';
 import { startedUndoableAction, completedUndoableAction } from '../../actions/undoActions';
 import { PASTE_OPTIONS_MODAL_WIDTH, MIN_ROW_HEIGHT } from '../../constants';
+import { createPasteRangeMessage, createPasteClipboardMessage } from '../displayText';
 import Button from '../atoms/Button';
 
 const PasteOptionsModal = () => {
@@ -34,6 +38,29 @@ const PasteOptionsModal = () => {
 	}
 
 	const handlePasteClipboard = () => {
+		const clipboardAsCells = convertTextToCellRange({ 
+			text: systemClipboard,
+			startingCellRowIndex: cellRow(cell), 
+			startingCellColumnIndex: cellColumn(cell)
+		});
+		console.log('PasteOptionsModal--handlePasteClipboard got clipboardAsCells', clipboardAsCells);
+
+		if (clipboardAsCells.length > 1) {
+			startedUndoableAction({ undoableType: PASTE_CLIPBOARD, timestamp: Date.now() });
+			clearedCellRange(); // clears from, to, and cells
+			replacedCellsInRange(clipboardAsCells);
+			console.log('PasteOptionsModal--handlePasteClipboard about to call pasteCellRangeToTarget which should then call blurCellInPlaceEditor');
+			ifThenElse({
+				ifCond: pasteCellRangeToTarget, // if true, a correctly formed range was pasted
+				thenDo: [ updatedShowPasteOptionsModal, blurCellInPlaceEditor ], // note: must happen in this order
+				elseDo: pasteText, // just paste the raw clipboard text instead and don't blur
+				params: { ifParams: cell, thenParams: false, elseParams: { text: systemClipboard, cell } }
+			});
+			const message = createPasteClipboardMessage(cell);
+			completedUndoableAction({ undoableType: PASTE_CLIPBOARD, message, timestamp: Date.now() });
+			return;
+		}
+
 		updatedCell({
 			...cell,
 			content: { ...cell.content, text: systemClipboard },
@@ -44,14 +71,16 @@ const PasteOptionsModal = () => {
 
 	const handlePasteRange = () => {
 		updatedShowPasteOptionsModal(false);
-		startedUndoableAction('started paste range');
+		startedUndoableAction({ undoableType: PASTE_RANGE, timestamp: Date.now() });
+		updatedPastingCellRange(true);
 		pasteCellRangeToTarget(cell);
-		completedUndoableAction('completed paste range');
-		// note that the blurCellInPlaceEditor triggers the FINISHED_EDITING action. 
-		// However it seems that CellInPLaceEditor does not know about the value from the range just pasted to that cell
-		// This must be because pasteCellRangeToTarget above has not triggered the CellInPlaceEditor's manageChange function
-		// so everything works out as we want it...luckily
 		blurCellInPlaceEditor();  
+		completedUndoableAction({
+			undoableType: PASTE_RANGE,
+			message: createPasteRangeMessage({ cell }),
+			timestamp: Date.now(),
+		});
+		updatedPastingCellRange(false);
 	}
 
 	const handleCancelPaste = () => updatedShowPasteOptionsModal(false);
@@ -62,7 +91,7 @@ const PasteOptionsModal = () => {
 		width: PASTE_OPTIONS_MODAL_WIDTH,
 	}
 	// // we do have positioning.height, but CellInPlaceEditor seems to get rendered twice and the 2nd time the height value is reduce (to 5px in testing)
-	// the bottom value is als changed, but no other values are changed
+	// the bottom value is also changed, but no other values are changed
 	// so the height is not reliable, so using MIN_ROW_HEIGHT * 2 instead, to find a reasonable place to put this modal dialog
 	// TODO this could do with being more sophisticated, taking into account whether at the edge of the screen or not
 
@@ -90,4 +119,3 @@ const PasteOptionsModal = () => {
 }
 
 export default PasteOptionsModal;
-// "this is from the clipboard" 

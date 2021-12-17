@@ -27,7 +27,6 @@ const DragableColumnLetter = props => {
    return (
       <div
          className={allClasses}
-         
          draggable="true"
          onDragStart={handleDragStart}
          onDragEnd={handleDragEnd}>

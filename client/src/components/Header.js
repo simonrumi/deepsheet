@@ -9,6 +9,7 @@ import {
    stateFuture,
    stateTitleIsEditingTitle,
 	stateRangeWasCopied,
+	stateShowUndoHistory,
 } from '../helpers/dataStructureHelpers';
 import SheetHeader from './molecules/SheetHeader';
 import TitleForm from './molecules/TitleForm';
@@ -23,6 +24,7 @@ const Header = () => {
    const isCallingDb = useSelector(state => stateIsCallingDb(state));
    const parentSheetId = useSelector(state => stateParentSheetId(state));
 	const rangeWasCopied = useSelector(state => stateRangeWasCopied(state));
+	const showHistory = useSelector(state => stateShowUndoHistory(state));
 
    const memoizedSheetHeader = useMemo(() => {
       return isEditingTitle 
@@ -35,8 +37,9 @@ const Header = () => {
             isCallingDb={isCallingDb} 
             parentSheetId={parentSheetId}
             rangeWasCopied={rangeWasCopied}
+				showHistory={showHistory}
          />
-   }, [ isEditingTitle, title, past, future, isStale, isCallingDb, parentSheetId, rangeWasCopied ])
+   }, [ isEditingTitle, title, past, future, isStale, isCallingDb, parentSheetId, rangeWasCopied, showHistory ]);
 
    return (
       <div id="header" className="fixed flex border-b border-grey-blue w-full bg-white shadow-md">

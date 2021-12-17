@@ -144,17 +144,9 @@ export const stateFrozenColumns = subObjectGetter(stateMetadataLens, 'frozenColu
 export const stateRowHeights = subObjectGetter(stateMetadataLens, 'rowHeights');
 export const stateColumnWidths = subObjectGetter(stateMetadataLens, 'columnWidths');
 
-/***** these are to get the previous version of various metadata items *****/
-export const statePastColumnVisibility = R.pipe(
-   R.prop('past'),
-   R.last,
-   R.path(['metadata', 'columnVisibility'])
-);
-export const statePastRowVisibility = R.pipe(
-   R.prop('past'),
-   R.last,
-   R.path(['metadata', 'rowVisibility'])
-);
+/***** these are to get the previous version of various metadata items - used by visibilityHelpers--updateFilteredCells only *****/
+export const statePastColumnVisibility =  R.path(['maybePast','metadata', 'columnVisibility']);
+export const statePastRowVisibility = R.path(['maybePast', 'metadata', 'rowVisibility'])
 
 /* the axisItemTool is the popup that can show for each column and each row.
 The following metadata says which one is visible and which column/row it is for
@@ -325,6 +317,8 @@ const stateCellRangeCellsLens = R.compose(stateCellRangeLens, R.lensProp('cells'
 export const stateCellRangeCells = R.view(stateCellRangeCellsLens);
 const stateRangeWasCopiedLens = R.compose(stateCellRangeLens, R.lensProp('rangeWasCopied'));
 export const stateRangeWasCopied = R.view(stateRangeWasCopiedLens);
+const statePastingCellRangeLens = R.compose(stateCellRangeLens, R.lensProp('isPastingCellRange'));
+export const statePastingCellRange = R.view(statePastingCellRangeLens);
 
 /************************************************ STATE CLIPBOARD **********************************************/
 const clipboardLens = R.lensProp('clipboard');
@@ -354,6 +348,16 @@ const stateGlobalInfoModalContentLens = R.compose(stateGlobalInfoModalLens, R.le
 export const stateGlobalInfoModalContent = R.view(stateGlobalInfoModalContentLens);
 const stateGlobalInfoModalCloseFnLens = R.compose(stateGlobalInfoModalLens, R.lensProp('closeFn'));
 export const stateGlobalInfoModalCloseFn = R.view(stateGlobalInfoModalCloseFnLens);
+
+/************************************************ UNDO HISTORY **********************************************/
+const showUndoHistoryLens = R.lensPath(['actionHistory', 'showHistoryModal']);
+export const stateShowUndoHistory = R.view(showUndoHistoryLens);
+const pastActionsLens = R.lensPath(['actionHistory', 'pastActions']);
+export const statePastActions = R.view(pastActionsLens);
+const presentActionLens = R.lensPath(['actionHistory', 'presentAction']);
+export const statePresentAction = R.view(presentActionLens);
+const futureActionsLens = R.lensPath(['actionHistory', 'futureActions']);
+export const stateFutureActions = R.view(futureActionsLens);
 
 /************************************************ STATE OTHER **********************************************/
 const titleLens = R.lensProp('title');

@@ -25,6 +25,7 @@ import {
    stateCellsRenderCount,
    stateMetadataErrorMessage,
    stateGlobalInfoModalIsVisible,
+	stateShowUndoHistory,
 } from '../helpers/dataStructureHelpers';
 import { isVisibilityCalculated } from '../helpers/visibilityHelpers';
 import { isAxisSizingCalculated,handleResizerDragOver, handleResizerDrop } from '../helpers/axisSizingHelpers';
@@ -47,6 +48,7 @@ import PasteOptionsModal from './molecules/PasteOptionsModal';
 import LoginModal from './organisms/LoginModal';
 import GlobalErrorModal from './organisms/GlobalErrorModal';
 import GlobalInfoModal from './organisms/GlobalInfoModal';
+import UndoHistory from './molecules/UndoHistoryModal';
 
 const compareSizesByIndex = (size1, size2) => {
    if (size1.index === size2.index) {
@@ -102,6 +104,7 @@ const Sheet = props => {
    const totalRows = useSelector(state => stateTotalRows(state));
    const totalColumns = useSelector(state => stateTotalColumns(state));
    const globalInfoModalIsVisible = useSelector(state => stateGlobalInfoModalIsVisible(state));
+	const showHistory = useSelector(state => stateShowUndoHistory(state));
    
    const cellsRenderCount = stateCellsRenderCount(managedStore.state); // not getting this value using useSelector as we don't want to retrigger a render when it changes (useEffect below manages the re-render)
    const memoizedCells = useMemo(() => {
@@ -177,6 +180,8 @@ const Sheet = props => {
       return null;
    };
 
+	const maybeRenderHistoryModal = () => showHistory ? <UndoHistory /> : null;
+
    const maybeRenderFilterModal = () => (showFilterModal ? <FilterModal /> : null);
 
    const maybeRenderSortModal = () => (showSortModal ? <SortModal /> : null);
@@ -193,6 +198,25 @@ const Sheet = props => {
       return <div style={style} ></div>
    }
 
+	const handleDrop = event => {
+		console.log('Sheet--handleDragOver');
+		event.preventDefault();
+		// setIsOver(false);
+				
+   }
+
+   const handleDragOver = event => {
+		console.log('Sheet--handleDragOver');
+		event.preventDefault(); // doing this allows the drop
+		event.dataTransfer.dropEffect = 'move'; // not sure how necessary this is
+		// setIsOver(true);
+   }
+
+   const handleDragLeave = event =>  {
+		console.log('Sheet--handleDragLeave');
+		// setIsOver(false);
+   }
+
    const render = () => {
       if (sheetIsCallingDb) {
          return (
@@ -202,13 +226,20 @@ const Sheet = props => {
          );
       }
       return (
-         <div className="px-1">
+         <div 
+				className="px-1" 
+				id="sheet"
+				onDragOver={handleDragOver}
+				onDragLeave={handleDragLeave}
+				onDrop={handleDrop}
+			>
             <Header />
             {renderHeaderSpacer()}
             {maybeRenderGlobalErrorModal()}
             {maybeRenderGlobalInfoModal()}
             {maybeRenderFilterModal()}
             {maybeRenderSortModal()}
+				{maybeRenderHistoryModal()}
 				<PasteOptionsModal />
             {maybeRenderLoginOrFetchSheet()}
             {renderCells()}

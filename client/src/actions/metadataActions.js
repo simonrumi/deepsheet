@@ -37,13 +37,8 @@ import {
 } from './metadataTypes';
 import { CELLS_UPDATED } from './cellTypes';
 import { COMPLETED_UNDOABLE_ACTION } from './undoTypes';
-import {
-   CHANGED_FILTER,
-   ORDERED_COLUMN,
-   ORDERED_ROW,
-   INSERTED_COLUMN,
-   INSERTED_ROW,
-} from '../constants';
+import { FILTER_EDIT } from './filterTypes';
+import { createFilterSheetMessage } from '../components/displayText';
 
 export const replacedAllMetadata = metadata => {
    managedStore.store.dispatch({
@@ -65,25 +60,24 @@ export const clearMetadata = () => {
    });
 }
 
-export const hasChangedMetadata = changeType => {
+export const hasChangedMetadata = ({ changeType, data }) => {
    managedStore.store.dispatch({
       type: HAS_CHANGED_METADATA,
    });
-   switch (changeType) {
-      case CHANGED_FILTER:
+	switch (changeType) {
+      case FILTER_EDIT:
+			console.log('metadatActions--hasChangedMetadata got FILTER_EDIT and will dispatch COMPLETED_UNDOABLE_ACTION');
          updateFilteredCells();
-         managedStore.store.dispatch({ type: COMPLETED_UNDOABLE_ACTION, payload: 'updated the filter' });
+         managedStore.store.dispatch({ 
+				type: COMPLETED_UNDOABLE_ACTION, 
+				payload: {
+					undoableType: FILTER_EDIT,
+					message: createFilterSheetMessage(data),
+					timestamp: Date.now()
+				}, 
+			});
          break;
 
-      //note: these ones are already have the COMPLETED_UNDOABLE_ACTION 
-      // and the cellDbUpdates.changedCells are getting recorded correctly in the store, so no need to do anything
-      // however leaving these here in case of a future need
-      case ORDERED_COLUMN:
-      case ORDERED_ROW:
-      case INSERTED_COLUMN:
-      case INSERTED_ROW:
-         break;
-      
       default:
    }
 };

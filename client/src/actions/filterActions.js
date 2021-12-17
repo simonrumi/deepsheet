@@ -1,6 +1,7 @@
 import managedStore from '../store';
 import { isSomething } from '../helpers';
 import {
+	FILTER_EDIT,
    TOGGLED_SHOW_FILTER_MODAL,
    HIDE_FILTERED,
    CLEAR_ALL_FILTERS,
@@ -17,7 +18,8 @@ import { REPLACED_COLUMN_FILTERS, REPLACED_ROW_FILTERS } from './metadataTypes';
 export const toggledShowFilterModal = (rowIndex, columnIndex, initialValues) => {
    const showModal = isSomething(rowIndex) || isSomething(columnIndex);
    if (showModal) {
-      managedStore.store.dispatch({ type: STARTED_UNDOABLE_ACTION });
+		console.log('filterAction--toggledShowFilterModal about to dispatch STARTED_UNDOABLE_ACTION');
+      managedStore.store.dispatch({ type: STARTED_UNDOABLE_ACTION, payload: { undoableType: FILTER_EDIT, timestamp: Date.now() } });
    } // note that COMPLETED_UNDOABLE_ACTION is fired by metadataActions--hasChangedMetadata 
    // and filterEditCancelled below fires CANCELLED_UNDOABLE_ACTION
 
@@ -82,5 +84,5 @@ export const changedCaseSensitiveValue = newCaseSensitive => {
 
 export const filterEditCancelled = wasStale => {
    managedStore.store.dispatch({ type: FILTER_EDIT_CANCELLED, payload: wasStale });
-   managedStore.store.dispatch({ type: CANCELLED_UNDOABLE_ACTION });
+   managedStore.store.dispatch({ type: CANCELLED_UNDOABLE_ACTION, payload: { undoableType: FILTER_EDIT, message: FILTER_EDIT_CANCELLED, timestamp: Date.now() } });
 };

@@ -10,6 +10,7 @@ const stateKeys = [
     'dragMonitor',
     'filterModal',
     'focus',
+    'globalInfoModal',
     'menu',
     'metadata',
 	 'pasteOptionsModal',
@@ -17,7 +18,6 @@ const stateKeys = [
     'sheets',
     'sortModal',
     'title',
-    'globalInfoModal',
 ];
  
 export const logState = wrappedState => {

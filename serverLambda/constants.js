@@ -1,6 +1,6 @@
 const DEFAULT_ROWS = 6;
 const DEFAULT_COLUMNS = 6;
-const DEFAULT_TITLE = 'My Deep Deep Sheet';
+const DEFAULT_TITLE = 'This is my sheet';
 const AUTH_PROVIDER_FACEBOOK = 1;
 const AUTH_PROVIDER_GOOGLE = 2;
 // logging levels

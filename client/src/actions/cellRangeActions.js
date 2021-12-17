@@ -6,6 +6,7 @@ import {
 	CLEAR_LIST_OF_CELLS_IN_RANGE,
 	REPLACED_CELLS_IN_RANGE,
 	UPDATED_RANGE_WAS_COPIED,
+	UPDATED_PASTING_CELL_RANGE,
 } from './cellRangeTypes';
 
 export const highlightedCellRange = cellData => {
@@ -37,7 +38,7 @@ export const clearListOfCellsInRange = () => {
 	});
 }
 
-export const replacedCellsInRage = cells => {
+export const replacedCellsInRange = cells => {
 	managedStore.store.dispatch({
 		type: REPLACED_CELLS_IN_RANGE,
 		payload: cells
@@ -48,5 +49,12 @@ export const updatedRangeWasCopied = rangeWasCopied => {
 	managedStore.store.dispatch({
 		type: UPDATED_RANGE_WAS_COPIED,
 		payload: rangeWasCopied
+	});
+}
+
+export const updatedPastingCellRange = isPastingCellRange => {
+	managedStore.store.dispatch({
+		type: UPDATED_PASTING_CELL_RANGE,
+		payload: isPastingCellRange
 	});
 }

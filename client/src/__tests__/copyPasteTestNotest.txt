@@ -1,0 +1,27 @@
+/*
+Here's a range to copy to the clipboard
+A1	B1
+A2	B2
+*/
+
+// copy then paste range - OK
+// copy then paste range that creates columns & rows - OK
+// copy range, copy text, then paste range - OK
+// copy range, copy text, then paste text - OK
+// copy range, copy text, then paste range that creates columns & rows - OK
+// copy range, copy text, then paste text that creates columns & rows - OK
+// copy outside of sheet, then paste text (no ranges involved) - OK
+// copy outside of sheet, then paste text that creates a range - OK
+// copy outside of sheet, then paste text that creates a range and creates columns & rows - OK
+// copy range, copy text, then choose Paste Neither in the paste options modal - OK
+// copy range, copy text, then press esc in the paste options modal - OK
+// also try doing sequences of things and make sure undo-redo captures correctly, such as
+// 1. edit cell
+// 2. copy range
+// 3. paste range - check undo-redo history
+// 4. undo paste range
+// 5. copy to system clipboard
+// 6. paste range - check undo-redo history
+
+// ...also try cancelling in other cirucumstances
+	

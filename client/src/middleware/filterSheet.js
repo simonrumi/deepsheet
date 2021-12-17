@@ -26,7 +26,7 @@ import {
    stateFrozenColumns,
    cellText,
 } from '../helpers/dataStructureHelpers';
-import { CHANGED_FILTER } from '../constants';
+import { FILTER_EDIT } from '../actions/filterTypes';
 
 /* these are used by multiple functions below */
 const getAxis = data =>
@@ -282,12 +282,12 @@ export default store => next => async action => {
          const { filterOptions, isInitializingSheet } = action.payload;
          hideFiltered(filterOptions, isInitializingSheet, store);
          if (!isInitializingSheet) {
-            hasChangedMetadata(CHANGED_FILTER);
+            hasChangedMetadata({ changeType: FILTER_EDIT, data: filterOptions });
          }
          break;
       case CLEAR_ALL_FILTERS:
          clearAllFilters(store);
-         hasChangedMetadata(CHANGED_FILTER);
+         hasChangedMetadata({ changeType: FILTER_EDIT, data: {} });
          break;
       default:
    }

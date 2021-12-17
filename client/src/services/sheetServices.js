@@ -42,7 +42,6 @@ import { sheetQuery, sheetsQuery } from '../queries/sheetQueries';
 import { deleteSheetsMutation, deleteSheetMutation, sheetByUserIdMutation } from '../queries/sheetMutations';
 import titleMutation from '../queries/titleMutation';
 
-
 // TODO return the response.data.thing for each query/mutation so the consumer doesn;t have to know that path
 
 export const fetchSheet = async (sheetId, userId) => {

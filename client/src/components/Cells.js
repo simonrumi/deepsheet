@@ -25,10 +25,7 @@ import Cell from './molecules/Cell';
 import managedStore from  '../store';
 
 const Cells = () => {
-   const renderEmptyEndCell = cell => {
-		return (
-      <Cell blankCell={true} endCell={true} row={cell.row} column={cell.column} classes={'border-r'} key={cellRow(cell) + '_endCell'}  />
-   )}; // TIDY
+   const renderEmptyEndCell = cell => <Cell blankCell={true} endCell={true} row={cell.row} column={cell.column} classes={'border-r'} key={cellRow(cell) + '_endCell'}  />;
 
    const maybeEmptyEndCell = cell => ifThenElse({ 
 		ifCond: isLastVisibleItemInAxis,

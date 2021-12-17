@@ -3,6 +3,7 @@ import { isSomething, forLoopMap } from './index';
 import { stateRowHeights, stateColumnWidths, stateDragType, stateDragData } from './dataStructureHelpers';
 import { startedUndoableAction, completedUndoableAction } from '../actions/undoActions';
 import { updatedRowHeight, updatedColumnWidth } from '../actions/metadataActions';
+import { UPDATED_ROW_HEIGHT, UPDATED_COLUMN_WIDTH } from '../actions/metadataTypes';
 import {
    ROW_AXIS,
    MIN_COLUMN_WIDTH,
@@ -10,6 +11,7 @@ import {
    DRAGGABLE_ROW_RESIZER,
    DRAGGABLE_COLUMN_RESIZER,
 } from '../constants';
+import { createUpdateRowHeightMessage, createUpdateColumnWidthMessage } from '../components/displayText';
 
 export const createDefaultAxisSizing = (numItems, defaultSize) => forLoopMap(
       index => ({ index, size: defaultSize }),
@@ -39,9 +41,13 @@ export const handleResizerDrop = event => {
             const rowHeightDelta = yPos - startingYPos;
             const rowHeaderBoundingRect = document.getElementById('rowHeader_' + rowIndex)?.getBoundingClientRect();
             const newRowHeight = Math.max(rowHeaderBoundingRect?.height + rowHeightDelta, MIN_ROW_HEIGHT);
-            startedUndoableAction();
+            startedUndoableAction({ undoableType: UPDATED_ROW_HEIGHT, timestamp: Date.now() });
             updatedRowHeight(rowIndex, newRowHeight + 'px');
-            completedUndoableAction('resized row ' + rowIndex);
+				completedUndoableAction({
+					undoableType: UPDATED_ROW_HEIGHT,
+					message: createUpdateRowHeightMessage({ rowIndex }),
+					timestamp: Date.now(),
+				});
          }
          break;
       
@@ -53,9 +59,13 @@ export const handleResizerDrop = event => {
             const columnWidthDelta = xPos - startingXPos;
             const columnHeaderBoundingRect = document.getElementById('columnHeader_' + columnIndex)?.getBoundingClientRect();
             const newColumnWidth = Math.max(columnHeaderBoundingRect?.width + columnWidthDelta, MIN_COLUMN_WIDTH);
-            startedUndoableAction();
+            startedUndoableAction({ undoableType: UPDATED_COLUMN_WIDTH, timestamp: Date.now() });
             updatedColumnWidth(columnIndex, newColumnWidth + 'px');
-            completedUndoableAction('resized column ' + columnIndex);
+            completedUndoableAction({
+					undoableType: UPDATED_COLUMN_WIDTH,
+					message: createUpdateColumnWidthMessage({ columnIndex }),
+					timestamp: Date.now(),
+				});
          }
          break;
 

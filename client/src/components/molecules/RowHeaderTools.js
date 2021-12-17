@@ -14,6 +14,8 @@ import { startedUndoableAction, completedUndoableAction } from '../../actions/un
 import { toggledShowFilterModal } from '../../actions/filterActions';
 import { toggledShowSortModal } from '../../actions/sortActions';
 import { updatedFrozenRows, updatedAxisItemTool } from '../../actions/metadataActions';
+import { UPDATED_FROZEN_ROWS } from '../../actions/metadataTypes';
+import { createToggleFreezeRowMessage } from '../displayText';
 import FilterIcon from '../atoms/IconFilter';
 import SnowflakeIcon from '../atoms/IconSnowflake';
 import SortIcon from '../atoms/IconSort';
@@ -41,9 +43,13 @@ const RowHeaderTools = ({ index, frozen }) => {
    }
    
    const toggleFreeze = () => {
-      startedUndoableAction();
+      startedUndoableAction({ undoableType: UPDATED_FROZEN_ROWS, timestamp: Date.now() });
       updatedFrozenRows([{ index, isFrozen: !frozen }]);
-      completedUndoableAction('toggled freeze for row ' + index);
+		completedUndoableAction({
+			undoableType: UPDATED_FROZEN_ROWS,
+			message: createToggleFreezeRowMessage({ rowIndex: index }),
+			timestamp: Date.now(),
+		});
    };
 
    // RowHeaderDetail pops up these RowHeaderTools (onCLick), and here we handle hiding it (onMouseLeave)

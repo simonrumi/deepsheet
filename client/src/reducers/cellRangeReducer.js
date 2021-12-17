@@ -6,6 +6,7 @@ import {
 	REPLACED_CELLS_IN_RANGE,
 	CLEAR_LIST_OF_CELLS_IN_RANGE,
 	UPDATED_RANGE_WAS_COPIED,
+	UPDATED_PASTING_CELL_RANGE,
 } from '../actions/cellRangeTypes';
 import { UPDATED_FOCUS } from '../actions/focusTypes';
 import { isSomething } from '../helpers';
@@ -43,6 +44,12 @@ const cellRangeReducer = (state = {}, action) => {
 				rangeWasCopied: action.payload,
 			}
 
+		case UPDATED_PASTING_CELL_RANGE:
+			return {
+				...state,
+				isPastingCellRange: action.payload,
+			}
+
       case ADDED_CELL_TO_RANGE:
          // FYI payload is just the cell
          console.log('cellRangeReducer got ADDED_CELL_TO_RANGE with payload (should be a cell):', action.payload);
@@ -56,7 +63,6 @@ const cellRangeReducer = (state = {}, action) => {
          return {
             ...state,
             cells: action.payload,
-				// TODO - do we need to set rangeWasCopied: false here? 
          };
 
       case CLEARED_CELL_RANGE:
@@ -64,7 +70,7 @@ const cellRangeReducer = (state = {}, action) => {
          // payload { cell: cellData }
          return {
             ...state,
-            cells: [], // TODO check this should be here
+            cells: [],
             from: action.payload?.cell || null,
             to: null,
 				rangeWasCopied: false,

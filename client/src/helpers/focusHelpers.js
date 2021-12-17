@@ -105,7 +105,6 @@ export const maybeClearSubsheetCellFocus = () => {
 		stateFocusAbortControl(managedStore.state).abort();
    	updatedFocusRef({ ref: null }); // this is probably redundant, since clearedFocus clears everything
 		clearedFocus();
-		// startedEditing(fromCell); // TIDY probably not needed. was doing this here since no undoable action is started when clicking on a subsheet cell.
 	}
 }
 
