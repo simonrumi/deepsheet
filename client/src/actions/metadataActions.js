@@ -66,7 +66,6 @@ export const hasChangedMetadata = ({ changeType, data }) => {
    });
 	switch (changeType) {
       case FILTER_EDIT:
-			console.log('metadatActions--hasChangedMetadata got FILTER_EDIT and will dispatch COMPLETED_UNDOABLE_ACTION');
          updateFilteredCells();
          managedStore.store.dispatch({ 
 				type: COMPLETED_UNDOABLE_ACTION, 

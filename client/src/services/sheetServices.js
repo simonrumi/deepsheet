@@ -41,6 +41,7 @@ import {
 import { sheetQuery, sheetsQuery } from '../queries/sheetQueries';
 import { deleteSheetsMutation, deleteSheetMutation, sheetByUserIdMutation } from '../queries/sheetMutations';
 import titleMutation from '../queries/titleMutation';
+import { editedTitleMessage } from '../components/displayText';
 
 // TODO return the response.data.thing for each query/mutation so the consumer doesn;t have to know that path
 
@@ -133,7 +134,7 @@ const saveTitleUpdate = async state => {
             type: TITLE_UPDATE_FAILED,
             payload: { errorMessage: 'title was not updated: ' + err },
          });
-         finishedEditingTitle(decodeText(text)); // even though the db update failed, the title has been changed locally
+         finishedEditingTitle({ value: decodeText(text), message: editedTitleMessage(), }); // even though the db update failed, the title has been changed locally
          log({ level: LOG.INFO }, 'error updating title in db', err);
       }
       

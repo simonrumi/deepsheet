@@ -1,7 +1,6 @@
 import React from 'react';
 import * as R from 'ramda';
 import managedStore from '../../store';
-import { arrayContainsSomething } from '../../helpers';
 import { statePastActions, statePresentAction, stateFutureActions } from '../../helpers/dataStructureHelpers';
 import { undid, redid, hidUndoHistory } from '../../actions/undoActions';
 import ChevronRight from '../atoms/IconChevronRight';
@@ -33,7 +32,6 @@ const renderHistoryList = () => (
 const positioning = { left: 0, top: 0 }
 
 const UndoHistoryModal = () => {
-	console.log('UndoHistory rendering');
 	return (
 		<DraggableModal classes="absolute z-50" positioning={positioning}>
 			<div className="bg-white border border-grey-blue pl-3">HISTORY</div>

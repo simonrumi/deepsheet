@@ -42,6 +42,7 @@ const titleReducer = (state = {}, action) => {
          return { ...state, text: action.payload, isStale: true }
 
       case FINISHED_EDITING_TITLE:
+			console.log('titleReducer--FINISHED_EDITING_TITLE got action.payload', action.payload );
          return {
             ...state,
             text: decodeText(action.payload.value),

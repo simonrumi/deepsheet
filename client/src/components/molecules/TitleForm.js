@@ -2,7 +2,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import {
    changedTitleValue,
-   updatedTitle,
+   finishedEditingTitle,
    titleEditCancelled,
    titleErrorDetected,
 } from '../../actions/titleActions';
@@ -13,6 +13,7 @@ import {
    stateTitleIsCallingDb,
    stateTitleIsStale,
 } from '../../helpers/dataStructureHelpers';
+import { editedTitleMessage } from '../displayText';
 import Button from '../atoms/Button';
 import TextInput from './TextInput';
 import ErrorText from '../atoms/ErrorText';
@@ -39,7 +40,10 @@ const TitleForm = props => {
 
    const handleSubmit = event => {
       event.preventDefault();
-      updatedTitle(titleText);
+      finishedEditingTitle({
+         value: titleText,
+         message: editedTitleMessage(),
+      });
    };
 
    const handleBlur = event => {

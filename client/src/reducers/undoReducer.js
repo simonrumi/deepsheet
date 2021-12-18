@@ -9,6 +9,7 @@ import {
    STARTED_EDITING,
    FINISHED_EDITING,
 	EDIT_CELL,
+	EDIT_TITLE,
 	SHOWED_UNDO_HISTORY, 
 	HID_UNDO_HISTORY,
 	STARTING_STATE,
@@ -16,11 +17,9 @@ import {
 import { TITLE_EDIT_CANCELLED, STARTED_EDITING_TITLE, FINISHED_EDITING_TITLE } from '../actions/titleTypes';
 import { arrayContainsSomething, isSomething, isNothing, reduceWithIndex } from '../helpers';
 import { stateOriginalValue, cellText, cellRow, cellColumn } from '../helpers/dataStructureHelpers';
-import { startMessage } from '../components/displayText';
+import { startMessage, editedTitleMessage } from '../components/displayText';
 import { LOG } from '../constants';
 import { log } from '../clientLogger';
-
-// TODO update the title edit stuff to use the new system
 
 const updateHistory = ({ startedActions, pastActions, presentAction, completedAction, actionCancelled = false }) => {
 	// completedAction & presentAction should look like this { undoableType, message, timestamp }
@@ -28,38 +27,13 @@ const updateHistory = ({ startedActions, pastActions, presentAction, completedAc
 		R.sortBy(R.prop('timestamp')), 
 		R.reverse
 	)(startedActions);
-	console.log(
-      'undoReducer--updateHistory got actionCancelled',
-      actionCancelled,
-      'reversedStartedActions',
-      reversedStartedActions,
-      'completedAction',
-      completedAction,
-      'pastActions',
-      pastActions,
-		'presentAction',
-		presentAction,
-   );
 	const { newStartedActions, newPastActions, newPresentAction } = reduceWithIndex(
       (accumulator, currentStartedAction, startedActionIndex) => {
-			console.log('undoReducer--updateHistory--reduceWithIndex got accumulator', accumulator, 'currentStartedAction', currentStartedAction);
          if (R.prop('undoableType', completedAction) === R.prop('undoableType', currentStartedAction)) {
 				const newPastActions = actionCancelled || isNothing(presentAction)
                ? R.prop('newPastActions', accumulator) // the action has been cancelled, or there's no presentAction, so don't record a new undoableAction
                : R.append(presentAction, R.prop('newPastActions', accumulator));
 				const newStartedActions = R.remove(startedActionIndex, 1, reversedStartedActions);
-				console.log(
-               'undoReducer--updateHistory got newPastActions',
-               newPastActions,
-               'newStartedActions',
-               newStartedActions,
-               'newPresentAction will be calculated from actionCancelled ? newPresentAction : completedAction ...where actionCancelled',
-               actionCancelled,
-					'accumulator.newPresentAction',
-					accumulator.newPresentAction,
-					'completedAction',
-					completedAction
-            );
             return R.reduced({
                newPastActions,
                newStartedActions,
@@ -74,14 +48,6 @@ const updateHistory = ({ startedActions, pastActions, presentAction, completedAc
          newPresentAction: presentAction,
       }, //initial values of the "new" actions are the current actions
       reversedStartedActions
-   );
-	console.log(
-      'undoReducer--updateHistory will return newPastActions',
-      newPastActions,
-      'newStartedActions',
-      newStartedActions,
-      'newPresentAction',
-      newPresentAction
    );
 	return {
 		newStartedActions: R.sortBy(R.prop('timestamp'), newStartedActions),
@@ -140,20 +106,6 @@ const undoReducer = reducer => {
 		const { startedActions, pastActions, presentAction, unregisteredActions, futureActions } = actionHistory;
       switch (action.type) {
          case UNDO:
-				console.log(
-               'undoReducer UNDO, startedActions',
-               startedActions,
-               'pastActions',
-               pastActions,
-               'presentAction',
-               presentAction,
-               'unregisteredActions',
-               unregisteredActions,
-               'futureActions',
-               futureActions,
-					'action.payload',
-					action.payload
-            );
             if (!arrayContainsSomething(past)) {
                return state;
             }
@@ -168,7 +120,6 @@ const undoReducer = reducer => {
 				if (isSomething(action.payload)) {
 					// payload contains a completedAction like {timestamp: 1639407914057, undoableType: 'edit_cell', message: 'Edited cell G3'}
 					const undoIndex = getIndexOfAction({ action: action.payload, actionArray: pastActions });
-					console.log('undoReducer UNDO got undoIndex', undoIndex);
 					return {
 						...state,
 						past: R.slice(0, undoIndex, past), // remove all the past after the undoIndex 
@@ -183,7 +134,6 @@ const undoReducer = reducer => {
 						}
 					}
 				}
-				console.log('undoReducer UNDO is doing a regular undo (not from the history list)');
             return {
 					...state,
                past: R.slice(0, past.length - 1, past), // take the last element from the past 
@@ -241,7 +191,6 @@ const undoReducer = reducer => {
             }
 
          case STARTED_UNDOABLE_ACTION:
-				console.log('undoReducer STARTED_UNDOABLE_ACTION');
             return startedActions.length === 0 
 				? {
                ...state, // keep the future as is
@@ -262,23 +211,14 @@ const undoReducer = reducer => {
 				}
 
          case COMPLETED_UNDOABLE_ACTION:
-				console.log('undoReducer COMPLETED_UNDOABLE_ACTION');
-				const { newPastActions, newStartedActions, newPresentAction } = updateHistory({
+				const historyAfterCompletion = updateHistory({
                startedActions,
                pastActions,
                presentAction,
                completedAction: action.payload,
             });
-				console.log(
-               'undoReducer COMPLETED_UNDOABLE_ACTION got newStartedActions',
-               newStartedActions,
-               'newPastActions',
-               newPastActions,
-               'newPresentAction',
-					newPresentAction
-            );
 
-				return newStartedActions.length === 0
+				return historyAfterCompletion.newStartedActions.length === 0
 					? {
 						...state,
 						past: R.append(state.maybePast, past), // the maybePast now becomes part of the real past
@@ -287,9 +227,9 @@ const undoReducer = reducer => {
 						maybePast: null, // reset this
 						actionHistory: {
 							...actionHistory,
-							startedActions: newStartedActions,
-							pastActions: newPastActions,
-							presentAction: newPresentAction,
+							startedActions: historyAfterCompletion.newStartedActions,
+							pastActions: historyAfterCompletion.newPastActions,
+							presentAction: historyAfterCompletion.newPresentAction,
 							futureActions: [], // blow away the future, since we're now taking a new course of action
 						}
 					}
@@ -298,15 +238,14 @@ const undoReducer = reducer => {
 						present: reducer(present, action), // update the present
 						actionHistory: {
 							...actionHistory,
-							startedActions: newStartedActions,
+							startedActions: historyAfterCompletion.newStartedActions,
 							pastActions, // while there are still outstanding startedActions, pastActions stays the same...
-							presentAction: newPresentAction,
+							presentAction: historyAfterCompletion.newPresentAction,
 							unregisteredActions: R.append(action.payload, unregisteredActions), //...and the completed action is unregistered
 						}
 					}
 
          case CANCELLED_UNDOABLE_ACTION:
-				console.log('undoReducer CANCELLED_UNDOABLE_ACTION');
             if (isNothing(maybePast)) {
                return state;
             }
@@ -317,7 +256,6 @@ const undoReducer = reducer => {
                completedAction: action.payload,
                actionCancelled: true,
             });
-				console.log('undoReducer CANCELLED_UNDOABLE_ACTION got updatedActions', updatedActions);
             return {
                ...state, // keep everything as-is
 					maybePast: null, // reset this
@@ -330,11 +268,8 @@ const undoReducer = reducer => {
             }
 
          case STARTED_EDITING:
-				// action.payload is the cell	
-				console.log('undoReducer STARTED_EDITING for cell', action.payload, 'startedActions', startedActions);
+				// action.payload is the cell
             // this is used by CellInPlaceEditor, when the user starts editing a cell
-            // action.payload contains the cell
-
 				return alreadyStartedEditingCell({ cell: action.payload, startedActions })
 					? state // don't change anything as we have already recorded that the cell is being edited
 					: {
@@ -360,7 +295,6 @@ const undoReducer = reducer => {
 					}
 
          case FINISHED_EDITING:
-				console.log('undoReducer FINISHED_EDITING got action.payload', action.payload);
             /**
             * 1. Note that action.payload contains { value, message, isPastingCellRange, actionCancelled }, which is different from what it is for STARTED_EDITING
             * 2. Note that in CellInPLaceEditor.js, the manageBlur() function may call finishedEditing() with the payload.value of null
@@ -370,6 +304,17 @@ const undoReducer = reducer => {
 				* and the payload.value are the same - i.e. don't change the undo history
 				* 3. if isPastingCellRange is true, then we should ignore the payload.value and update the past
              */
+				const { newPastActions, newStartedActions, newPresentAction } = updateHistory({ 
+					startedActions, 
+					pastActions, 
+					presentAction,
+					completedAction: { 
+						timestamp: Date.now(), 
+						undoableType: EDIT_CELL,
+						message: action.payload.message,
+					}, 
+					actionCancelled: action.payload.actionCancelled || false,
+				});
 				if (action.payload.isPastingCellRange ||
 					action.payload.value === null || 
 					R.equals(stateOriginalValue(state), action.payload.value) ||
@@ -377,25 +322,6 @@ const undoReducer = reducer => {
 					startedActions.length > 1
 				) {
 					// no change has been made to the cell, or we're pasting a cell range, or the edit was cancelled, or there is some other startedAction yet to complete
-					const { newPastActions, newStartedActions, newPresentAction } = updateHistory({ 
-						startedActions, 
-						pastActions, 
-						presentAction,
-						completedAction: { 
-							timestamp: Date.now(), 
-							undoableType: EDIT_CELL,
-							message: action.payload.message,
-						}, 
-						actionCancelled: action.payload.actionCancelled || false,
-					});
-					console.log(
-                  'undoReducer--FINISHED_EDITING determined no change made to the cell and newStartedActions',
-                  newStartedActions,
-                  'newPastActions',
-                  newPastActions,
-                  'newPresentAction',
-                  newPresentAction
-               );
 					return {
 							...state, // keep the past & future as is
 							present: reducer(present, action), // update the present
@@ -410,18 +336,6 @@ const undoReducer = reducer => {
 						}
 				} else {
 					// the cell has been edited and we're not pasting a cell range
-					const { newPastActions, newStartedActions, newPresentAction } = updateHistory({ 
-						startedActions, 
-						pastActions,
-						presentAction,
-						completedAction: {
-							timestamp: Date.now(), 
-							undoableType: EDIT_CELL,
-							message: action.payload.message,
-						}, 
-						actionCancelled: action.payload.actionCancelled || false,
-					});
-					console.log('undoReducer--FINISHED_EDITING determined the cell has changed and newStartedActions', newStartedActions, 'newPastActions', newPastActions, 'newPresentAction', newPresentAction);
 					return {
 						...state,
 						future: [], // blow away the future, since we're now taking a new course of action
@@ -445,30 +359,86 @@ const undoReducer = reducer => {
                present: reducer(present, action), // update the present
                maybePast: present, // this might become the official past, provided the user doesn't cancel
                original: { value: action.payload }, // save the value we started editing for comparison when FINISHED_EDITING_TITLE
+					actionHistory: {
+						...actionHistory,
+						startedActions : R.append(
+							{
+								timestamp: Date.now(), 
+								undoableType: EDIT_TITLE,
+								title: action.payload,
+							}, 
+							startedActions
+						),
+					}
             }
 
             case FINISHED_EDITING_TITLE:
-               return R.equals(stateOriginalValue(state), action.payload)
-                  ? {
+					// Note that in here we are not testing for startedActions === 0 as we do with COMPLETED_UNDOABLE_ACTION
+					// seems unlikely that there would be a situation where something else could start but not complete while editing the title
+					const historyAfterEdit = updateHistory({ 
+						startedActions, 
+						pastActions, 
+						presentAction,
+						completedAction: { 
+							timestamp: Date.now(), 
+							undoableType: EDIT_TITLE,
+							message: action.payload.message,
+						}, 
+						actionCancelled: action.payload.actionCancelled || false,
+					});
+               return R.equals(stateOriginalValue(state), action.payload.value) || 
+						action.payload.actionCancelled ||
+						startedActions.length > 1
+                  ? { // no change has been made, or the edit was cancelled, or there is some other startedAction yet to complete
                      ...state, // keep the past & future as is
                      present: reducer(present, action), // update the present
                      maybePast: null, // reset this
-                     original: null // reset this
-                  }
-                  : {
-                     ...state, // keep the future as is
+                     original: null, // reset this,
+							actionHistory: {
+								...actionHistory,
+								startedActions: historyAfterEdit.newStartedActions,
+								presentAction: historyAfterEdit.newPresentAction,
+								unregisteredActions: R.append(R.last(historyAfterEdit.newPastActions), unregisteredActions),
+							}
+                  } 
+                  : { // the title has been edited
+                     ...state,
+							future: [], // blow away the future, since we're now taking a new course of action
                      past: R.append(state.maybePast, past), // the maybePast now becomes part of the real past
                      present: reducer(present, action), // update the present
                      original: null, //reset this
                      maybePast: null, // reset this
+							actionHistory: {
+								...actionHistory,
+								startedActions:  historyAfterEdit.newStartedActions, 
+								pastActions: historyAfterEdit.newPastActions,
+								presentAction: historyAfterEdit.newPresentAction,
+								futureActions: [], // blow away the future, since we're now taking a new course of action
+							},
                   }
 
             case TITLE_EDIT_CANCELLED:
+					const historyAfterCancel = updateHistory({ 
+						startedActions, 
+						pastActions, 
+						presentAction,
+						completedAction: { 
+							timestamp: Date.now(), 
+							undoableType: EDIT_TITLE,
+							message: editedTitleMessage(),
+						}, 
+						actionCancelled: true,
+					});
                return {
                   ...state, // keep the past & future as is
                   present: reducer(present, action), // update the present
                   maybePast: null, // reset this
-                  original: null // reset this
+                  original: null, // reset this
+						actionHistory: {
+							...actionHistory, // keep the pastActions & futureActions as they are
+							startedActions: historyAfterCancel.newStartedActions,
+							presentAction: historyAfterCancel.newPresentAction,
+						}
                }
 
          case COMPLETED_SAVE_UPDATES:
@@ -477,7 +447,7 @@ const undoReducer = reducer => {
 					// reset the undo history after a save
                past: [], 
                future: [],
-					actionHistory: initialState.actionHistory, // TODO test this works
+					actionHistory: initialState.actionHistory,
             }
 
 			case SHOWED_UNDO_HISTORY:

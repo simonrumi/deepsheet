@@ -18,7 +18,6 @@ import { REPLACED_COLUMN_FILTERS, REPLACED_ROW_FILTERS } from './metadataTypes';
 export const toggledShowFilterModal = (rowIndex, columnIndex, initialValues) => {
    const showModal = isSomething(rowIndex) || isSomething(columnIndex);
    if (showModal) {
-		console.log('filterAction--toggledShowFilterModal about to dispatch STARTED_UNDOABLE_ACTION');
       managedStore.store.dispatch({ type: STARTED_UNDOABLE_ACTION, payload: { undoableType: FILTER_EDIT, timestamp: Date.now() } });
    } // note that COMPLETED_UNDOABLE_ACTION is fired by metadataActions--hasChangedMetadata 
    // and filterEditCancelled below fires CANCELLED_UNDOABLE_ACTION

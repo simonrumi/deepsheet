@@ -10,4 +10,5 @@ export const HID_UNDO_HISTORY = 'hid_undo_history';
 
 // these are not for an action, but the name of the action type within the action history
 export const EDIT_CELL = 'edit_cell'; 
+export const EDIT_TITLE = 'edit_title';
 export const STARTING_STATE = 'starting_state';

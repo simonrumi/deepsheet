@@ -199,21 +199,18 @@ const Sheet = props => {
    }
 
 	const handleDrop = event => {
-		console.log('Sheet--handleDragOver');
 		event.preventDefault();
 		// setIsOver(false);
 				
    }
 
    const handleDragOver = event => {
-		console.log('Sheet--handleDragOver');
 		event.preventDefault(); // doing this allows the drop
 		event.dataTransfer.dropEffect = 'move'; // not sure how necessary this is
 		// setIsOver(true);
    }
 
    const handleDragLeave = event =>  {
-		console.log('Sheet--handleDragLeave');
 		// setIsOver(false);
    }
 

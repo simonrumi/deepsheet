@@ -24,7 +24,6 @@ import RangeTools from './RangeTools';
 
 const onCellClick = (event, cell) => {
    event.preventDefault();
-	console.log('************** Cell--onCellClick started ****************');
    ifThenElse({
       ifCond: event.shiftKey,
       thenDo: [rangeSelected, maybeClearSubsheetCellFocus, hidePopups],

@@ -94,3 +94,5 @@ export const createFilterSheetMessage = ({ columnIndex, rowIndex }) => isSomethi
 		: 'Cleared all filters';
 
 export const startMessage = () => 'Start';
+
+export const editedTitleMessage = () => 'Edited sheet title';

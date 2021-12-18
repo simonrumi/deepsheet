@@ -98,7 +98,6 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
             column: cellColumn(cell),
          });
       }
-		console.log("CellInPLaceEditor--finalizeCellContent about to trigger FINISHED_EDITING statePastingCellRange(managedStore.state)", statePastingCellRange(managedStore.state));
       finishedEditing({
          value: isSomething(cellInPlaceEditorRef.current) ? cellInPlaceEditorRef.current.value : null,
          message: createdEditedCellMessage(cell),
@@ -117,7 +116,6 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
       event.preventDefault();
       stateFocusAbortControl(managedStore.state).abort();
       reinstateOriginalValue(cell); // note: this does the updatedCell call
-		console.log("CellInPLaceEditor--handleCancel about to trigger FINISHED_EDITING");
       finishedEditing({
          value: isSomething(cellInPlaceEditorRef.current) ? cellInPlaceEditorRef.current.value : null,
          message: `Cancelled editing cell ${createCellId(cellRow(cell), cellColumn(cell))}`,
@@ -130,9 +128,8 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
    }
 
    const handlePaste = event => {
-		console.log('-----CellInPlaceEditor--handlePaste started for cell', cell);
 		runIfSomething(evt => evt.preventDefault(), event);
-      // TODO have to handle what happens if the range includes hidden cells: shouldn't paste them
+      // TODO NEXT have to handle what happens if the range includes hidden cells: shouldn't paste them
       
       const fromCell = stateCellRangeFrom(managedStore.state);
       const toCell = stateCellRangeTo(managedStore.state);
@@ -150,7 +147,6 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
 		if (typeof navigator.clipboard.readText === 'function') {
 			updatedCellEditorPositioning({ ...positioning }); // this is needed, in some circumstances, by PasteOptionsModal
 			updatedBlurEditorFunction(manageBlur); // this is needed, in some circumstances, by PasteOptionsModal
-			console.log('CellInPlaceEditor--handlePaste just updatedBlurEditorFunction for cell', cell);
 			navigator.clipboard.readText().then(
 				systemClipboardText => {
 					capturedSystemClipboard(systemClipboardText);
@@ -187,7 +183,6 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
 						startingCellRowIndex: cellRow(cell), 
 						startingCellColumnIndex: cellColumn(cell)
 					});
-					console.log('CellInPlaceEditor--handlePaste only got something in clipboard, and clipboardAsCells is', clipboardAsCells);
 					if (clipboardAsCells.length > 1) {
 						startedUndoableAction({ undoableType: PASTE_CLIPBOARD, timestamp: Date.now() });
 						replacedCellsInRange(clipboardAsCells);
@@ -219,7 +214,6 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
       // use https://keycode.info/ to get key values
       switch(event.keyCode) {
          case 27: // esc
-				console.log('-----CellInPlaceEditor esc key was pressed about to call handleCancel-----');
             handleCancel(event);
             break;
          case 13: // enter
@@ -251,7 +245,6 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
    };
    
    const manageBlur = event => {
-		console.log('CellInPlaceEditor--manageBlur started for cell', cell);
       runIfSomething(evt => evt.preventDefault, event);
 		if (stateShowPasteOptionsModal(managedStore.state)) {
 			//the PasteOptionsModal has popped up, so we should not blur, so the focus is retained for that modal
@@ -261,7 +254,6 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
 			stateFocusAbortControl,
 			abortControl => runIfSomething(abortCtrl => abortCtrl.abort(), abortControl)
 		)(managedStore.state);
-		console.log('CellInPlaceEditor--manageBlur about to call finalizeCellContent with cell', cell);
       finalizeCellContent(cell);
       updatedFocusRef({ ref: null }); // clear the existing focusRef
       clearedFocus();
@@ -273,7 +265,6 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
          thenDo: [
             () => cellInPlaceEditorRef.current.selectionStart = 0,
             () => cellInPlaceEditorRef.current.selectionEnd = cellText(cell).length,
-				() => console.log('CellInPlaceEditor--manageCellInPlaceEditorFocus about to trigger STARTED_EDITING'),
             () => startedEditing(cell)
          ],
          params: { ifParams: { event, cell, cellRef: cellInPlaceEditorRef, keyBindings: keyBindingsCellInPlaceEditor } }
