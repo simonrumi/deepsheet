@@ -96,3 +96,7 @@ export const createFilterSheetMessage = ({ columnIndex, rowIndex }) => isSomethi
 export const startMessage = () => 'Start';
 
 export const editedTitleMessage = () => 'Edited sheet title';
+
+export const createHighlightRangeMessage = ({ fromCell, toCell }) => `Highlighted range from ${createCellId(cellRow(fromCell), cellColumn(fromCell))} to ${createCellId(cellRow(toCell), cellColumn(toCell))}`;
+
+export const unhighlightedRangeMessage = () => 'Unhighlighted cell range';

@@ -6,7 +6,7 @@ import { createdSheet } from '../../actions/sheetActions';
 import { clearedFocus, updatedFocusRef } from '../../actions/focusActions';
 import { replacedCellsInRange, updatedPastingCellRange } from '../../actions/cellRangeActions';
 import { startedEditing, finishedEditing, startedUndoableAction, completedUndoableAction, } from '../../actions/undoActions';
-import { PASTE_RANGE } from '../../actions/cellRangeTypes';
+import { PASTE_RANGE, } from '../../actions/cellRangeTypes';
 import { updatedClipboard } from '../../actions/clipboardActions';
 import { PASTE_CLIPBOARD } from '../../actions/clipboardTypes';
 import {
@@ -129,7 +129,6 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
 
    const handlePaste = event => {
 		runIfSomething(evt => evt.preventDefault(), event);
-      // TODO NEXT have to handle what happens if the range includes hidden cells: shouldn't paste them
       
       const fromCell = stateCellRangeFrom(managedStore.state);
       const toCell = stateCellRangeTo(managedStore.state);

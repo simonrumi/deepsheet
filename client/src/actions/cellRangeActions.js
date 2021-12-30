@@ -7,6 +7,8 @@ import {
 	REPLACED_CELLS_IN_RANGE,
 	UPDATED_RANGE_WAS_COPIED,
 	UPDATED_PASTING_CELL_RANGE,
+	STARTED_HIGHLIGHTING_RANGE,
+	COMPLETED_HIGHLIGHTING_RANGE,
 } from './cellRangeTypes';
 
 export const highlightedCellRange = cellData => {
@@ -56,5 +58,19 @@ export const updatedPastingCellRange = isPastingCellRange => {
 	managedStore.store.dispatch({
 		type: UPDATED_PASTING_CELL_RANGE,
 		payload: isPastingCellRange
+	});
+}
+
+export const startedHighlightingRange = info => {
+	managedStore.store.dispatch({
+		type: STARTED_HIGHLIGHTING_RANGE,
+		payload: info
+	});
+}
+
+export const completedHighlightingRange = info => {
+	managedStore.store.dispatch({
+		type: COMPLETED_HIGHLIGHTING_RANGE,
+		payload: info
 	});
 }

@@ -14,8 +14,15 @@ import { tabToNextVisibleCell } from './cellHelpers';
 import { updateCellsInRange } from './rangeToolHelpers';
 import { isSomething, arrayContainsSomething, ifThen, ifThenElse, } from '.';
 import { updatedFocusRef, updatedFocusAbortControl, focusedCell, clearedFocus } from '../actions/focusActions';
-import { highlightedCellRange, updatedFromCell, } from '../actions/cellRangeActions';
+import {
+   highlightedCellRange,
+   updatedFromCell,
+   startedHighlightingRange,
+   completedHighlightingRange,
+} from '../actions/cellRangeActions';
+import { HIGHLIGHTED_CELL_RANGE } from '../actions/cellRangeTypes';
 import { updatedCell } from '../actions/cellActions';
+import { createHighlightRangeMessage } from '../components/displayText';
 
 export const isStateCellRefThisCell = (cellRef, cell) => {
     const currentFocusedCell = stateFocusCell(managedStore.state);
@@ -79,6 +86,8 @@ export const rangeSelected = toCell => {
 	const fromCell = stateCellRangeMaybeFrom(managedStore.state);
 	console.log('focusHelpers--rangeSelected got maybeFrom cell from state', fromCell, 'and toCell passed in', toCell);
 	if (fromCell && (fromCell.row !== toCell.row || fromCell.column !== toCell.column)) {
+		const message = createHighlightRangeMessage({ fromCell, toCell });
+		startedHighlightingRange({ undoableType: HIGHLIGHTED_CELL_RANGE, timestamp: Date.now() });
 		document.getSelection().removeAllRanges(); // this stops the content within each cell in the range from getting highlighted. There's a bit of flashing, but no big deal
 		updatedFromCell(fromCell);
 		console.log('focusHelpers--rangeSelected just updatedFromCell');
@@ -86,6 +95,7 @@ export const rangeSelected = toCell => {
 		console.log('focusHelpers--rangeSelected just highlightedCellRange');
 		updateCellsInRange(true); // true means we're finding and adding all the cells in the range
 		console.log('focusHelpers--rangeSelected just updateCellsInRange');
+		completedHighlightingRange({ undoableType: HIGHLIGHTED_CELL_RANGE, message, timestamp: Date.now() });
 		return true;
 	}
 	return false;

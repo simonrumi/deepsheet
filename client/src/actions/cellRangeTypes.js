@@ -1,4 +1,9 @@
 export const HIGHLIGHTED_CELL_RANGE = 'highlighted_cell_range';
+
+// these two are for the undoReducer
+export const STARTED_HIGHLIGHTING_RANGE = 'started_highlighting_range';
+export const COMPLETED_HIGHLIGHTING_RANGE = 'completed_highlighting_range';
+
 export const CLEARED_CELL_RANGE = 'cleared_cell_range';
 export const UPDATED_FROM_CELL = 'updated_from_cell';
 export const ADDED_CELL_TO_RANGE = 'added_cell_to_range';

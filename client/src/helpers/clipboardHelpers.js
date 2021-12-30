@@ -26,6 +26,7 @@ import {
     cellRowSetter,
     cellColumnSetter,
     cellTextSetter,
+	 cellVisible,
     cellVisibleSetter,
     stateTotalRows,
     stateTotalColumns,
@@ -70,7 +71,7 @@ const populateAndSortVisibilityArr = (visibilityArr, axis) => R.pipe(
     sortVisibilityArr
 )(axis);
 
-const adjustIndiciesArrToShape = (lengthNeeded, indiciesArr, axis) => indiciesArr.length === lengthNeeded
+const adjustIndiciesArrToShape = ({ lengthNeeded, indiciesArr, axis }) => indiciesArr.length === lengthNeeded
     ? indiciesArr // it is exactly the right length, so just leave the indiciesArr as is
     : ifThenElse({
         ifCond: lengthNeeded - indiciesArr.length > 0, // if +ve we need to add indicides, if -ve we need to remove
@@ -133,9 +134,10 @@ const getExtraSpaceNeeded = (startCellRowIndex, startCellColumnIndex, rangeShape
     ]
 }
 
-const orderClipboardCells = () => R.pipe(
-    stateCellRangeCells,
-    R.sort(compareIndexValues)
+const orderVisibleClipboardCells = () => R.pipe(
+	stateCellRangeCells, 
+	R.sort(compareIndexValues),
+	R.filter(cell => cellVisible(cell))
 )(managedStore.state);
 
 const registerUpdatedCells = targetMap => R.forEach(
@@ -183,7 +185,7 @@ const mapTargetCells = R.curry((targetStartCell, rangeShape) => {
 		 // we didn't get a legit (rectangular) rangeShape
 		return;
 	 }
-    const orderedSourceCells = orderClipboardCells();
+    const orderedSourceCells = orderVisibleClipboardCells();
     const startCellRowIndex = cellRow(targetStartCell);
     const starCellColumnIndex = cellColumn(targetStartCell);
 
@@ -192,8 +194,10 @@ const mapTargetCells = R.curry((targetStartCell, rangeShape) => {
     const visibleRowIndicies = getVisibleAxisIndicies(startCellRowIndex, ROW_AXIS);
     const visibleColumnIndicies = getVisibleAxisIndicies(starCellColumnIndex, COLUMN_AXIS);
     
-    const requiredRowIndicies = adjustIndiciesArrToShape(rangeShape.rowSpan, visibleRowIndicies, ROW_AXIS);
-    const requiredColumnIndicides = adjustIndiciesArrToShape(rangeShape.columnSpan, visibleColumnIndicies, COLUMN_AXIS);
+	 console.log('clipboardHelpers--mapTargetCells got visibleRowIndicies', visibleRowIndicies, 'visibleColumnIndicies', visibleColumnIndicies, 'orderedSourceCells', orderedSourceCells);
+
+    const requiredRowIndicies = adjustIndiciesArrToShape({ lengthNeeded: rangeShape.rowSpan, indiciesArr: visibleRowIndicies, axis: ROW_AXIS});
+    const requiredColumnIndicides = adjustIndiciesArrToShape({ lengthNeeded: rangeShape.columnSpan, indiciesArr: visibleColumnIndicies, axis: COLUMN_AXIS });
 
     return R.pipe(
         () => reduceWithIndex(
@@ -201,8 +205,12 @@ const mapTargetCells = R.curry((targetStartCell, rangeShape) => {
                 const rowMapping = reduceWithIndex(
                     (columnAccumulator, columnIndex, columnArrIndex) => {
                         const sourceCell = orderedSourceCells[rowArrIndex * rangeShape.columnSpan + columnArrIndex]; // this calculates how far thru the orderedSourceCells array we are
-                        const targetCell = getTargetCell(rowIndex, columnIndex);
-                        return R.append([sourceCell, targetCell], columnAccumulator);
+								console.log('clipboardHelpers--mapTargetCells got cellVisible(sourceCell)', cellVisible(sourceCell), 'and sourceCell', sourceCell);
+								// if (cellVisible(sourceCell)) {
+									const targetCell = getTargetCell(rowIndex, columnIndex);
+                        	return R.append([sourceCell, targetCell], columnAccumulator);
+								// }
+                        // return columnAccumulator;
                     },
                     [], // initial value
                     requiredColumnIndicides
@@ -263,16 +271,66 @@ const getRangeShape = () => {
 			{ columnSpan: 0, rowSpan: 0, currentRow: null, currentColumnSpan: 0 }, // initial values
 			cellRangeArr
 		)
+		console.log('clipboardHelpers--getRangeShape got rangeShapeFromCells', rangeShapeFromCells);
 		return R.pick(['columnSpan', 'rowSpan'], rangeShapeFromCells);
 	}
+	
+	const fromCellColumn = isColumnDirectionForward(fromCell, toCell) ? cellColumn(fromCell) : cellColumn(toCell);
+	const toCellColumn = isColumnDirectionForward(fromCell, toCell) ? cellColumn(toCell) : cellColumn(fromCell);
+	const columnVisibility = stateColumnVisibility(managedStore.state);
+	console.log('clipboardHelpers--getRangeShape got columnVisibility', columnVisibility, 'stateTotalColumns(managedStore.state)', stateTotalColumns(managedStore.state));
+	const numberOfHiddenColumns = arrayContainsSomething(columnVisibility)
+		? forLoopReduce(
+			(accumulator, index) => {
+				console.log('clipboardHelpers--getRangeShape in forLoopReduce got accumulator', accumulator, 'index', index);
+				if (index < fromCellColumn) {
+					// we're not yet at the beginning of the cell range, so skip
+					return accumulator;
+				}
+				if (index > toCellColumn) {
+					// we're beyond the end of the cell range, so finish, returning the number we have accumulated 
+					return R.reduced(accumulator);
+				}
+				return R.pipe(
+					getObjectFromArrayByKeyValue, 
+					R.prop('isVisible'),
+					isVisible => isVisible ? accumulator : ++accumulator
+				)('index', index, columnVisibility);
+			},
+			0, //initial number of hidden columns
+			stateTotalColumns(managedStore.state)
+		)
+		: 0; // the columnVisibility array is empty, meaning all columns are visible
 
-	const columnSpan = isColumnDirectionForward(fromCell, toCell)
-		? cellColumn(toCell) + 1 - cellColumn(fromCell)
-		: cellColumn(fromCell) + 1 - cellColumn(toCell);
+	const columnSpan = toCellColumn + 1 - fromCellColumn - numberOfHiddenColumns;
+	console.log('clipboardHelpers--getRangeShape got fromCellColumn', fromCellColumn, 'toCellColumn', toCellColumn, 'numberOfHiddenColumns', numberOfHiddenColumns, 'therefore columnSpan =', columnSpan);
 
-	const rowSpan = isRowDirectionForward(fromCell, toCell)
-		? cellRow(toCell) + 1 - cellRow(fromCell)
-		: cellRow(fromCell) + 1 - cellRow(toCell);
+	const fromCellRow = isRowDirectionForward(fromCell, toCell) ? cellRow(fromCell) : cellRow(toCell);
+	const toCellRow = isRowDirectionForward(fromCell, toCell) ? cellRow(toCell) : cellRow(fromCell);
+	const rowVisibility = stateRowVisibility(managedStore.state);
+	const numberOfHiddenRows = arrayContainsSomething(rowVisibility) 
+		? forLoopReduce(
+			(accumulator, index) => {
+				if (index < fromCellRow) {
+					// we're not yet at the beginning of the cell range, so skip
+					return accumulator;
+				}
+				if (index > toCellRow) {
+					// we're beyond the end of the cell range, so finish, returning the number we have accumulated 
+					return R.reduced(accumulator);
+				}
+				return R.pipe(
+					getObjectFromArrayByKeyValue, 
+					R.prop('isVisible'),
+					isVisible => isVisible ? accumulator : ++accumulator
+				)('index', index, rowVisibility);
+			},
+			0, //initial number of hidden rows
+			stateTotalRows(managedStore.state)
+		)
+		: 0; // // the rowVisibility array is empty, meaning all rows are visible
+	const rowSpan = toCellRow + 1 - fromCellRow - numberOfHiddenRows;
+	console.log('clipboardHelpers--getRangeShape got fromCellRow', fromCellRow, 'toCellRow', toCellRow, 'numberOfHiddenRows', numberOfHiddenRows, 'therefore rowSpan =', rowSpan);
 
 	return { columnSpan, rowSpan }
 };

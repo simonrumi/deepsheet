@@ -60,10 +60,11 @@ export const clearMetadata = () => {
    });
 }
 
-export const hasChangedMetadata = ({ changeType, data }) => {
+export const hasChangedMetadata = props => {
    managedStore.store.dispatch({
       type: HAS_CHANGED_METADATA,
    });
+	const { changeType, data } = props || { changeType: null, data: null };
 	switch (changeType) {
       case FILTER_EDIT:
          updateFilteredCells();
