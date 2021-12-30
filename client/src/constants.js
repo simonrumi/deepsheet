@@ -20,11 +20,6 @@ export const TOOL_ICON_WIDTH = '2em';
 
 export const PASTE_OPTIONS_MODAL_WIDTH = '25em';
 
-export const DRAGGABLE_ROW_RESIZER = 'draggable_row_resizer';
-export const DRAGGABLE_COLUMN_RESIZER = 'draggable_column_resizer';
-export const DRAGGABLE_ROW_NUMBER = 'draggable_row_number';
-export const DRAGGABLE_COLUMN_LETTER = 'draggable_column_letter';
-
 export const SORT_INCREASING = 'sort_increasing';
 export const SORT_DECREASING = 'sort_decreasing';
 export const SORT_TYPE_TEXT = 'sort_type_text';

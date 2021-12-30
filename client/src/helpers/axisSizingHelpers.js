@@ -4,13 +4,8 @@ import { stateRowHeights, stateColumnWidths, stateDragType, stateDragData } from
 import { startedUndoableAction, completedUndoableAction } from '../actions/undoActions';
 import { updatedRowHeight, updatedColumnWidth } from '../actions/metadataActions';
 import { UPDATED_ROW_HEIGHT, UPDATED_COLUMN_WIDTH } from '../actions/metadataTypes';
-import {
-   ROW_AXIS,
-   MIN_COLUMN_WIDTH,
-   MIN_ROW_HEIGHT,
-   DRAGGABLE_ROW_RESIZER,
-   DRAGGABLE_COLUMN_RESIZER,
-} from '../constants';
+import { DRAGGABLE_ROW_RESIZER, DRAGGABLE_COLUMN_RESIZER } from '../actions/dragTypes';
+import { ROW_AXIS, MIN_COLUMN_WIDTH, MIN_ROW_HEIGHT } from '../constants';
 import { createUpdateRowHeightMessage, createUpdateColumnWidthMessage } from '../components/displayText';
 
 export const createDefaultAxisSizing = (numItems, defaultSize) => forLoopMap(

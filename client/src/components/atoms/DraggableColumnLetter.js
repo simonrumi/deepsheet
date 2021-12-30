@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { startedDrag, endedDrag } from '../../actions/dragActions';
-import { DRAGGABLE_COLUMN_LETTER } from '../../constants';
+import { DRAGGABLE_COLUMN_LETTER } from '../../actions/dragTypes';
 
 const DragableColumnLetter = props => {
    const { columnLetter, index } = props;

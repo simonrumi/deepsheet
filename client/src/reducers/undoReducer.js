@@ -89,7 +89,7 @@ const updateHistory = ({
    );
    // completedAction & presentAction should look like this { undoableType, message, timestamp }
    const reversedStartedActions = R.pipe(R.sortBy(R.prop('timestamp')), R.reverse)(startedActions);
-	if (R.prop('undoableType', completedAction) === UPDATED_FOCUS && R.prop('undoableType', presentAction) === HIGHLIGHTED_CELL_RANGE) { // TODO rename this to UNHIGHLIGHTED_RANGE
+	if (R.prop('undoableType', completedAction) === UPDATED_FOCUS && R.prop('undoableType', presentAction) === HIGHLIGHTED_CELL_RANGE) {
 		// there will be no started action, because this happened immediately after highlighting a range
 		console.log('undoReducer--updateHistory got UPDATED_FOCUS completedAction after a HIGHLIGHTED_CELL_RANGE presentAction so leaving startedActions as is');
 		return {
@@ -421,32 +421,6 @@ const undoReducer = reducer => {
 					state,
 				});
 				console.log('undoReducer--FINISHED_EDITING got historyAfterCellEdit', historyAfterCellEdit, 'action.payload', action.payload);
-				
-				// TODO BUG here:
-				// here's the first BUG:
-				// 1. highlight a cell range
-				// result: the history contains this
-				// pastActions: [starting_state, edit_cell] ...this is wrong - shouldn't have edit_cell
-				// presentAction: [highlighted_cell_range] ...this is correct
-				// ........seems like cellNotReallyEdited is messing up ...probably need some additional condition
-
-				//older notes, might still be relevant:
-				// when pasting a range we give updateHistory this:
-				// completedAtion: edit_cell
-				// is PastingCellRange: true
-				// actionCancelled false 
-				// hasHighlightedRange false
-				//pastActions: [edit_cell, highlighted_range]
-				//  presentAction: updated_focus
-				// startedActions: [pasteRange, edit_cell]
-
-				// after updateHistory we have
-				// pastActions: [edit_cell, hightlighted_range]
-				// presentACtion: edit_cell // ******** is this wrong??
-				// startedActions: [paste_range]
-				// unregisteredActions: [edit_cell]
-				 
-
 
 				if (cellNotReallyEdited({ 
 						isPastingCellRange: action.payload.isPastingCellRange, 

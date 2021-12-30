@@ -47,6 +47,7 @@ const PasteOptionsModal = () => {
 
 		if (clipboardAsCells.length > 1) {
 			startedUndoableAction({ undoableType: PASTE_CLIPBOARD, timestamp: Date.now() });
+			updatedPastingCellRange(true);
 			clearedCellRange(); // clears from, to, and cells
 			replacedCellsInRange(clipboardAsCells);
 			console.log('PasteOptionsModal--handlePasteClipboard about to call pasteCellRangeToTarget which should then call blurCellInPlaceEditor');
@@ -58,6 +59,7 @@ const PasteOptionsModal = () => {
 			});
 			const message = createPasteClipboardMessage(cell);
 			completedUndoableAction({ undoableType: PASTE_CLIPBOARD, message, timestamp: Date.now() });
+			updatedPastingCellRange(false);
 			return;
 		}
 

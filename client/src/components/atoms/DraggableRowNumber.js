@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { startedDrag, endedDrag } from '../../actions/dragActions';
-import { DRAGGABLE_ROW_NUMBER } from '../../constants';
+import { DRAGGABLE_ROW_NUMBER } from '../../actions/dragTypes';
 
 const DraggableRowNumber = props => {
    const { number, index } = props;

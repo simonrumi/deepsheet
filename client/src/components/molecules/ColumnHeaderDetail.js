@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import * as R from 'ramda';
 import managedStore from '../../store';
-import { COLUMN_AXIS, DRAGGABLE_COLUMN_LETTER } from '../../constants';
+import { COLUMN_AXIS, } from '../../constants';
 import { COLUMN_GEAR_ICON_TEST_ID } from '../../__tests__/testHelpers/constants';
 import { indexToColumnLetter, isSomething, getObjectFromArrayByKeyValue } from '../../helpers';
 import { isFilterEngaged } from '../../helpers/visibilityHelpers';
@@ -15,6 +15,7 @@ import { columnMoved } from '../../actions/metadataActions';
 import { startedUndoableAction, completedUndoableAction } from '../../actions/undoActions';
 import { updatedAxisItemTool } from '../../actions/metadataActions';
 import { COLUMN_MOVED } from '../../actions/metadataTypes';
+import { DRAGGABLE_COLUMN_LETTER } from '../../actions/dragTypes';
 import { createColumnDropMessage } from '../displayText';
 import DraggableColumnLetter from '../atoms/DraggableColumnLetter';
 import GearIcon from '../atoms/IconGear';

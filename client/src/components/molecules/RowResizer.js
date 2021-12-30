@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { startedDrag, endedDrag } from '../../actions/dragActions';
-import { DRAGGABLE_ROW_RESIZER } from '../../constants';
+import { DRAGGABLE_ROW_RESIZER } from '../../actions/dragTypes';
 
 const RowResizer = props => {
    const { rowIndex } = props;

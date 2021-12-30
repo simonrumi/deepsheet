@@ -42,6 +42,16 @@ import { cellRangePasteError, SYSTEM_CLIPBOARD_UNAVAILABLE_MSG } from '../compon
 import { ROW_AXIS, COLUMN_AXIS, LOG } from '../constants';
 import { log } from '../clientLogger';
 
+/**
+TODO BUG 
+1. copy range
+2. filter so that part of the range is hidden
+3. paste range
+result: only the top left cell is pasted into the target cell
+desired result: even though some of the source cells might be hidden, they should be pasted in full to the target cells
+ */
+
+
 const createPlaceholderCell = (row, column) => R.pipe(
         cellRowSetter(row),
         cellColumnSetter(column),
@@ -112,8 +122,10 @@ const getHiddenAxisItemsCount = (fromIndex, axis) => {
 
 const getVisibleAxisIndicies = (startingIndex, axis) => {
     const visibilityArr = axis === ROW_AXIS ? stateRowVisibility(managedStore.state) : stateColumnVisibility(managedStore.state);
+	 console.log('clipboardHelpers--getVisibleAxisIndicies for axis', axis, 'got visibilityArr', visibilityArr);
     return R.pipe(
         populateAndSortVisibilityArr,
+		  R.tap(data => console.log('clipboardHelpers--getVisibleAxisIndicies after populateAndSortVisibilityArr got', data)),
         R.reduce(
             (accumulator, visibilityItem) => visibilityItem.index >= startingIndex && visibilityItem.isVisible
                 ? R.append(visibilityItem.index, accumulator)
@@ -187,17 +199,18 @@ const mapTargetCells = R.curry((targetStartCell, rangeShape) => {
 	 }
     const orderedSourceCells = orderVisibleClipboardCells();
     const startCellRowIndex = cellRow(targetStartCell);
-    const starCellColumnIndex = cellColumn(targetStartCell);
+    const startCellColumnIndex = cellColumn(targetStartCell);
 
-    const [ extraRows, extraColumns ] = getExtraSpaceNeeded(startCellRowIndex, starCellColumnIndex, rangeShape);
+    const [ extraRows, extraColumns ] = getExtraSpaceNeeded(startCellRowIndex, startCellColumnIndex, rangeShape);
 
     const visibleRowIndicies = getVisibleAxisIndicies(startCellRowIndex, ROW_AXIS);
-    const visibleColumnIndicies = getVisibleAxisIndicies(starCellColumnIndex, COLUMN_AXIS);
+    const visibleColumnIndicies = getVisibleAxisIndicies(startCellColumnIndex, COLUMN_AXIS);
     
 	 console.log('clipboardHelpers--mapTargetCells got visibleRowIndicies', visibleRowIndicies, 'visibleColumnIndicies', visibleColumnIndicies, 'orderedSourceCells', orderedSourceCells);
 
     const requiredRowIndicies = adjustIndiciesArrToShape({ lengthNeeded: rangeShape.rowSpan, indiciesArr: visibleRowIndicies, axis: ROW_AXIS});
     const requiredColumnIndicides = adjustIndiciesArrToShape({ lengthNeeded: rangeShape.columnSpan, indiciesArr: visibleColumnIndicies, axis: COLUMN_AXIS });
+	 console.log('clipboardHelpers--mapTargetCells got requiredRowIndicies', requiredRowIndicies, 'requiredColumnIndicides', requiredColumnIndicides);
 
     return R.pipe(
         () => reduceWithIndex(
@@ -232,7 +245,6 @@ const getRangeShape = () => {
 	console.log('clipboardHelpers--getRangeShape got fromCell', fromCell, 'toCell', toCell);
 	if (isNothing(fromCell) || isNothing(toCell)) {
 		const cellRangeArr = stateCellRangeCells(managedStore.state);
-
 		if (!arrayContainsSomething(cellRangeArr)) {
 			log({ level: LOG.WARN }, 'could not get a complete range from the clipboard');
 			return;
@@ -412,6 +424,7 @@ const createCell = ({ text, rowIndex, columnIndex }) => R.pipe(
         cellColumnSetter(columnIndex),
         cellRowSetter(rowIndex),
         cellTextSetter(text),
+		  cellVisibleSetter(true), // since we're creating a cell range from the system clipboard, every cell should be visible
     )({});
 
 const createCellsInRow = ({ rowTextArr, rowIndex, columnIndex }) => {

@@ -184,12 +184,14 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
 					});
 					if (clipboardAsCells.length > 1) {
 						startedUndoableAction({ undoableType: PASTE_CLIPBOARD, timestamp: Date.now() });
+						updatedPastingCellRange(true);
 						replacedCellsInRange(clipboardAsCells);
 						pasteCellRangeToTarget(cell)
 							? manageBlur() // pasteCellRangeToTarget returned true, indicating a correctly formed range was pasted, so now do the blur
 							: pasteText({ text: systemClipboardText, cell }); // pasteCellRangeToTarget returned false, indicating it couldn't get a properly shaped range from the clippboard, so just paste the raw clipboard text instead
 						const message = createPasteClipboardMessage(cell);
 						completedUndoableAction({ undoableType: PASTE_CLIPBOARD, message, timestamp: Date.now() });
+						updatedPastingCellRange(false);
 						return;
 					}
 					pasteText({ text: systemClipboardText, cell });
