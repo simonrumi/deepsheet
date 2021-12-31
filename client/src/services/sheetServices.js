@@ -6,6 +6,7 @@ import { completedSaveUpdates } from '../actions';
 import { triggeredFetchSheet } from '../actions/sheetActions';
 import { updatedCells, clearedAllCellKeys } from '../actions/cellActions';
 import { clearedFocus } from '../actions/focusActions';
+import { clearedCellRange } from '../actions/cellRangeActions';
 import { updatedMetadata, clearMetadata } from '../actions/metadataActions';
 import {
    fetchingSheets,
@@ -19,13 +20,11 @@ import {
    deleteSheetsError,
 } from '../actions/sheetsActions';
 import { postingUpdatedTitle, finishedEditingTitle } from '../actions/titleActions';
+import { updatedSheetsTree } from '../actions/sheetsActions';
 import { COMPLETED_TITLE_UPDATE, TITLE_UPDATE_FAILED } from '../actions/titleTypes';
 import { clearCells, decodeText } from '../helpers/cellHelpers';
 import { createSheetsTreeFromArray } from '../helpers/sheetsHelpers';
-import { updatedSheetsTree } from '../actions/sheetsActions';
-import { sheetQuery, sheetsQuery } from '../queries/sheetQueries';
-import { deleteSheetsMutation, deleteSheetMutation, sheetByUserIdMutation } from '../queries/sheetMutations';
-import titleMutation from '../queries/titleMutation';
+import { updateCellsInRange } from '../helpers/rangeToolHelpers';
 import { isSomething, arrayContainsSomething, ifThen } from '../helpers';
 import { getSaveableCellData, getCellFromStore } from '../helpers/cellHelpers';
 import { getUserInfoFromCookie } from '../helpers/userHelpers';
@@ -39,6 +38,10 @@ import {
    stateSheets,
    stateFocusAbortControl,
 } from '../helpers/dataStructureHelpers';
+import { sheetQuery, sheetsQuery } from '../queries/sheetQueries';
+import { deleteSheetsMutation, deleteSheetMutation, sheetByUserIdMutation } from '../queries/sheetMutations';
+import titleMutation from '../queries/titleMutation';
+import { editedTitleMessage } from '../components/displayText';
 
 // TODO return the response.data.thing for each query/mutation so the consumer doesn;t have to know that path
 
@@ -131,7 +134,7 @@ const saveTitleUpdate = async state => {
             type: TITLE_UPDATE_FAILED,
             payload: { errorMessage: 'title was not updated: ' + err },
          });
-         finishedEditingTitle(decodeText(text)); // even though the db update failed, the title has been changed locally
+         finishedEditingTitle({ value: decodeText(text), message: editedTitleMessage(), }); // even though the db update failed, the title has been changed locally
          log({ level: LOG.INFO }, 'error updating title in db', err);
       }
       
@@ -197,5 +200,7 @@ export const loadSheet = R.curry(async (state, sheetId) => {
    clearMetadata();
    clearedAllCellKeys();
    clearedFocus(); // make sure no cells are focused
+	updateCellsInRange(false); // false means we want to remove all the cells from the range
+	clearedCellRange();
    triggeredFetchSheet(sheetId); // then get the new sheet
 });

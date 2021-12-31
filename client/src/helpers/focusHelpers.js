@@ -1,19 +1,28 @@
 import * as R from 'ramda';
 import managedStore from '../store';
 import {
-    stateFocusCellRef,
-    stateFocusCell,
-    stateFocusAbortControl,
-    stateCellRangeFrom,
-    stateCellRangeTo,
-    statePresent,
-    cellRow,
-    cellColumn,
+	stateFocusCellRef,
+	stateFocusCell,
+	stateFocusAbortControl,
+	stateCellRangeMaybeFrom,
+	stateCellRangeFrom,
+	stateCellRangeTo,
+	stateCellRangeCells,
+	cellInCellRangeSetter,
 } from './dataStructureHelpers';
-import { tabToNextVisibleCell, createCellKey } from './cellHelpers';
-import { isSomething, isNothing, ifThen, ifThenElse, } from '.';
-import { updatedFocusRef, updatedFocusAbortControl, focusedCell, highlightedCellRange } from '../actions/focusActions';
-import { addCellToRange, removeCellFromRange } from '../actions/cellActions';
+import { tabToNextVisibleCell } from './cellHelpers';
+import { updateCellsInRange } from './rangeToolHelpers';
+import { isSomething, arrayContainsSomething, ifThen, ifThenElse, } from '.';
+import { updatedFocusRef, updatedFocusAbortControl, focusedCell, clearedFocus } from '../actions/focusActions';
+import {
+   highlightedCellRange,
+   updatedFromCell,
+   startedHighlightingRange,
+   completedHighlightingRange,
+} from '../actions/cellRangeActions';
+import { HIGHLIGHTED_CELL_RANGE } from '../actions/cellRangeTypes';
+import { updatedCell } from '../actions/cellActions';
+import { createHighlightRangeMessage } from '../components/displayText';
 
 export const isStateCellRefThisCell = (cellRef, cell) => {
     const currentFocusedCell = stateFocusCell(managedStore.state);
@@ -64,70 +73,50 @@ export const manageTab = ({ event, cell, callback }) => {
     });
 }
 
-export const isRowDirectionForward = (fromCell, toCell) => cellRow(fromCell) <= cellRow(toCell);
-export const isColumnDirectionForward = (fromCell, toCell) => cellColumn(fromCell) <= cellColumn(toCell);
-
-export const orderFromAndToAxes = (fromCell, toCell) => {
-    // if the 'from' cell comes after the 'to' cell, then we will swap what we're calling from and to 
-    const rowDirectionForward = isRowDirectionForward(fromCell, toCell);
-    const columnDirectionForward = isColumnDirectionForward(fromCell, toCell);
-    return {
-        fromRow: rowDirectionForward ? fromCell.row : toCell.row,
-        toRow: rowDirectionForward ? toCell.row : fromCell.row,
-        fromColumn: columnDirectionForward ? fromCell.column : toCell.column,
-        toColumn: columnDirectionForward ? toCell.column : fromCell.column,
-    } 
-}
-
-export const updateCellsInRange = addingCells => {
-    const fromCell = stateCellRangeFrom(managedStore.state);
-    const toCell = stateCellRangeTo(managedStore.state);
-    if (isNothing(fromCell) || isNothing(toCell)) {
-        return;
-    }
-    
-    const { fromRow, toRow, fromColumn, toColumn } = orderFromAndToAxes(fromCell, toCell);
-    if (isNothing(fromRow) || isNothing(toRow) || isNothing(fromColumn) || isNothing(toColumn)) {
-        // this should never happen
-        console.error('focusHelpers.updateCellsInRange cannot proceed because it got fromRow', fromRow, 'toRow', toRow, 'fromColumn', fromColumn, 'toColumn', toColumn);
-        return;
-    }
-
-    const listCellsInRow = R.curry((row, column) => {
-        if (column >= fromColumn && column <= toColumn) {
-            const cellKey = createCellKey(row, column);
-            const cell = statePresent(managedStore.state)[cellKey];
-            addingCells ? addCellToRange(cell) : removeCellFromRange(cell);
-            listCellsInRow(row, ++column, fromColumn, toColumn);
-        }
-    });
-
-    const listCellsInRange = row => ifThen({
-        ifCond: row <= toRow,
-        thenDo: [
-            () => listCellsInRow(row, fromColumn),
-            () => listCellsInRange(row + 1)
-        ],
-        params: {}
-    });
-    listCellsInRange(fromRow);
-}
+export const clearCellRangeHighlight = () => R.pipe(
+	stateCellRangeCells,
+	cells => ifThen({
+		ifCond: arrayContainsSomething,
+		thenDo: R.forEach(cell => R.pipe(cellInCellRangeSetter, updatedCell)(false, cell)),
+		params: { ifParams: [cells], thenParams: [cells] },
+	})
+)(managedStore.state);
 
 export const rangeSelected = toCell => {
-    const fromCell = stateCellRangeFrom(managedStore.state);
-    if (fromCell && (fromCell.row !== toCell.row || fromCell.column !== toCell.column)) {
-        document.getSelection().removeAllRanges(); // this stops the content within each cell in the range from getting highlighted. There's a bit of flashing, but no big deal
-        highlightedCellRange(toCell);
-        updateCellsInRange(true); // true means we're finding and adding all the cells in the range
-        return true;
-    }
-    return false;
+	const fromCell = stateCellRangeMaybeFrom(managedStore.state);
+	if (fromCell && (fromCell.row !== toCell.row || fromCell.column !== toCell.column)) {
+		const message = createHighlightRangeMessage({ fromCell, toCell });
+		startedHighlightingRange({ undoableType: HIGHLIGHTED_CELL_RANGE, timestamp: Date.now() });
+		document.getSelection().removeAllRanges(); // this stops the content within each cell in the range from getting highlighted. There's a bit of flashing, but no big deal
+		updatedFromCell(fromCell);
+		highlightedCellRange(toCell);
+		updateCellsInRange(true); // true means we're finding and adding all the cells in the range
+		completedHighlightingRange({ undoableType: HIGHLIGHTED_CELL_RANGE, message, timestamp: Date.now() });
+		return true;
+	}
+	return false;
+}
+
+/**
+ * clearSubsheetCellFocus is for use in the case where 
+ * 1. user clicks on a SubsheetCell
+ * 2. user shift-clicks some other cell to create a range
+ * 3. now call this function to clear the focus of the cell from step #1
+ */
+export const maybeClearSubsheetCellFocus = () => {
+	const fromCell = stateCellRangeFrom(managedStore.state);
+	const focusedCell = stateFocusCell(managedStore.state);
+	if (fromCell === focusedCell) {
+		stateFocusAbortControl(managedStore.state).abort();
+   	updatedFocusRef({ ref: null }); // this is probably redundant, since clearedFocus clears everything
+		clearedFocus();
+	}
 }
 
 export const atEndOfRange = cell => {
-    const toCell = stateCellRangeTo(managedStore.state);
-    return isSomething(stateCellRangeFrom(managedStore.state)) &&
-    isSomething(toCell) && 
-    cell.row === toCell.row && 
-    cell.column === toCell.column;
+	const toCell = stateCellRangeTo(managedStore.state);
+	return isSomething(stateCellRangeFrom(managedStore.state)) &&
+	isSomething(toCell) && 
+	cell.row === toCell.row && 
+	cell.column === toCell.column;
 }

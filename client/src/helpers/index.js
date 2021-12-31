@@ -249,3 +249,18 @@ export const ifThenElse = spicyCurry(
    }, 
    { ifCond: true, thenDo: [], elseDo: [], params: {} } // template
 );
+
+export const optimizeModalPositioning = ({ initialTop, initialLeft, modalWidth, modalHeight }) => {
+	const left = (initialLeft + modalWidth) > document.body.clientWidth
+		? document.body.clientWidth - modalWidth
+		: initialLeft < window.scrollX
+			? window.scrollX
+			: initialLeft;
+
+	const top = (initialTop + modalHeight) > document.body.clientHeight
+		? document.body.clientHeight - modalHeight
+		: initialTop < window.scrollY
+			? window.scrollY
+			: initialTop;
+	return { top, left };
+}

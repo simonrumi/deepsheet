@@ -3,20 +3,23 @@ import { TRIGGERED_FETCH_SHEET, COMPLETED_CREATE_SHEET } from '../actions/sheetT
 import { fetchSheet, fetchSheetByUserId } from '../services/sheetServices';
 import { fetchedSheet, fetchingSheet, fetchSheetError } from '../actions/sheetActions';
 import { cellsLoaded, clearedAllCellKeys } from '../actions/cellActions';
+import { clearedCellRange } from '../actions/cellRangeActions';
 import { clearedFocus } from '../actions/focusActions';
 import { hidePopups } from '../actions';
 import { createCellReducers, populateCellsInStore } from '../reducers/cellReducers';
 import { isNothing, isSomething, arrayContainsSomething } from '../helpers';
 import { applyFilters, initializeAxesVisibility } from '../helpers/visibilityHelpers';
-import { stateCellKeys } from '../helpers/dataStructureHelpers';
+import { updateCellsInRange } from '../helpers/rangeToolHelpers';
 import { removeAllCellReducers, clearCells } from '../helpers/cellHelpers';
+import { getUserInfoFromCookie } from '../helpers/userHelpers';
 import {
    dbCells,
    stateIsLoggedIn,
    stateSheetIsCallingDb,
    stateSheetErrorMessage,
+	stateCellKeys,
 } from '../helpers/dataStructureHelpers';
-import { getUserInfoFromCookie } from '../helpers/userHelpers';
+
 
 const initializeCells = R.curry((store, sheet) => {
    if (arrayContainsSomething(dbCells(sheet))) {
@@ -57,6 +60,8 @@ const runFetchSheet = async ({ store, sheetId, userId }) => {
          R.pipe(hidePopups, store.dispatch)();
          initializeCells(store, sheet);
          cellsLoaded();
+			updateCellsInRange(false); // false means we want to remove all the cells from the range
+			clearedCellRange();
       }
       return sheet;
    } catch (err) {
@@ -93,8 +98,12 @@ export default store => next => async action => {
          return next(action);
 
       case COMPLETED_CREATE_SHEET:
-         // clear out any previous cells and cell reducers before loading the new cells. removeAllCellReducers() must run before clearCells() 
-         removeAllCellReducers();
+         // clear out any previous cells, cell reducers, and the cell range, before loading the new cells. 
+			// removeAllCellReducers() must run before clearCells()
+			// updateCellsInRange & clearedCellRange must run before initializeCells....and probably before removeAllCellReducers but that hasn't been tested
+         updateCellsInRange(false); // false means we want to remove all the cells from the range
+			clearedCellRange();
+			removeAllCellReducers();
          clearCells(store.getState());
          clearedAllCellKeys();
          initializeCells(store, action.payload.sheet);

@@ -10,7 +10,9 @@ import {
    SORT_TYPE_DATES,
 } from '../../constants';
 import { toggledShowSortModal, sortedAxis, updatedSortOptions } from '../../actions/sortActions';
+import { SORTED_AXIS } from '../../actions/sortTypes';
 import { startedUndoableAction, completedUndoableAction } from '../../actions/undoActions';
+import { createSortAxisMessage } from '../displayText';
 import SortUpIcon from '../atoms/IconSortUp';
 import SortDownIcon from '../atoms/IconSortDown';
 import RadioButton from '../atoms/RadioButton';
@@ -23,31 +25,39 @@ const SortOptions = ({ classes, rowIndex, columnIndex }) => {
    const onClickSortDates = () => setSortType(SORT_TYPE_DATES);
 
    const onClickLowToHigh = () => {
+		startedUndoableAction({ undoableType: SORTED_AXIS, timestamp: Date.now() });
       updatedSortOptions({
          rowSortByIndex: rowIndex,
          columnSortByIndex: columnIndex,
          sortDirection: SORT_INCREASING,
          sortType,
       });
-      startedUndoableAction();
       sortedAxis();
-      const axisName = rowIndex ? ROW_AXIS : COLUMN_AXIS
-      completedUndoableAction('sorted A to Z for ' + axisName + ' ' + rowIndex || columnIndex);
       toggledShowSortModal();
+		const axisName = rowIndex ? ROW_AXIS : COLUMN_AXIS;
+		completedUndoableAction({
+         undoableType: SORTED_AXIS,
+         message: createSortAxisMessage({ axisName, rowIndex, columnIndex, sortType, sortDirection: SORT_INCREASING }),
+         timestamp: Date.now(),
+      });
    };
 
    const onClickHighToLow = () => {
+		startedUndoableAction({ undoableType: SORTED_AXIS, timestamp: Date.now() });
       updatedSortOptions({
          rowSortByIndex: rowIndex,
          columnSortByIndex: columnIndex,
          sortDirection: SORT_DECREASING,
          sortType,
       });
-      startedUndoableAction();
       sortedAxis();
-      const axisName = rowIndex ? ROW_AXIS : COLUMN_AXIS
-      completedUndoableAction('sorted Z to A for ' + axisName + ' ' + rowIndex || columnIndex);
       toggledShowSortModal();
+		const axisName = rowIndex ? ROW_AXIS : COLUMN_AXIS;
+		completedUndoableAction({
+         undoableType: SORTED_AXIS,
+         message: createSortAxisMessage({ axisName, rowIndex, columnIndex, sortType, sortDirection: SORT_DECREASING }),
+         timestamp: Date.now(),
+      });
    };
 
    const render = () => {

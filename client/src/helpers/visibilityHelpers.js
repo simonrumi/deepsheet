@@ -301,7 +301,7 @@ const findChangedVisibilityItems = ({ oldVisibility, newVisibility }) => {
 export const updateFilteredCells = () => {   
    // to see what visibility items have changed, compare the most recent past to the present
    // (all these need to be sorted so they are in the same order for the R.equals comparison below)
-   const oldColumnVisibility = R.sort(compareIndexValues, statePastColumnVisibility(managedStore.state));
+	const oldColumnVisibility = R.sort(compareIndexValues, statePastColumnVisibility(managedStore.state));
    const newColumnVisibility = R.sort(compareIndexValues, stateColumnVisibility(managedStore.state));
    const oldRowVisibility = R.sort(compareIndexValues, statePastRowVisibility(managedStore.state));
    const newRowVisibility = R.sort(compareIndexValues, stateRowVisibility(managedStore.state));

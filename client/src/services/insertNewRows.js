@@ -9,6 +9,7 @@ import managedStore from '../store';
 import { addedCellKeys } from '../actions/cellActions';
 import { updatedRowVisibility, hasChangedMetadata, updatedRowHeight, updatedTotalRows, } from '../actions/metadataActions';
 import { startedUndoableAction, completedUndoableAction } from '../actions/undoActions';
+import { UPDATED_TOTAL_ROWS } from '../actions/metadataTypes';
 import { shouldShowColumn } from '../helpers/visibilityHelpers';
 import {
    addNewCellsToStore,
@@ -24,7 +25,8 @@ import {
    stateRowVisibility,
 } from '../helpers/dataStructureHelpers';
 import { addCellReducers } from '../reducers/cellReducers';
-import { DEFAULT_ROW_HEIGHT, INSERTED_ROW } from '../constants';
+import { DEFAULT_ROW_HEIGHT, } from '../constants';
+import { createInsertNewRowsMessage } from '../components/displayText';
 
 const makeNewRowCell = R.curry((rowIndex, columnIndex, columnVisibility) => {
    const partialCell = {
@@ -64,7 +66,7 @@ const createUpdatesForNewCells = ({
 };
 
 const insertNewRows = (additionalRows = 1) => {
-   startedUndoableAction();
+   startedUndoableAction({ undoableType: UPDATED_TOTAL_ROWS, timestamp: Date.now() });
    const totalRows = stateTotalRows(managedStore.state);
 
    const allUpdatedCells = forLoopReduce(
@@ -101,8 +103,12 @@ const insertNewRows = (additionalRows = 1) => {
       rowCount => updatedRowHeight((totalRows + rowCount), DEFAULT_ROW_HEIGHT),
       additionalRows
    );
-   hasChangedMetadata(INSERTED_ROW);
-   completedUndoableAction(`added ${additionalRows} row(s)`);
+   hasChangedMetadata();
+   completedUndoableAction({
+      undoableType: UPDATED_TOTAL_ROWS,
+      message: createInsertNewRowsMessage(additionalRows),
+      timestamp: Date.now(),
+   });
 };
 
 export default insertNewRows;

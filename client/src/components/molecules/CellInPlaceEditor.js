@@ -3,14 +3,30 @@ import * as R from 'ramda';
 import managedStore from '../../store';
 import { updatedCell, hasChangedCell } from '../../actions/cellActions';
 import { createdSheet } from '../../actions/sheetActions';
-import { clearedFocus, updatedFocusRef, clearedCellRange } from '../../actions/focusActions';
-import { startedEditing, finishedEditing } from '../../actions/undoActions'; 
+import { clearedFocus, updatedFocusRef } from '../../actions/focusActions';
+import { replacedCellsInRange, updatedPastingCellRange } from '../../actions/cellRangeActions';
+import { startedEditing, finishedEditing, startedUndoableAction, completedUndoableAction, } from '../../actions/undoActions';
+import { PASTE_RANGE, } from '../../actions/cellRangeTypes';
 import { updatedClipboard } from '../../actions/clipboardActions';
-import { isSomething, ifThen } from '../../helpers';
+import { PASTE_CLIPBOARD } from '../../actions/clipboardTypes';
+import {
+   capturedSystemClipboard,
+   updatedShowPasteOptionsModal,
+   updatedCellEditorPositioning,
+	updatedBlurEditorFunction,
+} from '../../actions/pasteOptionsModalActions';
+import { isNothing, isSomething, ifThen, runIfSomething } from '../../helpers';
 import { getUserInfoFromCookie } from '../../helpers/userHelpers';
 import { createDefaultAxisSizing } from '../../helpers/axisSizingHelpers';
-import { manageKeyBindings, manageTab, updateCellsInRange } from '../../helpers/focusHelpers';
-import { pasteCellRangeToTarget } from '../../helpers/clipboardHelpers';
+import { manageKeyBindings, manageTab } from '../../helpers/focusHelpers';
+import {
+   pasteCellRangeToTarget,
+   updateSystemClipboard,
+   convertTextToCellRange,
+	pasteText,
+} from '../../helpers/clipboardHelpers';
+import { compareCellsArrays, updateCellsInRange } from '../../helpers/rangeToolHelpers';
+import { createCellKey, createCellId } from '../../helpers/cellHelpers';
 import {
    stateSheetId,
    stateCell,
@@ -23,16 +39,20 @@ import {
    stateFocusAbortControl,
    stateCellRangeFrom,
    stateCellRangeTo,
+   stateCellRangeCells,
+	stateRangeWasCopied,
+	statePastingCellRange,
    stateClipboard,
-   stateClipboardRangeFrom,
-   stateClipboardRangeTo,
+	stateShowPasteOptionsModal,
 } from '../../helpers/dataStructureHelpers';
-import Clipboard from '../organisms/Clipboard';
+import { createPasteRangeUndoMessage, createPasteClipboardMessage } from '../displayText';
 import NewDocIcon from '../atoms/IconNewDoc';
 import CloseIcon from '../atoms/IconClose';
 import PasteIcon from '../atoms/IconPaste';
 import CheckmarkSubmitIcon from '../atoms/IconCheckmarkSubmit';
-import { DEFAULT_TOTAL_ROWS, DEFAULT_TOTAL_COLUMNS, DEFAULT_COLUMN_WIDTH, DEFAULT_ROW_HEIGHT } from '../../constants';
+import { DEFAULT_TOTAL_ROWS, DEFAULT_TOTAL_COLUMNS, DEFAULT_COLUMN_WIDTH, DEFAULT_ROW_HEIGHT, LOG } from '../../constants';
+import { SYSTEM_CLIPBOARD_UNAVAILABLE_MSG, createdEditedCellMessage } from '../displayText';
+import { log } from '../../clientLogger';
 
 const reinstateOriginalValue = cell => ifThen({
    ifCond: cell.row === stateOriginalRow(managedStore.state) && cell.column === stateOriginalColumn(managedStore.state),
@@ -60,11 +80,6 @@ const triggerCreatedSheetAction = cell => {
 
 const manageChange = (event, cell) => {
    event.preventDefault();
-   ifThen({
-      ifCond: isSomething(stateCellRangeFrom(managedStore.state)) && isSomething(stateCellRangeTo(managedStore.state)),
-      thenDo: [ () => updateCellsInRange(false), clearedCellRange ],
-      params: { thenParams: {cell} }
-   });
    updatedCell({
       ...cell,
       content: { ...cell.content, text: event.target.value },
@@ -76,7 +91,7 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
    // this ref is applied to the text area (see below) so that we can manage its focus
    const cellInPlaceEditorRef = useRef();
 
-   const finalizeCellContent = (cell) => {
+   const finalizeCellContent = cell => {
       if (!R.equals(stateOriginalValue(managedStore.state), cellInPlaceEditorRef.current?.value)) {
          hasChangedCell({
             row: cellRow(cell),
@@ -85,14 +100,15 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
       }
       finishedEditing({
          value: isSomething(cellInPlaceEditorRef.current) ? cellInPlaceEditorRef.current.value : null,
-         message: 'edited row ' + cellRow(cell) + ', column ' + cellColumn(cell),
+         message: createdEditedCellMessage(cell),
+			isPastingCellRange: statePastingCellRange(managedStore.state),
       });
    }
 
    const handleSubmit = event => {
       event.preventDefault();
       stateFocusAbortControl(managedStore.state).abort();
-      finalizeCellContent(cell, cellInPlaceEditorRef);
+      finalizeCellContent(cell);
       clearedFocus();
    }
    
@@ -102,17 +118,100 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
       reinstateOriginalValue(cell); // note: this does the updatedCell call
       finishedEditing({
          value: isSomething(cellInPlaceEditorRef.current) ? cellInPlaceEditorRef.current.value : null,
-         message: 'cancelled editing row ' + cellRow(cell) + ', column ' + cellColumn(cell),
+         message: `Cancelled editing cell ${createCellId(cellRow(cell), cellColumn(cell))}`,
+			actionCancelled: true,
       });
-      updateCellsInRange(false); // false means we're finding then removing all the cells from the range
+		if (!stateRangeWasCopied(managedStore.state)) {
+			updateCellsInRange(false); // false means we're finding then removing all the cells from the range
+		}
       clearedFocus();
    }
 
-   const checkForCellRange = () => 
-      R.pipe(stateClipboardRangeFrom, isSomething)(managedStore.state) && 
-      R.pipe(stateClipboardRangeTo, isSomething)(managedStore.state);
-   
+   const handlePaste = event => {
+		runIfSomething(evt => evt.preventDefault(), event);
+      
+      const fromCell = stateCellRangeFrom(managedStore.state);
+      const toCell = stateCellRangeTo(managedStore.state);
+
+		const doPasteRange = () => {
+			const message = createPasteRangeUndoMessage({ fromCell, toCell, cell });
+			startedUndoableAction({ undoableType: PASTE_RANGE, timestamp: Date.now() });
+			updatedPastingCellRange(true);
+			pasteCellRangeToTarget(cell);
+			manageBlur(null); // null is in place of the event, which has already had preventDefault called on it (above); 
+			completedUndoableAction({ undoableType: PASTE_RANGE, message, timestamp: Date.now() });
+			updatedPastingCellRange(false);
+		}
+
+		if (typeof navigator.clipboard.readText === 'function') {
+			updatedCellEditorPositioning({ ...positioning }); // this is needed, in some circumstances, by PasteOptionsModal
+			updatedBlurEditorFunction(manageBlur); // this is needed, in some circumstances, by PasteOptionsModal
+			navigator.clipboard.readText().then(
+				systemClipboardText => {
+					capturedSystemClipboard(systemClipboardText);
+
+					if (isSomething(fromCell) && isSomething(toCell)) {
+						if(isNothing(systemClipboardText)) {
+							// we have a cell range but no clipboard so just paste the cell range
+							// this is an edge case that may never happen
+							doPasteRange();
+							return;
+						}
+
+						// there is a cell range and something in the clipboard, so covert the clipboard to an array of cells, then compare it to the actual cell range
+						const clipboardCellsArr = convertTextToCellRange({ 
+							text: systemClipboardText, 
+							startingCellRowIndex: cellRow(fromCell), 
+							startingCellColumnIndex: cellColumn(fromCell)
+						});
+			
+						const storeCellsArr = stateCellRangeCells(managedStore.state);
+						if (compareCellsArrays(clipboardCellsArr, storeCellsArr)) {
+							// the system clipboard and the cell range are the same, so paste the cell range
+							doPasteRange();
+							return;
+						}
+						// system clipboard and the cell range are different, so popup dialog box asking which to use
+						updatedShowPasteOptionsModal(true);						
+						return;
+					}
+			
+					// at this point there's no cell range, only something in the clipbaord
+					const clipboardAsCells = convertTextToCellRange({ 
+						text: systemClipboardText,
+						startingCellRowIndex: cellRow(cell), 
+						startingCellColumnIndex: cellColumn(cell)
+					});
+					if (clipboardAsCells.length > 1) {
+						startedUndoableAction({ undoableType: PASTE_CLIPBOARD, timestamp: Date.now() });
+						updatedPastingCellRange(true);
+						replacedCellsInRange(clipboardAsCells);
+						pasteCellRangeToTarget(cell)
+							? manageBlur() // pasteCellRangeToTarget returned true, indicating a correctly formed range was pasted, so now do the blur
+							: pasteText({ text: systemClipboardText, cell }); // pasteCellRangeToTarget returned false, indicating it couldn't get a properly shaped range from the clippboard, so just paste the raw clipboard text instead
+						const message = createPasteClipboardMessage(cell);
+						completedUndoableAction({ undoableType: PASTE_CLIPBOARD, message, timestamp: Date.now() });
+						updatedPastingCellRange(false);
+						return;
+					}
+					pasteText({ text: systemClipboardText, cell });
+				}
+			)
+		} else {
+			log({ level: LOG.WARN }, SYSTEM_CLIPBOARD_UNAVAILABLE_MSG);
+			if (isSomething(fromCell) && isSomething(toCell)) {
+				doPasteRange();
+				return;
+			}
+		}
+   }
+
    const keyBindingsCellInPlaceEditor = event => {
+		if (stateShowPasteOptionsModal(managedStore.state)) {
+			// we're not reacting to any key strokes until the user clicks on something in the PasteOptionsModal
+			runIfSomething(evt => evt.preventDefault, event);
+			return;
+		}
       // use https://keycode.info/ to get key values
       switch(event.keyCode) {
          case 27: // esc
@@ -122,21 +221,24 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
             handleSubmit(event);
             break;
          case 9: // tab
-            manageTab({ event, cell, callback: () => finalizeCellContent(cell, cellInPlaceEditorRef) });
+            manageTab({ event, cell, callback: () => finalizeCellContent(cell) });
             break;
 
          case 67: // "C" for copy
             if (event.ctrlKey) {
-               const text = R.pipe(stateCell, cellText)(managedStore.state);
-               updatedClipboard({ text, cellRange: null });
+               const text = R.pipe(
+                  createCellKey,
+                  stateCell(managedStore.state),
+                  cellText
+               )(cellRow(cell), cellColumn(cell));
+               updatedClipboard({ text });
+               updateSystemClipboard(text);
             }
             break;
          case 86: // "V" for paste 
-            if (event.ctrlKey && checkForCellRange()) {
-               event.preventDefault();
-               pasteCellRangeToTarget(cell);
-               manageBlur(event);
-            }
+            if (event.ctrlKey) {
+					handlePaste(event);               
+            } 
             break;
             
          default:
@@ -144,11 +246,17 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
    };
    
    const manageBlur = event => {
-      event.preventDefault();
-      stateFocusAbortControl(managedStore.state).abort();
+      runIfSomething(evt => evt.preventDefault, event);
+		if (stateShowPasteOptionsModal(managedStore.state)) {
+			//the PasteOptionsModal has popped up, so we should not blur, so the focus is retained for that modal
+			return; 
+		}
+      R.pipe(
+			stateFocusAbortControl,
+			abortControl => runIfSomething(abortCtrl => abortCtrl.abort(), abortControl)
+		)(managedStore.state);
       finalizeCellContent(cell);
       updatedFocusRef({ ref: null }); // clear the existing focusRef
-      updateCellsInRange(false); // false means we're finding then removing all the cells from the range
       clearedFocus();
    }
 
@@ -165,7 +273,7 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
    }
 
    const renderPasteIcon = () => isSomething(stateClipboard(managedStore.state))
-      ? <PasteIcon classes="bg-white mb-1" svgClasses="w-6" onMouseDownFn={() => pasteCellRangeToTarget(cell)}/>
+      ? <PasteIcon classes="bg-white mb-1" svgClasses="w-6" onMouseDownFn={handlePaste}/>
       : null;
 
    const renderIcons = () => {
@@ -175,16 +283,17 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
 
       return (
          <div className="relative w-full">
-            <div className="absolute top-0 z-10 flex flex-col bg-white border border-grey-blue p-1" style={leftPositioning}>
+            <div
+               className="absolute top-0 z-10 flex flex-col bg-white border border-grey-blue shadow-lg p-1"
+               style={leftPositioning}>
                {/* onMouseDown is fired before onBlur, whereas onClick is after onBlur. 
                Since the textarea has the focus, clicking on NewDocIcon will cause
                the editor's onBlur to fire...but we need to call another action before the onBlur,
                hence the use of onMouseDown */}
                <CheckmarkSubmitIcon classes="bg-white mb-1" svgClasses="w-6" onMouseDownFn={handleSubmit} />
                <CloseIcon classes="bg-white mb-1" svgClasses="w-6" onMouseDownFn={handleCancel} />
-               { renderPasteIcon() }
+               {renderPasteIcon()}
                <NewDocIcon classes="mb-1" svgClasses="w-6" onMouseDownFn={() => triggerCreatedSheetAction(cell)} />
-               <Clipboard />
             </div>
          </div>
       );

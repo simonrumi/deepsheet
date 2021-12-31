@@ -8,7 +8,13 @@ import * as R from 'ramda';
 import managedStore from '../store';
 import { addedCellKeys } from '../actions/cellActions';
 import { startedUndoableAction, completedUndoableAction } from '../actions/undoActions';
-import { updatedColumnVisibility, hasChangedMetadata, updatedColumnWidth, updatedTotalColumns, } from '../actions/metadataActions';
+import {
+   updatedColumnVisibility,
+   hasChangedMetadata,
+   updatedColumnWidth,
+   updatedTotalColumns,
+} from '../actions/metadataActions';
+import { UPDATED_TOTAL_COLUMNS } from '../actions/metadataTypes';
 import { forLoopMap, forLoopReduce } from '../helpers';
 import { shouldShowRow } from '../helpers/visibilityHelpers';
 import {
@@ -24,7 +30,8 @@ import {
    createUpdatesForNewCellKeys,
 } from './insertNewAxis';
 import { addCellReducers } from '../reducers/cellReducers';
-import { DEFAULT_COLUMN_WIDTH, INSERTED_COLUMN } from '../constants';
+import { DEFAULT_COLUMN_WIDTH, } from '../constants';
+import { createInsertNewColumnsMessage } from '../components/displayText';
 
 const makeNewColumnCell = R.curry((rowIndex, columnIndex, rowVisibility) => {
    const partialCell = {
@@ -63,7 +70,7 @@ const createUpdatesForNewCells = ({
 };
 
 const insertNewColumns = (additionalColumns = 1) => {
-   startedUndoableAction();
+   startedUndoableAction({ undoableType: UPDATED_TOTAL_COLUMNS, timestamp: Date.now() });
    const totalColumns = stateTotalColumns(managedStore.state);
 
    const allUpdatedCells = forLoopReduce(
@@ -100,8 +107,12 @@ const insertNewColumns = (additionalColumns = 1) => {
       columnCount => updatedColumnWidth((totalColumns + columnCount), DEFAULT_COLUMN_WIDTH),
       additionalColumns
    );
-   hasChangedMetadata(INSERTED_COLUMN);
-   completedUndoableAction(`added ${additionalColumns} column(s)`);
+   hasChangedMetadata();
+   completedUndoableAction({
+      undoableType: UPDATED_TOTAL_COLUMNS,
+      message: createInsertNewColumnsMessage(additionalColumns),
+      timestamp: Date.now(),
+   });
 };
 
 export default insertNewColumns;

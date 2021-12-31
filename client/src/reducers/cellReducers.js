@@ -7,7 +7,6 @@ import { updatedCell, addedCellKeys } from '../actions/cellActions';
 import {
    UPDATED_CELL,
    UPDATED_CELL_VISIBILITY,
-   UPDATED_CONTENT_OF_CELL,
    POSTING_UPDATED_CELLS,
    COMPLETED_SAVE_CELLS,
    CELLS_UPDATE_FAILED,
@@ -20,6 +19,7 @@ import {
    ADDED_CELL_KEYS,
    REMOVED_CELL_KEYS,
    CLEARED_ALL_CELL_KEYS,
+	UPDATED_END_OF_ROW_CELL,
 } from '../actions/cellTypes';
 import { FETCHED_SHEET } from '../actions/sheetTypes';
 import { COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
@@ -32,8 +32,8 @@ const processCellAction = R.curry((state, sheetId, action) => {
       case UPDATED_CELL_VISIBILITY:
          return { ...state, visible: action.payload.visible }
 
-      case UPDATED_CONTENT_OF_CELL:
-         return { ...state, ...action.payload, isStale: true };
+		case UPDATED_END_OF_ROW_CELL:
+			return { ...state, isEndOfRow: action.payload.isEndOfRow } // didn't end up using isEndOfRow but keeping it in case it is useful in future
 
       case COMPLETED_SAVE_CELL:
          return createUpdatedCellState(action.payload, state, sheetId);

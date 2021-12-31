@@ -19,8 +19,8 @@ export const changedTitleValue = newTitle => {
    managedStore.store.dispatch({ type: CHANGED_TITLE_VALUE, payload: newTitle });
 }
 
-export const updatedTitle = newTitle => {
-   managedStore.store.dispatch({ type: FINISHED_EDITING_TITLE, payload: { value: newTitle } });
+export const finishedEditingTitle = info => {
+   managedStore.store.dispatch({ type: FINISHED_EDITING_TITLE, payload: info });
 };
 
 export const postingUpdatedTitle = ({ sheetId, text }) => {
@@ -37,8 +37,4 @@ export const titleErrorDetected = error => {
 
 export const startedEditingTitle = initialValue => {
    managedStore.store.dispatch({ type: STARTED_EDITING_TITLE, payload: initialValue });
-};
-
-export const finishedEditingTitle = finalValue => {
-   managedStore.store.dispatch({ type: FINISHED_EDITING_TITLE, payload: finalValue });
 };

@@ -144,17 +144,9 @@ export const stateFrozenColumns = subObjectGetter(stateMetadataLens, 'frozenColu
 export const stateRowHeights = subObjectGetter(stateMetadataLens, 'rowHeights');
 export const stateColumnWidths = subObjectGetter(stateMetadataLens, 'columnWidths');
 
-/***** these are to get the previous version of various metadata items *****/
-export const statePastColumnVisibility = R.pipe(
-   R.prop('past'),
-   R.last,
-   R.path(['metadata', 'columnVisibility'])
-);
-export const statePastRowVisibility = R.pipe(
-   R.prop('past'),
-   R.last,
-   R.path(['metadata', 'rowVisibility'])
-);
+/***** these are to get the previous version of various metadata items - used by visibilityHelpers--updateFilteredCells only *****/
+export const statePastColumnVisibility =  R.path(['maybePast','metadata', 'columnVisibility']);
+export const statePastRowVisibility = R.path(['maybePast', 'metadata', 'rowVisibility'])
 
 /* the axisItemTool is the popup that can show for each column and each row.
 The following metadata says which one is visible and which column/row it is for
@@ -310,14 +302,23 @@ const stateFocusCellRefLens = R.compose(stateFocusLens, R.lensProp('ref'));
 export const stateFocusCellRef = R.view(stateFocusCellRefLens);
 const stateFocusAbortControlLens = R.compose(stateFocusLens, R.lensProp('abortControl'));
 export const stateFocusAbortControl = R.view(stateFocusAbortControlLens);
-const stateCellRangeLens = R.compose(stateFocusLens, R.lensProp('cellRange'));
+
+/************************************************ STATE CELL RANGE **********************************************/
+const cellRangeLens = R.lensProp('cellRange');
+const stateCellRangeLens = R.compose(presentLens, cellRangeLens);
 export const stateCellRange = R.view(stateCellRangeLens);
+const stateCellRangeMaybeFromLens = R.compose(stateCellRangeLens, R.lensProp('maybeFrom'));
+export const stateCellRangeMaybeFrom = R.view(stateCellRangeMaybeFromLens);
 const stateCellRangeFromLens = R.compose(stateCellRangeLens, R.lensProp('from'));
 export const stateCellRangeFrom = R.view(stateCellRangeFromLens);
 const stateCellRangeToLens = R.compose(stateCellRangeLens, R.lensProp('to'));
 export const stateCellRangeTo = R.view(stateCellRangeToLens);
 const stateCellRangeCellsLens = R.compose(stateCellRangeLens, R.lensProp('cells'));
 export const stateCellRangeCells = R.view(stateCellRangeCellsLens);
+const stateRangeWasCopiedLens = R.compose(stateCellRangeLens, R.lensProp('rangeWasCopied'));
+export const stateRangeWasCopied = R.view(stateRangeWasCopiedLens);
+const statePastingCellRangeLens = R.compose(stateCellRangeLens, R.lensProp('isPastingCellRange'));
+export const statePastingCellRange = R.view(statePastingCellRangeLens);
 
 /************************************************ STATE CLIPBOARD **********************************************/
 const clipboardLens = R.lensProp('clipboard');
@@ -325,12 +326,18 @@ const stateClipboardLens = R.compose(presentLens, clipboardLens);
 export const stateClipboard = R.view(stateClipboardLens);
 const stateClipboardTextLens = R.compose(stateClipboardLens, R.lensProp('text'));
 export const stateClipboardText = R.view(stateClipboardTextLens);
-const stateClipboardRangeFromLens = R.compose(stateClipboardLens, R.lensPath(['cellRange', 'from']));
-export const stateClipboardRangeFrom = R.view(stateClipboardRangeFromLens);
-const stateClipboardRangeToLens = R.compose(stateClipboardLens, R.lensPath(['cellRange', 'to']));
-export const stateClipboardRangeTo = R.view(stateClipboardRangeToLens);
-const stateClipboardRangeCellsLens = R.compose(stateClipboardLens, R.lensPath(['cellRange', 'cells']));
-export const stateClipboardRangeCells = R.view(stateClipboardRangeCellsLens);
+
+/************************************************ STATE PASTE OPTIONS MODAL **********************************************/
+const pasteOptionsModalLens = R.lensProp('pasteOptionsModal');
+const statePasteOptionsModalLens = R.compose(presentLens, pasteOptionsModalLens);
+const stateSystemClipboardLens = R.compose(statePasteOptionsModalLens, R.lensProp('systemClipboard'));
+export const stateSystemClipboard = R.view(stateSystemClipboardLens);
+const stateShowPasteOptionsModalLens = R.compose(statePasteOptionsModalLens, R.lensProp('showModal'));
+export const stateShowPasteOptionsModal = R.view(stateShowPasteOptionsModalLens);
+const statePasteOptionsModalPositioningLens = R.compose(statePasteOptionsModalLens, R.lensProp('positioning'));
+export const statePasteOptionsModalPositioning = R.view(statePasteOptionsModalPositioningLens);
+const stateBlurEditorFunctionLens = R.compose(statePasteOptionsModalLens, R.lensProp('blurEditorFunction'));
+export const stateBlurEditorFunction = R.view(stateBlurEditorFunctionLens);
 
 /************************************************ STATE GLOBAL INFO MODAL **********************************************/
 const globalInfoModalLens = R.lensProp('globalInfoModal');
@@ -341,6 +348,16 @@ const stateGlobalInfoModalContentLens = R.compose(stateGlobalInfoModalLens, R.le
 export const stateGlobalInfoModalContent = R.view(stateGlobalInfoModalContentLens);
 const stateGlobalInfoModalCloseFnLens = R.compose(stateGlobalInfoModalLens, R.lensProp('closeFn'));
 export const stateGlobalInfoModalCloseFn = R.view(stateGlobalInfoModalCloseFnLens);
+
+/************************************************ UNDO HISTORY **********************************************/
+const showUndoHistoryLens = R.lensPath(['actionHistory', 'showHistoryModal']);
+export const stateShowUndoHistory = R.view(showUndoHistoryLens);
+const pastActionsLens = R.lensPath(['actionHistory', 'pastActions']);
+export const statePastActions = R.view(pastActionsLens);
+const presentActionLens = R.lensPath(['actionHistory', 'presentAction']);
+export const statePresentAction = R.view(presentActionLens);
+const futureActionsLens = R.lensPath(['actionHistory', 'futureActions']);
+export const stateFutureActions = R.view(futureActionsLens);
 
 /************************************************ STATE OTHER **********************************************/
 const titleLens = R.lensProp('title');

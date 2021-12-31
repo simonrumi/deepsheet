@@ -15,6 +15,8 @@ import { startedUndoableAction, completedUndoableAction } from '../../actions/un
 import { toggledShowFilterModal } from '../../actions/filterActions';
 import { toggledShowSortModal } from '../../actions/sortActions';
 import { updatedFrozenColumns, updatedAxisItemTool } from '../../actions/metadataActions';
+import { UPDATED_FROZEN_COLUMNS } from '../../actions/metadataTypes';
+import { createToggleFreezeColumnMessage } from '../displayText';
 import FilterIcon from '../atoms/IconFilter';
 import SnowflakeIcon from '../atoms/IconSnowflake';
 import SortIcon from '../atoms/IconSort';
@@ -41,9 +43,13 @@ const ColumnHeaderTools = ({ index, frozen }) => {
    }
 
    const toggleFreeze = () => {
-      startedUndoableAction();
+      startedUndoableAction({ undoableType: UPDATED_FROZEN_COLUMNS, timestamp: Date.now() });
       updatedFrozenColumns([{ index, isFrozen: !frozen }]);
-      completedUndoableAction('toggled freeze for column ' + index);
+      completedUndoableAction({
+			undoableType: UPDATED_FROZEN_COLUMNS,
+			message: createToggleFreezeColumnMessage({ columnIndex: index }),
+			timestamp: Date.now(),
+		});
    };
 
    // ColumnHeaderDetail pops up these ColumnHeaderTools (onCLick), and here we handle hiding it (onMouseLeave)

@@ -28,7 +28,11 @@ import sortAxis from '../services/sortAxis';
 import { hasChangedCell } from '../actions/cellActions';
 import { runIfSomething, isSomething, arrayContainsSomething } from '../helpers';
 import { stateMetadataProp } from '../helpers/dataStructureHelpers';
-import { ROW_AXIS, COLUMN_AXIS, ORDERED_COLUMN, ORDERED_ROW } from '../constants';
+import { ROW_AXIS, COLUMN_AXIS, } from '../constants';
+import { updatedRowOrderMessage, updatedColumnOrderMessage } from '../components/displayText';
+
+// TODO BUG - sorting by dates is broken if there is anything in a cell which is not a date
+// should treat those cells like blanks and push to the end
 
 export default store => next => async action => {
    const clearMoveData = () => {
@@ -96,16 +100,20 @@ export default store => next => async action => {
          // Is this a Ramda bug?
          const newRowCellsArr = R.values(newRowCells);
          if (arrayContainsSomething(newRowCellsArr)) {
-            startedUndoableAction();
+            startedUndoableAction({ undoableType: UPDATED_ROW_ORDER, timestamp: Date.now() });
          }
          runCellDispatches(newRowCellsArr);
          runIfSomething(replacedRowFilters, newRowFilters);
          runIfSomething(replacedRowVisibility, newRowVisibility);
          runIfSomething(replacedRowHeights, newRowHeights);
          runIfSomething(replacedFrozenRows, newFrozenRows);
-         hasChangedMetadata(ORDERED_ROW);
+         hasChangedMetadata();
          if (arrayContainsSomething(newRowCellsArr)) {
-            completedUndoableAction();
+            completedUndoableAction({
+					undoableType: UPDATED_ROW_ORDER,
+					message: updatedRowOrderMessage(),
+					timestamp: Date.now(),
+				});
          }
          break;
 
@@ -119,20 +127,25 @@ export default store => next => async action => {
          ] = maybeMoveAxis('columnMoved', 'columnMovedTo', moveColumn, store);
          const newColumnCellsArr = R.values(newColumnCells);
          if (arrayContainsSomething(newColumnCellsArr)) {
-            startedUndoableAction();
+            startedUndoableAction({ undoableType: UPDATED_COLUMN_ORDER, timestamp: Date.now() });
          }
          runCellDispatches(newColumnCellsArr);
          runIfSomething(replacedColumnFilters, newColumnFilters);
          runIfSomething(replacedColumnVisibility, newColumnVisibility);
          runIfSomething(replacedColumnWidths, newColumnWidths);
          runIfSomething(replacedFrozenColumns, newFrozenColumns);
-         hasChangedMetadata(ORDERED_COLUMN);
+         hasChangedMetadata();
          if (arrayContainsSomething(newColumnCellsArr)) {
-            completedUndoableAction();
+            completedUndoableAction({
+					undoableType: UPDATED_COLUMN_ORDER,
+					message: updatedColumnOrderMessage(),
+					timestamp: Date.now(),
+				});
          }
          break;
 
       case SORTED_AXIS:
+			// note that startedUndoableAction and CompletedUndoableAction is not needed here, since this is handled in SortOptions.js
          const sortAxisResult = sortAxis(store.getState());
          const { updatedCells = [], updatedVisibility = {}, updatedFilters = {}, updatedSizing = {} } = sortAxisResult;
          runIfSomething(replacedRowVisibility, updatedVisibility[ROW_AXIS]);
@@ -143,7 +156,6 @@ export default store => next => async action => {
          runIfSomething(replacedColumnWidths, updatedSizing[COLUMN_AXIS]);
          runCellDispatches(updatedCells);
          clearedSortOptions();
-         completedUndoableAction();
          break;
 
       default:

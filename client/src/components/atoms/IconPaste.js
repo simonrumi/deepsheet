@@ -1,6 +1,6 @@
 import React from 'react';
 
-const IconCopy = ({
+const IconPaste = ({
    style = {},
    width = '100%',
    height = '100%',
@@ -39,4 +39,4 @@ const IconCopy = ({
     );
 };
 
-export default IconCopy;
+export default IconPaste;

@@ -1,9 +1,7 @@
 import React, { useEffect } from 'react';
 import { connect } from 'react-redux';
 import { undid, redid } from '../actions/undoActions';
-import { clearedCellRange } from '../actions/focusActions';
 import { hideAllPopups } from '../actions';
-import { updateCellsInRange } from '../helpers/focusHelpers';
 import Sheet from './Sheet';
 import ModalBackground from './atoms/ModalBackground';
 import Footer from './molecules/Footer';
@@ -24,8 +22,6 @@ const keyBindings = event => {
    }
    if (event.keyCode === 27) { //esc
       hideAllPopups();
-      updateCellsInRange(false);
-      clearedCellRange({ cell: null });
    }
 }
 

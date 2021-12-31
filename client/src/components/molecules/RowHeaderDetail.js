@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import * as R from 'ramda';
 import managedStore from  '../../store';
-import { DRAGGABLE_ROW_NUMBER, ROW_AXIS } from '../../constants';
+import { ROW_AXIS } from '../../constants';
 import { ROW_GEAR_ICON_TEST_ID } from '../../__tests__/testHelpers/constants';
 import { indexToRowNumber, isSomething, getObjectFromArrayByKeyValue } from '../../helpers';
 import {
@@ -14,7 +14,10 @@ import {
 import { isFilterEngaged } from '../../helpers/visibilityHelpers';
 import { rowMoved } from '../../actions/metadataActions';
 import { updatedAxisItemTool } from '../../actions/metadataActions';
+import { ROW_MOVED } from '../../actions/metadataTypes';
 import { startedUndoableAction, completedUndoableAction } from '../../actions/undoActions';
+import { DRAGGABLE_ROW_NUMBER } from '../../actions/dragTypes';
+import { createRowDropMessage } from '../displayText';
 import RowHeaderTools from './RowHeaderTools';
 import GearIcon from '../atoms/IconGear';
 import DraggableRowNumber from '../atoms/DraggableRowNumber';
@@ -31,10 +34,14 @@ const RowHeaderDetail = ({ cell, frozen }) => {
       if (isDroppable(rowMovingIndex)) {
          event.preventDefault();
          if (isSomething(rowMovingIndex)) {
-            startedUndoableAction();
+            startedUndoableAction({ undoableType: ROW_MOVED, timestamp: Date.now() });
             rowMoved({ rowMoved: rowMovingIndex, rowMovedTo: index });
             setIsOver(false);
-            completedUndoableAction('moved row ' + rowMovingIndex + ' to ' + index);
+            completedUndoableAction({
+					undoableType: ROW_MOVED,
+               message: createRowDropMessage({ rowMovingIndex, toIndex: index }),
+               timestamp: Date.now()
+				});
          }
       }
    }

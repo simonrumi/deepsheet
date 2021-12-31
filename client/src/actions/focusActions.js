@@ -4,9 +4,6 @@ import {
    UPDATED_FOCUS_REF,
    UPDATED_FOCUS_ABORT_CONTROL,
    CLEARED_FOCUS,
-   HIGHLIGHTED_CELL_RANGE,
-   CLEARED_CELL_RANGE,
-   UPDATED_FROM_CELL,
 } from './focusTypes';
 
 export const focusedCell = cellData => {
@@ -35,24 +32,3 @@ export const clearedFocus = () => {
       type: CLEARED_FOCUS,
    });
 };
-
-export const highlightedCellRange = cellData => {
-   managedStore.store.dispatch({
-      type: HIGHLIGHTED_CELL_RANGE,
-      payload: { cell: cellData }
-   });
-};
-
-export const clearedCellRange = cellData => {
-   managedStore.store.dispatch({
-      type: CLEARED_CELL_RANGE,
-      payload: { cell: cellData }
-   });
-}
-
-export const updatedFromCell = cell => {
-   managedStore.store.dispatch({
-      type: UPDATED_FROM_CELL,
-      payload: cell
-   });
-}

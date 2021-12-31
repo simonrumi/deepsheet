@@ -18,10 +18,10 @@ export const MIN_ROW_HEIGHT = '40'; // this is in pixels..smaller than this mean
 export const TOOL_ICON_HEIGHT = '2em';
 export const TOOL_ICON_WIDTH = '2em';
 
-export const DRAGGABLE_ROW_RESIZER = 'draggable_row_resizer';
-export const DRAGGABLE_COLUMN_RESIZER = 'draggable_column_resizer';
-export const DRAGGABLE_ROW_NUMBER = 'draggable_row_number';
-export const DRAGGABLE_COLUMN_LETTER = 'draggable_column_letter';
+export const PASTE_OPTIONS_MODAL_WIDTH = parseFloat(getComputedStyle(document.body).fontSize) * 25; //'25em';
+export const PASTE_OPTIONS_MODAL_MIN_HEIGHT = parseFloat(getComputedStyle(document.body).fontSize) * 15; // '15em';
+export const HISTORY_MODAL_MIN_WIDTH = parseFloat(getComputedStyle(document.body).fontSize) * 15;
+export const HISTORY_MODAL_MIN_HEIGHT = parseFloat(getComputedStyle(document.body).fontSize) * 15;
 
 export const SORT_INCREASING = 'sort_increasing';
 export const SORT_DECREASING = 'sort_decreasing';
@@ -32,13 +32,6 @@ export const SORT_TYPE_DATES = 'sort_type_dates';
 export const LOCAL_STORAGE_STATE_KEY = 'dds_state';
 export const LOCAL_STORAGE_ACTION_KEY = 'dds_action';
 export const LOCAL_STORAGE_TIME_KEY = 'dds_time';
-
-// these are ro use as the changeType in the hasChangedMetadata action
-export const CHANGED_FILTER = 'changed_filter';
-export const ORDERED_COLUMN = 'ordered_column';
-export const ORDERED_ROW = 'ordered_row';
-export const INSERTED_COLUMN = 'inserted_column';
-export const INSERTED_ROW = 'inserted_row';
 
 export const ALL_CELLS = 'all_cells'; // for use by cellsNeeding Update
 

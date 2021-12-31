@@ -5,17 +5,19 @@ const stateKeys = [
     'auth',
     'cellKeys',
     'cellDbUpdates',
+    'cellRange',
     'clipboard',
     'dragMonitor',
     'filterModal',
     'focus',
+    'globalInfoModal',
     'menu',
     'metadata',
+	 'pasteOptionsModal',
     'sheet',
     'sheets',
     'sortModal',
     'title',
-    'globalInfoModal',
 ];
  
 export const logState = wrappedState => {

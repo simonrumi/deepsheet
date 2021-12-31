@@ -2,7 +2,6 @@ export const HAS_CHANGED_CELL = 'has_changed_cell';
 export const HAS_ADDED_CELL = 'has_added_cell';
 export const UPDATED_CELL = 'updated_cell';
 export const UPDATED_CELL_VISIBILITY = 'updated_cell_visibility';
-export const UPDATED_CONTENT_OF_CELL = 'updated_content_of_cell';
 export const POSTING_UPDATED_CELLS = 'posting_updated_cells';
 export const COMPLETED_SAVE_CELLS = 'completed_save_cells';
 export const COMPLETED_SAVE_CELL = 'completed_save_cell';
@@ -16,6 +15,4 @@ export const REMOVED_CELL_KEYS = 'removed_cell_keys';
 export const CLEARED_ALL_CELL_KEYS = 'cleared_all_cell_keys';
 export const CELLS_UPDATED = 'cells_updated';
 export const CELLS_REDRAW_COMPLETED = 'cells_redraw_completed';
-export const ADDED_CELL_TO_RANGE = 'added_cell_to_range';
-export const REMOVED_CELL_FROM_RANGE = 'removed_cell_from_range';
-
+export const UPDATED_END_OF_ROW_CELL = 'updatedEndOfRowCell';
