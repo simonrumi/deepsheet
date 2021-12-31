@@ -1,6 +1,7 @@
 import React from 'react';
+import * as R from 'ramda';
 import { useSelector } from 'react-redux';
-import { isSomething, ifThenElse } from '../../helpers';
+import { isSomething, ifThenElse, optimizeModalPositioning } from '../../helpers';
 import { createCellId } from '../../helpers/cellHelpers';
 import { pasteCellRangeToTarget, convertTextToCellRange, pasteText } from '../../helpers/clipboardHelpers';
 import {
@@ -20,7 +21,7 @@ import { updatedShowPasteOptionsModal } from '../../actions/pasteOptionsModalAct
 import { PASTE_RANGE } from '../../actions/pasteOptionsModalTypes';
 import { PASTE_CLIPBOARD } from '../../actions/clipboardTypes';
 import { startedUndoableAction, completedUndoableAction } from '../../actions/undoActions';
-import { PASTE_OPTIONS_MODAL_WIDTH, MIN_ROW_HEIGHT } from '../../constants';
+import { PASTE_OPTIONS_MODAL_WIDTH, MIN_ROW_HEIGHT, PASTE_OPTIONS_MODAL_MIN_HEIGHT } from '../../constants';
 import { createPasteRangeMessage, createPasteClipboardMessage } from '../displayText';
 import Button from '../atoms/Button';
 
@@ -43,14 +44,12 @@ const PasteOptionsModal = () => {
 			startingCellRowIndex: cellRow(cell), 
 			startingCellColumnIndex: cellColumn(cell)
 		});
-		console.log('PasteOptionsModal--handlePasteClipboard got clipboardAsCells', clipboardAsCells);
 
 		if (clipboardAsCells.length > 1) {
 			startedUndoableAction({ undoableType: PASTE_CLIPBOARD, timestamp: Date.now() });
 			updatedPastingCellRange(true);
 			clearedCellRange(); // clears from, to, and cells
 			replacedCellsInRange(clipboardAsCells);
-			console.log('PasteOptionsModal--handlePasteClipboard about to call pasteCellRangeToTarget which should then call blurCellInPlaceEditor');
 			ifThenElse({
 				ifCond: pasteCellRangeToTarget, // if true, a correctly formed range was pasted
 				thenDo: [ updatedShowPasteOptionsModal, blurCellInPlaceEditor ], // note: must happen in this order
@@ -87,15 +86,18 @@ const PasteOptionsModal = () => {
 
 	const handleCancelPaste = () => updatedShowPasteOptionsModal(false);
 
-	const modalPositioning = {
-		left: positioning.left + positioning.width,
-		top: positioning.top - MIN_ROW_HEIGHT * 2, 
-		width: PASTE_OPTIONS_MODAL_WIDTH,
-	}
-	// // we do have positioning.height, but CellInPlaceEditor seems to get rendered twice and the 2nd time the height value is reduce (to 5px in testing)
+	const modalPositioning = R.pipe(
+		optimizeModalPositioning,
+		R.assoc('width', PASTE_OPTIONS_MODAL_WIDTH)
+	)({
+		initialTop: positioning.top - MIN_ROW_HEIGHT * 2, 
+		initialLeft: positioning.left + positioning.width, 
+		modalWidth: PASTE_OPTIONS_MODAL_WIDTH, 
+		modalHeight: PASTE_OPTIONS_MODAL_MIN_HEIGHT,
+	});
+	// Note: for initialTop we have positioning.height, but CellInPlaceEditor seems to get rendered twice and the 2nd time the height value is reduce (to 5px in testing)
 	// the bottom value is also changed, but no other values are changed
-	// so the height is not reliable, so using MIN_ROW_HEIGHT * 2 instead, to find a reasonable place to put this modal dialog
-	// TODO this could do with being more sophisticated, taking into account whether at the edge of the screen or not
+	// Hence the height is not reliable, so using MIN_ROW_HEIGHT * 2 instead, to find a reasonable place to put this modal dialog
 
 	const fromCellId = isSomething(fromCell) ? createCellId(cellRow(fromCell), cellColumn(fromCell)) : null;
 	const toCellId = isSomething(toCell) ? createCellId(cellRow(toCell), cellColumn(toCell)) : null;

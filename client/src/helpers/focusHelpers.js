@@ -84,17 +84,13 @@ export const clearCellRangeHighlight = () => R.pipe(
 
 export const rangeSelected = toCell => {
 	const fromCell = stateCellRangeMaybeFrom(managedStore.state);
-	console.log('focusHelpers--rangeSelected got maybeFrom cell from state', fromCell, 'and toCell passed in', toCell);
 	if (fromCell && (fromCell.row !== toCell.row || fromCell.column !== toCell.column)) {
 		const message = createHighlightRangeMessage({ fromCell, toCell });
 		startedHighlightingRange({ undoableType: HIGHLIGHTED_CELL_RANGE, timestamp: Date.now() });
 		document.getSelection().removeAllRanges(); // this stops the content within each cell in the range from getting highlighted. There's a bit of flashing, but no big deal
 		updatedFromCell(fromCell);
-		console.log('focusHelpers--rangeSelected just updatedFromCell');
 		highlightedCellRange(toCell);
-		console.log('focusHelpers--rangeSelected just highlightedCellRange');
 		updateCellsInRange(true); // true means we're finding and adding all the cells in the range
-		console.log('focusHelpers--rangeSelected just updateCellsInRange');
 		completedHighlightingRange({ undoableType: HIGHLIGHTED_CELL_RANGE, message, timestamp: Date.now() });
 		return true;
 	}
@@ -110,7 +106,6 @@ export const rangeSelected = toCell => {
 export const maybeClearSubsheetCellFocus = () => {
 	const fromCell = stateCellRangeFrom(managedStore.state);
 	const focusedCell = stateFocusCell(managedStore.state);
-	console.log('focusHelpers--clearSubsheetCellFocus will clear focus if these are the same: focusedCell', focusedCell, 'fromCell', fromCell)
 	if (fromCell === focusedCell) {
 		stateFocusAbortControl(managedStore.state).abort();
    	updatedFocusRef({ ref: null }); // this is probably redundant, since clearedFocus clears everything

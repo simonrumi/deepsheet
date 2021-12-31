@@ -30,7 +30,6 @@ const RangeTools = ({ cell }) => {
    const inCellRange = cellInCellRange(cell);
 
 	const handleCopyRange = event => {
-		console.log('*********** RangeTools.handleCopyRange COPY started ********');
 		event.preventDefault();
 		copyRange();
 		setCopiedRange(true);

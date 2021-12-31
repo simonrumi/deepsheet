@@ -14,12 +14,10 @@ import { isSomething } from '../helpers';
 const cellRangeReducer = (state = {}, action) => {
    switch (action.type) {
       case UPDATED_FOCUS:
-         console.log('cellRangeReducer UPDATED_FOCUS got action.payload', action.payload, 'initial state is', state);
          // FYI payload: { cell: cellData },
 			return { ...state, maybeFrom: action.payload.cell };
 
       case UPDATED_FROM_CELL:
-         console.log('cellRangeReducer UPDATED_FROM_CELL got action.payload', action.payload);
          // payload: cell
          return {
             ...state,
@@ -28,7 +26,6 @@ const cellRangeReducer = (state = {}, action) => {
          };
 
       case HIGHLIGHTED_CELL_RANGE:
-         console.log('cellRangeReducer HIGHLIGHTED_CELL_RANGE got action.payload', action.payload);
          // FYI payload: { cell: cellData } // this is the "to" Cell
          return isSomething(state.from)
             ? {
@@ -52,7 +49,6 @@ const cellRangeReducer = (state = {}, action) => {
 
       case ADDED_CELL_TO_RANGE:
          // FYI payload is just the cell
-         console.log('cellRangeReducer got ADDED_CELL_TO_RANGE with payload (should be a cell):', action.payload);
          return {
             ...state,
             cells: [...(state.cells || []), action.payload],
@@ -66,7 +62,6 @@ const cellRangeReducer = (state = {}, action) => {
          };
 
       case CLEARED_CELL_RANGE:
-         console.log('cellRangeReducer CLEARED_CELL_RANGE got action.payload', action.payload);
          // payload { cell: cellData }
          return {
             ...state,

@@ -75,18 +75,8 @@ const SubsheetCell = ({ cell, cellHasFocus }) => {
 	const baseClasses = 'col-span-1 row-span-1 w-full h-full p-0.5 grid items-stretch cursor-pointer border-t border-l';
 
    const memoizedSubsheetCell = useMemo(() => {
-		console.log(
-         'SubsheetCell about to render; got cellIsCurrentlyFocused',
-         cellIsCurrentlyFocused,
-			'cell.inCellRange',
-			cell.inCellRange,
-         'for cell',
-         cell
-      );
-	
 		const onSubsheetCellClick = event => {
 			event.preventDefault();
-			console.log('************** SubsheetCell--onSubsheetCellClick started ****************');
 			ifThenElse({
 				ifCond: event.shiftKey,
 				thenDo: [ rangeSelected, maybeClearSubsheetCellFocus, hidePopups ],

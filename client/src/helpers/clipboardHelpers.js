@@ -42,16 +42,6 @@ import { cellRangePasteError, SYSTEM_CLIPBOARD_UNAVAILABLE_MSG } from '../compon
 import { ROW_AXIS, COLUMN_AXIS, LOG } from '../constants';
 import { log } from '../clientLogger';
 
-/**
-TODO BUG 
-1. copy range
-2. filter so that part of the range is hidden
-3. paste range
-result: only the top left cell is pasted into the target cell
-desired result: even though some of the source cells might be hidden, they should be pasted in full to the target cells
- */
-
-
 const createPlaceholderCell = (row, column) => R.pipe(
         cellRowSetter(row),
         cellColumnSetter(column),
@@ -122,10 +112,8 @@ const getHiddenAxisItemsCount = (fromIndex, axis) => {
 
 const getVisibleAxisIndicies = (startingIndex, axis) => {
     const visibilityArr = axis === ROW_AXIS ? stateRowVisibility(managedStore.state) : stateColumnVisibility(managedStore.state);
-	 console.log('clipboardHelpers--getVisibleAxisIndicies for axis', axis, 'got visibilityArr', visibilityArr);
     return R.pipe(
         populateAndSortVisibilityArr,
-		  R.tap(data => console.log('clipboardHelpers--getVisibleAxisIndicies after populateAndSortVisibilityArr got', data)),
         R.reduce(
             (accumulator, visibilityItem) => visibilityItem.index >= startingIndex && visibilityItem.isVisible
                 ? R.append(visibilityItem.index, accumulator)
@@ -192,7 +180,6 @@ const mapTargetCells = R.curry((targetStartCell, rangeShape) => {
 		log({ level: LOG.WARN }, 'mapTargetCells did not get all the required parameters');
       return;
     }
-	 console.log('clipboardHelpers--mapTargetCells got targetStartCell', targetStartCell, 'rangeShape', rangeShape);
 	 if (isNothing(rangeShape) || isNothing(rangeShape.rowSpan) || isNothing(rangeShape.columnSpan)) {
 		 // we didn't get a legit (rectangular) rangeShape
 		return;
@@ -205,12 +192,9 @@ const mapTargetCells = R.curry((targetStartCell, rangeShape) => {
 
     const visibleRowIndicies = getVisibleAxisIndicies(startCellRowIndex, ROW_AXIS);
     const visibleColumnIndicies = getVisibleAxisIndicies(startCellColumnIndex, COLUMN_AXIS);
-    
-	 console.log('clipboardHelpers--mapTargetCells got visibleRowIndicies', visibleRowIndicies, 'visibleColumnIndicies', visibleColumnIndicies, 'orderedSourceCells', orderedSourceCells);
 
     const requiredRowIndicies = adjustIndiciesArrToShape({ lengthNeeded: rangeShape.rowSpan, indiciesArr: visibleRowIndicies, axis: ROW_AXIS});
     const requiredColumnIndicides = adjustIndiciesArrToShape({ lengthNeeded: rangeShape.columnSpan, indiciesArr: visibleColumnIndicies, axis: COLUMN_AXIS });
-	 console.log('clipboardHelpers--mapTargetCells got requiredRowIndicies', requiredRowIndicies, 'requiredColumnIndicides', requiredColumnIndicides);
 
     return R.pipe(
         () => reduceWithIndex(
@@ -218,12 +202,8 @@ const mapTargetCells = R.curry((targetStartCell, rangeShape) => {
                 const rowMapping = reduceWithIndex(
                     (columnAccumulator, columnIndex, columnArrIndex) => {
                         const sourceCell = orderedSourceCells[rowArrIndex * rangeShape.columnSpan + columnArrIndex]; // this calculates how far thru the orderedSourceCells array we are
-								console.log('clipboardHelpers--mapTargetCells got cellVisible(sourceCell)', cellVisible(sourceCell), 'and sourceCell', sourceCell);
-								// if (cellVisible(sourceCell)) {
-									const targetCell = getTargetCell(rowIndex, columnIndex);
-                        	return R.append([sourceCell, targetCell], columnAccumulator);
-								// }
-                        // return columnAccumulator;
+								const targetCell = getTargetCell(rowIndex, columnIndex);
+								return R.append([sourceCell, targetCell], columnAccumulator);
                     },
                     [], // initial value
                     requiredColumnIndicides
@@ -239,10 +219,24 @@ const mapTargetCells = R.curry((targetStartCell, rangeShape) => {
     )();
 });
 
+/**
+ * Known "bug"
+ * 1. copy range
+ * 2. filter so that part of the range is hidden
+ * 3. paste range
+ * result: not all the range is pasted
+ * desired result: even though some of the source cells might be hidden, they should be pasted in full to the target cells
+ * BUT this conflicts with the following situation:
+ * 1. filter 
+ * 2. copy a range that includes columns/rows that are filtered out
+ * 3. paste the range
+ * result: only the visible cells are pasted - this is the desired result
+ * ....so we're keeping the second scenario and not trying to make the first scenario work.
+ * If you copied a range then filtered out some of what you just copied, you shouldn't expect to have your original range in tact
+ */
 const getRangeShape = () => {
 	const fromCell = stateCellRangeFrom(managedStore.state);
 	const toCell = stateCellRangeTo(managedStore.state);
-	console.log('clipboardHelpers--getRangeShape got fromCell', fromCell, 'toCell', toCell);
 	if (isNothing(fromCell) || isNothing(toCell)) {
 		const cellRangeArr = stateCellRangeCells(managedStore.state);
 		if (!arrayContainsSomething(cellRangeArr)) {
@@ -282,19 +276,16 @@ const getRangeShape = () => {
 			},
 			{ columnSpan: 0, rowSpan: 0, currentRow: null, currentColumnSpan: 0 }, // initial values
 			cellRangeArr
-		)
-		console.log('clipboardHelpers--getRangeShape got rangeShapeFromCells', rangeShapeFromCells);
+		);
 		return R.pick(['columnSpan', 'rowSpan'], rangeShapeFromCells);
 	}
 	
 	const fromCellColumn = isColumnDirectionForward(fromCell, toCell) ? cellColumn(fromCell) : cellColumn(toCell);
 	const toCellColumn = isColumnDirectionForward(fromCell, toCell) ? cellColumn(toCell) : cellColumn(fromCell);
 	const columnVisibility = stateColumnVisibility(managedStore.state);
-	console.log('clipboardHelpers--getRangeShape got columnVisibility', columnVisibility, 'stateTotalColumns(managedStore.state)', stateTotalColumns(managedStore.state));
 	const numberOfHiddenColumns = arrayContainsSomething(columnVisibility)
 		? forLoopReduce(
 			(accumulator, index) => {
-				console.log('clipboardHelpers--getRangeShape in forLoopReduce got accumulator', accumulator, 'index', index);
 				if (index < fromCellColumn) {
 					// we're not yet at the beginning of the cell range, so skip
 					return accumulator;
@@ -315,8 +306,6 @@ const getRangeShape = () => {
 		: 0; // the columnVisibility array is empty, meaning all columns are visible
 
 	const columnSpan = toCellColumn + 1 - fromCellColumn - numberOfHiddenColumns;
-	console.log('clipboardHelpers--getRangeShape got fromCellColumn', fromCellColumn, 'toCellColumn', toCellColumn, 'numberOfHiddenColumns', numberOfHiddenColumns, 'therefore columnSpan =', columnSpan);
-
 	const fromCellRow = isRowDirectionForward(fromCell, toCell) ? cellRow(fromCell) : cellRow(toCell);
 	const toCellRow = isRowDirectionForward(fromCell, toCell) ? cellRow(toCell) : cellRow(fromCell);
 	const rowVisibility = stateRowVisibility(managedStore.state);
@@ -342,8 +331,6 @@ const getRangeShape = () => {
 		)
 		: 0; // // the rowVisibility array is empty, meaning all rows are visible
 	const rowSpan = toCellRow + 1 - fromCellRow - numberOfHiddenRows;
-	console.log('clipboardHelpers--getRangeShape got fromCellRow', fromCellRow, 'toCellRow', toCellRow, 'numberOfHiddenRows', numberOfHiddenRows, 'therefore rowSpan =', rowSpan);
-
 	return { columnSpan, rowSpan }
 };
 

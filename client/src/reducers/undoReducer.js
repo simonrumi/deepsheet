@@ -21,7 +21,7 @@ import {
    COMPLETED_HIGHLIGHTING_RANGE,
    HIGHLIGHTED_CELL_RANGE,
 } from '../actions/cellRangeTypes';
-import { arrayContainsSomething, isSomething, isNothing, reduceWithIndex, ifThenElse } from '../helpers';
+import { arrayContainsSomething, isSomething, isNothing, reduceWithIndex } from '../helpers';
 import { stateOriginalValue, cellText, cellRow, cellColumn } from '../helpers/dataStructureHelpers';
 import { startMessage, editedTitleMessage, unhighlightedRangeMessage } from '../components/displayText';
 import { LOG } from '../constants';
@@ -36,33 +36,13 @@ const cellNotReallyEdited = ({
    startedActions,
    hasHighlightedRange = false,
    state,
-}) => {
-   console.log(
-      'undoReducer--cellNotReallyEdited got isPastingCellRange',
-      isPastingCellRange,
-      'value',
-      value,
-		'stateOriginalValue(state)',
-		stateOriginalValue(state),
-      'actionCancelled',
-      actionCancelled,
-      'startedActions',
-      startedActions,
-		'hasHighlightedRange',
-		hasHighlightedRange,
-   );
-   const returnValue = (
-		!hasHighlightedRange && (
-			isPastingCellRange ||
-			value === null ||
-			(value !== undefined && R.equals(stateOriginalValue(state), value)) ||
-			actionCancelled ||
-			startedActions.length > 1
-		)
-   );
-	console.log('undoReducer--cellNotReallyEdited will return', returnValue);
-	return returnValue; // TIDY
-};
+}) => !hasHighlightedRange && (
+	isPastingCellRange ||
+	value === null ||
+	(value !== undefined && R.equals(stateOriginalValue(state), value)) ||
+	actionCancelled ||
+	startedActions.length > 1
+);
 
 const updateHistory = ({
    actionHistory,
@@ -74,24 +54,10 @@ const updateHistory = ({
    state,
 }) => {
    const { startedActions, pastActions, presentAction } = actionHistory;
-   console.log(
-      'undoReducer--updateHistory got value',
-      value,
-		'completedAction', completedAction,
-      'isPastingCellRange',
-      isPastingCellRange,
-      'actionCancelled',
-      actionCancelled,
-		'hasHighlightedRange',
-		hasHighlightedRange,
-      'actionHistory',
-      actionHistory
-   );
    // completedAction & presentAction should look like this { undoableType, message, timestamp }
    const reversedStartedActions = R.pipe(R.sortBy(R.prop('timestamp')), R.reverse)(startedActions);
 	if (R.prop('undoableType', completedAction) === UPDATED_FOCUS && R.prop('undoableType', presentAction) === HIGHLIGHTED_CELL_RANGE) {
 		// there will be no started action, because this happened immediately after highlighting a range
-		console.log('undoReducer--updateHistory got UPDATED_FOCUS completedAction after a HIGHLIGHTED_CELL_RANGE presentAction so leaving startedActions as is');
 		return {
 			startedActions,
 			pastActions: R.append(presentAction, pastActions),
@@ -102,18 +68,6 @@ const updateHistory = ({
 
    const { newStartedActions, newPastActions, newPresentAction } = reduceWithIndex(
       (accumulator, currentStartedAction, startedActionIndex) => {
-         console.log(
-            'undoReducer--updateHistory--reduceWithIndex got accumulator',
-            accumulator,
-            'currentStartedAction',
-            currentStartedAction,
-            'startedActionIndex',
-            startedActionIndex,
-            ' completedAction',
-            completedAction,
-            'actionCancelled',
-            actionCancelled
-         );
          if (R.prop('undoableType', completedAction) === R.prop('undoableType', currentStartedAction)) {
             const newPastActions =
                actionCancelled || isNothing(presentAction)
@@ -134,14 +88,6 @@ const updateHistory = ({
          newPresentAction: presentAction,
       }, //initial values of the "new" actions are the current actions (more or less)
       reversedStartedActions
-   );
-	console.log(
-      'undoReducer--updateHistory after reduceWithIndex got newStartedActions',
-      newStartedActions,
-      'newPastActions',
-      newPastActions,
-      'newPresentAction',
-      newPresentAction
    );
 
 	return cellNotReallyEdited({ isPastingCellRange, value, actionCancelled, startedActions, hasHighlightedRange, state })
@@ -373,7 +319,6 @@ const undoReducer = reducer => {
          case STARTED_EDITING:
 				// action.payload is the cell
             // this is used by CellInPlaceEditor, when the user starts editing a cell
-				console.log('undoReducer--STARTED_EDITING got action.payload', action.payload, 'startedActions', startedActions);
 				return alreadyStartedEditingCell({ cell: action.payload, startedActions })
 					? state // don't change anything as we have already recorded that the cell is being edited
 					: {
@@ -420,7 +365,6 @@ const undoReducer = reducer => {
 					value: action.payload.value,
 					state,
 				});
-				console.log('undoReducer--FINISHED_EDITING got historyAfterCellEdit', historyAfterCellEdit, 'action.payload', action.payload);
 
 				if (cellNotReallyEdited({ 
 						isPastingCellRange: action.payload.isPastingCellRange, 
@@ -456,7 +400,6 @@ const undoReducer = reducer => {
 					hasHighlightedRange: true,
 					state,
 				});
-				console.log('undoReducer--COMPLETED_HIGHLIGHTING_RANGE got historyAfterRangeHighlight', historyAfterRangeHighlight, 'action.payload', action.payload);
 				return {
 					...state,
 					future: [], // blow away the future, since we're now taking a new course of action
@@ -465,13 +408,10 @@ const undoReducer = reducer => {
 					// then then maybePast, before the range highlight, becomes part of the real past
 					past: R.pipe(
 						R.last,
-						R.tap(data => console.log('undoReducer--COMPLETED_HIGHLIGHTING_RANGE updating past, after R.last(past) got', data)),
 						R.prop('undoableType'),
-						R.tap(data => console.log('undoReducer--COMPLETED_HIGHLIGHTING_RANGE updating past, after R.prop("undoableType") got', data)),
 						type => type === EDIT_CELL // note that we're not checking which cell was edited. Unlikely that is necessary, but beware
 							? R.slice(0, -1, past)
 							: past,
-						R.tap(data => console.log('undoReducer--COMPLETED_HIGHLIGHTING_RANGE updating past, after type === EDIT_CELL got', data, 'which will be appended to state.maybePast', state.maybePast)),
 						R.append(state.maybePast)
 					)(past),
 					maybePast: null, // reset this
@@ -480,17 +420,7 @@ const undoReducer = reducer => {
 
 			case CLEARED_FOCUS:
 			case UPDATED_FOCUS:
-				// a special case: after highlighting a cell range, if you click on another cell UPDATED_FOCUS is fired
-				
-				console.log(
-               'undoReducer--UPDATED_FOCUS got state.actionHistory',
-               state.actionHistory,
-               'present',
-               present,
-               'state.actionHistory.presentAction.undoableType === HIGHLIGHTED_CELL_RANGE',
-               state.actionHistory.presentAction.undoableType === HIGHLIGHTED_CELL_RANGE
-            );
-				
+				// a special case: after highlighting a cell range, if you click on another cell UPDATED_FOCUS is fired				
 				if (state.actionHistory.presentAction.undoableType === HIGHLIGHTED_CELL_RANGE) {
 					const historyAfterFoucsUpdate = updateHistory({
 						actionHistory: state.actionHistory,

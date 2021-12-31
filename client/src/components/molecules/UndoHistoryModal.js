@@ -1,8 +1,10 @@
 import React from 'react';
 import * as R from 'ramda';
 import managedStore from '../../store';
+import { optimizeModalPositioning } from '../../helpers';
 import { statePastActions, statePresentAction, stateFutureActions } from '../../helpers/dataStructureHelpers';
 import { undid, redid, hidUndoHistory } from '../../actions/undoActions';
+import { HISTORY_MODAL_MIN_WIDTH, HISTORY_MODAL_MIN_HEIGHT } from '../../constants';
 import ChevronRight from '../atoms/IconChevronRight';
 import DraggableModal from '../atoms/DraggableModal';
 
@@ -28,10 +30,13 @@ const renderHistoryList = () => (
    </ul>
 );
 
-// TODO need to come up with better default positioning 
-const positioning = { left: 0, top: 0 }
-
-const UndoHistoryModal = () => {
+const UndoHistoryModal = () => { 
+	const positioning = optimizeModalPositioning({
+		initialTop: 0,
+		initialLeft: document.body.clientWidth,
+		modalWidth: HISTORY_MODAL_MIN_WIDTH,
+		modalHeight: HISTORY_MODAL_MIN_HEIGHT,
+	});
 	return (
 		<DraggableModal classes="absolute z-50" positioning={positioning}>
 			<div className="bg-white border border-grey-blue pl-3">HISTORY</div>

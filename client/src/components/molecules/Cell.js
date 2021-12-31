@@ -23,7 +23,6 @@ import CellInPlaceEditor from './CellInPlaceEditor';
 import RangeTools from './RangeTools';
 
 const onCellClick = (event, cell) => {
-	console.log('***************** Cell click started ***************');
    event.preventDefault();
    ifThenElse({
       ifCond: event.shiftKey,

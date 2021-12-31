@@ -70,7 +70,6 @@ const createUpdatesForNewCells = ({
 };
 
 const insertNewColumns = (additionalColumns = 1) => {
-	console.log('insertNewColumns about to trigger STARTED_UNDOABLE_ACTION');
    startedUndoableAction({ undoableType: UPDATED_TOTAL_COLUMNS, timestamp: Date.now() });
    const totalColumns = stateTotalColumns(managedStore.state);
 
@@ -109,7 +108,6 @@ const insertNewColumns = (additionalColumns = 1) => {
       additionalColumns
    );
    hasChangedMetadata();
-	console.log('insertNewColumns about to trigger COMPLETED_UNDOABLE_ACTION');
    completedUndoableAction({
       undoableType: UPDATED_TOTAL_COLUMNS,
       message: createInsertNewColumnsMessage(additionalColumns),
