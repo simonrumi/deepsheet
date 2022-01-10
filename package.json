@@ -17,13 +17,13 @@
    },
    "dependencies": {
       "@reduxjs/toolkit": "^1.6.1",
-      "autoprefixer": "^10.3.3",
+      "autoprefixer": "^10.4.2",
       "netlify-cli": "^2.59.2",
       "postcss": "^8.3.6",
       "tailwindcss": "^2.2.8"
    },
    "devDependencies": {
-      "concurrently": "^4.1.2",
-      "nodemon": "^1.19.4"
+      "concurrently": "^7.0.0",
+      "nodemon": "^2.0.15"
    }
 }

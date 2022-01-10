@@ -39,4 +39,5 @@ ramdaTests.js
 FilterOptions-old.js
 *-classBased.js
 *-old.js
+*.old
 

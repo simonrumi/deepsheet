@@ -26,7 +26,7 @@ import { PASTE_OPTIONS_MODAL_WIDTH, MIN_ROW_HEIGHT, PASTE_OPTIONS_MODAL_MIN_HEIG
 import { createPasteRangeMessage, createPasteClipboardMessage } from '../displayText';
 import Button from '../atoms/Button';
 
-// TODO BUG
+// TODO NEXT BUG
 // 1. copy range
 // 2. copy text range (below)
 // 3. paste ....post options modal shows up

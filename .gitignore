@@ -7,6 +7,7 @@ dev.js
 
 # probably can delete files named like this
 old-*.txt
+*.old
 
 # lambda functions build dir
 /server/lambda
