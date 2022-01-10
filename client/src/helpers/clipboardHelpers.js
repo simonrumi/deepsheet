@@ -450,10 +450,17 @@ export const convertTextToCellRange = ({ text, startingCellRowIndex, startingCel
       firstColumnIndex: startingCellColumnIndex,
    });
 
-export const pasteText = ({ text, cell }) => {
+export const pasteText = ({ text, cell, cellInPlaceEditorRef }) => {
+	const [realStart, realEnd] =
+		cellInPlaceEditorRef.current.selectionEnd < cellInPlaceEditorRef.current.selectionStart
+			? [cellInPlaceEditorRef.current.selectionEnd, cellInPlaceEditorRef.current.selectionStart]
+			: [cellInPlaceEditorRef.current.selectionStart, cellInPlaceEditorRef.current.selectionEnd];
+	const beforeHighlight = R.slice(0, realStart, cellText(cell));
+	const afterHighlight = R.slice(realEnd, Infinity, cellText(cell));
+	const newText = beforeHighlight + text + afterHighlight;
 	updatedCell({
 		...cell,
-		content: { ...cell.content, text },
+		content: { ...cell.content, text: newText },
 		isStale: true,
 	});
 }

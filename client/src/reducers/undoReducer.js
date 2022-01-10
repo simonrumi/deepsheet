@@ -1,3 +1,31 @@
+// TODO BUG/Feature
+// clipboard pasting requires option to paste range or just text
+// 1. copy something outside of sheet that has carriage returns and/or tabs
+// 2. click on a cell to edit
+// 3. Ctrl-V to paste
+// result: clipboard pasted as a range, but what if you wanted it pasted into the cell?
+// desired result: pop up a modal asking which option you want
+
+// TODO 
+// server-side need to verify and tidy up sheets
+// metadata:
+// 1. number of rows and columns should match number of cells
+// 2a. if there are entries in columnWidths there must be an entry for every column (check that is required)
+// 2b. if there are entries in rowHeights there must be an entry for every row (check that is required)
+// 2.5 if there is a parentsheetId, it must point to a legit sheet... TODO make a tool to reconnect an orphan sheet to its parent....don't do this automatically because user has to decide which cell to attach it to
+// 3. must have the following:
+// title
+// cells array with somethign in it
+// users object with a legit user as the owner
+// 4. when a cell gets saved/updated it must have
+// row that is < totalRows
+// column that is < totalColumns
+// visible - true by default
+// content.text = has something, and is escaped
+// subsheetId - if is something, it must be a legit sheet id
+
+
+
 import * as R from 'ramda';
 import { COMPLETED_SAVE_UPDATES } from '../actions/types';
 import {
@@ -476,11 +504,11 @@ const undoReducer = reducer => {
 							message: action.payload.message,
 						}, 
 						actionCancelled: action.payload.actionCancelled || false,
-						value: action.payload.value,
+						value: action.payload?.value,
 						state,
 					});
-               return R.equals(stateOriginalValue(state), action.payload.value) || 
-						action.payload.actionCancelled ||
+               return R.equals(stateOriginalValue(state), action.payload?.value) || 
+						action.payload?.actionCancelled ||
 						startedActions.length > 1
                   ? { // no change has been made, or the edit was cancelled, or there is some other startedAction yet to complete
                      ...state, // keep the past & future as is
@@ -519,7 +547,7 @@ const undoReducer = reducer => {
 							message: editedTitleMessage(),
 						}, 
 						actionCancelled: true,
-						value: action.payload.value,
+						value: action.payload?.value,
 						state,
 					});
                return {
@@ -529,8 +557,8 @@ const undoReducer = reducer => {
                   original: null, // reset this
 						actionHistory: {
 							...actionHistory, // keep the pastActions & futureActions as they are
-							startedActions: historyAfterCancel.startedActions,
-							presentAction: historyAfterCancel.presentAction,
+							startedActions: historyAfterCancel?.startedActions,
+							presentAction: historyAfterCancel?.presentAction,
 						}
                }
 
