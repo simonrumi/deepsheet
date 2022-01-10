@@ -4,11 +4,10 @@ import managedStore from '../../store';
 import { updatedCell, hasChangedCell } from '../../actions/cellActions';
 import { createdSheet } from '../../actions/sheetActions';
 import { clearedFocus, updatedFocusRef } from '../../actions/focusActions';
-import { replacedCellsInRange, updatedPastingCellRange } from '../../actions/cellRangeActions';
+import { updatedPastingCellRange } from '../../actions/cellRangeActions';
 import { startedEditing, finishedEditing, startedUndoableAction, completedUndoableAction, } from '../../actions/undoActions';
 import { PASTE_RANGE, } from '../../actions/cellRangeTypes';
 import { updatedClipboard } from '../../actions/clipboardActions';
-import { PASTE_CLIPBOARD } from '../../actions/clipboardTypes';
 import {
    capturedSystemClipboard,
    updatedShowPasteOptionsModal,
@@ -45,7 +44,7 @@ import {
    stateClipboard,
 	stateShowPasteOptionsModal,
 } from '../../helpers/dataStructureHelpers';
-import { createPasteRangeUndoMessage, createPasteClipboardMessage } from '../displayText';
+import { createPasteRangeUndoMessage } from '../displayText';
 import NewDocIcon from '../atoms/IconNewDoc';
 import CloseIcon from '../atoms/IconClose';
 import PasteIcon from '../atoms/IconPaste';
