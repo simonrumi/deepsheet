@@ -16,10 +16,8 @@
       "build": "cd client && npm run build && cd ../serverLambda && npm run build:lambda"
    },
    "dependencies": {
-      "@reduxjs/toolkit": "^1.6.1",
       "autoprefixer": "^10.4.2",
-      "netlify-cli": "^2.59.2",
-      "postcss": "^8.3.6",
+      "postcss": "^8.4.5",
       "tailwindcss": "^2.2.8"
    },
    "devDependencies": {

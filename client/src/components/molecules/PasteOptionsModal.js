@@ -26,6 +26,8 @@ import { PASTE_OPTIONS_MODAL_WIDTH, MIN_ROW_HEIGHT, PASTE_OPTIONS_MODAL_MIN_HEIG
 import { createPasteRangeMessage, createPasteClipboardMessage } from '../displayText';
 import Button from '../atoms/Button';
 
+// TODO continue with pagkage updates
+
 // TODO NEXT BUG
 // 1. copy range
 // 2. copy text range (below)
