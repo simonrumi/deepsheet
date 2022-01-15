@@ -40,6 +40,11 @@ A1	A3
 B2	B3
 */
 
+// TODO BUG
+// 1. copy a range so that the bottom right cell is in the last column
+// 2. paste the range
+// result: the bottom right cell is not pasted 
+
 const PasteOptionsModal = () => {
 	const showModal = useSelector(state => stateShowPasteOptionsModal(state));
 	const systemClipboard = useSelector(state => stateSystemClipboard(state));
