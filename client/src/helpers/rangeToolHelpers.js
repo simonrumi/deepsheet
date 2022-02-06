@@ -37,6 +37,9 @@ import { DEFAULT_COLUMN_WIDTH, DEFAULT_TOTAL_ROWS, DEFAULT_TOTAL_COLUMNS, DEFAUL
 import { DEFAULT_TITLE_FOR_SUBSHEET_FROM_CELL_RANGE } from '../components/displayText';
 import { log } from '../clientLogger';
 
+// doing this to avoid confusing React, which thinks the word "use" means its a hook
+const rUseWith = R.useWith;
+
 const getOneCellPerColumn = R.reduce((accumulator, cell) => {
    const existingCellInColumn = getObjectFromArrayByKeyValue('column', cellColumn(cell), accumulator);
    return isSomething(existingCellInColumn) ? accumulator : R.append(cell, accumulator);
@@ -49,7 +52,7 @@ const getOneCellPerRow = R.reduce((accumulator, cell) => {
 
 const createColumnWidthItem = ({ oneCellPerColumn, columnIndex }) =>
    R.pipe(
-      R.useWith(
+      rUseWith(
          getObjectFromArrayByKeyValue('index'), // the remaining 2 params come from the array below
          [
             R.path([columnIndex, 'column']), //operates on oneCellPerColumn
@@ -77,7 +80,7 @@ export const createColumnWidths = ({ totalColumns, orderedCellRange }) => {
 
 const createRowHeightItem = ({ oneCellPerRow, rowIndex }) =>
    R.pipe(
-      R.useWith(
+      rUseWith(
          getObjectFromArrayByKeyValue('index'), // the remaining 2 params come from the array below
          [
             R.path([rowIndex, 'row']), //operates on oneCellPerRow

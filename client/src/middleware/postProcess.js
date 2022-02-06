@@ -50,7 +50,7 @@ const maybeUpdateFromLocalStorage = async state => {
    }
 }
 
-export default store => next => async action => {
+const postProcess = store => next => async action => {
    switch (action.type) {
       case SAVE_STATE:
          saveToLocalStorage(store.getState(), action);
@@ -98,3 +98,5 @@ export default store => next => async action => {
    }
    return next(action);
 }
+
+export default postProcess;

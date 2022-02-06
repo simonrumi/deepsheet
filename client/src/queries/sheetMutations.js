@@ -1,4 +1,4 @@
-import { gql } from 'apollo-boost';
+import { gql } from '@apollo/client'; // from 'apollo-boost';
 import apolloClient from '../services/apolloClient';
 import { prepCellsForDb } from '../helpers/cellHelpers';
 
@@ -108,7 +108,8 @@ const DELETE_SHEET_MUTATION = gql`
          id
          title
          metadata {
-            parentSheetId
+            parentSheetId,
+				created
          }
       }
    }
@@ -129,7 +130,8 @@ const DELETE_SHEETS_MUTATION = gql`
          id
          title
          metadata {
-            parentSheetId
+            parentSheetId,
+				created
          }
       }
    }
@@ -205,6 +207,7 @@ const SHEET_BY_USER_ID_MUTATION = gql`
 `;
 
 export const sheetByUserIdMutation = async userId => {
+	console.log('sheetMutations--sheetByUserIdMutation got userId', userId, 'about to call SHEET_BY_USER_ID_MUTATION');
    const result = await apolloClient.mutate({
       mutation: SHEET_BY_USER_ID_MUTATION,
       variables: { userId },

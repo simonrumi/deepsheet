@@ -126,7 +126,7 @@ const getCellsInRow = state =>
       getAllCells(state)
    );
 
-export default state => 
+const sortRow = state => 
    R.pipe(
       getCellsInRow,
       R.sort(compareCellColumn),
@@ -135,3 +135,5 @@ export default state =>
       createMapOfChangedColumns,
       createUpdatesForStore(state),
      )(state);
+
+export default sortRow;

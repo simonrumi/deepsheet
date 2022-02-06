@@ -1,5 +1,5 @@
 import * as R from 'ramda';
-import { isSomething } from './index';
+import { isSomething, isNothing } from './index';
 
 /************************************************ GENERAL STUFF **********************************************/
 
@@ -43,6 +43,21 @@ export const stateOriginalRow = R.view(originalRowLens);
 const originalColumnLens = R.lensPath(['original', 'column']);
 export const stateOriginalColumn = R.view(originalColumnLens);
 
+export const removeTypename = data => {
+	if (isNothing(data)) {
+      return data;
+    }
+	if (Array.isArray(data)) {
+		return R.map(arrItem => removeTypename(arrItem), data);
+	}
+	if (typeof data === 'object') {
+		return R.pipe(
+			R.omit(['__typename']),
+			R.map(item => removeTypename(item))
+		)(data)
+	}
+	return data
+}
 
 /************************************************ DB **********************************************/
 
@@ -405,7 +420,26 @@ export const stateIsStale = state =>
    stateTitleIsStale(state) || stateCellDbUpdatesIsStale(state) || stateMetadataIsStale(state);
 
 // return true if we have an issue with any state objects that tried to save to the db but got error messages
-export const stateErrorMessages = state =>
+export const stateHasErrorMessages = state =>
    stateCellDbUpdatesErrorMessage(state) 
-      // || (stateTitleIsStale(state) && !stateTitleIsCallingDb(state) && !stateTitleIsEditingTitle(state))
-      || stateMetadataErrorMessage(state);
+   || stateTitleErrorMessage(state)
+   || stateMetadataErrorMessage(state)
+	|| stateSheetErrorMessage(state)
+	|| stateSheetsErrorMessage(state);
+
+export const stateErrorMessages = state => {
+	const allErrors = R.flatten([
+		stateCellDbUpdatesErrorMessage(state),
+		stateTitleErrorMessage(state),
+		stateMetadataErrorMessage(state),
+		stateSheetErrorMessage(state),
+		stateSheetsErrorMessage(state),
+	]);
+	console.log('dataStructureHelpers--stateErrorMessages flattened error messages to this', allErrors);
+	const filteredErrors = R.filter(item => isSomething(item), allErrors);
+	console.log('dataStructureHelpers--stateErrorMessages filtered error messages to this', filteredErrors);
+	return filteredErrors;
+}
+
+
+

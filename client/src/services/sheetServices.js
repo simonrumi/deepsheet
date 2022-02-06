@@ -57,7 +57,8 @@ export const fetchSheet = async (sheetId, userId) => {
       const sheet = await sheetQuery(sheetId, confirmedUserId);
       return sheet;
    } catch (err) {
-      console.error('error fetching sheet');
+		log({ level: LOG.ERROR }, 'error fetching sheet');
+		log({ level: LOG.DEBUG }, 'error fetching sheet', err);
    }
 };
 
@@ -82,7 +83,8 @@ export const fetchSheets = async () => {
          updatedSheetsTree(sheetsTree);
       }
    } catch (err) {
-      console.error('error fetching sheets:', err);
+		log({ level: LOG.ERROR }, 'error fetching sheets');
+		log({ level: LOG.DEBUG }, 'error fetching sheets', err);
       fetchSheetsError(err);
    }
 };
@@ -93,7 +95,8 @@ export const deleteSheets = async (sheetIds, userId) => {
       const remainingSheets = await deleteSheetsMutation(sheetIds, userId);
       deletedSheets(remainingSheets);
    } catch (err) {
-      console.error('error deleting sheets:', err);
+		log({ level: LOG.ERROR }, 'error deleting sheets');
+		log({ level: LOG.DEBUG }, 'error deleting sheets', err);
       deleteSheetsError(err);
    }
 };
@@ -104,12 +107,13 @@ export const deleteSheet = async (sheetId, userId) => {
       const remainingSheets = await deleteSheetMutation(sheetId, userId);
       deletedSheet(remainingSheets);
    } catch (err) {
-      console.error('error deleting sheet:', err);
+		log({ level: LOG.ERROR }, 'error deleting sheet');
+		log({ level: LOG.DEBUG }, 'error deleting sheet', err);
       deleteSheetError(err);
    }
 };
 
-const updateTitleInDB = async ({id, title}) => {
+const updateTitleInDB = async ({ id, title }) => {
    const data = await titleMutation(id, title);
    const decodedText = decodeText(data.title);
    managedStore.store.dispatch({
@@ -132,10 +136,10 @@ const saveTitleUpdate = async state => {
       } catch (err) {
          managedStore.store.dispatch({
             type: TITLE_UPDATE_FAILED,
-            payload: { errorMessage: 'title was not updated: ' + err },
+            payload: { errorMessage: 'title could not be updated' },
          });
          finishedEditingTitle({ value: decodeText(text), message: editedTitleMessage(), }); // even though the db update failed, the title has been changed locally
-         log({ level: LOG.INFO }, 'error updating title in db', err);
+         log({ level: LOG.ERROR }, 'error updating title in db', err);
       }
       
    }
@@ -160,7 +164,8 @@ const saveCellUpdates = async state => {
       try {
          await updatedCells({ sheetId, cells: changedCells }); // note the "await" here doesn't do much because it is just triggering the action, which completes immediately. That action doesn't wait for the db update to happen
       } catch (err) {
-         console.error('Error updating cells in db');
+			log({ level: LOG.ERROR }, 'error updating cells in db');
+			log({ level: LOG.DEBUG }, 'error updating cells in db', err);
          throw new Error('Error updating cells in db', err);
       }
    }
@@ -173,9 +178,11 @@ const saveMetadataUpdates = async state => {
    if (changedMetadata) {
       try {
          const sheetId = stateSheetId(state);
+			console.log('sheetServices--saveMetadataUpdates got changedMetadata', changedMetadata);
          await updatedMetadata({ sheetId, changedMetadata });
       } catch (err) {
-         console.error('Error updating metadata in db');
+			log({ level: LOG.ERROR }, 'error updating metadata in db');
+			log({ level: LOG.DEBUG }, 'error updating metadata in db', err);
          throw new Error('Error updating metadata in db', err);
       }
    }

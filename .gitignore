@@ -9,6 +9,9 @@ dev.js
 old-*.txt
 *.old
 
+# for local dev notes
+notes.txt
+
 # lambda functions build dir
 /server/lambda
 /serverLambda/lambda

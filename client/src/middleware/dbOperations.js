@@ -22,7 +22,7 @@ import { isSomething, arrayContainsSomething, ifThenElse } from '../helpers';
 import { getUserInfoFromCookie } from '../helpers/userHelpers';
 import { getSaveableCellData } from '../helpers/cellHelpers';
 import { createDefaultAxisSizing } from '../helpers/axisSizingHelpers';
-import { cellSubsheetIdSetter, cellTextSetter, dbSheetId } from '../helpers/dataStructureHelpers';
+import { cellSubsheetIdSetter, cellTextSetter, dbSheetId, removeTypename } from '../helpers/dataStructureHelpers';
 import { DEFAULT_TOTAL_ROWS, DEFAULT_TOTAL_COLUMNS, DEFAULT_ROW_HEIGHT, DEFAULT_COLUMN_WIDTH } from '../constants';
 import { DEFAULT_TITLE_FOR_SUBSHEET_FROM_CELL_RANGE } from '../components/displayText';
 
@@ -75,13 +75,14 @@ const createNewSheet = async ({
    return createSheetResult;
 };
 
-export default store => next => async action => {
+const dbOperations = store => next => async action => {
    switch (action.type) {
       case POSTING_CREATE_SHEET:
          next(action); // get this action to the reducer before we do the next steps
+			const cleanedCreateSheetData = removeTypename(action.payload);
          try {
             await saveAllUpdates(store.getState());
-            const response = await createNewSheet(action.payload);
+            const response = await createNewSheet(cleanedCreateSheetData);
             managedStore.store.dispatch({
                type: COMPLETED_CREATE_SHEET,
                payload: { sheet: response },
@@ -100,7 +101,8 @@ export default store => next => async action => {
          next(action); // get this action to the reducer before we do the next steps
          try {
             const { sheetId, changedMetadata } = action.payload;
-            const data = await updateMetadataMutation({ ...changedMetadata, id: sheetId });
+				const cleanChangedMetadata = removeTypename(changedMetadata);
+            const data = await updateMetadataMutation({ ...cleanChangedMetadata, id: sheetId });
             managedStore.store.dispatch({
                type: COMPLETED_SAVE_METADATA,
                payload: {
@@ -121,8 +123,9 @@ export default store => next => async action => {
          next(action); // get this action to the reducer before we do the next steps, so the UI can display "waiting" state
          try {
             const { userId } = getUserInfoFromCookie();
+				const cleanedCells = removeTypename(action.payload); // contains sheetId as well as cells
             const response = await updateCellsMutation({
-               ...action.payload, // contains sheetId, cells
+               ...cleanedCells, 
                userId,
             });
             managedStore.store.dispatch({
@@ -151,7 +154,8 @@ export default store => next => async action => {
       case POSTING_DELETE_SUBSHEET_ID:
          next(action); // get this action to the reducer before we do the next steps, so the UI can display "waiting" state
          try {
-            const response = await deleteSubsheetIdMutation(action.payload); // action.payload contains { row, column, text, sheetId, subsheetId }
+				const cleanedData = removeTypename(action.payload); // action.payload contains { row, column, text, sheetId, subsheetId }
+            const response = await deleteSubsheetIdMutation(cleanedData); 
             managedStore.store.dispatch({
                type: COMPLETED_DELETE_SUBSHEET_ID,
                payload: response,
@@ -174,3 +178,5 @@ export default store => next => async action => {
          return next(action);
    }
 };
+
+export default dbOperations;

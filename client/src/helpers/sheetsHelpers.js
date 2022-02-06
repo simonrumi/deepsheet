@@ -27,6 +27,8 @@ import { clearedAllCellKeys } from '../actions/cellActions';
 import { updateCellsMutation } from '../queries/cellMutations';
 import IconRightArrow from '../components/atoms/IconRightArrow';
 import IconDelete from '../components/atoms/IconDelete';
+import { log } from '../clientLogger';
+import { LOG } from '../constants';
 
 /* Here's what a node in the tree of sheets looks like
    node = { 
@@ -143,7 +145,7 @@ export const getSheetIdsFromNode = (node, sheetIds = []) => {
 
 const getCellsFromSheet = async sheetId => {
    if (isNothing(sheetId)) {
-      console.error('sheetsHelpers.js getCellsFromSheet was not given a sheetId');
+		log({ level: LOG.ERROR }, 'sheetHelpers--getCellsFromSheet was not given a sheetId');
       return null;
    }
    const sheet = await fetchSheet(sheetId);
@@ -207,12 +209,13 @@ const handleSheetDelete = async (node, sheetId) => {
       
       sheetsTreeStale();
 
-      if (stateParentSheetId(node.sheet) === sheetId) {
-         console.warn('SheetsDisplay.handleSheetDelete has the case where the parentSheetId === sheetId, so now it will call loadSheet for the sheetId');
+      if (isSomething(stateParentSheetId(node.sheet)) && isSomething(sheetId) && stateParentSheetId(node.sheet) === sheetId) {
+			log({ level: LOG.DEBUG }, 'sheetHelpers.handleSheetDelete has the case where the parentSheetId === sheetId, so now it will call loadSheet for the sheetId', sheetId);
          await loadSheet(managedStore.state, sheetId);
       }
    } catch (err) {
-      console.warn('could not delete sheet');
+		log({ level: LOG.DEBUG }, 'sheetHelpers.handleSheetDelete could not delete sheet with id', sheetId, err);
+		log({ level: LOG.WARN }, 'could not delete sheet');
       updatedSheetsTreeNode({ ...node, error: menuDeleteSheetError() });
    }
 }

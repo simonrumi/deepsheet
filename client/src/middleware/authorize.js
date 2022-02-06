@@ -9,7 +9,7 @@ import { getUserInfoFromCookie } from '../helpers/userHelpers';
 import { stateIsLoggedIn } from '../helpers/dataStructureHelpers';
 import { saveToLocalStorage } from '../helpers/authHelpers';
 
-export default store => next => async action => {
+const authorize = store => next => async action => {
    switch (action.type) {
       case POSTING_UPDATED_CELLS:
       case TRIGGERED_FETCH_SHEET:
@@ -19,6 +19,7 @@ export default store => next => async action => {
       case POSTING_UPDATED_TITLE:
          const state = store.getState();
          const isLoggedIn = stateIsLoggedIn(state);
+			console.log('authorize, from state, got isLoggedIn', isLoggedIn, 'if false we will promptLogin(), otherwise will next(action) for action.type', action.type);
          if (isLoggedIn === false) {
             // note that we don't use !isLoggedIn because we want to ignore the case where it is undefined, 
             // which means we haven't yet figured out whether we're logged in or not
@@ -27,6 +28,7 @@ export default store => next => async action => {
             return next(action);
          }
          const { userId, sessionId } = getUserInfoFromCookie();
+			console.log('authorize, from cookie, got userId', userId, 'sessionId', sessionId);
          if (!userId || !sessionId) {
             saveToLocalStorage(state, action);
             promptLogin();
@@ -37,3 +39,5 @@ export default store => next => async action => {
    }
    return next(action);
 };
+
+export default authorize;

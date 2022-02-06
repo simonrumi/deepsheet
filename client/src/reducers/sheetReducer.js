@@ -9,7 +9,9 @@ import {
    SHEET_CREATION_FAILED,
 } from '../actions/sheetTypes';
 import { CELLS_LOADED, CELLS_UPDATED, CELLS_REDRAW_COMPLETED } from '../actions/cellTypes';
+import { CLEARED_ALL_ERROR_MESSAGES } from '../actions/types';
 import { isNothing, arrayContainsSomething } from '../helpers';
+import { addErrorMessage } from '../helpers/authHelpers';
 import { ALL_CELLS } from '../constants';
 
 const sheetReducer = (state = null, action) => {
@@ -59,8 +61,8 @@ const sheetReducer = (state = null, action) => {
             ...state,
             // sheetId: null,
             isCallingDb: false,
-            errorMessage: action.payload,
-         };
+				errorMessage: addErrorMessage({ err: action.payload, errArr: state.errorMessage }),
+         }
 
       case CELLS_LOADED:
          return {
@@ -87,6 +89,12 @@ const sheetReducer = (state = null, action) => {
             ...state,
             cellsUpdateInfo: [],
          }
+
+		case CLEARED_ALL_ERROR_MESSAGES:
+			return { 
+				...state,
+				errorMessage: null,
+			}
 
       default:
          return state;

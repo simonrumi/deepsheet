@@ -2,7 +2,7 @@ import { isSomething } from '../helpers';
 import { log } from '../clientLogger';
 import { LOG } from '../constants';
 
-export default store => next => async action => {
+const preProcess = store => next => async action => {
    if (!action) {
       return;
    }
@@ -16,3 +16,5 @@ export default store => next => async action => {
    }
    return next(action);
 };
+
+export default preProcess;

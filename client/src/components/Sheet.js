@@ -4,7 +4,14 @@ import { useSelector } from 'react-redux';
 import managedStore from '../store';
 import { triggeredFetchSheet } from '../actions/sheetActions';
 import { cellsRedrawCompleted } from '../actions/cellActions';
-import { isNothing, isSomething, arrayContainsSomething, forLoopReduce, getObjectFromArrayByKeyValue } from '../helpers';
+import {
+   isNothing,
+   isSomething,
+   arrayContainsSomething,
+   forLoopReduce,
+   getObjectFromArrayByKeyValue,
+} from '../helpers';
+import { has401Error } from '../helpers/authHelpers';
 import {
    stateIsLoggedIn,
    stateShowLoginModal,
@@ -24,6 +31,7 @@ import {
    stateTotalColumns,
    stateCellsRenderCount,
    stateMetadataErrorMessage,
+	stateHasErrorMessages,
    stateGlobalInfoModalIsVisible,
 	stateShowUndoHistory,
 } from '../helpers/dataStructureHelpers';
@@ -88,7 +96,8 @@ const createAxisSizes = (axisSizes = [], axisVisibility, axis) => {
 
 const Sheet = props => {
    const isLoggedIn = useSelector(state => stateIsLoggedIn(state));
-   const metadataError = useSelector(state => stateMetadataErrorMessage(state));
+   // const metadataError = useSelector(state => stateMetadataErrorMessage(state)); // TIDY
+	const hasErrors = useSelector(state => stateHasErrorMessages(state));
    const showFilterModal = useSelector(state => stateShowFilterModal(state));
    const showSortModal = useSelector(state => stateShowSortModal(state));
    const showLoginModal = useSelector(state => stateShowLoginModal(state));
@@ -138,7 +147,8 @@ const Sheet = props => {
          rowFilters,
          rowVisibility,
          totalRows,
-         totalColumns
+         totalColumns,
+			getAxisSizing
       ]
    );
 
@@ -167,7 +177,13 @@ const Sheet = props => {
 
    const maybeRenderLoginOrFetchSheet = () => {
       const { userId, sessionId } = getUserInfoFromCookie();
-      if (showLoginModal || isLoggedIn === false || !userId || !sessionId) {
+      if (
+         showLoginModal ||
+         isLoggedIn === false ||
+         !userId ||
+         !sessionId  ||
+         has401Error(stateSheetErrorMessage(managedStore.state))
+      ) {
          return <LoginModal />;
       }
       if (!sheetId) {
@@ -186,9 +202,9 @@ const Sheet = props => {
 
    const maybeRenderSortModal = () => (showSortModal ? <SortModal /> : null);
 
-   const maybeRenderGlobalErrorModal = () => isSomething(metadataError) ? <GlobalErrorModal error={metadataError} /> : null;
+   const maybeRenderGlobalErrorModal = () => hasErrors ? <GlobalErrorModal /> : null;
 
-   const maybeRenderGlobalInfoModal = () => isNothing(metadataError) && globalInfoModalIsVisible ? <GlobalInfoModal /> : null;
+   const maybeRenderGlobalInfoModal = () => !hasErrors && globalInfoModalIsVisible ? <GlobalInfoModal /> : null;
 
    // the header is in a fixed position, but we want the spreadsheet to get pushed down below the header, so we use this spacer
    // when scrolling the spreadhsheet appears to scroll under the header

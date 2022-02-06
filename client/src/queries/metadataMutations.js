@@ -1,4 +1,4 @@
-import { gql } from 'apollo-boost';
+import { gql } from '@apollo/client'; // TIDY from 'apollo-boost';
 import apolloClient from '../services/apolloClient';
 
 const UPDATE_METATDATA_MUTATION = gql`
@@ -71,6 +71,18 @@ export const updateMetadataMutation = async ({
    rowHeights,
    columnWidths,
 }) => {
+	console.log('metadataMutations--updateMetadataMutation got',
+		'id', id,
+		'totalRows', totalRows,
+		'totalColumns', totalColumns,
+		'parentSheetId', parentSheetId,
+		'rowFilters', rowFilters,
+		'columnFilters', columnFilters,
+		'frozenRows', frozenRows,
+		'frozenColumns', frozenColumns,
+		'rowHeights', rowHeights,
+		'columnWidths', columnWidths,
+	)
    const response = await apolloClient.mutate({
       mutation: UPDATE_METATDATA_MUTATION,
       variables: {
@@ -86,6 +98,8 @@ export const updateMetadataMutation = async ({
          columnWidths,
       },
    });
+	// TODO BUG - never get to this line....get 400 bad request instead
+	console.log('metadataMutations--updateMetadataMutation got response', response);
    return response.data.updateMetadata; // "updateMetadata" is from the mutation above
 };
 

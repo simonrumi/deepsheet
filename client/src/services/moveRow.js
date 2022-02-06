@@ -42,7 +42,7 @@ const makeNewCellsFromMap = (rowUpdateMapping, state) => {
    return createCells(rowUpdateMapping);
 };
 
-export default state => {
+const moveRow = state => {
    const rowIndexToMove = stateRowMoved(state);
    const insertAtIndex = stateRowMovedTo(state);
    const totalRows = stateTotalRows(state);
@@ -66,3 +66,5 @@ export default state => {
    const newFrozenRows = makeNewMetadatatItem(getFrozenAxisName);
    return  [ newCells, newRowFilters, newRowVisibility, newRowHeights, newFrozenRows ];
 };
+
+export default moveRow;

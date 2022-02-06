@@ -135,7 +135,8 @@ module.exports = db => ({
                parentSheet.cells = updateParentWithSubsheetTitle(parentSheet, sheetDoc);
                await parentSheet.save();
             }
-            return savedSheet;
+				return new Error('testing update title error');
+            // return savedSheet; // TODO reinstate
          } catch (err) {
             log({ level: LOG.ERROR }, 'resolvers.Mutation.changeTitle Error updating title:', err.message);
             return err;
@@ -143,9 +144,11 @@ module.exports = db => ({
       },
 
       updateMetadata: async (parent, args, context) => {
+			console.log('resolvers--updateMetadata got args', args);
          try {
             // args.input has all the metadata fields (see below) plus the sheet's id
             const sheetDoc = await SheetModel.findById(args.input.id);
+				console.log('resolvers--updateMetadata got sheetDoc', sheetDoc);
             const newMetadata = R.mergeAll([
                sheetDoc.toObject().metadata, //toObject() gets rid of any weird props included from mongoose
                R.pick(
@@ -166,6 +169,7 @@ module.exports = db => ({
                ),
                { lastUpdated: new Date() }
             ]);
+				console.log('resolvers--updateMetadata got newMetadata', newMetadata);
             sheetDoc.metadata = newMetadata;
             const savedSheet = await sheetDoc.save();
             return savedSheet.metadata;
@@ -250,7 +254,7 @@ module.exports = db => ({
          try {
             await SheetModel.deleteMany({ _id: { $in: sheetIdsToDelete } }); // delete the sheets
             await UserModel.updateMany({}, { $pullAll: { sheets: sheetIdsToDelete } }); // remove the deleted sheets from all the users
-            return getAllSheetsForUser(args.userId);
+				return getAllSheetsForUser(args.userId);
          } catch (err) {
             log({ level: LOG.ERROR }, 'resolvers.Mutation.deleteSheets Error deleting sheets:', err.message);
             return err;

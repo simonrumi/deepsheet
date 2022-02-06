@@ -74,7 +74,7 @@ const getOrFindSheet = async (store, sheetId) => {
    return await runFetchSheet({ store, sheetId, userId });
 };
 
-export default store => next => async action => {
+const initializeSheet = store => next => async action => {
    switch (action.type) {
       case TRIGGERED_FETCH_SHEET:
          const state = store.getState();
@@ -113,3 +113,5 @@ export default store => next => async action => {
    }
    return next(action);
 };
+
+export default initializeSheet;

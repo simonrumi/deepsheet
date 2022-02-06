@@ -1,5 +1,7 @@
 import { PROMPT_LOGIN, LOGGED_IN, LOGGED_OUT, RECEIVED_NETWORK_ERROR } from '../actions/authTypes';
 import { networkErrorText } from '../components/displayText';
+import { log } from '../clientLogger';
+import { LOG } from '../constants';
 
 const authReducer = (state = {}, action) => {
    switch (action.type) {
@@ -14,7 +16,8 @@ const authReducer = (state = {}, action) => {
 
       case RECEIVED_NETWORK_ERROR:
          // note the payload gives us the actual error, but don't want to publicize it for security reasons
-         return { ...state, error: networkErrorText() };
+			log({ level: LOG.ERROR }, 'authReducer--RECEIVED_NETWORK_ERROR', action.payload);
+			return { ...state, error: networkErrorText() };
 
       default:
          return state;

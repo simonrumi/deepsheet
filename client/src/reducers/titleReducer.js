@@ -10,8 +10,10 @@ import {
 import { FINISHED_EDITING_TITLE } from '../actions/titleTypes';
 import { FETCHED_SHEET } from '../actions/sheetTypes';
 import { COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
+import { CLEARED_ALL_ERROR_MESSAGES } from '../actions/types';
 import { isSomething } from '../helpers';
 import { decodeText } from '../helpers/cellHelpers';
+import { addErrorMessage } from '../helpers/authHelpers';
 
 const titleReducer = (state = {}, action) => {
    switch (action.type) {
@@ -80,7 +82,7 @@ const titleReducer = (state = {}, action) => {
             isEditingTitle: true,
             isCallingDb: false,
             isStale: false,
-            errorMessage: isSomething(action.payload.errorMessage) ? action.payload.errorMessage : null,
+            errorMessage: addErrorMessage({ err: action.payload.errorMessage, errArr: state.errorMessage }),
             lastUpdated: isSomething(state.lastUpdated) ? state.lastUpdated : null,
          };
 
@@ -99,6 +101,12 @@ const titleReducer = (state = {}, action) => {
             isStale: false,
             errorMessage: null,
          };
+
+		case CLEARED_ALL_ERROR_MESSAGES:
+			return {
+				...state,
+				errorMessage: null,
+			}
 
       default:
          return state;
