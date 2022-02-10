@@ -1,24 +1,5 @@
 import * as R from 'ramda';
-// import ApolloClient, { InMemoryCache /* HttpLink, ApolloLink */ } from 'apollo-boost';
-
-// TIDY  in here using this instead...should be able to clear up all these comments...
 import { ApolloClient, InMemoryCache, } from '@apollo/client'; // note that ApolloProvider, useQuery, gql are also available from @apollo-client
-
-// but note that 
-// 1. we don't need <ApolloProvider /> or useQuery (the react hook) since we're making the calls by hand
-// 2. in here we are not using gql, but seaching for apolloClient will show all the files where we import gql
-// 3. main thin we need to understand is the InMemoryCache...apollo-boost is doing something with this
-// ...we need to do it manually OR might be fine to accept Apollo's defaults
-
-// ALSO note that apollo-client has a 3.0 version but we're on a 2.x version ...should try updating that
-// here is all the packages relating to apollo with comments:
-/*
-"@apollo/react-hooks": "^4.0.0", // are we even using apoloo react hooks? might not need this
-"apollo-boost": "^0.4.9", // trying to get rid of this
-"apollo-cache-inmemory": "^1.6.5", // if we update to apollo-client 3.x then should not need to import this separately
-"apollo-client": "^2.6.8", // should update to 3.x
-"apollo-link-http": "^1.5.17", // don't think we're using this (but might be imported with pollo 3.x)
-*/
 
 import { GRAPHQL_URL } from '../constants';
 import { handleNetworkError } from '../helpers/userHelpers';

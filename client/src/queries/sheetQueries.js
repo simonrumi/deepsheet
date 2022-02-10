@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client'; // from 'apollo-boost';
+import { gql } from '@apollo/client';
 import apolloClient from '../services/apolloClient';
 import { log } from '../clientLogger';
 import { LOG } from '../constants';

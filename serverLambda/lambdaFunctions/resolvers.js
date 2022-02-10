@@ -135,8 +135,7 @@ module.exports = db => ({
                parentSheet.cells = updateParentWithSubsheetTitle(parentSheet, sheetDoc);
                await parentSheet.save();
             }
-				return new Error('testing update title error');
-            // return savedSheet; // TODO reinstate
+            return savedSheet;
          } catch (err) {
             log({ level: LOG.ERROR }, 'resolvers.Mutation.changeTitle Error updating title:', err.message);
             return err;

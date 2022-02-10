@@ -16,7 +16,7 @@
       "mongodb-client-encryption": "^1.1.0",
       "mongoose": "^5.10.0",
       "netlify-lambda": "^2.0.1",
-      "ramda": "^0.27.1",
+      "ramda": "^0.28.0",
       "utf-8-validate": "^5.0.2",
       "webpack-node-externals": "^2.5.1"
    },

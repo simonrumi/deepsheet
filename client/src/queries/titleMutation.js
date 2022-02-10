@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client'; // TIDY from 'apollo-boost';
+import { gql } from '@apollo/client';
 import apolloClient from '../services/apolloClient';
 import { encodeText } from '../helpers/cellHelpers';
 
