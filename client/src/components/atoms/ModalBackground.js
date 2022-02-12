@@ -10,6 +10,9 @@ import {
    stateMetadataErrorMessage,
 } from '../../helpers/dataStructureHelpers';
 
+// this is to avoid an issue with React's compiler which thinks any function starting with "use" is a hook
+const rUseWith = R.useWith;
+
 const ModalBackground = () => {
    const modalVisible = useSelector(
       state => stateShowFilterModal(state) 
@@ -20,8 +23,7 @@ const ModalBackground = () => {
    );
    const baseClasses = 'w-screen h-screen z-40 fixed top-0 left-0 bg-light-light-orange-transparent';
 
-   // see notes in filterSheet.js addNewFilter() on how this pattern works
-   const allClasses = R.useWith(
+   const allClasses = rUseWith(
          R.ifElse, 
          [
             R.thunkify(R.not), 

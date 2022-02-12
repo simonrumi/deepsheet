@@ -7,7 +7,7 @@ import { CELLS_LOADED } from '../actions/cellTypes';
 import { replacedColumnWidths, replacedRowHeights } from '../actions/metadataActions';
 import { ROW_AXIS, COLUMN_AXIS, DEFAULT_COLUMN_WIDTH, DEFAULT_ROW_HEIGHT } from '../constants';
 
-export default store => next => action => {
+const buildAxisSizing = store => next => action => {
    if (!action) {
       return;
    }
@@ -84,3 +84,5 @@ export default store => next => action => {
    }
    return next(action);
 };
+
+export default buildAxisSizing;

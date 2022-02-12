@@ -276,7 +276,7 @@ const clearAllFilters = store => {
    )(filterDataReset, isInitializingSheet, store);
 };
 
-export default store => next => async action => {
+const filterSheet = store => next => async action => {
    switch (action.type) {
       case HIDE_FILTERED:
          const { filterOptions, isInitializingSheet } = action.payload;
@@ -293,3 +293,5 @@ export default store => next => async action => {
    }
    return next(action);
 };
+
+export default filterSheet;

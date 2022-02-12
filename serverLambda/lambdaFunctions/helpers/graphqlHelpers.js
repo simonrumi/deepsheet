@@ -72,6 +72,7 @@ const withAuth = func => async (event, context) => {
             log({ level: LOG.DEBUG, startTime }, 'graphqlHelpers.withAuth got isAuthorized', isAuthorized);
             
             if (!isAuthorized && AUTH_ON) {
+					log({ level: LOG.DEBUG }, 'graphqlHelpers.withAuth found user is not authorized so will return standardAuthError', standardAuthError);
                return standardAuthError;
             }
          } catch (err) {

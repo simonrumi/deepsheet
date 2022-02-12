@@ -26,6 +26,8 @@ import { PASTE_OPTIONS_MODAL_WIDTH, MIN_ROW_HEIGHT, PASTE_OPTIONS_MODAL_MIN_HEIG
 import { createPasteRangeMessage, createPasteClipboardMessage } from '../displayText';
 import Button from '../atoms/Button';
 
+// TODO continue with pagkage updates
+
 // TODO NEXT BUG
 // 1. copy range
 // 2. copy text range (below)
@@ -37,6 +39,11 @@ import Button from '../atoms/Button';
 A1	A3
 B2	B3
 */
+
+// TODO BUG
+// 1. copy a range so that the bottom right cell is in the last column
+// 2. paste the range
+// result: the bottom right cell is not pasted 
 
 const PasteOptionsModal = () => {
 	const showModal = useSelector(state => stateShowPasteOptionsModal(state));

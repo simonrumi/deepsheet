@@ -8,7 +8,7 @@ const SaveIcon = ({
    viewBox = '0 0 512 512',
    onClickFn,
 }) => {
-   const allClasses = 'text-vibrant-blue cursor-pointer ' + classes;
+   const allClasses = 'cursor-pointer ' + classes;
    return (
       <div className={allClasses} onClick={onClickFn}>
          <svg

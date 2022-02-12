@@ -1,5 +1,7 @@
-import { gql } from 'apollo-boost';
+import { gql } from '@apollo/client';
 import apolloClient from '../services/apolloClient';
+import { log } from '../clientLogger';
+import { LOG } from '../constants';
 
 const SHEETS_QUERY = gql`
    query FetchSheets($userId: ID!) {
@@ -7,6 +9,7 @@ const SHEETS_QUERY = gql`
          id
          title
          metadata {
+				created
             parentSheetId
          }
       }
@@ -14,6 +17,10 @@ const SHEETS_QUERY = gql`
 `;
 
 export const sheetsQuery = async userId => {
+	// note that the call FetchSheets (see SHEETS_QUERY above) seems to send __typename fields (from the apolloClient.cache), in the request body, to the server
+	// however the resolver for the sheets Query ignores those and just uses the userId...so doesn't seem to be an issue
+	// similar things could be happening with other queries/mutations...but haven't found any bugs in testing all queries & mutations as of 1/30/22
+	log({ level: LOG.SILLY }, 'sheetQueries--sheetsQuery got apolloClient.cache', apolloClient.cache);
    return await apolloClient.query({
       query: SHEETS_QUERY,
       variables: { userId },
@@ -85,6 +92,7 @@ const SHEET_QUERY = gql`
 `;
 
 export const sheetQuery = async (sheetId, userId) => {
+	log({ level: LOG.SILLY }, 'sheetQueries--sheetQuery got apolloClient.cache', apolloClient.cache);
    const sheetResult = await apolloClient.query({
       query: SHEET_QUERY,
       variables: { sheetId, userId },

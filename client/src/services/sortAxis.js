@@ -43,9 +43,11 @@ export const compareCellContent = R.curry((state, isDecreasing, cell1, cell2) =>
    }
 });
 
-export default state => {
+const sortAxis = state => {
    if (typeof stateColumnSortByIndex(state) === 'number') {
       return sortColumn(state);
    }
    return sortRow(state);
 };
+
+export default sortAxis;

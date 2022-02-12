@@ -12,7 +12,7 @@ import { isSomething, arrayContainsSomething, ifThen } from '../../helpers';
 import { createCellId } from '../../helpers/cellHelpers';
 import {
    stateParentSheetId,
-   stateErrorMessages,
+   stateHasErrorMessages,
    stateCellRangeFrom,
    stateCellRangeTo,
    cellRow,
@@ -81,12 +81,12 @@ const SheetHeader = ({ title, past, future, isStale, isCallingDb, parentSheetId,
 
 
    const renderSaveIcon = () => {
-      if (isCallingDb) {
+		if (isCallingDb) {
          return <LoadingIcon height="2em" width="2em" classes="pr-2" />;
       }
       if (isStale) {
-         const classes = stateErrorMessages(managedStore.state) ? 'pr-2 text-burnt-orange ' : 'pr-2 ';
-         return <SaveIcon height="1.5em" width="1.5em" classes={classes} onClickFn={handleSave} />;
+         const classes = stateHasErrorMessages(managedStore.state) ? 'pr-2 text-burnt-orange ' : 'pr-2 text-vibrant-blue ';
+			return <SaveIcon height="1.5em" width="1.5em" classes={classes} onClickFn={handleSave} />;
       }
    }
 

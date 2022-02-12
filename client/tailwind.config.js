@@ -1,8 +1,9 @@
 module.exports = {
-   purge: ['./client/public/**/*.html', './client/src/**/*.js'],
+   content: ['./client/public/**/*.html', './client/src/**/*.js'],
    theme: {
       extend: {
          colors: {
+				current: 'currentColor', // see https://tailwindcss.com/docs/upgrade-guide#fill-and-stroke-use-color-palette
             'dark-dark-blue': '#04191c',
             'grey-blue': '#a5cacf',
             'light-light-blue': '#c7f8ff',
@@ -50,7 +51,6 @@ module.exports = {
          'ns-move': 'ns-resize',
       },
    },
-   variants: {},
    plugins: [
       function ({ addVariant, e }) {
          addVariant('checked', ({ modifySelectors, separator }) => {

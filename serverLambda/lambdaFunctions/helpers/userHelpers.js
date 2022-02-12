@@ -20,18 +20,17 @@ const makeCookie = (userId, sessionId) => {
    return 'deepdeepsheet=' + cookieStr + '; Path=/; Max-Age=' + maxAge + (process.env.NODE_ENV === 'production' ? '; Secure' : '');
 };
 
-// Note that this used to be the standardAuthError
-/* const standardAuthError = {
+// Note that we have gone back and forth on using 401 Unauthorized vs 302 redirect below. 401 seems more appropriate, and now working, so keeping this as of 1/24/22
+const standardAuthError = {
    statusCode: 401,
    body: JSON.stringify({
       error: 'authentication failed...bummer',
    }),
-}; */
+};
 
-// Originally we sent a 401 (unauthorized) response, but what we really want to happen on the client
-// when authorization fails, is to return to the main uri without a cookie, so that the login prompt will show
-// this redirect accomplishes that
-const standardAuthError = {
+// Possible alternative to 401 above:
+// when authorization fails, we redirect to the main uri without a cookie, so that the login prompt will show
+/* const standardAuthError = {
    statusCode: 302,
    headers: {
       'Location': keys.mainUri,
@@ -39,7 +38,7 @@ const standardAuthError = {
    body: JSON.stringify({
       error: 'authentication failed...bummer',
    }),
-};
+}; */
 
 const findUser = async ({ userIdFromProvider, provider }) => {
    if (isSomething(userIdFromProvider)) {

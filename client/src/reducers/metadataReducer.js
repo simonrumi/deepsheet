@@ -1,6 +1,7 @@
 import * as R from 'ramda';
-import { removeObjectFromArrayByKeyValue, isSomething, maybeHasPath } from '../helpers';
+import { removeObjectFromArrayByKeyValue, isSomething, maybeHasPath, arrayContainsSomething } from '../helpers';
 import { updatedAxisFilters, updateOrAddPayloadToState } from '../helpers/visibilityHelpers';
+import { convertErrorToString, addErrorMessage } from '../helpers/authHelpers';
 import {
    REPLACED_ALL_METADATA,
    HAS_CHANGED_METADATA,
@@ -39,6 +40,7 @@ import {
 } from '../actions/metadataTypes';
 import { UPDATED_SORT_OPTIONS, CLEARED_SORT_OPTIONS } from '../actions/sortTypes';
 import { FETCHED_SHEET, COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
+import { CLEARED_ALL_ERROR_MESSAGES } from '../actions/types';
 
 const metadataReducer = (state = {}, action) => {
    switch (action.type) {
@@ -228,9 +230,8 @@ const metadataReducer = (state = {}, action) => {
             lastUpdated: isSomething(state.lastUpdated) ? state.lastUpdated : null,
          };
 
-      case CLEAR_METADATA: {
+      case CLEAR_METADATA:
          return {}
-      }
 
       case COMPLETED_SAVE_METADATA:
          return {
@@ -246,23 +247,22 @@ const metadataReducer = (state = {}, action) => {
             ...state,
             isCallingDb: false,
             isStale: true,
-            errorMessage: isSomething(action.payload.errorMessage) ? action.payload.errorMessage : null,
+            errorMessage: addErrorMessage({ err: action.payload, errArr: state.errorMessage }),
             lastUpdated: isSomething(state.lastUpdated) ? state.lastUpdated : null,
          };
 
-      case UPDATED_METADATA_ERROR_MESSAGE: {
+      case UPDATED_METADATA_ERROR_MESSAGE:
          return {
             ...state,
-            errorMessage: action.payload
+            errorMessage: addErrorMessage({ err: action.payload, errArr: state.errorMessage })
          }
-      }
 
-      case CLEARED_METADATA_ERROR_MESSAGE: {
+		case CLEARED_ALL_ERROR_MESSAGES:
+      case CLEARED_METADATA_ERROR_MESSAGE:
          return {
             ...state,
             errorMessage: null
          }
-      }
 
       default:
          return state;

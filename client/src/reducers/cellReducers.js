@@ -3,6 +3,7 @@ import managedStore from '../store';
 import { isSomething, isNothing } from '../helpers';
 import { createUpdatedCellState, createCellKey, decodeCellText } from '../helpers/cellHelpers';
 import { dbCells } from '../helpers/dataStructureHelpers';
+import { addErrorMessage } from '../helpers/authHelpers';
 import { updatedCell, addedCellKeys } from '../actions/cellActions';
 import {
    UPDATED_CELL,
@@ -23,6 +24,7 @@ import {
 } from '../actions/cellTypes';
 import { FETCHED_SHEET } from '../actions/sheetTypes';
 import { COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
+import { CLEARED_ALL_ERROR_MESSAGES } from '../actions/types';
 
 const processCellAction = R.curry((state, sheetId, action) => {
    switch (action.type) {
@@ -173,7 +175,7 @@ export const cellDbUpdatesReducer = (state = {}, action) => {
             ...state,
             isCallingDb: false,
             isStale: true,
-            errorMessage: isSomething(action.payload.errorMessage) ? action.payload.errorMessage : null,
+            errorMessage: addErrorMessage({ err: action.payload, errArr: state.errorMessage }), // TIDY isSomething(action.payload.errorMessage) ? action.payload.errorMessage : null,
             lastUpdated: isSomething(state.lastUpdated) ? state.lastUpdated : null,
          };
 
@@ -192,6 +194,12 @@ export const cellDbUpdatesReducer = (state = {}, action) => {
             isStale: true,
             changedCells,
          };
+
+		case CLEARED_ALL_ERROR_MESSAGES:
+			return { 
+				...state,
+				errorMessage: null,
+			}
 
       default:
          return state;

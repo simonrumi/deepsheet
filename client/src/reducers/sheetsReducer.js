@@ -10,8 +10,9 @@ import {
    SHEETS_TREE_STALE,
    SHEETS_TREE_CURRENT,
 } from '../actions/sheetsTypes';
-
+import { CLEARED_ALL_ERROR_MESSAGES } from '../actions/types';
 import { replaceNodeWithinSheetsTree } from '../helpers/sheetsHelpers';
+import { addErrorMessage } from '../helpers/authHelpers';
 
 const sheetsReducer = (state = {}, action) => {
    switch (action.type) {
@@ -34,7 +35,7 @@ const sheetsReducer = (state = {}, action) => {
          return {
             ...state,
             isCallingDb: false,
-            errorMessage: action.payload,
+				errorMessage: addErrorMessage({ err: action.payload, errArr: state.errorMessage }),
          };
 
       case DELETING_SHEETS:
@@ -68,7 +69,7 @@ const sheetsReducer = (state = {}, action) => {
          return {
             ...state,
             isCallingDb: false,
-            errorMessage: action.payload,
+				errorMessage: addErrorMessage({ err: action.payload, errArr: state.errorMessage }),
          };
 
       case UPDATED_SHEETS_TREE:
@@ -77,12 +78,18 @@ const sheetsReducer = (state = {}, action) => {
             sheetsTree: action.payload,
          }
 
-         case UPDATED_SHEETS_TREE_NODE:
-            const updatedSheetsTree = replaceNodeWithinSheetsTree(action.payload, state.sheetsTree);
-            return {
-               ...state,
-               sheetsTree: updatedSheetsTree,
-            }
+		case UPDATED_SHEETS_TREE_NODE:
+			const updatedSheetsTree = replaceNodeWithinSheetsTree(action.payload, state.sheetsTree);
+			return {
+				...state,
+				sheetsTree: updatedSheetsTree,
+			}
+
+		case CLEARED_ALL_ERROR_MESSAGES:
+			return { 
+				...state,
+				errorMessage: null,
+			}
 
       default:
          return state;

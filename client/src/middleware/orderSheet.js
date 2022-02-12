@@ -34,7 +34,7 @@ import { updatedRowOrderMessage, updatedColumnOrderMessage } from '../components
 // TODO BUG - sorting by dates is broken if there is anything in a cell which is not a date
 // should treat those cells like blanks and push to the end
 
-export default store => next => async action => {
+const orderSheet = store => next => async action => {
    const clearMoveData = () => {
       store.dispatch({
          type: ROW_MOVED,
@@ -162,3 +162,5 @@ export default store => next => async action => {
    }
    return next(action);
 };
+
+export default orderSheet;

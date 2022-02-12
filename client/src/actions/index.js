@@ -1,5 +1,5 @@
 import managedStore from '../store';
-import { COMPLETED_SAVE_UPDATES } from './types';
+import { COMPLETED_SAVE_UPDATES, CLEARED_ALL_ERROR_MESSAGES } from './types';
 import { MENU_HIDDEN } from './menuTypes';
 import { HIDE_AXIS_ITEM_TOOL } from './metadataTypes'; // don't move this one to metadataActions.js
 import { TOGGLED_SHOW_SORT_MODAL } from './sortTypes';
@@ -40,3 +40,8 @@ export const hideAllPopups = () => {
    });
 }
 
+export const clearedAllErrorMessages = () => {
+   managedStore.store.dispatch({
+      type: CLEARED_ALL_ERROR_MESSAGES,
+   });
+}

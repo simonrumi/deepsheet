@@ -25,7 +25,7 @@ const prepareAuthResponse = async (userIdFromProvider, provider, token) => {
 
 // see explanation here
 // https://dev.to/oyetoket/fastest-way-to-generate-random-strings-in-javascript-2k5a
-const partRandomString = () => Math.random().toString(20).substr(2); // this seems to be about 14 - 16 chars long
+const partRandomString = () => Math.random().toString(20).substring(2); // this seems to be about 14 - 16 chars long
 const makeStateCheckValue = () => R.concat(partRandomString(), partRandomString()); // this should be close to 30 chars
 
 const createStateCheck = async () => {
