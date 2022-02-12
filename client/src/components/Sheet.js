@@ -6,7 +6,6 @@ import { triggeredFetchSheet } from '../actions/sheetActions';
 import { cellsRedrawCompleted } from '../actions/cellActions';
 import {
    isNothing,
-   isSomething,
    arrayContainsSomething,
    forLoopReduce,
    getObjectFromArrayByKeyValue,
@@ -30,7 +29,6 @@ import {
    stateTotalRows,
    stateTotalColumns,
    stateCellsRenderCount,
-   stateMetadataErrorMessage,
 	stateHasErrorMessages,
    stateGlobalInfoModalIsVisible,
 	stateShowUndoHistory,
@@ -46,7 +44,9 @@ import {
    THIN_ROW,
    DEFAULT_ROW_HEIGHT,
    DEFAULT_COLUMN_WIDTH,
+	LOG,
 } from '../constants';
+import { log } from '../clientLogger';
 import LoadingIcon from './atoms/IconLoading';
 import Header from './Header';
 import Cells from './Cells';
@@ -125,7 +125,8 @@ const Sheet = props => {
       ? createAxisSizes(columnWidths, columnVisibility, COLUMN_AXIS)
       : createAxisSizes(rowHeights, rowVisibility, ROW_AXIS);
 
-   const getGridSizingStyle = () => {
+   const getGridSizingStyle = possiblyChangedProps => {
+		log({ level: LOG.DEBUG }, 'Sheet--getGridSizingStyle got possiblyChangedProps', possiblyChangedProps);
       const contentRows = getAxisSizing(ROW_AXIS);
       const contentColumns = getAxisSizing(COLUMN_AXIS);
       const rowsStyle = THIN_ROW + contentRows + THIN_ROW; // the THIN_ROWs are for the ColumnHeader at the top and the RowAdder at the bottom
@@ -137,7 +138,18 @@ const Sheet = props => {
    }
 
    const memoizedGridSizingStyle = useMemo(
-      getGridSizingStyle,
+      () => getGridSizingStyle({
+			cellsLoaded,
+         columnWidths,
+         rowHeights,
+         columnFilters,
+         columnVisibility,
+         rowFilters,
+         rowVisibility,
+         totalRows,
+         totalColumns,
+			getAxisSizing
+		}),
       [
          cellsLoaded,
          columnWidths,

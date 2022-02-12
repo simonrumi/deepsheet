@@ -1,7 +1,7 @@
 import * as R from 'ramda';
-import { removeObjectFromArrayByKeyValue, isSomething, maybeHasPath, arrayContainsSomething } from '../helpers';
+import { removeObjectFromArrayByKeyValue, isSomething, maybeHasPath, } from '../helpers';
 import { updatedAxisFilters, updateOrAddPayloadToState } from '../helpers/visibilityHelpers';
-import { convertErrorToString, addErrorMessage } from '../helpers/authHelpers';
+import { addErrorMessage } from '../helpers/authHelpers';
 import {
    REPLACED_ALL_METADATA,
    HAS_CHANGED_METADATA,
