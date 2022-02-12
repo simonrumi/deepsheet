@@ -96,7 +96,6 @@ const createAxisSizes = (axisSizes = [], axisVisibility, axis) => {
 
 const Sheet = props => {
    const isLoggedIn = useSelector(state => stateIsLoggedIn(state));
-   // const metadataError = useSelector(state => stateMetadataErrorMessage(state)); // TIDY
 	const hasErrors = useSelector(state => stateHasErrorMessages(state));
    const showFilterModal = useSelector(state => stateShowFilterModal(state));
    const showSortModal = useSelector(state => stateShowSortModal(state));
@@ -160,7 +159,8 @@ const Sheet = props => {
          rowVisibility,
          totalRows,
          totalColumns,
-			getAxisSizing
+			getAxisSizing,
+			getGridSizingStyle
       ]
    );
 
