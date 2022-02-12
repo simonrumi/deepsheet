@@ -22,9 +22,9 @@ import {
    stateSheetErrorMessage,
    stateColumnWidths,
    stateRowHeights,
-   stateColumnFilters,
+   // stateColumnFilters, // TIDY
    stateColumnVisibility,
-   stateRowFilters,
+   // stateRowFilters, // TIDY
    stateRowVisibility,
    stateTotalRows,
    stateTotalColumns,
@@ -94,6 +94,24 @@ const createAxisSizes = (axisSizes = [], axisVisibility, axis) => {
    );
 };
 
+const getAxisSizing = ({ axis, columnWidths, columnVisibility, rowHeights, rowVisibility }) =>
+   axis === COLUMN_AXIS
+      ? createAxisSizes(columnWidths, columnVisibility, COLUMN_AXIS)
+      : createAxisSizes(rowHeights, rowVisibility, ROW_AXIS);
+
+const getGridSizingStyle = ({ columnWidths, columnVisibility, rowHeights, rowVisibility }) => {
+	log({ level: LOG.DEBUG }, 'Sheet--getGridSizingStyle got columnWidths', columnWidths, 'columnVisibility', columnVisibility, 'rowHeights', rowHeights, 'rowVisibility', rowVisibility);
+	const contentRows = getAxisSizing({ axis: ROW_AXIS, rowHeights, rowVisibility });
+	const contentColumns = getAxisSizing({ axis: COLUMN_AXIS, columnWidths, columnVisibility });
+	const rowsStyle = THIN_ROW + contentRows + THIN_ROW; // the THIN_ROWs are for the ColumnHeader at the top and the RowAdder at the bottom
+	const columnsStyle = THIN_COLUMN + contentColumns + THIN_COLUMN; // the THIN_COLUMNs are for the RowHeaders on the left and the ColumnAdder on the right
+	return {
+		gridTemplateRows: rowsStyle,
+		gridTemplateColumns: columnsStyle,
+	};
+}
+
+
 const Sheet = props => {
    const isLoggedIn = useSelector(state => stateIsLoggedIn(state));
 	const hasErrors = useSelector(state => stateHasErrorMessages(state));
@@ -103,14 +121,14 @@ const Sheet = props => {
    const sheetIsCallingDb = useSelector(state => stateSheetIsCallingDb(state));
    const columnWidths = useSelector(state => stateColumnWidths(state));
    const rowHeights = useSelector(state => stateRowHeights(state));
-   const columnFilters = useSelector(state => stateColumnFilters(state));
+   // const columnFilters = useSelector(state => stateColumnFilters(state)); // TIDY
    const columnVisibility = useSelector(state => stateColumnVisibility(state));
-   const rowFilters = useSelector(state => stateRowFilters(state));
+   // const rowFilters = useSelector(state => stateRowFilters(state)); // TIDY
    const rowVisibility = useSelector(state => stateRowVisibility(state));
    const sheetId = useSelector(state => stateSheetId(state));
    const cellsLoaded = useSelector(state => stateSheetCellsLoaded(state));
-   const totalRows = useSelector(state => stateTotalRows(state));
-   const totalColumns = useSelector(state => stateTotalColumns(state));
+   /* const totalRows = useSelector(state => stateTotalRows(state));
+   const totalColumns = useSelector(state => stateTotalColumns(state)); */ // TIDY
    const globalInfoModalIsVisible = useSelector(state => stateGlobalInfoModalIsVisible(state));
 	const showHistory = useSelector(state => stateShowUndoHistory(state));
    
@@ -119,52 +137,20 @@ const Sheet = props => {
       return <Cells renderCount={cellsRenderCount}/>;
    }, [cellsRenderCount]);
 
-   const getAxisSizing = axis =>
-   axis === COLUMN_AXIS
-      ? createAxisSizes(columnWidths, columnVisibility, COLUMN_AXIS)
-      : createAxisSizes(rowHeights, rowVisibility, ROW_AXIS);
-
-   const getGridSizingStyle = possiblyChangedProps => {
-		log({ level: LOG.DEBUG }, 'Sheet--getGridSizingStyle got possiblyChangedProps', possiblyChangedProps);
-      const contentRows = getAxisSizing(ROW_AXIS);
-      const contentColumns = getAxisSizing(COLUMN_AXIS);
-      const rowsStyle = THIN_ROW + contentRows + THIN_ROW; // the THIN_ROWs are for the ColumnHeader at the top and the RowAdder at the bottom
-      const columnsStyle = THIN_COLUMN + contentColumns + THIN_COLUMN; // the THIN_COLUMNs are for the RowHeaders on the left and the ColumnAdder on the right
-      return {
-         gridTemplateRows: rowsStyle,
-         gridTemplateColumns: columnsStyle,
-      };
-   }
-
    const memoizedGridSizingStyle = useMemo(
-      () => getGridSizingStyle({
-			cellsLoaded,
-         columnWidths,
-         rowHeights,
-         columnFilters,
-         columnVisibility,
-         rowFilters,
-         rowVisibility,
-         totalRows,
-         totalColumns,
-			getAxisSizing
-		}),
-      [
-         cellsLoaded,
-         columnWidths,
-         rowHeights,
-         columnFilters,
-         columnVisibility,
-         rowFilters,
-         rowVisibility,
-         totalRows,
-         totalColumns,
-			getAxisSizing,
-			getGridSizingStyle
-      ]
+      () =>
+         getGridSizingStyle({
+            columnWidths,
+            rowHeights,
+            columnVisibility,
+            rowVisibility,
+         }),
+      [columnWidths, rowHeights, columnVisibility, rowVisibility]
    );
 
-   const renderGridSizingStyle = () => isVisibilityCalculated(managedStore.state) && isAxisSizingCalculated() ? memoizedGridSizingStyle : null;
+   const renderGridSizingStyle = () =>
+      isVisibilityCalculated(managedStore.state) && isAxisSizingCalculated() 
+			? memoizedGridSizingStyle : null;
 
    const renderCells = () => {
       return (<div
