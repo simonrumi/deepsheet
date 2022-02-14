@@ -1,11 +1,9 @@
-// const proxy = require('http-proxy-middleware'); // TIDY
 const { createProxyMiddleware }  = require('http-proxy-middleware');
 
 // somehow this thing is getting used by the lambda functions.
 // e.g. removing it causes the route http://localhost:9000/graphql not to work
 module.exports = function (app) {
    app.use(
-      // proxy(['/.netlify/functions/', '/.netlify/functions/auth', '/.netlify/functions/authReturn'], { // TIDY
 		createProxyMiddleware(['/.netlify/functions/', '/.netlify/functions/auth', '/.netlify/functions/authReturn'], {
          target: 'http://localhost:9000',
          pathRewrite: { '^/\\.netlify/functions': '' }, // this removes .netlify/functions from the path

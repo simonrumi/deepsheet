@@ -175,7 +175,7 @@ export const cellDbUpdatesReducer = (state = {}, action) => {
             ...state,
             isCallingDb: false,
             isStale: true,
-            errorMessage: addErrorMessage({ err: action.payload, errArr: state.errorMessage }), // TIDY isSomething(action.payload.errorMessage) ? action.payload.errorMessage : null,
+            errorMessage: addErrorMessage({ err: action.payload, errArr: state.errorMessage }),
             lastUpdated: isSomething(state.lastUpdated) ? state.lastUpdated : null,
          };
 

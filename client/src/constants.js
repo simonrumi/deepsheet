@@ -37,15 +37,48 @@ export const ALL_CELLS = 'all_cells'; // for use by cellsNeeding Update
 
 // logging levels
 export const LOG = {
-    ERROR: 0,
-    WARN: 1,
-    INFO: 2,
-    HTTP: 3,
-    VERBOSE: 4,
-    DEBUG: 5,
-    SILLY: 6,
+	ERROR: 0,
+	WARN: 1,
+	INFO: 2,
+	HTTP: 3,
+	VERBOSE: 4,
+	DEBUG: 5,
+	SILLY: 6,
 }
 
-export const CLIENT_LOG_LEVEL = LOG.SILLY;
+const getLogLevel = () => {
+	const logQueryStrValue = document.location.search.match(/log=(\w*)/i);
+	if (!logQueryStrValue) {
+		return LOG.ERROR;
+	}
+	switch (logQueryStrValue[1]) {
+		case 'error':
+			return LOG.ERROR;
+
+		case 'warn':
+			return LOG.WARN;
+
+		case 'info':
+			return LOG.INFO;
+
+		case 'http':
+			return LOG.HTTP;
+
+		case 'verbose':
+			return LOG.VERBOSE;
+
+		case 'debug':
+			return LOG.DEBUG;
+
+		case 'silly':
+			return LOG.SILLY;
+
+		default:
+			return LOG.ERROR;
+	}
+}
+
+
+export const CLIENT_LOG_LEVEL = getLogLevel(); //LOG.DEBUG;
 
 

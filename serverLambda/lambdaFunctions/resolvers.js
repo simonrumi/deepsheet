@@ -143,11 +143,9 @@ module.exports = db => ({
       },
 
       updateMetadata: async (parent, args, context) => {
-			console.log('resolvers--updateMetadata got args', args);
          try {
             // args.input has all the metadata fields (see below) plus the sheet's id
             const sheetDoc = await SheetModel.findById(args.input.id);
-				console.log('resolvers--updateMetadata got sheetDoc', sheetDoc);
             const newMetadata = R.mergeAll([
                sheetDoc.toObject().metadata, //toObject() gets rid of any weird props included from mongoose
                R.pick(
@@ -168,7 +166,6 @@ module.exports = db => ({
                ),
                { lastUpdated: new Date() }
             ]);
-				console.log('resolvers--updateMetadata got newMetadata', newMetadata);
             sheetDoc.metadata = newMetadata;
             const savedSheet = await sheetDoc.save();
             return savedSheet.metadata;

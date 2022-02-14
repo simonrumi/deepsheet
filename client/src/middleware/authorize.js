@@ -19,8 +19,7 @@ const authorize = store => next => async action => {
       case POSTING_UPDATED_TITLE:
          const state = store.getState();
          const isLoggedIn = stateIsLoggedIn(state);
-			console.log('authorize, from state, got isLoggedIn', isLoggedIn, 'if false we will promptLogin(), otherwise will next(action) for action.type', action.type);
-         if (isLoggedIn === false) {
+			if (isLoggedIn === false) {
             // note that we don't use !isLoggedIn because we want to ignore the case where it is undefined, 
             // which means we haven't yet figured out whether we're logged in or not
             saveToLocalStorage(state, action);
@@ -28,8 +27,7 @@ const authorize = store => next => async action => {
             return next(action);
          }
          const { userId, sessionId } = getUserInfoFromCookie();
-			console.log('authorize, from cookie, got userId', userId, 'sessionId', sessionId);
-         if (!userId || !sessionId) {
+			if (!userId || !sessionId) {
             saveToLocalStorage(state, action);
             promptLogin();
          }

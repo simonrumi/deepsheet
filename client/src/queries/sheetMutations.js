@@ -207,8 +207,7 @@ const SHEET_BY_USER_ID_MUTATION = gql`
 `;
 
 export const sheetByUserIdMutation = async userId => {
-	console.log('sheetMutations--sheetByUserIdMutation got userId', userId, 'about to call SHEET_BY_USER_ID_MUTATION');
-   const result = await apolloClient.mutate({
+	const result = await apolloClient.mutate({
       mutation: SHEET_BY_USER_ID_MUTATION,
       variables: { userId },
    });

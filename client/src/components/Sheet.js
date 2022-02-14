@@ -22,9 +22,7 @@ import {
    stateSheetErrorMessage,
    stateColumnWidths,
    stateRowHeights,
-   // stateColumnFilters, // TIDY
    stateColumnVisibility,
-   // stateRowFilters, // TIDY
    stateRowVisibility,
    stateTotalRows,
    stateTotalColumns,
@@ -100,7 +98,7 @@ const getAxisSizing = ({ axis, columnWidths, columnVisibility, rowHeights, rowVi
       : createAxisSizes(rowHeights, rowVisibility, ROW_AXIS);
 
 const getGridSizingStyle = ({ columnWidths, columnVisibility, rowHeights, rowVisibility }) => {
-	log({ level: LOG.DEBUG }, 'Sheet--getGridSizingStyle got columnWidths', columnWidths, 'columnVisibility', columnVisibility, 'rowHeights', rowHeights, 'rowVisibility', rowVisibility);
+	log({ level: LOG.SILLY }, 'Sheet--getGridSizingStyle got columnWidths', columnWidths, 'columnVisibility', columnVisibility, 'rowHeights', rowHeights, 'rowVisibility', rowVisibility);
 	const contentRows = getAxisSizing({ axis: ROW_AXIS, rowHeights, rowVisibility });
 	const contentColumns = getAxisSizing({ axis: COLUMN_AXIS, columnWidths, columnVisibility });
 	const rowsStyle = THIN_ROW + contentRows + THIN_ROW; // the THIN_ROWs are for the ColumnHeader at the top and the RowAdder at the bottom
@@ -111,7 +109,6 @@ const getGridSizingStyle = ({ columnWidths, columnVisibility, rowHeights, rowVis
 	};
 }
 
-
 const Sheet = props => {
    const isLoggedIn = useSelector(state => stateIsLoggedIn(state));
 	const hasErrors = useSelector(state => stateHasErrorMessages(state));
@@ -121,14 +118,10 @@ const Sheet = props => {
    const sheetIsCallingDb = useSelector(state => stateSheetIsCallingDb(state));
    const columnWidths = useSelector(state => stateColumnWidths(state));
    const rowHeights = useSelector(state => stateRowHeights(state));
-   // const columnFilters = useSelector(state => stateColumnFilters(state)); // TIDY
    const columnVisibility = useSelector(state => stateColumnVisibility(state));
-   // const rowFilters = useSelector(state => stateRowFilters(state)); // TIDY
    const rowVisibility = useSelector(state => stateRowVisibility(state));
    const sheetId = useSelector(state => stateSheetId(state));
    const cellsLoaded = useSelector(state => stateSheetCellsLoaded(state));
-   /* const totalRows = useSelector(state => stateTotalRows(state));
-   const totalColumns = useSelector(state => stateTotalColumns(state)); */ // TIDY
    const globalInfoModalIsVisible = useSelector(state => stateGlobalInfoModalIsVisible(state));
 	const showHistory = useSelector(state => stateShowUndoHistory(state));
    
