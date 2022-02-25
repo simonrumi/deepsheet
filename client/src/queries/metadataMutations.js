@@ -71,18 +71,6 @@ export const updateMetadataMutation = async ({
    rowHeights,
    columnWidths,
 }) => {
-	console.log('metadataMutations--updateMetadataMutation got',
-		'id', id,
-		'totalRows', totalRows,
-		'totalColumns', totalColumns,
-		'parentSheetId', parentSheetId,
-		'rowFilters', rowFilters,
-		'columnFilters', columnFilters,
-		'frozenRows', frozenRows,
-		'frozenColumns', frozenColumns,
-		'rowHeights', rowHeights,
-		'columnWidths', columnWidths,
-	)
    const response = await apolloClient.mutate({
       mutation: UPDATE_METATDATA_MUTATION,
       variables: {

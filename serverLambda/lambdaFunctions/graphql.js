@@ -2,7 +2,22 @@ const { createServer, withAuth } = require('./helpers/graphqlHelpers');
 const { log } = require('./helpers/logger');
 const { LOG } = require('../constants');
 
-const handler = async (event, context, callback) => {
+// see https://www.apollographql.com/docs/apollo-server/migration/#apollo-server-lambda
+const handler = async (event, context) => {
+	log({ level: LOG.DEBUG }, 'graphql--handler got event', event, 'context', context);
+   log({ level: LOG.SILLY }, 'lambda ENVIRONMENT VARIABLES\n' + JSON.stringify(process.env, null, 2));
+
+   const server = await createServer();
+   const graphqlHandler = server.createHandler();
+	try {
+		return await graphqlHandler(event, context);
+	} catch (err) {
+		log({ level: LOG.ERROR }, 'graphql--handler got error calling the graphqlHandler', err);
+	}
+}
+
+// TODO - in theory we shouldn't need this old version - swap it for handler fn in the export statemetn below
+const handler_forApolloServer2_x_x = async (event, context, callback) => {
 	log({ level: LOG.DEBUG }, 'graphql.handler got event', event, 'context', context);
    log({ level: LOG.SILLY }, 'lambda ENVIRONMENT VARIABLES\n' + JSON.stringify(process.env, null, 2));
 
@@ -42,5 +57,5 @@ const handler = async (event, context, callback) => {
 };
 
 module.exports = {
-   handler: async (event, context) => await withAuth(handler)(event, context),
+   handler: async (event, context) => await withAuth(handler_forApolloServer2_x_x)(event, context),
 };
