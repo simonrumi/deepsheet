@@ -104,9 +104,9 @@ module.exports = db => ({
 
       sheetByUserId: async (parent, args, context) => {
          try {
-            const startTime = log({ level: LOG.DEBUG, printTime: true }, 'resolvers.Mutation.sheetByUserId starting findById query for userId', args.userId);
+            const startTime = log({ level: LOG.VERBOSE, printTime: true }, 'resolvers.Mutation.sheetByUserId starting findById query for userId', args.userId);
             const user = await UserModel.findById(args.userId);
-            log({ level: LOG.DEBUG, startTime }, 'resolvers.Mutation.sheetByUserId finished findbyId query.');
+            log({ level: LOG.VERBOSE, startTime }, 'resolvers.Mutation.sheetByUserId finished findbyId query.');
             if (isNothing(user)) {
                return new Error('no user found');
             }

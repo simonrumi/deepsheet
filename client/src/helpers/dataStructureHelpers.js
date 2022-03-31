@@ -435,9 +435,7 @@ export const stateErrorMessages = state => {
 		stateSheetErrorMessage(state),
 		stateSheetsErrorMessage(state),
 	]);
-	console.log('dataStructureHelpers--stateErrorMessages flattened error messages to this', allErrors);
 	const filteredErrors = R.filter(item => isSomething(item), allErrors);
-	console.log('dataStructureHelpers--stateErrorMessages filtered error messages to this', filteredErrors);
 	return filteredErrors;
 }
 

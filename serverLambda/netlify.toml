@@ -1,3 +1,0 @@
-# /server netlify.toml
-[build]
-  functions = "lambda" # netlify dev uses this directory to scaffold and serve your functions

@@ -17,7 +17,6 @@ const createServer = async () => {
       const db = await dbConnector();
       log({ level: LOG.DEBUG, startTime }, 'graphqlHelpers.createServer got db from dbConnector');
       
-		// TODO BUG in creating the server here apollo-server-lambda is new
       const server = new ApolloServer({
          typeDefs,
          resolvers: resolvers(db),

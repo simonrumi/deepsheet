@@ -7,8 +7,8 @@ const { confirmStateCheck, prepareAuthResponse } = require('./helpers/authHelper
 const { log } = require('./helpers/logger');
 const { AUTH_PROVIDER_FACEBOOK, LOG } = require('../constants');
 
-export async function handler(event, context, callback) {
-   const startTime = log({ level: LOG.DEBUG, printTime: true }, 'autReturn starting by getting db');
+const handler = async (event, context) => {
+	const startTime = log({ level: LOG.DEBUG, printTime: true }, 'autReturn starting by getting db');
    await dbConnector(); // for some reason we need to have this line here, in order for the findUser() call (within prepareAuthResponse) to work
    log({ level: LOG.DEBUG, startTime }, 'autReturn got db.');
 
@@ -48,3 +48,5 @@ export async function handler(event, context, callback) {
       }
    }
 }
+
+module.exports = { handler };

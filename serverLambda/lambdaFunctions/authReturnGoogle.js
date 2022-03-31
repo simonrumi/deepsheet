@@ -7,8 +7,8 @@ const { log } = require('./helpers/logger');
 const { AUTH_PROVIDER_GOOGLE, LOG } = require('../constants');
 const keys = require('../config/keys');
 
-export async function handler(event, context, callback) {
-   // for some reason we need to have this line here, in order for the findUser() call (within prepareAuthResponse) to work
+const handler = async (event, context) => {
+   // for some reason we need to call dbConnector() here, in order for the findUser() call (within prepareAuthResponse) to work
    // even though we are not directly using the db connection it returns
    const startTime = log({ level: LOG.DEBUG, printTime: true }, 'autReturnGoogle starting by getting db');
    await dbConnector();
@@ -52,3 +52,5 @@ export async function handler(event, context, callback) {
       return standardAuthError;
    }
 }
+
+module.exports = { handler };

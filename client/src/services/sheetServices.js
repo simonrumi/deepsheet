@@ -178,7 +178,6 @@ const saveMetadataUpdates = async state => {
    if (changedMetadata) {
       try {
          const sheetId = stateSheetId(state);
-			console.log('sheetServices--saveMetadataUpdates got changedMetadata', changedMetadata);
          await updatedMetadata({ sheetId, changedMetadata });
       } catch (err) {
 			log({ level: LOG.ERROR }, 'error updating metadata in db');

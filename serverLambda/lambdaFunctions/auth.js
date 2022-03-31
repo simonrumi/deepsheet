@@ -6,7 +6,7 @@ const { makeFacebookAuthCall } = require('./helpers/facebookAuthHelpers');
 const { log } = require('./helpers/logger');
 const { LOG } = require('../constants');
 
-export async function handler(event, context, callback) {
+	const handler = async (event, context) => {
    await dbConnector();
 
    let stateCheck;
@@ -22,6 +22,7 @@ export async function handler(event, context, callback) {
       case 'facebook':
          try {
             const fbResponse = await makeFacebookAuthCall(stateCheck.stateCheckValue);
+				log({ level: LOG.DEBUG }, 'completed Facebook auth call and got response:', fbResponse);
             return fbResponse;
          } catch (err) {
             log({ level: LOG.ERROR }, 'error making fb auth call:', err.message);
@@ -31,6 +32,7 @@ export async function handler(event, context, callback) {
       case 'google':
          try {
             const googleResponse = await makeGoogleAuthCall(stateCheck.stateCheckValue);
+				log({ level: LOG.DEBUG }, 'completed google auth call and got response:', googleResponse);
             return googleResponse;
          } catch (err) {
             log({ level: LOG.ERROR }, 'error making google auth call:', err.message);
@@ -46,3 +48,5 @@ export async function handler(event, context, callback) {
    // NOTE: don't use async and callback together - both doing same job when redirecting - so this doesn't work
    //return callback(null, response);
 }
+
+module.exports = { handler };

@@ -15,3 +15,4 @@ notes.txt
 # lambda functions build dir
 /server/lambda
 /serverLambda/lambda
+/serverLambda/lambda-build

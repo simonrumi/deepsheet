@@ -7,13 +7,12 @@
    "license": "ISC",
    "scripts": {
       "test": "echo \"Error: no test specified\" && exit 1",
+		"start": "cd client && npm run start",
       "tailwind:css": "tailwind build client/src/css/tailwind.src.css -c client/tailwind.config.js -o client/src/css/tailwind.css",
-      "lambda": "npm run lambda --prefix serverLambda",
-      "client": "npm run start --prefix client",
-      "dev": "cd ./serverLambda && npm run build:lambda && cd .. && npm run tailwind:css && concurrently \"npm run client\" \"npm run lambda\"",
       "postinstall": "cd serverLambda && npm install && cd ../client && npm install",
       "prebuild": "npm run tailwind:css",
-      "build": "cd client && npm run build && cd ../serverLambda && npm run build:lambda"
+      "build": "cd client && npm run build",
+		"dev": "npm run build && netlify dev"
    },
    "dependencies": {
       "autoprefixer": "^10.4.2",
@@ -22,6 +21,8 @@
    },
    "devDependencies": {
       "concurrently": "^7.0.0",
-      "nodemon": "^2.0.15"
+      "netlify-cli": "^9.13.5",
+      "nodemon": "^2.0.15",
+		"react-scripts": "^5.0.0"
    }
 }

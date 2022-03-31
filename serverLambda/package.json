@@ -5,19 +5,17 @@
    "author": "Simon Amarasingham",
    "license": "ISC",
    "dependencies": {
-      "apollo-server-lambda": "^2.16.1",
+      "apollo-server-lambda": "^3.6.3",
       "axios": "^0.26.0",
       "googleapis": "^67.0.0",
-      "graphql": "^15.3.0",
-      "mongodb": "^4.3.1",
-      "mongoose": "^6.2.1",
+      "graphql": "^16.3.0",
+      "mongodb": "^4.4.0",
+      "mongoose": "^6.2.3",
       "netlify-lambda": "^2.0.1",
       "ramda": "^0.28.0",
       "webpack-node-externals": "^3.0.0"
    },
    "scripts": {
-      "lambda": "netlify-lambda serve lambdaFunctions",
-      "build:lambda": "netlify-lambda build lambdaFunctions --config webpack.functions.js",
       "test": "mocha ./lambdaFunctions/__tests__/**/*test.js"
    },
    "devDependencies": {
