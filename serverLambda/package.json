@@ -7,12 +7,11 @@
    "dependencies": {
       "apollo-server-lambda": "^3.6.3",
       "axios": "^0.26.0",
-      "googleapis": "^67.0.0",
+      "googleapis": "^100.0.0",
       "graphql": "^16.3.0",
       "mongodb": "^4.4.0",
       "mongoose": "^6.2.3",
-      "ramda": "^0.28.0",
-      "webpack-node-externals": "^3.0.0"
+      "ramda": "^0.28.0"
    },
    "scripts": {
       "test": "mocha ./lambdaFunctions/__tests__/**/*test.js"
