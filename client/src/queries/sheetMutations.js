@@ -168,12 +168,14 @@ const SHEET_BY_USER_ID_MUTATION = gql`
                index
                filterExpression
                caseSensitive
+					hideBlanks
                regex
             }
             rowFilters {
                index
                filterExpression
                caseSensitive
+					hideBlanks
                regex
             }
             frozenColumns {

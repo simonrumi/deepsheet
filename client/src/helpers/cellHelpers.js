@@ -4,9 +4,12 @@ import {
    indexToColumnLetter,
    indexToRowNumber,
    isSomething,
+	isNothing,
    arrayContainsSomething,
    compareIndexValues,
+	ifThen,
    ifThenElse,
+	getObjectFromArrayByKeyValue,
 } from './index';
 import {
    cellRow,
@@ -19,15 +22,19 @@ import {
    cellTextSetter,
    cellSubsheetIdSetter,
    cellVisibleSetter,
+	dbCells,
    stateFocus,
    stateCellKeys,
    stateCell,
    statePresent,
    stateTotalColumns,
    stateColumnVisibility,
+	stateRowVisibility,
    stateCellsUpdateInfo,
 } from './dataStructureHelpers';
-import { THIN_COLUMN, ROW_AXIS } from '../constants';
+import { updatedCell, hasChangedCell, addedCellKeys } from '../actions/cellActions';
+import { THIN_COLUMN, ROW_AXIS, LOG } from '../constants';
+import { log } from '../clientLogger';
 
 export const getCellContent = cell =>
    isSomething(cell) && isSomething(cell.content) && isSomething(cell.content.text) ? cell.content.text : '';
@@ -254,3 +261,62 @@ export const prepCellsForDb = cells => R.map(
    ), 
    cells // each call to R.pipe will be giving it a cell
 );
+
+export const ensureCorrectCellVisibility = R.curry((columnVisibility, rowVisibility, cell) => {
+	const column = cellColumn(cell);
+	const row = cellRow(cell);
+	const currColumnFilter = getObjectFromArrayByKeyValue('index', column, columnVisibility);
+	const currRowFilter = getObjectFromArrayByKeyValue('index', row, rowVisibility);
+	const returnObj = { cell, updatedVisibility: false }; // we're mutating this....icky
+	if (isNothing(cellVisible(cell))) {
+		log({ level: LOG.INFO }, 'cellHelpers--ensureCorrectCellVisibility cellVisible is nothing for cell', cell, 'so will update cell visibility');
+		returnObj.cell = R.pipe(
+			() => (currColumnFilter === true || isNothing(currColumnFilter)) && (currRowFilter === true || isNothing(currRowFilter))
+				? true
+				: false,
+			cellVisibleSetter(R.__, cell),
+		)();
+		returnObj.updatedVisibility = true;
+	}
+	if (cellVisible(cell) === true && (currColumnFilter === false || currRowFilter === false)) {
+		log({ level: LOG.INFO }, 'cellHelpers--ensureCorrectCellVisibility cell visibility for cell', cell, 'is true but currColumnFilter is', currColumnFilter, 'currRowFilter', currRowFilter, 'so will update cell visibility');
+		returnObj.cell = cellVisibleSetter(false, cell);
+		returnObj.updatedVisibility = true;
+	}
+	if (cellVisible(cell) === false && (currColumnFilter === true || isNothing(currColumnFilter)) && (currRowFilter === true || isNothing(currRowFilter))) {
+		log({ level: LOG.INFO }, 'cellHelpers--ensureCorrectCellVisibility cell visibility for cell', cell, 'is false but currColumnFilter is', currColumnFilter, 'currRowFilter', currRowFilter, 'so will update cell visibility');
+		returnObj.cell = cellVisibleSetter(true, cell);
+		returnObj.updatedVisibility = true;
+	}
+	return returnObj;
+});
+
+export const maybeCorrectCellVisibility = () => {
+	const columnVisibility = stateColumnVisibility(managedStore.state);
+	const rowVisibility = stateRowVisibility(managedStore.state);
+	R.forEach(cellKey => {
+		const { cell, updatedVisibility } = R.pipe(
+			stateCell(managedStore.state),
+			ensureCorrectCellVisibility(columnVisibility, rowVisibility)
+		)(cellKey);
+		ifThen({
+			ifCond: updatedVisibility,
+			thenDo: [ 
+				() => hasChangedCell({ row: cellRow(cell), column: cellColumn(cell) }), 
+				() => updatedCell(cell),
+			],
+			params: { }
+		});
+	})(stateCellKeys(managedStore.state));
+}
+
+export const populateCellsInStore = sheet => {
+   R.pipe(
+      dbCells,
+      R.map(cell => createCellKey(cell.row, cell.column)),
+      addedCellKeys
+   )(sheet);
+   R.forEach(cell => 
+		R.pipe(decodeCellText, updatedCell)(cell)
+	)(dbCells(sheet));
+}

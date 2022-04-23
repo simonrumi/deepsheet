@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import * as R from 'ramda';
 import managedStore from '../../store';
 import { updatedCell, hasChangedCell } from '../../actions/cellActions';
@@ -23,6 +23,7 @@ import {
    updateSystemClipboard,
    convertTextToCellRange,
 	pasteText,
+	getSystemClipboard,
 } from '../../helpers/clipboardHelpers';
 import { compareCellsArrays, updateCellsInRange } from '../../helpers/rangeToolHelpers';
 import { createCellKey, createCellId } from '../../helpers/cellHelpers';
@@ -42,6 +43,7 @@ import {
 	stateRangeWasCopied,
 	statePastingCellRange,
    stateClipboard,
+	stateSystemClipboard,
 	stateShowPasteOptionsModal,
 } from '../../helpers/dataStructureHelpers';
 import { createPasteRangeUndoMessage } from '../displayText';
@@ -89,6 +91,11 @@ const manageChange = (event, cell) => {
 const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
    // this ref is applied to the text area (see below) so that we can manage its focus
    const cellInPlaceEditorRef = useRef();
+
+	// getting the system clipbaord is async, and we want to re-render CellInPlaceEditor when it changes
+	// so using a local state seems like a reasonable way to make it so that only the single CellInPlaceEditor changes,
+	// rather than re-rendering every Cell, which would be the case if we gave systemClipboard as a param to CellInPlaceEditor
+	const [systemClipboardLocal, setSystemClipboardLocal] = useState(stateSystemClipboard(managedStore.state));
 
    const finalizeCellContent = cell => {
       if (!R.equals(stateOriginalValue(managedStore.state), cellInPlaceEditorRef.current?.value)) {
@@ -263,8 +270,8 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
       });
    }
 
-   const renderPasteIcon = () => isSomething(stateClipboard(managedStore.state))
-      ? <PasteIcon classes="bg-white mb-1" svgClasses="w-6" onMouseDownFn={handlePaste}/>
+   const renderPasteIcon = () => isSomething(stateClipboard(managedStore.state)) || isSomething(systemClipboardLocal)
+      ? <PasteIcon systemClipboard={systemClipboardLocal} classes="bg-white mb-1" svgClasses="w-6" onMouseDownFn={handlePaste}/>
       : null;
 
    const renderIcons = () => {
@@ -307,13 +314,25 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
       return textArea;
    };
 
-   // TODO replace setTimeouts with useEffect elsewhere
    // need to useEffect so the cellInPlaceEditorRef can first be assigned to the textarea
    useEffect(() => {
       if (cellHasFocus && isSomething(cellInPlaceEditorRef.current)) {
          cellInPlaceEditorRef.current.focus();
          manageCellInPlaceEditorFocus(null);
       }
+
+		// if there is something on the system clipboard, then that affects whether we display the PasteIcon
+		getSystemClipboard()
+			.then( systemClipboard => {
+				ifThen({
+					ifCond: isSomething,
+					thenDo: setSystemClipboardLocal,
+					params: { ifParams: systemClipboard, thenParams: systemClipboard }
+				});
+			})
+			.catch(err => {
+				log({ level: LOG.ERROR }, 'Couldn\'t get system clipboard', err);
+			});
    });
 
    return (

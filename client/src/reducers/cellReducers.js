@@ -1,10 +1,9 @@
 import * as R from 'ramda';
 import managedStore from '../store';
-import { isSomething, isNothing } from '../helpers';
-import { createUpdatedCellState, createCellKey, decodeCellText } from '../helpers/cellHelpers';
+import { isSomething, isNothing, } from '../helpers';
+import { createUpdatedCellState, createCellKey } from '../helpers/cellHelpers';
 import { dbCells } from '../helpers/dataStructureHelpers';
 import { addErrorMessage } from '../helpers/authHelpers';
-import { updatedCell, addedCellKeys } from '../actions/cellActions';
 import {
    UPDATED_CELL,
    UPDATED_CELL_VISIBILITY,
@@ -117,19 +116,6 @@ export const addCellReducers = (cells, sheetId) => {
       )
    )(cells);
    cellReducerCreator(thunkifiedCreatorFunc);
-}
-
-export const populateCellsInStore = sheet => {
-   R.pipe(
-      dbCells,
-      R.map(cell => createCellKey(cell.row, cell.column)),
-      addedCellKeys
-   ) (sheet);
-   
-   R.forEach(cell => {
-      const decodedCell = decodeCellText(cell);
-      return updatedCell(decodedCell);
-   })(dbCells(sheet));
 }
 
 export const cellDbUpdatesReducer = (state = {}, action) => {

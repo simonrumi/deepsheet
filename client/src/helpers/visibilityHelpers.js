@@ -7,6 +7,7 @@ import {
    arrayContainsSomething,
    getObjectFromArrayByKeyValue,
    ifThen,
+	ifThenElse,
    compareIndexValues,
    spicyCurry
 } from './index';
@@ -30,7 +31,7 @@ import {
    statePastColumnVisibility,
    statePastRowVisibility,
 } from './dataStructureHelpers';
-import { cellsInRow, cellsInColumn } from './cellHelpers';
+import { cellsInRow, cellsInColumn, maybeCorrectCellVisibility } from './cellHelpers';
 import { ROW_AXIS, COLUMN_AXIS } from '../constants';
 
 export const getAxisFilterName = axis => R.concat(axis, 'Filters');
@@ -202,8 +203,15 @@ export const isCellVisible = cell => {
 export const applyFilters = sheet => {
    const rowFilters = dbRowFilters(sheet);
    const columnFilters = dbColumnFilters(sheet);
-   mapWithUpdatedFilter(ROW_AXIS)(rowFilters);
-   mapWithUpdatedFilter(COLUMN_AXIS)(columnFilters);
+	ifThenElse({
+		ifCond: !arrayContainsSomething(rowFilters) && !arrayContainsSomething(columnFilters),
+		thenDo: maybeCorrectCellVisibility,
+		elseDo: [
+			() => mapWithUpdatedFilter(ROW_AXIS)(rowFilters), 
+			() => mapWithUpdatedFilter(COLUMN_AXIS)(columnFilters)
+		],
+		params: {}
+	})
 };
 
 export const initializeAxesVisibility = () => {

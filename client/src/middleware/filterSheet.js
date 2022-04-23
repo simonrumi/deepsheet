@@ -9,7 +9,7 @@ import {
 import { HIDE_FILTERED, CLEAR_ALL_FILTERS, } from '../actions/filterTypes';
 import { toggledShowFilterModal } from '../actions/filterActions';
 import { hasChangedMetadata, updatedColumnFilters, updatedRowFilters } from '../actions/metadataActions';
-import { updatedCell } from '../actions/cellActions';
+import { updatedCell, hasChangedCell } from '../actions/cellActions';
 import {
    getObjectFromArrayByKeyValue,
    isNothing,
@@ -19,12 +19,14 @@ import {
    ifThenElse,
 } from '../helpers';
 import { getTotalForAxis, getAxisVisibilityName } from '../helpers/visibilityHelpers';
-import { getCellFromStore, getAllCells } from '../helpers/cellHelpers';
+import { getCellFromStore, getAllCells, maybeCorrectCellVisibility } from '../helpers/cellHelpers';
 import {
    stateMetadataProp,
    stateFrozenRows,
    stateFrozenColumns,
    cellText,
+	cellRow,
+	cellColumn,
 } from '../helpers/dataStructureHelpers';
 import { FILTER_EDIT } from '../actions/filterTypes';
 
@@ -196,7 +198,10 @@ const setVisibilityForCell = (data, cell) => {
    );
    R.when(
       newVisibility => newVisibility !== cell.visible,
-      newVisibility => updatedCell({ ...cell, visible: newVisibility })
+      newVisibility => {
+			updatedCell({ ...cell, visible: newVisibility });
+			hasChangedCell({ row: cellRow(cell), column: cellColumn(cell) });
+		}
    )(newCellVisibility);
 };
 
@@ -284,6 +289,7 @@ const filterSheet = store => next => async action => {
          if (!isInitializingSheet) {
             hasChangedMetadata({ changeType: FILTER_EDIT, data: filterOptions });
          }
+			maybeCorrectCellVisibility(store);
          break;
       case CLEAR_ALL_FILTERS:
          clearAllFilters(store);

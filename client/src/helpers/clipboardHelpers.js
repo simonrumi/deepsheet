@@ -32,9 +32,11 @@ import {
     stateTotalColumns,
     stateColumnVisibility,
     stateRowVisibility,
+	 stateSystemClipboard,
 } from './dataStructureHelpers';
 import { updatedCell, hasChangedCell } from '../actions/cellActions';
 import { updatedClipboardError } from '../actions/clipboardActions';
+import { capturedSystemClipboard } from '../actions/pasteOptionsModalActions';
 import { updatedMetadataErrorMessage } from '../actions/metadataActions';
 import insertNewColumns from '../services/insertNewColumns';
 import insertNewRows from '../services/insertNewRows';
@@ -136,8 +138,11 @@ const getExtraSpaceNeeded = (startCellRowIndex, startCellColumnIndex, rangeShape
 
 const orderVisibleClipboardCells = () => R.pipe(
 	stateCellRangeCells, 
+	R.tap(data => console.log('clipboardHelpers--orderVisibleClipboardCells after stateCellRangeCells got', data)),
 	R.sort(compareIndexValues),
-	R.filter(cell => cellVisible(cell))
+	R.tap(data => console.log('clipboardHelpers--orderVisibleClipboardCells after sort got', data)),
+	R.filter(cell => cellVisible(cell)),
+	R.tap(data => console.log('clipboardHelpers--orderVisibleClipboardCells after filter got', data)),
 )(managedStore.state);
 
 const registerUpdatedCells = targetMap => R.forEach(
@@ -185,6 +190,7 @@ const mapTargetCells = R.curry((targetStartCell, rangeShape) => {
 		return;
 	 }
     const orderedSourceCells = orderVisibleClipboardCells();
+	 console.log('clipboardHelpers--mapTargetCells got orderedSourceCells', orderedSourceCells);
     const startCellRowIndex = cellRow(targetStartCell);
     const startCellColumnIndex = cellColumn(targetStartCell);
 
@@ -195,14 +201,17 @@ const mapTargetCells = R.curry((targetStartCell, rangeShape) => {
 
     const requiredRowIndicies = adjustIndiciesArrToShape({ lengthNeeded: rangeShape.rowSpan, indiciesArr: visibleRowIndicies, axis: ROW_AXIS});
     const requiredColumnIndicides = adjustIndiciesArrToShape({ lengthNeeded: rangeShape.columnSpan, indiciesArr: visibleColumnIndicies, axis: COLUMN_AXIS });
+	 console.log('clipboardHelpers--mapTargetCells got requiredRowIndicies',requiredRowIndicies, 'requiredColumnIndicides', requiredColumnIndicides);
 
     return R.pipe(
         () => reduceWithIndex(
             (rowAccumulator, rowIndex, rowArrIndex) => {
                 const rowMapping = reduceWithIndex(
                     (columnAccumulator, columnIndex, columnArrIndex) => {
+								console.log('clipboardHelpers--mapTargetCells will get sourceCell from orderedSourceCells at the index given by rowArrIndex * rangeShape.columnSpan + columnArrIndex',rowArrIndex, rangeShape.columnSpan, columnArrIndex);
                         const sourceCell = orderedSourceCells[rowArrIndex * rangeShape.columnSpan + columnArrIndex]; // this calculates how far thru the orderedSourceCells array we are
 								const targetCell = getTargetCell(rowIndex, columnIndex);
+								console.log('clipboardHelpers--mapTargetCells got sourceCell',sourceCell, 'targetCell', targetCell);
 								return R.append([sourceCell, targetCell], columnAccumulator);
                     },
                     [], // initial value
@@ -337,7 +346,9 @@ const getRangeShape = () => {
 export const pasteCellRangeToTarget = cell =>
    R.pipe(
       getRangeShape,
+		R.tap(data => console.log('clipboardHelpers--pasteCellRangeToTarget after getRangeShape got', data)),
       mapTargetCells(cell), // will output { cellMapping, extraRows, extraColumns } or undefined
+		R.tap(data => console.log('clipboardHelpers--pasteCellRangeToTarget after mapTargetCells got', data)),
       R.cond([
 			[ (mappedTargetCellsParams) => isNothing(mappedTargetCellsParams), R.F ],
 			[ ({ cellMapping = null }) => hasSubsheetCells(cellMapping), R.pipe(cellRangePasteError, updatedMetadataErrorMessage, R.T) ],
@@ -430,7 +441,7 @@ const createCellsInRow = ({ rowTextArr, rowIndex, columnIndex }) => {
 
 const createRowsOfCells = ({ rowsArr, rowIndex, firstColumnIndex }) => {
     if ( rowsArr.length === 0 || isNothing(rowIndex) || isNothing(firstColumnIndex)) {
-        log({ level: LOG.DEBUG }, 'clipboardHelpers--createRowsOfCells unable to continue, rowsArr', rowsArr, 'rowIndex', rowIndex, 'firstColumnIndex', firstColumnIndex);
+        log({ level: LOG.DEBUG }, 'clipboardHelpers--createRowsOfCells will not continue, rowsArr', rowsArr, 'rowIndex', rowIndex, 'firstColumnIndex', firstColumnIndex);
         return;
     }
     const rowTextArr = rowsArr[0].split('\t');
@@ -463,4 +474,19 @@ export const pasteText = ({ text, cell, cellInPlaceEditorRef }) => {
 		content: { ...cell.content, text: newText },
 		isStale: true,
 	});
+}
+
+export const getSystemClipboard = async () => {
+	if (typeof navigator.clipboard.readText !== 'function') {
+		log({ level: LOG.WARN }, SYSTEM_CLIPBOARD_UNAVAILABLE_MSG);
+		return;
+  	}
+	const currentSystemClipboard = stateSystemClipboard(managedStore.state);
+	const systemClipboardText = await navigator.clipboard.readText();
+
+	if (currentSystemClipboard === systemClipboardText) {
+		return null;
+	}
+	capturedSystemClipboard(systemClipboardText);
+	return systemClipboardText;
 }

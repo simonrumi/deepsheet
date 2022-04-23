@@ -7,7 +7,7 @@
 // desired result: pop up a modal asking which option you want
 
 // TODO 
-// server-side need to verify and tidy up sheets
+// client-side need to verify and tidy up sheets
 // metadata:
 // 1. number of rows and columns should match number of cells
 // 2a. if there are entries in columnWidths there must be an entry for every column (check that is required)

@@ -194,7 +194,7 @@ module.exports = db => ({
             if (sheetDoc.users.owner != userId) {
                return new Error('User not authorized to update sheet');
             }
-            const updatedCells = updateAndAddCells(sheetDoc.cells, cells);
+            const updatedCells = updateAndAddCells(sheetDoc, cells);
             sheetDoc.cells = updatedCells;
             sheetDoc.metadata.lastUpdated = new Date();
             return await sheetDoc.save();

@@ -25,25 +25,12 @@ import { startedUndoableAction, completedUndoableAction } from '../../actions/un
 import { PASTE_OPTIONS_MODAL_WIDTH, MIN_ROW_HEIGHT, PASTE_OPTIONS_MODAL_MIN_HEIGHT } from '../../constants';
 import { createPasteRangeMessage, createPasteClipboardMessage } from '../displayText';
 import Button from '../atoms/Button';
-
-// TODO continue with pagkage updates
-
-// TODO NEXT BUG
-// 1. copy range
-// 2. copy text range (below)
-// 3. paste ....post options modal shows up
-// 4. click "paste clipboard as range"
-// result the clipboard is pasted both as a range and as text 
+import CloseIcon from '../atoms/IconClose';
 
 /*
 A1	A3
 B2	B3
-*/
-
-// TODO BUG
-// 1. copy a range so that the bottom right cell is in the last column
-// 2. paste the range
-// result: the bottom right cell is not pasted 
+*/ // TIDY
 
 const PasteOptionsModal = () => {
 	const showModal = useSelector(state => stateShowPasteOptionsModal(state));
@@ -154,36 +141,65 @@ const PasteOptionsModal = () => {
 
 	const fromCellId = isSomething(fromCell) ? createCellId(cellRow(fromCell), cellColumn(fromCell)) : null;
 	const toCellId = isSomething(toCell) ? createCellId(cellRow(toCell), cellColumn(toCell)) : null;
+	const closeButton = (
+		<div className="flex justify-end">
+			<CloseIcon classes="p-1" svgClasses="w-6" onClickFn={handleCancelPaste}/>
+		</div>
+	)
 
+/* 
+A1	A3
+B2	B3
+ */
 	return clipboardAsCells.length > 1 && isNothing(toCell)
 		? (
 			<div className="relative w-full z-50">
-				<div className="absolute top-0 bg-white border border-grey-blue shadow-lg p-3" style={modalPositioning}>
+				<div className="absolute top-0 bg-white border border-grey-blue shadow-lg p-1" style={modalPositioning}>
+					{closeButton}
 					<div className="flex justify-center">
-						<Button label="Paste As Range of Cells" classes="p-3" onClickFn={handlePasteClipboardAsRange}/>
-						<Button label="Paste Clipboard" classes="p-3" onClickFn={handlePasteClipboardAsText}/>
-						<Button label="Paste Neither" classes="p-3" onClickFn={handleCancelPaste}/>
+						<Button label="Paste clipboard as range of cells" classes="p-3" onClickFn={handlePasteClipboardAsRange}/>
+						<Button label="Paste clipboard in one cell" classes="p-3" onClickFn={handlePasteClipboardAsText}/>
 					</div>
 				</div>
 			</div>
 		)
-		: (
-			<div className="relative w-full z-50">
-				<div className="absolute top-0 bg-white border border-grey-blue shadow-lg p-3" style={modalPositioning}>
-					<div className="flex justify-center">
-						<Button label="Paste Clipboard" classes="p-3" onClickFn={handlePasteClipboard}/>
-						<Button label="Paste Range" classes="p-3" onClickFn={handlePasteRange}/>
-						<Button label="Paste Neither" classes="p-3" onClickFn={handleCancelPaste}/>
+		: clipboardAsCells.length > 1 && isSomething(toCell) 
+			? (
+				<div className="relative w-full z-50">
+					<div className="absolute top-0 bg-white border border-grey-blue shadow-lg p-1" style={modalPositioning}>
+						{closeButton}
+						<div className="grid grid-cols-3">
+							<Button label="Paste cell range" classes="p-1" onClickFn={handlePasteRange}/>
+							<Button label="Paste clipboard as range of cells" classes="p-1" onClickFn={handlePasteClipboardAsRange}/>
+							<Button label="Paste clipboard in one cell" classes="p-1" onClickFn={handlePasteClipboardAsText}/>
+						</div>
+						<p>You can paste the cell range from 
+							<span className="text-vibrant-purple"> {fromCellId} </span>
+							to 
+							<span className="text-vibrant-purple"> {toCellId} </span>
+						</p>
+						<p>Or paste the system clipboard as either a range of cells, or paste it into a single cell. The system clipboard contains this:</p>
+						<p>"<span className="text-vibrant-purple">{systemClipboard}</span>"</p>
 					</div>
-					<p>You can either paste the cell range from 
-						<span className="text-vibrant-purple"> {fromCellId} </span>
-						to 
-						<span className="text-vibrant-purple"> {toCellId} </span>
-					</p>
-					<p>Or the system clipboard, which contains this:</p>
-					<p>"<span className="text-vibrant-purple">{systemClipboard}</span>"</p>
 				</div>
-			</div>
+			)
+			: (
+				<div className="relative w-full z-50">
+					<div className="absolute top-0 bg-white border border-grey-blue shadow-lg p-1" style={modalPositioning}>
+						{closeButton}
+						<div className="flex justify-center">
+							<Button label="Paste clipboard" classes="p-3" onClickFn={handlePasteClipboard}/>
+							<Button label="Paste cell range" classes="p-3" onClickFn={handlePasteRange}/>
+						</div>
+						<p>You can either paste the cell range from 
+							<span className="text-vibrant-purple"> {fromCellId} </span>
+							to 
+							<span className="text-vibrant-purple"> {toCellId} </span>
+						</p>
+						<p>Or the system clipboard, which contains this:</p>
+						<p>"<span className="text-vibrant-purple">{systemClipboard}</span>"</p>
+					</div>
+				</div>
 		);
 }
 

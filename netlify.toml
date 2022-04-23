@@ -8,4 +8,5 @@
   publish = "client/build" # directory where deploy-ready HTML files etc are. THis value can be set in the UI also, but this entry will override it 
 
 [dev]
-publish = "client/public" # The path to your static content folder
+  publish = "client/public" # The path to your static content folder
+  framework = "create-react-app"

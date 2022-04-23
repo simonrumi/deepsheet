@@ -18,7 +18,7 @@ export const MIN_ROW_HEIGHT = '40'; // this is in pixels..smaller than this mean
 export const TOOL_ICON_HEIGHT = '2em';
 export const TOOL_ICON_WIDTH = '2em';
 
-export const PASTE_OPTIONS_MODAL_WIDTH = parseFloat(getComputedStyle(document.body).fontSize) * 25; //'25em';
+export const PASTE_OPTIONS_MODAL_WIDTH = parseFloat(getComputedStyle(document.body).fontSize) * 25; //'30em';
 export const PASTE_OPTIONS_MODAL_MIN_HEIGHT = parseFloat(getComputedStyle(document.body).fontSize) * 15; // '15em';
 export const HISTORY_MODAL_MIN_WIDTH = parseFloat(getComputedStyle(document.body).fontSize) * 15;
 export const HISTORY_MODAL_MIN_HEIGHT = parseFloat(getComputedStyle(document.body).fontSize) * 15;
