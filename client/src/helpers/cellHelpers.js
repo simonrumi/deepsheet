@@ -9,6 +9,8 @@ import {
    compareIndexValues,
 	ifThen,
    ifThenElse,
+	forLoopReduce,
+	forLoopMap,
 	getObjectFromArrayByKeyValue,
 } from './index';
 import {
@@ -23,6 +25,8 @@ import {
    cellSubsheetIdSetter,
    cellVisibleSetter,
 	dbCells,
+	dbTotalRows,
+	dbTotalColumns,
    stateFocus,
    stateCellKeys,
    stateCell,
@@ -32,8 +36,12 @@ import {
 	stateRowVisibility,
    stateCellsUpdateInfo,
 } from './dataStructureHelpers';
+import { isCellVisible } from './visibilityHelpers';
+import { addCellReducers } from '../reducers/cellReducers';
+import { addNewCellsToStore, addNewCellsToCellDbUpdates } from '../services/insertNewAxis';
 import { updatedCell, hasChangedCell, addedCellKeys } from '../actions/cellActions';
-import { THIN_COLUMN, ROW_AXIS, LOG } from '../constants';
+import { updatedTotalRows, updatedTotalColumns, hasChangedMetadata, updatedRowHeight, updatedColumnWidth } from '../actions/metadataActions';
+import { THIN_COLUMN, ROW_AXIS, COLUMN_AXIS, DEFAULT_ROW_HEIGHT, DEFAULT_COLUMN_WIDTH, LOG } from '../constants';
 import { log } from '../clientLogger';
 
 export const getCellContent = cell =>
@@ -310,6 +318,182 @@ export const maybeCorrectCellVisibility = () => {
 	})(stateCellKeys(managedStore.state));
 }
 
+const addNewCellsAndCellKeysToStore = ({ newCells, newCellKeys }) => {
+	if (!arrayContainsSomething(newCells) || !arrayContainsSomething(newCellKeys)) {
+		return;
+	}
+	addCellReducers(newCells);
+	addedCellKeys(newCellKeys);
+	addNewCellsToStore(newCells);
+	addNewCellsToCellDbUpdates(newCells);
+}
+
+// NOTE this is not functional coding style...would be nice to update
+const tryIncreasingAxisCount = ({ totalinAxis, totalinOtherAxis, totalCellKeys }) => {
+	let extra = 0;
+	if ((totalinAxis + extra) * totalinOtherAxis === totalCellKeys) {
+   	return { extra, perfectFit: true }
+   }
+	if ((totalinAxis + extra) * totalinOtherAxis > totalCellKeys) {
+   	return { extra, perfectFit: false }
+   }
+	while((totalinAxis + extra) * totalinOtherAxis <= totalCellKeys) {
+		++extra;
+		if ((totalinAxis + extra) * totalinOtherAxis === totalCellKeys) {
+			return { extra, perfectFit: true };
+		}
+		if ((totalinAxis + extra) * totalinOtherAxis > totalCellKeys) {
+			return { extra, perfectFit: false };
+		}
+	}
+	return { extra, perfectFit: false }
+}
+
+const createDefaultCell = (row, column) => ({
+		row,
+		column,
+		content: {
+			subsheetId: null,
+			text: ''
+		}, 
+		visible: isCellVisible({ row, column })
+	});
+
+const concatRowWithAccumulator = ({ newRowCells, newRowCellKeys, accumulator }) => {
+	if (!arrayContainsSomething(newRowCells) || !arrayContainsSomething(newRowCellKeys)) {
+		return accumulator;
+	}
+	const newCells = R.pipe(R.prop('newCells'), R.concat(R.__, newRowCells))(accumulator);
+	const newCellKeys = R.pipe(R.prop('newCellKeys'), R.concat(R.__, newRowCellKeys))(accumulator);
+	return { newCells, newCellKeys };
+}
+
+const addCellToRowAccumulator = ({ rowAccumulator, cellKey, row, column }) => {
+	const newRowCellKeys = R.pipe(R.prop, R.append(cellKey))('newRowCellKeys', rowAccumulator);
+	const newCell = createDefaultCell(row, column);
+	const newRowCells = R.pipe(R.prop, R.append(newCell))('newRowCells', rowAccumulator);
+	return { newRowCells, newRowCellKeys };
+}
+
+const addExtraRowsColumns = ({ newRows, newColumns, totalRows, totalColumns }) => {
+	const lengths = { totalRows, totalColumns };
+	const largestRowIndex = R.reduce((accumulator, index) => index > accumulator ? index : accumulator, 0, newRows);
+	if (largestRowIndex >= totalRows) {
+		lengths.totalRows = largestRowIndex + 1;
+		updatedTotalRows({ newTotalRows: lengths.totalRows });
+	}
+	const largestColumnIndex = R.reduce((accumulator, index) => index > accumulator ? index : accumulator, 0, newColumns);
+	if (largestColumnIndex >= totalColumns) {
+		lengths.totalColumns = largestColumnIndex + 1;
+		updatedTotalColumns({ newTotalColumns: lengths.totalColumns });
+	}
+	return lengths;
+}
+
+const checkEachCellHasAvailablePosition = sheet => {
+	const totalRows = dbTotalRows(sheet);
+	const totalColumns = dbTotalColumns(sheet);
+	const cellKeys = stateCellKeys(managedStore.state);
+	const { newRows, newColumns } = R.reduce(
+		(accumulator, cellKey) => {
+			const currentRowIndex = getIndexFromCellKey(ROW_AXIS, cellKey);
+			if (currentRowIndex >= totalRows) {
+				const foundIndexInNewRows = R.find(indexInNewRows => indexInNewRows === currentRowIndex, accumulator.newRows);
+				if (!foundIndexInNewRows) {
+					accumulator.newRows = R.append(currentRowIndex, accumulator.newRows);
+				}
+			}
+
+			const currentColumnIndex = getIndexFromCellKey(COLUMN_AXIS, cellKey);
+			if (currentColumnIndex >= totalColumns) {
+				const foundIndexInNewColumns = R.find(indexInNewColumns => indexInNewColumns === currentColumnIndex, accumulator.newColumns);
+				if (!foundIndexInNewColumns) {
+					accumulator.newColumns = R.append(currentColumnIndex, accumulator.newColumns);
+				}
+			}
+			return accumulator;
+		},
+		{ newRows: [], newColumns: [] },
+		cellKeys
+	);
+	return addExtraRowsColumns({ newRows, newColumns, totalRows, totalColumns }); // this will return updated values for { totalRows, totalColumns }
+}
+
+const addExtraCells = ({ totalRows, totalColumns }) => {
+	const { newCells, newCellKeys } = forLoopReduce(
+		(accumulator, currentRow) => {
+			const { newRowCells, newRowCellKeys } = forLoopReduce(
+				(rowAccumulator, currentColumn) => {
+					const cellKey = createCellKey(currentRow, currentColumn);
+					const currentCell = stateCell(managedStore.state, cellKey);
+					if (isNothing(currentCell)) {
+						return addCellToRowAccumulator({ rowAccumulator, cellKey, row: currentRow, column: currentColumn });
+					}
+					return rowAccumulator;
+				},
+				{ newRowCells: [], newRowCellKeys: [] }, // initialValue
+				totalColumns
+			);
+			return concatRowWithAccumulator({ newRowCells, newRowCellKeys, accumulator });
+		},
+		{ newCells: [], newCellKeys: [] }, // initial value
+		totalRows
+	);
+	addNewCellsAndCellKeysToStore({ newCells, newCellKeys });
+}
+
+const addExtraAxisSizes = ({ axis, totalAxisItems, extraAxisItems }) => {
+	const sizeUpdateFunction = axis === ROW_AXIS ? updatedRowHeight : updatedColumnWidth;
+	const defaultSize = axis === ROW_AXIS ? DEFAULT_ROW_HEIGHT : DEFAULT_COLUMN_WIDTH;
+	forLoopMap(
+		currentIndex => sizeUpdateFunction((totalAxisItems + currentIndex + 1), defaultSize),
+		extraAxisItems
+	);
+}
+
+const increaseRowOrColumnCount = ({ totalRows, totalColumns, totalCellKeys }) => {
+	// try increasing totalRows
+	const { extra: extraRows, perfectFit: perfectRowFit } = tryIncreasingAxisCount({ totalinAxis: totalRows, totalinOtherAxis: totalColumns, totalCellKeys });
+	if (perfectRowFit) {
+		updatedTotalRows({ oldTotalRows: totalRows, newTotalRows: (totalRows + extraRows) });
+		addExtraAxisSizes({ axis: ROW_AXIS, totalAxisItems: totalRows, extraAxisItems: extraRows });
+		hasChangedMetadata();
+		return;
+	}
+	// try increasing totalColumns
+	const { extra: extraColumns, perfectFit: perfectColumnFit } = tryIncreasingAxisCount({ totalinAxis: totalColumns, totalinOtherAxis: totalRows, totalCellKeys });
+	if (perfectColumnFit) {
+		updatedTotalColumns({ oldTotalColumns: totalColumns, newTotalColumns: (totalColumns + extraColumns) });
+		addExtraAxisSizes({ axis: COLUMN_AXIS, totalAxisItems: totalColumns, extraAxisItems: extraColumns });
+		hasChangedMetadata();
+		return;
+	}
+	// increase whichever axis requires the least number of added cells...and add the extra cells
+	ifThenElse({
+		ifCond: extraRows < extraColumns,
+		thenDo: [
+			() => updatedTotalRows({ oldTotalRows: totalRows, newTotalRows: (totalRows + extraRows) }),
+			() => addExtraCells({ totalRows: (totalRows + extraRows), totalColumns })
+		],
+		elseDo: [
+			() => updatedTotalColumns({ oldTotalColumns: totalColumns, newTotalColumns: (totalColumns + extraColumns) }),
+			() => addExtraCells({ totalColumns: (totalColumns + extraColumns), totalRows })
+		],
+		params: {}
+	});
+}
+
+const reconcileTotalCells = sheet => {
+	const totalCellKeys = R.length(stateCellKeys(managedStore.state)) || 0;
+	const { totalRows, totalColumns } = checkEachCellHasAvailablePosition(sheet);
+	if (totalRows * totalColumns > totalCellKeys) {
+		addExtraCells({ totalRows, totalColumns });
+	}
+	if (totalRows * totalColumns < totalCellKeys) {
+		increaseRowOrColumnCount({ totalRows, totalColumns, totalCellKeys });
+	}
+}
+
 export const populateCellsInStore = sheet => {
    R.pipe(
       dbCells,
@@ -319,4 +503,7 @@ export const populateCellsInStore = sheet => {
    R.forEach(cell => 
 		R.pipe(decodeCellText, updatedCell)(cell)
 	)(dbCells(sheet));
+	reconcileTotalCells(sheet);
 }
+
+// TODO NEXT - upload to production

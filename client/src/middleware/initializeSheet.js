@@ -48,7 +48,7 @@ const runFetchFunctionForId = async ({ sheetId, userId }) => {
    return sheetId ? await fetchSheet(sheetId, userId) : await fetchSheetByUserId(userId);
 };
 
-const runFetchSheet = async ({ store, sheetId, userId }) => {
+const fetchAndInitializeSheet = async ({ store, sheetId, userId }) => {
    if (stateIsLoggedIn(store.getState()) === false) {
       fetchSheetError('Must log in before fetching a sheet');
       return {};
@@ -70,9 +70,9 @@ const runFetchSheet = async ({ store, sheetId, userId }) => {
    }
 };
 
-const getOrFindSheet = async (store, sheetId) => {
+const getSheet = async (store, sheetId) => {
    const { userId } = getUserInfoFromCookie();
-   return await runFetchSheet({ store, sheetId, userId });
+   return await fetchAndInitializeSheet({ store, sheetId, userId });
 };
 
 const initializeSheet = store => next => async action => {
@@ -87,7 +87,7 @@ const initializeSheet = store => next => async action => {
             return null;
          }
          try {
-            const sheetResult = await Promise.resolve(getOrFindSheet(store, action.payload));
+            const sheetResult = await Promise.resolve(getSheet(store, action.payload));
             if (isNothing(sheetResult)) {
                fetchSheetError('No sheet found');
                return;

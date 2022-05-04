@@ -1,4 +1,5 @@
 import managedStore from '../store';
+import { isSomething } from '../helpers';
 import { updateFilteredCells } from '../helpers/visibilityHelpers';
 import { 
    REPLACED_ALL_METADATA,
@@ -230,26 +231,30 @@ export const replacedRowVisibility = newVisibility => {
    });
 };
 
-export const updatedTotalColumns = (oldTotalColumns, newTotalColumns) => {
+export const updatedTotalColumns = ({ oldTotalColumns, newTotalColumns }) => {
    managedStore.store.dispatch({
       type: UPDATED_TOTAL_COLUMNS,
       payload: newTotalColumns,
    });
-   managedStore.store.dispatch({
-      type: CELLS_UPDATED,
-      payload: { changeType: UPDATED_TOTAL_COLUMNS, data: { oldTotalColumns, newTotalColumns } }
-   });
+	if (isSomething(oldTotalColumns)) {
+		managedStore.store.dispatch({
+			type: CELLS_UPDATED,
+			payload: { changeType: UPDATED_TOTAL_COLUMNS, data: { oldTotalColumns, newTotalColumns } }
+		});
+	}
 };
 
-export const updatedTotalRows = (oldTotalRows, newTotalRows) => {
+export const updatedTotalRows = ({ oldTotalRows, newTotalRows }) => {
    managedStore.store.dispatch({
       type: UPDATED_TOTAL_ROWS,
       payload: newTotalRows,
    });
-   managedStore.store.dispatch({
-      type: CELLS_UPDATED,
-      payload: { changeType: UPDATED_TOTAL_ROWS, data: { oldTotalRows, newTotalRows } }
-   });
+	if (isSomething(oldTotalRows)) {
+		managedStore.store.dispatch({
+			type: CELLS_UPDATED,
+			payload: { changeType: UPDATED_TOTAL_ROWS, data: { oldTotalRows, newTotalRows } }
+		});
+	}
 };
 
 export const updatedAxisItemTool = axisItemTooldata => {

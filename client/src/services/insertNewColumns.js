@@ -102,7 +102,7 @@ const insertNewColumns = (additionalColumns = 1) => {
    addedCellKeys(updatedCellKeys);
    addNewCellsToStore(allUpdatedCells);
    addNewCellsToCellDbUpdates(allUpdatedCells);
-   updatedTotalColumns(totalColumns, (totalColumns + additionalColumns));
+   updatedTotalColumns({ oldTotalColumns: totalColumns, newTotalColumns: (totalColumns + additionalColumns) });
    forLoopMap(
       columnCount => updatedColumnWidth((totalColumns + columnCount), DEFAULT_COLUMN_WIDTH),
       additionalColumns

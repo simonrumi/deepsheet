@@ -98,7 +98,7 @@ const insertNewRows = (additionalRows = 1) => {
    addedCellKeys(updatedCellKeys);
    addNewCellsToStore(allUpdatedCells);
    addNewCellsToCellDbUpdates(allUpdatedCells);
-   updatedTotalRows(totalRows, totalRows + additionalRows);
+   updatedTotalRows({ oldTotalRows: totalRows, newTotalRows: (totalRows + additionalRows) });
    forLoopMap(
       rowCount => updatedRowHeight((totalRows + rowCount), DEFAULT_ROW_HEIGHT),
       additionalRows
