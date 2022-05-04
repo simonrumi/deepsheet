@@ -381,11 +381,13 @@ const addExtraRowsColumns = ({ newRows, newColumns, totalRows, totalColumns }) =
 	if (largestRowIndex >= totalRows) {
 		lengths.totalRows = largestRowIndex + 1;
 		updatedTotalRows({ newTotalRows: lengths.totalRows });
+		hasChangedMetadata();
 	}
 	const largestColumnIndex = R.reduce((accumulator, index) => index > accumulator ? index : accumulator, 0, newColumns);
 	if (largestColumnIndex >= totalColumns) {
 		lengths.totalColumns = largestColumnIndex + 1;
 		updatedTotalColumns({ newTotalColumns: lengths.totalColumns });
+		hasChangedMetadata();
 	}
 	return lengths;
 }
