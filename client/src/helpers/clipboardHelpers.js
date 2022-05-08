@@ -137,12 +137,9 @@ const getExtraSpaceNeeded = (startCellRowIndex, startCellColumnIndex, rangeShape
 }
 
 const orderVisibleClipboardCells = () => R.pipe(
-	stateCellRangeCells, 
-	R.tap(data => console.log('clipboardHelpers--orderVisibleClipboardCells after stateCellRangeCells got', data)),
+	stateCellRangeCells,
 	R.sort(compareIndexValues),
-	R.tap(data => console.log('clipboardHelpers--orderVisibleClipboardCells after sort got', data)),
-	R.filter(cell => cellVisible(cell)),
-	R.tap(data => console.log('clipboardHelpers--orderVisibleClipboardCells after filter got', data)),
+	R.filter(cell => cellVisible(cell))
 )(managedStore.state);
 
 const registerUpdatedCells = targetMap => R.forEach(
@@ -181,51 +178,47 @@ const hasSubsheetCells = cellMapping => R.reduce(
 );
 
 const mapTargetCells = R.curry((targetStartCell, rangeShape) => {
-    if (isNothing(targetStartCell)) {
+	if (isNothing(targetStartCell)) {
 		log({ level: LOG.WARN }, 'mapTargetCells did not get all the required parameters');
-      return;
-    }
-	 if (isNothing(rangeShape) || isNothing(rangeShape.rowSpan) || isNothing(rangeShape.columnSpan)) {
-		 // we didn't get a legit (rectangular) rangeShape
 		return;
-	 }
-    const orderedSourceCells = orderVisibleClipboardCells();
-	 console.log('clipboardHelpers--mapTargetCells got orderedSourceCells', orderedSourceCells);
-    const startCellRowIndex = cellRow(targetStartCell);
-    const startCellColumnIndex = cellColumn(targetStartCell);
+	}
+	if (isNothing(rangeShape) || isNothing(rangeShape.rowSpan) || isNothing(rangeShape.columnSpan)) {
+		// we didn't get a legit (rectangular) rangeShape
+		return;
+	}
+	const orderedSourceCells = orderVisibleClipboardCells();
+	const startCellRowIndex = cellRow(targetStartCell);
+	const startCellColumnIndex = cellColumn(targetStartCell);
 
-    const [ extraRows, extraColumns ] = getExtraSpaceNeeded(startCellRowIndex, startCellColumnIndex, rangeShape);
+	const [ extraRows, extraColumns ] = getExtraSpaceNeeded(startCellRowIndex, startCellColumnIndex, rangeShape);
 
-    const visibleRowIndicies = getVisibleAxisIndicies(startCellRowIndex, ROW_AXIS);
-    const visibleColumnIndicies = getVisibleAxisIndicies(startCellColumnIndex, COLUMN_AXIS);
+	const visibleRowIndicies = getVisibleAxisIndicies(startCellRowIndex, ROW_AXIS);
+	const visibleColumnIndicies = getVisibleAxisIndicies(startCellColumnIndex, COLUMN_AXIS);
 
-    const requiredRowIndicies = adjustIndiciesArrToShape({ lengthNeeded: rangeShape.rowSpan, indiciesArr: visibleRowIndicies, axis: ROW_AXIS});
-    const requiredColumnIndicides = adjustIndiciesArrToShape({ lengthNeeded: rangeShape.columnSpan, indiciesArr: visibleColumnIndicies, axis: COLUMN_AXIS });
-	 console.log('clipboardHelpers--mapTargetCells got requiredRowIndicies',requiredRowIndicies, 'requiredColumnIndicides', requiredColumnIndicides);
+	const requiredRowIndicies = adjustIndiciesArrToShape({ lengthNeeded: rangeShape.rowSpan, indiciesArr: visibleRowIndicies, axis: ROW_AXIS});
+	const requiredColumnIndicides = adjustIndiciesArrToShape({ lengthNeeded: rangeShape.columnSpan, indiciesArr: visibleColumnIndicies, axis: COLUMN_AXIS });
 
-    return R.pipe(
-        () => reduceWithIndex(
-            (rowAccumulator, rowIndex, rowArrIndex) => {
-                const rowMapping = reduceWithIndex(
-                    (columnAccumulator, columnIndex, columnArrIndex) => {
-								console.log('clipboardHelpers--mapTargetCells will get sourceCell from orderedSourceCells at the index given by rowArrIndex * rangeShape.columnSpan + columnArrIndex',rowArrIndex, rangeShape.columnSpan, columnArrIndex);
-                        const sourceCell = orderedSourceCells[rowArrIndex * rangeShape.columnSpan + columnArrIndex]; // this calculates how far thru the orderedSourceCells array we are
-								const targetCell = getTargetCell(rowIndex, columnIndex);
-								console.log('clipboardHelpers--mapTargetCells got sourceCell',sourceCell, 'targetCell', targetCell);
-								return R.append([sourceCell, targetCell], columnAccumulator);
-                    },
-                    [], // initial value
-                    requiredColumnIndicides
-                );
-                return R.concat(rowAccumulator, rowMapping);
-            },
-            [], // initial value
-            requiredRowIndicies
-        ),
-        R.objOf('cellMapping'), // creates a data object with the reduceWithIndex result as the prop 'cellMapping'
-        R.assoc('extraRows', extraRows), // add extraRows to the object
-        R.assoc('extraColumns', extraColumns) // add extraColumns to the object
-    )();
+	return R.pipe(
+		() => reduceWithIndex(
+			(rowAccumulator, rowIndex, rowArrIndex) => {
+					const rowMapping = reduceWithIndex(
+						(columnAccumulator, columnIndex, columnArrIndex) => {
+							const sourceCell = orderedSourceCells[rowArrIndex * rangeShape.columnSpan + columnArrIndex]; // this calculates how far thru the orderedSourceCells array we are
+							const targetCell = getTargetCell(rowIndex, columnIndex);
+							return R.append([sourceCell, targetCell], columnAccumulator);
+						},
+						[], // initial value
+						requiredColumnIndicides
+					);
+					return R.concat(rowAccumulator, rowMapping);
+			},
+			[], // initial value
+			requiredRowIndicies
+		),
+		R.objOf('cellMapping'), // creates a data object with the reduceWithIndex result as the prop 'cellMapping'
+		R.assoc('extraRows', extraRows), // add extraRows to the object
+		R.assoc('extraColumns', extraColumns) // add extraColumns to the object
+	)();
 });
 
 /**
@@ -243,10 +236,10 @@ const mapTargetCells = R.curry((targetStartCell, rangeShape) => {
  * ....so we're keeping the second scenario and not trying to make the first scenario work.
  * If you copied a range then filtered out some of what you just copied, you shouldn't expect to have your original range in tact
  */
-const getRangeShape = () => {
+const getRangeShape = useSystemClipboard => {
 	const fromCell = stateCellRangeFrom(managedStore.state);
 	const toCell = stateCellRangeTo(managedStore.state);
-	if (isNothing(fromCell) || isNothing(toCell)) {
+	if (useSystemClipboard || isNothing(fromCell) || isNothing(toCell)) {
 		const cellRangeArr = stateCellRangeCells(managedStore.state);
 		if (!arrayContainsSomething(cellRangeArr)) {
 			log({ level: LOG.WARN }, 'could not get a complete range from the clipboard');
@@ -343,18 +336,16 @@ const getRangeShape = () => {
 	return { columnSpan, rowSpan }
 };
 
-export const pasteCellRangeToTarget = cell =>
+export const pasteCellRangeToTarget = ({ cell, useSystemClipboard = false }) =>
    R.pipe(
       getRangeShape,
-		R.tap(data => console.log('clipboardHelpers--pasteCellRangeToTarget after getRangeShape got', data)),
       mapTargetCells(cell), // will output { cellMapping, extraRows, extraColumns } or undefined
-		R.tap(data => console.log('clipboardHelpers--pasteCellRangeToTarget after mapTargetCells got', data)),
       R.cond([
 			[ (mappedTargetCellsParams) => isNothing(mappedTargetCellsParams), R.F ],
 			[ ({ cellMapping = null }) => hasSubsheetCells(cellMapping), R.pipe(cellRangePasteError, updatedMetadataErrorMessage, R.T) ],
 			[ ({ cellMapping }) => !hasSubsheetCells(cellMapping), R.pipe(makeRoomForTargetCells, pasteToTargetCells, registerUpdatedCells, R.T) ]
 		])
-   )();
+   )(useSystemClipboard);
 
 export const updateSystemClipboard = text => {
     if (typeof navigator.clipboard.readText !== 'function') {

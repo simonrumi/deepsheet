@@ -27,11 +27,6 @@ import { createPasteRangeMessage, createPasteClipboardMessage } from '../display
 import Button from '../atoms/Button';
 import CloseIcon from '../atoms/IconClose';
 
-/*
-A1	A3
-B2	B3
-*/ // TIDY
-
 const PasteOptionsModal = () => {
 	const showModal = useSelector(state => stateShowPasteOptionsModal(state));
 	const systemClipboard = useSelector(state => stateSystemClipboard(state));
@@ -53,7 +48,6 @@ const PasteOptionsModal = () => {
 	}
 
 	const handlePasteClipboard = () => {
-		console.log('PasteOptionsModal--handlePasteClipboard started');
 		if (clipboardAsCells.length > 1) {
 			startedUndoableAction({ undoableType: PASTE_CLIPBOARD, timestamp: Date.now() });
 			updatedPastingCellRange(true);
@@ -61,13 +55,13 @@ const PasteOptionsModal = () => {
 			replacedCellsInRange(clipboardAsCells);
 			ifThenElse({
 				ifCond: pasteCellRangeToTarget, // if true, a correctly formed range was pasted
-				thenDo: [ updatedShowPasteOptionsModal, blurCellInPlaceEditor, () => console.log('PasteOptionsModal--handlePasteClipboard successful pasteCellRangeToTarget') ], // note: must happen in this order
-				elseDo: [ pasteText, () => console.log('PasteOptionsModal--handlePasteClipboard unsuccessful pasteCellRangeToTarget so did pasteText') ], // just paste the raw clipboard text instead and don't blur  /// TIDY
-				params: { ifParams: cell, thenParams: false, elseParams: { text: systemClipboard, cell, cellInPlaceEditorRef } }
+				thenDo: [ updatedShowPasteOptionsModal, blurCellInPlaceEditor ], // note: must happen in this order
+				elseDo: pasteText, // just paste the raw clipboard text instead and don't blur
+				params: { ifParams: { cell }, thenParams: false, elseParams: { text: systemClipboard, cell, cellInPlaceEditorRef } }
 			});
 			const message = createPasteClipboardMessage(cell);
+			updatedPastingCellRange(false);
 			completedUndoableAction({ undoableType: PASTE_CLIPBOARD, message, timestamp: Date.now() });
-			updatedPastingCellRange(false); // TODO move this to before completedUndoableAction
 		}
 
 		updatedCell({
@@ -82,46 +76,43 @@ const PasteOptionsModal = () => {
 		updatedShowPasteOptionsModal(false);
 		startedUndoableAction({ undoableType: PASTE_RANGE, timestamp: Date.now() });
 		updatedPastingCellRange(true);
-		pasteCellRangeToTarget(cell);
-		blurCellInPlaceEditor();  
+		pasteCellRangeToTarget({ cell });
+		blurCellInPlaceEditor();
+		updatedPastingCellRange(false);
 		completedUndoableAction({
 			undoableType: PASTE_RANGE,
 			message: createPasteRangeMessage({ cell }),
 			timestamp: Date.now(),
 		});
-		updatedPastingCellRange(false); // TODO move this to before completedUndoableAction
 	}
 
+	
 	const handlePasteClipboardAsRange = () => {
 		updatedShowPasteOptionsModal(false);
 		startedUndoableAction({ undoableType: PASTE_CLIPBOARD, timestamp: Date.now() });
 		updatedPastingCellRange(true);
 		replacedCellsInRange(clipboardAsCells);
-		if(pasteCellRangeToTarget(cell)) {
-			console.log('PasteOptionsModal--handlePasteClipboardAsRange pasteCellRangeToTarget returned true, now blurring');
-			blurCellInPlaceEditor() // pasteCellRangeToTarget returned true, indicating a correctly formed range was pasted, so now do the blur
-		} else {
-			console.log('PasteOptionsModal--handlePasteClipboardAsRange pasteCellRangeToTarget returned false, so now doing pasteText');
-			pasteText({ text: systemClipboard, cell, cellInPlaceEditorRef }); // pasteCellRangeToTarget returned false, indicating it couldn't get a properly shaped range from the clippboard, so just paste the raw clipboard text instead, and don't blur
-		}// TIDY - make into ?-: thing or use ifElse
+		pasteCellRangeToTarget({ cell, useSystemClipboard: true }) 
+			? blurCellInPlaceEditor() 
+			: pasteText({ text: systemClipboard, cell, cellInPlaceEditorRef }); // pasteCellRangeToTarget returned false, indicating it couldn't get a properly shaped range from the clippboard, so just paste the raw clipboard text instead, and don't blur
+		updatedPastingCellRange(false);
 		completedUndoableAction({
          undoableType: PASTE_CLIPBOARD,
          message: createPasteClipboardMessage(cell),
          timestamp: Date.now(),
       });
-		updatedPastingCellRange(false); // TODO move this to before completedUndoableAction
 	}
 
 	const handlePasteClipboardAsText = () => {
 		updatedShowPasteOptionsModal(false);
 		startedUndoableAction({ undoableType: PASTE_CLIPBOARD, timestamp: Date.now() });
 		pasteText({ text: systemClipboard, cell, cellInPlaceEditorRef });
+		updatedPastingCellRange(false);
 		completedUndoableAction({
          undoableType: PASTE_CLIPBOARD,
          message: createPasteClipboardMessage(cell),
          timestamp: Date.now(),
       });
-		updatedPastingCellRange(false); // TODO move this to before completedUndoableAction
 	}
 
 	const handleCancelPaste = () => updatedShowPasteOptionsModal(false);
@@ -188,8 +179,8 @@ B2	B3
 					<div className="absolute top-0 bg-white border border-grey-blue shadow-lg p-1" style={modalPositioning}>
 						{closeButton}
 						<div className="flex justify-center">
-							<Button label="Paste clipboard" classes="p-3" onClickFn={handlePasteClipboard}/>
 							<Button label="Paste cell range" classes="p-3" onClickFn={handlePasteRange}/>
+							<Button label="Paste clipboard" classes="p-3" onClickFn={handlePasteClipboard}/>
 						</div>
 						<p>You can either paste the cell range from 
 							<span className="text-vibrant-purple"> {fromCellId} </span>

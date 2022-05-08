@@ -12,7 +12,6 @@ export const focusReducer = (state = {}, action) => {
          return { ...state, ...action.payload };
 
       case UPDATED_FOCUS_REF:
-			console.log('focusReducer UPDATED_FOCUS_REF got action.payload.ref', action.payload.ref);
          return { ...state, ref: action.payload.ref };
 
       case UPDATED_FOCUS_ABORT_CONTROL:

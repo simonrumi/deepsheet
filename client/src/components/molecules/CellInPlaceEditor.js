@@ -143,7 +143,7 @@ const CellInPlaceEditor = ({ cell, positioning, cellHasFocus }) => {
 			const message = createPasteRangeUndoMessage({ fromCell, toCell, cell });
 			startedUndoableAction({ undoableType: PASTE_RANGE, timestamp: Date.now() });
 			updatedPastingCellRange(true);
-			pasteCellRangeToTarget(cell);
+			pasteCellRangeToTarget({ cell });
 			manageBlur(null); // null is in place of the event, which has already had preventDefault called on it (above); 
 			completedUndoableAction({ undoableType: PASTE_RANGE, message, timestamp: Date.now() });
 			updatedPastingCellRange(false);

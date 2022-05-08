@@ -507,5 +507,3 @@ export const populateCellsInStore = sheet => {
 	)(dbCells(sheet));
 	reconcileTotalCells(sheet);
 }
-
-// TODO NEXT - upload to production
