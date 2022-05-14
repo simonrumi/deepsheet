@@ -277,7 +277,7 @@ export const ensureCorrectCellVisibility = R.curry((columnVisibility, rowVisibil
 	const currRowFilter = getObjectFromArrayByKeyValue('index', row, rowVisibility);
 	const returnObj = { cell, updatedVisibility: false }; // we're mutating this....icky
 	if (isNothing(cellVisible(cell))) {
-		log({ level: LOG.INFO }, 'cellHelpers--ensureCorrectCellVisibility cellVisible is nothing for cell', cell, 'so will update cell visibility');
+		log({ level: LOG.VERBOSE }, 'cellHelpers--ensureCorrectCellVisibility cellVisible is nothing for cell', cell, 'so will update cell visibility');
 		returnObj.cell = R.pipe(
 			() => (currColumnFilter === true || isNothing(currColumnFilter)) && (currRowFilter === true || isNothing(currRowFilter))
 				? true
@@ -287,12 +287,12 @@ export const ensureCorrectCellVisibility = R.curry((columnVisibility, rowVisibil
 		returnObj.updatedVisibility = true;
 	}
 	if (cellVisible(cell) === true && (currColumnFilter === false || currRowFilter === false)) {
-		log({ level: LOG.INFO }, 'cellHelpers--ensureCorrectCellVisibility cell visibility for cell', cell, 'is true but currColumnFilter is', currColumnFilter, 'currRowFilter', currRowFilter, 'so will update cell visibility');
+		log({ level: LOG.VERBOSE }, 'cellHelpers--ensureCorrectCellVisibility cell visibility for cell', cell, 'is true but currColumnFilter is', currColumnFilter, 'currRowFilter', currRowFilter, 'so will update cell visibility');
 		returnObj.cell = cellVisibleSetter(false, cell);
 		returnObj.updatedVisibility = true;
 	}
 	if (cellVisible(cell) === false && (currColumnFilter === true || isNothing(currColumnFilter)) && (currRowFilter === true || isNothing(currRowFilter))) {
-		log({ level: LOG.INFO }, 'cellHelpers--ensureCorrectCellVisibility cell visibility for cell', cell, 'is false but currColumnFilter is', currColumnFilter, 'currRowFilter', currRowFilter, 'so will update cell visibility');
+		log({ level: LOG.VERBOSE }, 'cellHelpers--ensureCorrectCellVisibility cell visibility for cell', cell, 'is false but currColumnFilter is', currColumnFilter, 'currRowFilter', currRowFilter, 'so will update cell visibility');
 		returnObj.cell = cellVisibleSetter(true, cell);
 		returnObj.updatedVisibility = true;
 	}

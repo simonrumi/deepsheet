@@ -10,17 +10,17 @@ import {
    stateSheetsTree,
    stateSheetsIsCallingDb,
    stateSheetsErrorMessage,
-   stateSheetId,
+	stateSheetId,
    stateSheetsTreeStale,
 } from '../../helpers/dataStructureHelpers';
 import RefreshIcon from '../atoms/IconRefresh';
 
-const SheetsDisplay = props => {
+const SheetsDisplay = () => {
    const sheetsArr = useSelector(state => stateSheets(state));
    const sheetsTree = useSelector(state => stateSheetsTree(state));
    const sheetsIsCallingDb = useSelector(state => stateSheetsIsCallingDb(state));
    const sheetsErrorMessage = useSelector(state => stateSheetsErrorMessage(state));
-   const sheetId = useSelector(state => stateSheetId(state));
+	const sheetId = useSelector(state => stateSheetId(state));
    const sheetsTreeIsStale = useSelector(state => stateSheetsTreeStale(state));
 
    const errorClasses = 'px-2 text-burnt-orange';

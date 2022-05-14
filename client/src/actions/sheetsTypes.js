@@ -4,6 +4,7 @@ export const FETCH_SHEETS_ERROR = 'fetched_sheets_error';
 
 export const UPDATED_SHEETS_TREE = 'updated_sheets_tree';
 export const UPDATED_SHEETS_TREE_NODE = 'updated_sheets_tree_node';
+export const TOGGLED_SHEETS_TREE_NODE_IS_EXPANDED = 'toggled_sheets_tree_node_is_expanded';
 
 export const SHEETS_TREE_STALE = 'sheets_tree_stale';
 export const SHEETS_TREE_CURRENT = 'sheets_tree_current';

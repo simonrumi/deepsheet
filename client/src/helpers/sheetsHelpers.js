@@ -1,9 +1,9 @@
 import * as R from 'ramda';
 import React from 'react';
 import managedStore from '../store';
-import { isNothing, isSomething, arrayContainsSomething, getObjectFromArrayByKeyValue } from './index';
+import { isNothing, isSomething, arrayContainsSomething, getObjectFromArrayByKeyValue, forLoopMap } from './index';
 import { getUserInfoFromCookie } from './userHelpers';
-import { clearCells } from './cellHelpers';
+import { clearCells, decodeText } from './cellHelpers';
 import {
    sheetParentSheetId,
    stateParentSheetId,
@@ -20,6 +20,7 @@ import {
    updatedSheetsTree,
    sheetsTreeStale,
    sheetsTreeCurrent,
+	toggledSheetsTreeNodeIsExpanded,
 } from '../actions/sheetsActions';
 import { triggeredFetchSheet } from '../actions/sheetActions';
 import { updatedParentSheetId } from '../actions/metadataActions';
@@ -27,6 +28,7 @@ import { clearedAllCellKeys } from '../actions/cellActions';
 import { updateCellsMutation } from '../queries/cellMutations';
 import IconRightArrow from '../components/atoms/IconRightArrow';
 import IconDelete from '../components/atoms/IconDelete';
+import IconPlusMinus from '../components/atoms/IconPlusMinus';
 import { log } from '../clientLogger';
 import { LOG } from '../constants';
 
@@ -44,7 +46,12 @@ import { LOG } from '../constants';
    } 
 */
 
-const createNode = sheet => ({ sheet, children: [], error: null });
+const createNode = (sheet, isExpanded = false) => ({
+   sheet,
+   children: [],
+   error: null,
+   isExpanded,
+});
 
 const addChildNode = (parent, child) => ({ ...parent, children: R.append(child, parent.children) });
 
@@ -177,7 +184,7 @@ export const removeSheetFromParent = async (node, userId) => {
 export const replaceNodeWithinSheetsTree = (updatedNode, sheetsTree) => {
    // note that the sheetsTree is actually an array, with each element containing a top level node
    const sheetId = updatedNode.sheet.id;
-   const returnVal = R.map(
+   return R.map(
       node => {
          if (R.equals(node.sheet.id, sheetId)) {
             return updatedNode;
@@ -191,7 +198,6 @@ export const replaceNodeWithinSheetsTree = (updatedNode, sheetsTree) => {
          return node;
       }
    )(sheetsTree);
-   return returnVal;
 }
 
 const handleSheetDelete = async (node, sheetId) => {
@@ -223,19 +229,45 @@ const handleSheetDelete = async (node, sheetId) => {
 const getIconDeleteClasses = node => isSomething(node.error) ? "text-burnt-orange hover:text-vibrant-burnt-orange pr-2" : "pr-2";
 const errorClasses = 'px-2 text-burnt-orange';
 
-const displayChildren = (basicClasses, hoverClasses, children, sheetId) => {
+const iconPlusMinusClasses = 'min-w-[1em] text-2xl'; // the [1em] thing is a tailwindcss "arbitrary value" used because not worth putting it into the theme
+
+const onClickPlusMinus = node => {
+	setTimeout(() => {
+		toggledSheetsTreeNodeIsExpanded(node);
+	}, 0); // run 1 tick later to avoid infinite loop
+}
+
+const indent = indentationCount => forLoopMap(
+	num => <span className={iconPlusMinusClasses} key={num}></span>,
+	indentationCount
+);
+
+const displayChildren = ({ basicClasses, hoverClasses, children, sheetId, indentationCount }) => {
    const childrenList = R.map(childNode => {
       const grandChildrenList =
-         arrayContainsSomething(childNode.children)
-            ? displayChildren(basicClasses, hoverClasses, childNode.children, sheetId)
+         arrayContainsSomething(childNode.children) && childNode.isExpanded
+            ? displayChildren({ basicClasses, hoverClasses, children: childNode.children, sheetId, indentationCount: indentationCount + 1 })
             : null;
       return (
          <li className={basicClasses} key={childNode.sheet.id}>
             <div className="flex items-center justify-between">
-               <div className="flex items-center">
-                  <IconRightArrow height="0.75em" width="0.75em" classes="pr-2 text-subdued-blue" />
+               <div className="flex align-center items-center">
+						{ indent(indentationCount) }
+						{
+							arrayContainsSomething(childNode.children)
+								? <IconPlusMinus
+									canExpand={arrayContainsSomething(childNode.children)}
+									isTopLevel={false}
+									isExpanded={childNode.isExpanded}
+									onClickFn={() => onClickPlusMinus(childNode)}
+									classes={iconPlusMinusClasses}
+									width="0.5em"
+									height="0.5em"
+								/>
+								: <IconRightArrow classes={iconPlusMinusClasses + ' text-grey-blue'} height="0.75em" width="0.75em" />
+						}
                   <span className={hoverClasses} onClick={() => loadSheet(managedStore.state, childNode.sheet.id)}>
-                     {childNode.sheet.title}
+                     {decodeText(childNode.sheet.title)}
                   </span>
                </div>
                <IconDelete
@@ -253,7 +285,7 @@ const displayChildren = (basicClasses, hoverClasses, children, sheetId) => {
    return <ul>{childrenList}</ul>;
 }
 
-export const buildSheetList = ({ sheetId, sheetsArr, sheetsTree, sheetsTreeIsStale }) => {
+export const buildSheetList = ({ sheetsArr, sheetsTree, sheetsTreeIsStale, sheetId }) => {
    const basicClasses = 'pl-2 pt-2 text-subdued-blue';
    const hoverClasses = 'hover:text-vibrant-blue cursor-pointer';
    if (arrayContainsSomething(sheetsArr) && (!arrayContainsSomething(sheetsTree) || sheetsTreeIsStale)) {
@@ -265,11 +297,22 @@ export const buildSheetList = ({ sheetId, sheetsArr, sheetsTree, sheetsTreeIsSta
    }
    if (arrayContainsSomething(sheetsTree)) {
       const sheetList = R.map(node => (
-         <li key={node.sheet.id} className={'ml-2 ' + basicClasses}>
+         <li key={node.sheet.id} className={basicClasses}>
             <div className="flex align-center justify-between">
-               <span className={hoverClasses} onClick={() => loadSheet(managedStore.state, node.sheet.id)}>
-                  {node.sheet.title}
-               </span>
+               <div className="flex align-center items-center">
+                  <IconPlusMinus
+                     isExpanded={node.isExpanded}
+                     canExpand={arrayContainsSomething(node.children)}
+                     onClickFn={() => onClickPlusMinus(node)}
+                     classes={iconPlusMinusClasses}
+							width="0.5em"
+							height="0.5em"
+							isTopLevel={true}
+                  />
+                  <span className={hoverClasses} onClick={() => loadSheet(managedStore.state, node.sheet.id)}>
+                     {decodeText(node.sheet.title)}
+                  </span>
+               </div>
                <div className={errorClasses}>{node.error}</div>
                <IconDelete
                   height="1.0em"
@@ -278,7 +321,7 @@ export const buildSheetList = ({ sheetId, sheetsArr, sheetsTree, sheetsTreeIsSta
                   onClickFn={() => handleSheetDelete(node)}
                />
             </div>
-            {displayChildren(basicClasses, hoverClasses, node.children, sheetId)}
+            {node.isExpanded ? displayChildren({ basicClasses, hoverClasses, children: node.children, sheetId, indentationCount: 1 }) : null}
          </li>
       ))(sheetsTree);
       return <ul>{sheetList}</ul>;

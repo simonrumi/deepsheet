@@ -11,6 +11,7 @@ import {
    DELETE_SHEETS_ERROR,
    UPDATED_SHEETS_TREE,
    UPDATED_SHEETS_TREE_NODE,
+	TOGGLED_SHEETS_TREE_NODE_IS_EXPANDED,
    SHEETS_TREE_STALE,
    SHEETS_TREE_CURRENT,
 } from './sheetsTypes';
@@ -59,6 +60,10 @@ export const updatedSheetsTree = tree => {
 
 export const updatedSheetsTreeNode = updatedNode => {
    managedStore.store.dispatch({ type: UPDATED_SHEETS_TREE_NODE, payload: updatedNode });
+}
+
+export const toggledSheetsTreeNodeIsExpanded = node => {
+	managedStore.store.dispatch({ type: TOGGLED_SHEETS_TREE_NODE_IS_EXPANDED, payload: node });
 }
 
 export const sheetsTreeStale = () => {

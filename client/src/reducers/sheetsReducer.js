@@ -7,6 +7,7 @@ import {
    DELETE_SHEETS_ERROR,
    UPDATED_SHEETS_TREE,
    UPDATED_SHEETS_TREE_NODE,
+	TOGGLED_SHEETS_TREE_NODE_IS_EXPANDED,
    SHEETS_TREE_STALE,
    SHEETS_TREE_CURRENT,
 } from '../actions/sheetsTypes';
@@ -83,6 +84,17 @@ const sheetsReducer = (state = {}, action) => {
 			return {
 				...state,
 				sheetsTree: updatedSheetsTree,
+			}
+
+		case TOGGLED_SHEETS_TREE_NODE_IS_EXPANDED:
+			const newNode = {
+				...action.payload,
+				isExpanded: !action.payload.isExpanded
+			}
+			const sheetsTreeWithToggle = replaceNodeWithinSheetsTree(newNode, state.sheetsTree);
+			return {
+				...state,
+				sheetsTree: sheetsTreeWithToggle,
 			}
 
 		case CLEARED_ALL_ERROR_MESSAGES:
