@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { DEFAULT_COLUMN_WIDTH } from '../../constants';
 import { getObjectFromArrayByKeyValue, } from '../../helpers';
-import { manageKeyBindings, manageTab, } from '../../helpers/focusHelpers';
+import { manageFocus, manageTab, } from '../../helpers/focusHelpers';
 import { triggerCreatedSheetAction, copyRange, clearRangeHighlight, maybeAbortFocus } from '../../helpers/rangeToolHelpers';
 import { stateColumnWidths, cellInCellRange } from '../../helpers/dataStructureHelpers';
 import { clearedFocus } from '../../actions/focusActions';
@@ -58,7 +58,7 @@ const RangeTools = ({ cell }) => {
 
    useEffect(() => {
       if (inCellRange) {
-         manageKeyBindings({ event: null, cell, rangeToolsRef, keyBindings: keyBindingsRangeTool });
+         manageFocus({ event: null, cell, rangeToolsRef });
       }
    });
 

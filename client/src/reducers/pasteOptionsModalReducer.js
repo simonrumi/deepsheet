@@ -3,6 +3,7 @@ import {
    UPDATED_SHOW_PASTE_OPTIONS_MODAL,
    UPDATED_CELL_EDITOR_POSITIONING,
 	UPDATED_BLUR_EDITOR_FUNCTION,
+	UPDATED_HANDLING_PASTE,
 } from '../actions/pasteOptionsModalTypes';
 
 const pasteOptionsModalReducer = (state = { showModal: false }, action) => {
@@ -18,6 +19,9 @@ const pasteOptionsModalReducer = (state = { showModal: false }, action) => {
 
 		case UPDATED_BLUR_EDITOR_FUNCTION:
          return { ...state, blurEditorFunction: action.payload };
+
+		case UPDATED_HANDLING_PASTE:
+			return { ...state, isHandlingPaste: action.payload };
 
       default:
          return state;

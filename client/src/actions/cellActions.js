@@ -16,6 +16,7 @@ import {
 } from './cellTypes';
 import { ADDED_CELL_TO_RANGE, } from './cellRangeTypes';
 import { isNothing } from '../helpers';
+import { populateFormattedTextWithPlaceholders } from '../helpers/cellHelpers';
 
 export const updatedCell = cell => {
    if (isNothing(cell) || R.not(R.has('content', cell))) {
@@ -24,7 +25,7 @@ export const updatedCell = cell => {
    }
    managedStore.store.dispatch({
       type: UPDATED_CELL,
-      payload: cell,
+      payload: populateFormattedTextWithPlaceholders(cell),
    });
 };
 

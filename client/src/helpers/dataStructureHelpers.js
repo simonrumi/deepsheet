@@ -38,26 +38,30 @@ const futureLens = R.lensProp('future');
 export const stateFuture = R.view(futureLens);
 const originalValueLens = R.lensPath(['original', 'value']);
 export const stateOriginalValue = R.view(originalValueLens);
+const originaFormattedTextLens = R.lensPath(['original', 'formattedText']);
+export const stateOriginaFormattedText = R.view(originaFormattedTextLens);
 const originalRowLens = R.lensPath(['original', 'row']);
 export const stateOriginalRow = R.view(originalRowLens);
 const originalColumnLens = R.lensPath(['original', 'column']);
 export const stateOriginalColumn = R.view(originalColumnLens);
 
-export const removeTypename = data => {
+export const removeNamedKey = R.curry((key, data) => {
 	if (isNothing(data)) {
       return data;
-    }
+   }
 	if (Array.isArray(data)) {
-		return R.map(arrItem => removeTypename(arrItem), data);
+		return R.map(arrItem => removeNamedKey(key, arrItem), data);
 	}
 	if (typeof data === 'object') {
 		return R.pipe(
-			R.omit(['__typename']),
-			R.map(item => removeTypename(item))
+			R.omit([key]),
+			R.map(item => removeNamedKey(key, item))
 		)(data)
 	}
 	return data
-}
+});
+
+export const removeTypename = data => removeNamedKey('__typename', data);
 
 /************************************************ DB **********************************************/
 
@@ -242,6 +246,13 @@ const cellTextLens = R.lensPath(['content', 'text']);
 export const cellText = cell => R.view(cellTextLens, cell);
 export const cellTextSetter = R.curry((newText, cell) => R.set(cellTextLens, newText, cell));
 
+const cellFormattedTextLens = R.lensPath(['content', 'formattedText' ]);
+export const cellFormattedText = cell => R.view(cellFormattedTextLens, cell);
+export const cellFormattedTextSetter = R.curry((newFormattedText, cell) => R.set(cellFormattedTextLens, newFormattedText, cell));
+
+const cellFormattedTextBlocksLens = R.lensPath(['content', 'formattedText', 'blocks']);
+export const cellFormattedTextBlocks = cell => R.view(cellFormattedTextBlocksLens, cell);
+
 const cellSubsheetIdLens = R.lensPath(['content', 'subsheetId']);
 export const cellSubsheetId = cell => R.view(cellSubsheetIdLens, cell);
 export const cellSubsheetIdSetter = R.curry((newSubsheetId, cell) => R.set(cellSubsheetIdLens, newSubsheetId, cell));
@@ -317,6 +328,8 @@ const stateFocusCellRefLens = R.compose(stateFocusLens, R.lensProp('ref'));
 export const stateFocusCellRef = R.view(stateFocusCellRefLens);
 const stateFocusAbortControlLens = R.compose(stateFocusLens, R.lensProp('abortControl'));
 export const stateFocusAbortControl = R.view(stateFocusAbortControlLens);
+const stateFocusEditorLens = R.compose(stateFocusLens, R.lensProp('editor'));
+export const stateFocusEditor = R.view(stateFocusEditorLens);
 
 /************************************************ STATE CELL RANGE **********************************************/
 const cellRangeLens = R.lensProp('cellRange');
@@ -353,6 +366,9 @@ const statePasteOptionsModalPositioningLens = R.compose(statePasteOptionsModalLe
 export const statePasteOptionsModalPositioning = R.view(statePasteOptionsModalPositioningLens);
 const stateBlurEditorFunctionLens = R.compose(statePasteOptionsModalLens, R.lensProp('blurEditorFunction'));
 export const stateBlurEditorFunction = R.view(stateBlurEditorFunctionLens);
+const stateIsHandlingPasteLens = R.compose(statePasteOptionsModalLens, R.lensProp('isHandlingPaste'));
+export const stateIsHandlingPaste = R.view(stateIsHandlingPasteLens);
+
 
 /************************************************ STATE GLOBAL INFO MODAL **********************************************/
 const globalInfoModalLens = R.lensProp('globalInfoModal');

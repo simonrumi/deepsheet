@@ -14,6 +14,8 @@ import {
 	getObjectFromArrayByKeyValue,
 } from './index';
 import {
+	removeTypename,
+	removeNamedKey,
    cellRow,
    cellColumn,
    cellText,
@@ -22,6 +24,9 @@ import {
    cellRowSetter,
    cellColumnSetter,
    cellTextSetter,
+	cellFormattedText,
+	cellFormattedTextSetter,
+	cellFormattedTextBlocks,
    cellSubsheetIdSetter,
    cellVisibleSetter,
 	dbCells,
@@ -37,6 +42,7 @@ import {
    stateCellsUpdateInfo,
 } from './dataStructureHelpers';
 import { isCellVisible } from './visibilityHelpers';
+import { encodeFormattedText } from './richTextHelpers';
 import { addCellReducers } from '../reducers/cellReducers';
 import { addNewCellsToStore, addNewCellsToCellDbUpdates } from '../services/insertNewAxis';
 import { updatedCell, hasChangedCell, addedCellKeys } from '../actions/cellActions';
@@ -78,7 +84,11 @@ export const getSaveableCellData = cell =>
       cellRowSetter(cellRow(cell)),
       cellColumnSetter(cellColumn(cell)),
       cellTextSetter(cellText(cell)),
+		R.tap(data => console.log('cellHelpers--getSaveableCellData after cellTextSetter has', data)),
+		cellFormattedTextSetter(cellFormattedText(cell)),
+		R.tap(data => console.log('cellHelpers--getSaveableCellData after cellFormattedTextSetter has', data)),
       cellSubsheetIdSetter(cellSubsheetId(cell)),
+		R.tap(data => console.log('cellHelpers--getSaveableCellData after cellSubsheetIdSetter has', data)),
       cellVisibleSetter(cellVisible(cell))
    )({});
 
@@ -221,6 +231,7 @@ export const encodeText = text => isSomething(text) ? text.replace(/([^a-zA-Z0-9
 export const encodeCellText = cell => R.pipe(
       cellText,
       encodeText,
+		R.tap(data => console.log('cellHelpers--encodeCellText after encodeText got', data)),
       cellTextSetter(R.__, cell)
    )(cell);
 
@@ -228,15 +239,8 @@ export const decodeText = text => isSomething(text) ? text.replace(/\\/g, '') : 
 
 export const decodeCellText = cell => R.pipe(
    cellText,
-   text => ifThenElse({
-      ifCond: isSomething,
-      thenDo: [
-         decodeText,
-         cellTextSetter(R.__, cell),
-      ],
-      elseDo: R.identity,
-      params: { ifParams: text, thenParams: text, elseParams: cell }
-   })
+	decodeText,
+	cellTextSetter(R.__, cell)
 )(cell);
 
 export const removeCellFromArray = (cell, arr) => R.filter(
@@ -262,9 +266,23 @@ export const cellsInRow = ({ state, rowIndex }) =>
       getAllCells(state)
    );
 
+
+
+const tidyUpFormattedText = cell => R.pipe(
+	cellFormattedText,
+	removeTypename,
+	removeNamedKey('placeholderString'),
+	R.dissoc('entityMap'),
+	removeNamedKey('data'),
+	removeNamedKey('entityRanges'),
+	encodeFormattedText,
+	cellFormattedTextSetter(R.__, cell),
+)(cell);
+
 export const prepCellsForDb = cells => R.map(
    R.pipe(
-      encodeCellText, 
+      encodeCellText,
+		tidyUpFormattedText,
       R.pick(['row', 'column', 'visible', 'content']) // leave out unnecessary fields, like isStale and __typename
    ), 
    cells // each call to R.pipe will be giving it a cell
@@ -495,6 +513,20 @@ const reconcileTotalCells = sheet => {
 		increaseRowOrColumnCount({ totalRows, totalColumns, totalCellKeys });
 	}
 }
+
+// NOTE: if in future we want to use formattedText/blocks/data, formattedText/blocks/entityRanges or formattedText/entityMap
+// this function will have to be updated or removed   
+export const populateFormattedTextWithPlaceholders = cell => isSomething(cellFormattedText(cell)) 
+	? R.pipe(
+		cellFormattedTextBlocks,
+		R.map(block => R.assoc('data', {}, block)),
+		R.map(block => R.assoc('entityRanges', [], block)),
+		R.assoc('blocks', R.__, cellFormattedText(cell)),
+		R.assoc('entityMap', {}),
+		cellFormattedTextSetter(R.__, cell),
+		R.tap(data => console.log('cellHelpers--populateFormattedTextWithPlaceholders will return', data)),
+	)(cell)
+	: cell;
 
 export const populateCellsInStore = sheet => {
    R.pipe(

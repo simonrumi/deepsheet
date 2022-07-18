@@ -2,6 +2,8 @@ import { gql } from '@apollo/client';
 import apolloClient from '../services/apolloClient';
 import { prepCellsForDb } from '../helpers/cellHelpers';
 
+// // TODO NEXT BUG - saving is broken
+// 1. try creating a sheet
 const CREATE_SHEET_MUTATION = gql`
    mutation CreateSheet(
       $userId: ID!
@@ -201,6 +203,28 @@ const SHEET_BY_USER_ID_MUTATION = gql`
             content {
                text
                subsheetId
+					formattedText {
+						blocks {
+							data {
+								placeholderString
+							}
+							depth
+							entityRanges {
+								placeholderString
+							}
+							inlineStyleRanges {
+								offset
+								length
+								style
+							}
+							key
+							text
+							type
+						}
+						entityMap {
+							placeholderString
+						}
+					}
             }
             visible
          }

@@ -2,16 +2,21 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import * as R from 'ramda';
 import managedStore from '../../store';
-import { focusedCell } from '../../actions/focusActions';
+import { focusedCell, updatedEditorState } from '../../actions/focusActions';
 import { hidePopups } from '../../actions';
 import { nothing, isSomething, ifThen, ifThenElse } from '../../helpers';
 import { createCellId, isCellFocused, createCellKey } from '../../helpers/cellHelpers';
 import { isCellVisible } from '../../helpers/visibilityHelpers';
 import { rangeSelected, atEndOfRange, maybeClearSubsheetCellFocus } from '../../helpers/focusHelpers';
 import { clearRangeHighlight } from '../../helpers/rangeToolHelpers';
+import { convertBlocksToJsx, decodeFormattedText, getInitialEditorState } from '../../helpers/richTextHelpers';
 import {
    cellSubsheetId,
    cellText,
+	cellRow,
+	cellColumn,
+	cellFormattedText, 
+	cellFormattedTextBlocks,
    cellInCellRange,
    statePresent,
 	stateCellRangeTo,
@@ -28,6 +33,7 @@ const onCellClick = (event, cell) => {
       ifCond: event.shiftKey,
       thenDo: [rangeSelected, maybeClearSubsheetCellFocus, hidePopups],
       elseDo: [
+			R.pipe(getInitialEditorState, updatedEditorState),
          () => {
 				focusedCell(cell)
 			},
@@ -38,7 +44,7 @@ const onCellClick = (event, cell) => {
 			}),
          hidePopups,
       ],
-      params: { thenParams: cell },
+      params: { thenParams: cell, elseParams: cell },
    });
 }
 
@@ -59,7 +65,10 @@ const Cell = React.memo(({ row, column, classes, blankCell, endCell, isVisible }
    const inCellRange = cellInCellRange(cell);
 
    const renderRegularCell = cell => {
-     const text = cellText(cell);
+		console.log('Cell--renderRegularCell cellFormattedTextBlocks(cell)', cellFormattedTextBlocks(cell));
+		const text = isSomething(cellFormattedTextBlocks(cell)) 
+			? R.pipe(cellFormattedText, decodeFormattedText, R.prop('blocks'), convertBlocksToJsx)(cell)
+			: cellText(cell);
       const cellId = createCellId(row, column);
       return (
          <div
@@ -68,6 +77,7 @@ const Cell = React.memo(({ row, column, classes, blankCell, endCell, isVisible }
             onClick={event => onCellClick(event, cell)}
             id={cellId}
             data-testid={cellId}
+				key={cellKey + (endCell ? '_endCell' : '') }
          >
             {text}
          </div>
@@ -76,20 +86,20 @@ const Cell = React.memo(({ row, column, classes, blankCell, endCell, isVisible }
 
    const renderInPlaceEditor = cell => {
          return <div className="w-full">
-            {renderRegularCell(cell)}
-            <CellInPlaceEditor positioning={positioning} cell={cell} cellHasFocus={cellHasFocus} />
+            {/* renderRegularCell(cell) // TODO used to do this, but now with the cell editor working, probably should render a blank cell here */}
+            <CellInPlaceEditor positioning={positioning} cellToEdit={cell} cellHasFocus={cellHasFocus} key={cellKey + '_inPlaceEditor'} />
          </div>;
 	};
 
 	const renderRangeTools = () => blankCell ? null : <RangeTools cell={cell} />;
 
-   const renderBlankCell = () => <BlankCell classes={createClassNames({ classes, inCellRange, isEndCell: endCell })}/>;
+   const renderBlankCell = () => <BlankCell classes={createClassNames({ classes, inCellRange, isEndCell: endCell })} key={cellKey} />;
 
-   const renderSubsheetCell = cell => <SubsheetCell cell={cell} cellHasFocus={cellHasFocus} />;
+   const renderSubsheetCell = cell => <SubsheetCell cell={cell} cellHasFocus={cellHasFocus} key={cellKey} />;
 
    const renderEndOfRangeCell = cell => {
       return (
-         <div className="w-full h-full relative">
+         <div className="w-full h-full relative" key={cellKey + '_endOfRange'} >
             {isSubsheetCell(cell) ? renderSubsheetCell(cell) : renderRegularCell(cell)}
             {renderRangeTools()}
          </div>

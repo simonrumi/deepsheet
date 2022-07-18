@@ -1,4 +1,31 @@
 const { gql } = require('apollo-server-lambda');
+/* TIDY if not needed
+input PlaceholderObjectInput {
+		placeholderString: String
+	}
+
+	input InlineStyleRangeInput {
+		offset: Int
+		length: Int
+		style: String
+	}
+
+	input BlockInput {
+		data: PlaceholderObjectInput
+		depth: Int
+		entityRanges: [PlaceholderObjectInput]
+		inlineStyleRanges: [InlineStyleRangeInput]
+		key: String
+		text: String
+		type: String
+	}
+
+	input FormattedTextInput {
+		blocks: [BlockInput]
+		entityMap: PlaceholderObjectInput
+	}
+*/
+
 
 const SheetMutations = gql`
    input UpdateSubsheetIdInput {
@@ -9,9 +36,35 @@ const SheetMutations = gql`
       subsheetId: ID!
    }
 
+	input PlaceholderObjectInput {
+		placeholderString: String
+	}
+
+	input InlineStyleRangeInput {
+		offset: Int
+		length: Int
+		style: String
+	}
+
+	input BlockInput {
+		data: PlaceholderObjectInput
+		depth: Int
+		entityRanges: [PlaceholderObjectInput]
+		inlineStyleRanges: [InlineStyleRangeInput]
+		key: String
+		text: String
+		type: String
+	}
+
+	input FormattedTextInput {
+		blocks: [BlockInput]
+		entityMap: PlaceholderObjectInput
+	}
+
    input CellContentInput {
       text: String
       subsheetId: ID
+		formattedText: FormattedTextInput
    }
 
    input CellInput {

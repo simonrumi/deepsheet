@@ -32,33 +32,27 @@ export const isStateCellRefThisCell = (cellRef, cell) => {
        && isSomething(currentFocusedCellRef?.current)
        && cellRef?.current === currentFocusedCellRef.current;
 }
+// TODO rename - this is not managing the key bindings any more - Draft.js is
+export const manageFocus = ({ event, cell, cellRef }) => {
+	event?.preventDefault();
 
-export const manageKeyBindings = ({ event, cell, cellRef, keyBindings }) => {
-    ifThen({
-       ifCond: isSomething(event),
-       thenDo: () => event.preventDefault(),
-       params: {},
-    });
-
-    if (isStateCellRefThisCell(cellRef, cell)) {
-       return false; // indicates we didn't need to change focus
-    }
-    // make sure any previous cell no longer has its keydown listener
-    ifThen({
-       ifCond: isSomething(stateFocusAbortControl(managedStore.state)),
-       thenDo: () => stateFocusAbortControl(managedStore.state).abort(),
-       params: {},
-    });
-    const controller = new AbortController();
-    updatedFocusAbortControl(controller, cell);
-    document.addEventListener('keydown', evt => keyBindings(evt), { signal: controller.signal });
-    updatedFocusRef(cellRef);
-    return true; // indicates we changed the focus
+	if (isStateCellRefThisCell(cellRef, cell)) {
+		return false; // indicates we didn't need to change focus
+	}
+	ifThen({
+		ifCond: isSomething(stateFocusAbortControl(managedStore.state)),
+		thenDo: () => stateFocusAbortControl(managedStore.state).abort(),
+		params: {},
+	});
+	const controller = new AbortController();
+	updatedFocusAbortControl(controller, cell);
+	updatedFocusRef(cellRef);
+	return true; // indicates we changed the focus
 }
 
-export const manageTab = ({ event, cell, callback }) => {
-    event.preventDefault();
-    const nextCell = tabToNextVisibleCell(cell.row, cell.column, event.shiftKey);
+export const manageTab = ({ cell, callback, goBackwards }) => {
+    const nextCell = tabToNextVisibleCell(cell.row, cell.column, goBackwards);
+	 console.log('focusHelpers--manageTab got nextCell', nextCell);
     return ifThenElse({
         ifCond: isSomething(nextCell),
         thenDo: [

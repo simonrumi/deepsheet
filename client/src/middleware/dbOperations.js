@@ -124,6 +124,7 @@ const dbOperations = store => next => async action => {
          try {
             const { userId } = getUserInfoFromCookie();
 				const cleanedCells = removeTypename(action.payload); // contains sheetId as well as cells
+				console.log('dbOperations--POSTING_UPDATED_CELLS got payload', action.payload, 'cleanedCells', cleanedCells);
             const response = await updateCellsMutation({
                ...cleanedCells, 
                userId,

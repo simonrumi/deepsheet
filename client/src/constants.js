@@ -35,7 +35,31 @@ export const LOCAL_STORAGE_TIME_KEY = 'dds_time';
 
 export const ALL_CELLS = 'all_cells'; // for use by cellsNeeding Update
 
-// logging levels
+/** Rich text editing **/
+export const BLOCK_SEPARATOR = '<br>';
+export const BLOCK_SEPARATOR_REGEX = /<br>$/;
+export const NEWLINE_REGEX = /(?:\n\r|\r\n|\n|\r)/g;
+export const BOLD = 'BOLD';
+export const ITALIC = 'ITALIC';
+export const UNDERLINE = 'UNDERLINE';
+
+export const STYLE_TAGS = {
+	[BOLD]: 'font-bold',
+	[ITALIC]: 'italic',
+	[UNDERLINE]: 'underline'
+}
+
+export const CELL_EDITOR_ESC = 'cell-editor-esc';
+export const CELL_EDITOR_ENTER = 'cell-editor-enter';
+export const CELL_EDITOR_ALT_ENTER = 'split-block'; // specific string required by Draft.js 
+export const CELL_EDITOR_TAB = 'cell-editor-tab';
+export const CELL_EDITOR_SHIFT_TAB = 'cell-editor-shift-tab';
+export const CELL_EDITOR_COPY = 'cell-editor-copy';
+export const CELL_EDITOR_PASTE = 'cell-editor-paste';
+export const CELL_EDITOR_KEY_COMMAND_HANDLED = 'handled'; // specific string required by Draft.js 
+export const CELL_EDITOR_KEY_COMMAND_NOT_HANDLED = 'not-handled'; // specific string required by Draft.js 
+
+/** logging levels **/
 export const LOG = {
 	ERROR: 0,
 	WARN: 1,
@@ -77,7 +101,6 @@ const getLogLevel = () => {
 			return LOG.ERROR;
 	}
 }
-
 
 export const CLIENT_LOG_LEVEL = getLogLevel(); //LOG.DEBUG;
 

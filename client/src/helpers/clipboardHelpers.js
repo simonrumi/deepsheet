@@ -14,6 +14,7 @@ import {
 import { isRowDirectionForward, isColumnDirectionForward } from './rangeToolHelpers';
 import { orderFromAndToAxes } from './rangeToolHelpers';
 import { createCellKey } from './cellHelpers';
+import { addPastedTextToEditorState } from './richTextHelpers';
 import { 
     statePresent,
     stateCellRangeCells,
@@ -36,12 +37,13 @@ import {
 } from './dataStructureHelpers';
 import { updatedCell, hasChangedCell } from '../actions/cellActions';
 import { updatedClipboardError } from '../actions/clipboardActions';
-import { capturedSystemClipboard } from '../actions/pasteOptionsModalActions';
+import { updatedEditorState } from '../actions/focusActions';
+import { capturedSystemClipboard, updatedHandlingPaste } from '../actions/pasteOptionsModalActions';
 import { updatedMetadataErrorMessage } from '../actions/metadataActions';
 import insertNewColumns from '../services/insertNewColumns';
 import insertNewRows from '../services/insertNewRows';
 import { cellRangePasteError, SYSTEM_CLIPBOARD_UNAVAILABLE_MSG } from '../components/displayText';
-import { ROW_AXIS, COLUMN_AXIS, LOG } from '../constants';
+import { ROW_AXIS, COLUMN_AXIS, NEWLINE_REGEX, LOG } from '../constants';
 import { log } from '../clientLogger';
 
 const createPlaceholderCell = (row, column) => R.pipe(
@@ -447,24 +449,19 @@ const createRowsOfCells = ({ rowsArr, rowIndex, firstColumnIndex }) => {
 
 export const convertTextToCellRange = ({ text, startingCellRowIndex, startingCellColumnIndex }) =>
    createRowsOfCells({
-      rowsArr: text.split(/(?:\n\r|\r\n|\n|\r)/), // these are the various possibilities for end-of-line characters
+      rowsArr: text.split(NEWLINE_REGEX), // these are the various possibilities for end-of-line characters
       rowIndex: startingCellRowIndex,
       firstColumnIndex: startingCellColumnIndex,
    });
 
-export const pasteText = ({ text, cell, cellInPlaceEditorRef }) => {
-	const [realStart, realEnd] =
-		cellInPlaceEditorRef.current.selectionEnd < cellInPlaceEditorRef.current.selectionStart
-			? [cellInPlaceEditorRef.current.selectionEnd, cellInPlaceEditorRef.current.selectionStart]
-			: [cellInPlaceEditorRef.current.selectionStart, cellInPlaceEditorRef.current.selectionEnd];
-	const beforeHighlight = R.slice(0, realStart, cellText(cell));
-	const afterHighlight = R.slice(realEnd, Infinity, cellText(cell));
-	const newText = beforeHighlight + text + afterHighlight;
-	updatedCell({
-		...cell,
-		content: { ...cell.content, text: newText },
-		isStale: true,
-	});
+export const pasteText = ({ text }) => {
+	R.pipe(
+		addPastedTextToEditorState,
+		R.tap(data => console.log('clipboardHelpers--pasteText after addPastedTextToEditorState got', data)),
+		updatedEditorState,
+		R.tap(data => console.log('clipboardHelpers--pasteText after updatedEditorState')),
+	)(text); 
+	updatedHandlingPaste(false);
 }
 
 export const getSystemClipboard = async () => {

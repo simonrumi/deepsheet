@@ -1,4 +1,5 @@
 import * as R from 'ramda';
+import { convertToRaw } from 'draft-js';
 import { COMPLETED_SAVE_UPDATES } from '../actions/types';
 import {
    UNDO,
@@ -39,7 +40,7 @@ const cellNotReallyEdited = ({
 }) => !hasHighlightedRange && (
 	isPastingCellRange ||
 	value === null ||
-	(value !== undefined && R.equals(stateOriginalValue(state), value)) ||
+	(value !== undefined && R.equals(stateOriginalValue(state), value)) || // TOOD might need to compare formattedText here also
 	actionCancelled ||
 	startedActions.length > 1
 );
@@ -75,8 +76,8 @@ const updateHistory = ({
                   : R.append(presentAction, R.prop('newPastActions', accumulator));
             const newStartedActions = R.remove(startedActionIndex, 1, reversedStartedActions);
             return R.reduced({
-               newPastActions,
-               newStartedActions,
+               newPastActions: newPastActions,
+               newStartedActions: newStartedActions,
                newPresentAction: actionCancelled ? presentAction : completedAction,
             });
          }
@@ -310,24 +311,25 @@ const undoReducer = reducer => {
 					maybePast: null, // reset this
 					actionHistory: {
 						...actionHistory,
-						startedActions: updatedActions.newStartedActions,
-						pastActions: updatedActions.newPastActions,
-						presentAction: updatedActions.newPresentAction,
+						startedActions: updatedActions.startedActions,
+						pastActions: updatedActions.pastActions,
+						presentAction: updatedActions.presentAction,
 					}
             }
 
          case STARTED_EDITING:
-				// action.payload is the cell
-            // this is used by CellInPlaceEditor, when the user starts editing a cell
-				return alreadyStartedEditingCell({ cell: action.payload, startedActions })
+				// this is used by CellInPlaceEditor, when the user starts editing a cell
+				const { cell, editorState } = action.payload;
+				return alreadyStartedEditingCell({ cell, startedActions })
 					? state // don't change anything as we have already recorded that the cell is being edited
 					: {
 						...state, // keep the past & future as is
 						maybePast: R.assoc('focus', {}, present), // the mabyePast might become the official past...note that the focus is reset to nothing: we don't want focus remembered when undoing
 							original: {
-							value: cellText(action.payload),
-							row: cellRow(action.payload),
-							column: cellColumn(action.payload),
+							value: cellText(cell),
+							row: cellRow(cell),
+							column: cellColumn(cell),
+							formattedText: convertToRaw(editorState.getCurrentContent()),
 						}, // save the value we started editing for comparison when FINISHED_EDITING
 						present: reducer(present, action), // update the present
 						actionHistory: {
@@ -336,7 +338,7 @@ const undoReducer = reducer => {
 								{
 									timestamp: Date.now(), 
 									undoableType: EDIT_CELL,
-									cell: action.payload,
+									cell,
 								}, 
 								startedActions
 							),

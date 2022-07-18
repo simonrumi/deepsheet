@@ -3,6 +3,7 @@ import {
    UPDATED_FOCUS_REF,
    UPDATED_FOCUS_ABORT_CONTROL,
    CLEARED_FOCUS,
+	UPDATED_EDITOR_STATE,
 } from '../actions/focusTypes';
 
 export const focusReducer = (state = {}, action) => {
@@ -16,6 +17,9 @@ export const focusReducer = (state = {}, action) => {
 
       case UPDATED_FOCUS_ABORT_CONTROL:
          return { ...state, abortControl: action.payload.abortControl };
+
+		case UPDATED_EDITOR_STATE:
+			return { ...state, editor: action.payload }
 
       case CLEARED_FOCUS:
          return {}

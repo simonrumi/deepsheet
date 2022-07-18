@@ -1,7 +1,7 @@
 import React from 'react';
 import * as R from 'ramda';
 import { useSelector } from 'react-redux';
-import { isSomething, isNothing, ifThenElse, optimizeModalPositioning } from '../../helpers';
+import { isSomething, isNothing, optimizeModalPositioning } from '../../helpers';
 import { createCellId } from '../../helpers/cellHelpers';
 import { pasteCellRangeToTarget, convertTextToCellRange, pasteText } from '../../helpers/clipboardHelpers';
 import {
@@ -16,9 +16,8 @@ import {
 	statePasteOptionsModalPositioning,
 	stateBlurEditorFunction,
 } from '../../helpers/dataStructureHelpers';
-import { updatedCell } from '../../actions/cellActions';
-import { updatedPastingCellRange, replacedCellsInRange, clearedCellRange } from '../../actions/cellRangeActions';
-import { updatedShowPasteOptionsModal } from '../../actions/pasteOptionsModalActions';
+import { updatedPastingCellRange, replacedCellsInRange } from '../../actions/cellRangeActions';
+import { updatedShowPasteOptionsModal, updatedHandlingPaste } from '../../actions/pasteOptionsModalActions';
 import { PASTE_RANGE } from '../../actions/pasteOptionsModalTypes';
 import { PASTE_CLIPBOARD } from '../../actions/clipboardTypes';
 import { startedUndoableAction, completedUndoableAction } from '../../actions/undoActions';
@@ -42,33 +41,15 @@ const PasteOptionsModal = () => {
 		startingCellRowIndex: cellRow(cell), 
 		startingCellColumnIndex: cellColumn(cell)
 	});
+	console.log('PasteOptionsModal got clipboardAsCells', clipboardAsCells, 'function for blurCellInPlaceEditor is:', blurCellInPlaceEditor);
 
 	if (!showModal) {
 		return null;
 	}
 
 	const handlePasteClipboard = () => {
-		if (clipboardAsCells.length > 1) {
-			startedUndoableAction({ undoableType: PASTE_CLIPBOARD, timestamp: Date.now() });
-			updatedPastingCellRange(true);
-			clearedCellRange(); // clears from, to, and cells
-			replacedCellsInRange(clipboardAsCells);
-			ifThenElse({
-				ifCond: pasteCellRangeToTarget, // if true, a correctly formed range was pasted
-				thenDo: [ updatedShowPasteOptionsModal, blurCellInPlaceEditor ], // note: must happen in this order
-				elseDo: pasteText, // just paste the raw clipboard text instead and don't blur
-				params: { ifParams: { cell }, thenParams: false, elseParams: { text: systemClipboard, cell, cellInPlaceEditorRef } }
-			});
-			const message = createPasteClipboardMessage(cell);
-			updatedPastingCellRange(false);
-			completedUndoableAction({ undoableType: PASTE_CLIPBOARD, message, timestamp: Date.now() });
-		}
-
-		updatedCell({
-			...cell,
-			content: { ...cell.content, text: systemClipboard },
-			isStale: true,
-		});
+		pasteText({ text: systemClipboard });
+		updatedHandlingPaste(false);
 		updatedShowPasteOptionsModal(false);
 	}
 
@@ -77,6 +58,7 @@ const PasteOptionsModal = () => {
 		startedUndoableAction({ undoableType: PASTE_RANGE, timestamp: Date.now() });
 		updatedPastingCellRange(true);
 		pasteCellRangeToTarget({ cell });
+		updatedHandlingPaste(false); // must do this before the blur
 		blurCellInPlaceEditor();
 		updatedPastingCellRange(false);
 		completedUndoableAction({
@@ -93,8 +75,13 @@ const PasteOptionsModal = () => {
 		updatedPastingCellRange(true);
 		replacedCellsInRange(clipboardAsCells);
 		pasteCellRangeToTarget({ cell, useSystemClipboard: true }) 
-			? blurCellInPlaceEditor() 
-			: pasteText({ text: systemClipboard, cell, cellInPlaceEditorRef }); // pasteCellRangeToTarget returned false, indicating it couldn't get a properly shaped range from the clippboard, so just paste the raw clipboard text instead, and don't blur
+			? R.pipe(updatedHandlingPaste, blurCellInPlaceEditor)(false)
+			// if pasteCellRangeToTarget returned false, it couldn't get a properly shaped range from the clippboard, 
+			// so just paste the raw clipboard text instead, and don't blur
+			: R.pipe( 
+				pasteText, 
+				() => updatedHandlingPaste(false)
+			)({ text: systemClipboard });
 		updatedPastingCellRange(false);
 		completedUndoableAction({
          undoableType: PASTE_CLIPBOARD,
@@ -106,8 +93,9 @@ const PasteOptionsModal = () => {
 	const handlePasteClipboardAsText = () => {
 		updatedShowPasteOptionsModal(false);
 		startedUndoableAction({ undoableType: PASTE_CLIPBOARD, timestamp: Date.now() });
-		pasteText({ text: systemClipboard, cell, cellInPlaceEditorRef });
+		pasteText({ text: systemClipboard });
 		updatedPastingCellRange(false);
+		updatedHandlingPaste(false);
 		completedUndoableAction({
          undoableType: PASTE_CLIPBOARD,
          message: createPasteClipboardMessage(cell),
@@ -115,7 +103,10 @@ const PasteOptionsModal = () => {
       });
 	}
 
-	const handleCancelPaste = () => updatedShowPasteOptionsModal(false);
+	const handleCancelPaste = () => {
+		updatedHandlingPaste(false);
+		updatedShowPasteOptionsModal(false);
+	}
 
 	const modalPositioning = R.pipe(
 		optimizeModalPositioning,
@@ -138,10 +129,6 @@ const PasteOptionsModal = () => {
 		</div>
 	)
 
-/* 
-A1	A3
-B2	B3
- */
 	return clipboardAsCells.length > 1 && isNothing(toCell)
 		? (
 			<div className="relative w-full z-50">

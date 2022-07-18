@@ -15,7 +15,7 @@ import {
    stateFocusCellRef,
    stateCellRangeTo,
 } from '../../helpers/dataStructureHelpers';
-import { manageKeyBindings, manageTab, rangeSelected, maybeClearSubsheetCellFocus } from '../../helpers/focusHelpers';
+import { manageFocus, manageTab, rangeSelected, maybeClearSubsheetCellFocus } from '../../helpers/focusHelpers';
 import { clearRangeHighlight, maybeAbortFocus, } from '../../helpers/rangeToolHelpers';
 import SubsheetCellTools from './SubsheetCellTools';
 import { log } from '../../clientLogger';
@@ -55,16 +55,14 @@ const SubsheetCell = ({ cell, cellHasFocus }) => {
 		}
 	};
 
-	// note when a cell is clicked onSubsheetCellClick will focus the cell, which will cause the useEffect below to fire this manageFocus function
-	// whereas when a cell is tabbed into, the focus will be updated by the manageTab function, again causing the useEffect below to fire this function
-	const manageFocus = event => {
-		manageKeyBindings({ event, cell, cellRef, keyBindings: keyBindingsSubsheetCell });
-	}
+	// TODO BUG Tabbing out of a subsheet cell is broken
 
+	// note when a cell is clicked onSubsheetCellClick will focus the cell, which will cause the useEffect to fire manageFocus
+	// whereas when a cell is tabbed into, the focus will be updated by the manageTab function, again causing the useEffect below to fire this function
    useEffect(() => {
       ifThen({
          ifCond: cellHasFocus,
-         thenDo: () => manageFocus(null), // null becuase there is no event to send
+         thenDo: () => manageFocus({ event: null, cell, cellRef }),
          params: {} 
       });
    });

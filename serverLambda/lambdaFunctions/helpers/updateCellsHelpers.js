@@ -6,7 +6,7 @@ const findCellByRowAndColumn = R.curry((row, column, cellsArr) => {
 });
 
 const updateAndAddCells = (sheetDoc, updatedCells) => {
-	const originalCells = R.pipe(
+	const updatedExistingCells = R.pipe(
 		R.prop,
 		R.map(cell => {
 			const updatedCell = findCellByRowAndColumn(cell.row, cell.column, updatedCells);
@@ -14,19 +14,19 @@ const updateAndAddCells = (sheetDoc, updatedCells) => {
 		})
 	)('cells', sheetDoc);
 
-   const newCells = R.filter(
+   const addedCells = R.filter(
 		cell => R.pipe(
 			findCellByRowAndColumn, 
 			isNothing
-		)(cell.row, cell.column, originalCells)
+		)(cell.row, cell.column, updatedExistingCells)
 	)(updatedCells);
 
-   return isSomething(originalCells)
-      ? isSomething(newCells)
-         ? R.concat(originalCells, newCells)
-         : originalCells
-      : isSomething(newCells)
-         ? newCells
+   return isSomething(updatedExistingCells)
+      ? isSomething(addedCells)
+         ? R.concat(updatedExistingCells, addedCells)
+         : updatedExistingCells
+      : isSomething(addedCells)
+         ? addedCells
          : null;
 };
 

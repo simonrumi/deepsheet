@@ -4,6 +4,7 @@ import {
    UPDATED_SHOW_PASTE_OPTIONS_MODAL,
    UPDATED_CELL_EDITOR_POSITIONING,
 	UPDATED_BLUR_EDITOR_FUNCTION,
+	UPDATED_HANDLING_PASTE,
 } from './pasteOptionsModalTypes';
 
 export const capturedSystemClipboard = systemClipboardText => {
@@ -20,4 +21,8 @@ export const updatedCellEditorPositioning = positioning => {
 
 export const updatedBlurEditorFunction = blurEditor => {
    managedStore.store.dispatch({ type: UPDATED_BLUR_EDITOR_FUNCTION, payload: blurEditor });
+};
+
+export const updatedHandlingPaste = isHandlingPaste => {
+   managedStore.store.dispatch({ type: UPDATED_HANDLING_PASTE, payload: isHandlingPaste });
 };

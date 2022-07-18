@@ -84,6 +84,28 @@ const SHEET_QUERY = gql`
             content {
                text
                subsheetId
+					formattedText {
+						blocks {
+							data {
+								placeholderString
+							}
+							depth
+							entityRanges {
+								placeholderString
+							}
+							inlineStyleRanges {
+								offset
+								length
+								style
+							}
+							key
+							text
+							type
+						}
+						entityMap {
+							placeholderString
+						}
+					}
             }
             visible
          }
