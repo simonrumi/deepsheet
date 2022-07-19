@@ -15,16 +15,18 @@ export const getInitialEditorState = cell => ifThenElse({
 	params: { ifParams: cell, thenParams: cell, elseParams: cell }
 });
 
-export const encodeFormattedText = formattedText => R.pipe(
-	R.prop('blocks'),
-	// encode the text within each block
-	R.map(block => R.pipe(
-		R.prop('text'),
-		encodeText,
-		R.assoc('text', R.__, block)
-	)(block)),
-	R.assoc('blocks', R.__, formattedText) // put the blocks back into formattedText
-)(formattedText);
+export const encodeFormattedText = formattedText => isSomething(formattedText) 
+	? R.pipe(
+		R.prop('blocks'),
+		// encode the text within each block
+		R.map(block => R.pipe(
+			R.prop('text'),
+			encodeText,
+			R.assoc('text', R.__, block)
+		)(block)),
+		R.assoc('blocks', R.__, formattedText) // put the blocks back into formattedText
+	)(formattedText)
+	: null;
 
 export const decodeFormattedText = formattedText => R.pipe(
 	R.prop('blocks'),
