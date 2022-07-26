@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import * as R from 'ramda';
 import {
@@ -11,7 +11,7 @@ import 'draft-js/dist/Draft.css';
 import managedStore from '../../store';
 import { updatedCell, hasChangedCell } from '../../actions/cellActions';
 import { createdSheet } from '../../actions/sheetActions';
-import { clearedFocus, updatedFocusRef, updatedEditorState } from '../../actions/focusActions';
+import { clearedFocus, updatedFocusRef, updatedEditorState, updatedCellPositioning } from '../../actions/focusActions';
 import { updatedPastingCellRange } from '../../actions/cellRangeActions';
 import { startedEditing, finishedEditing, startedUndoableAction, completedUndoableAction, } from '../../actions/undoActions';
 import { PASTE_RANGE, } from '../../actions/cellRangeTypes';
@@ -19,7 +19,7 @@ import { updatedClipboard } from '../../actions/clipboardActions';
 import {
    capturedSystemClipboard,
    updatedShowPasteOptionsModal,
-   updatedCellEditorPositioning,
+   updatedCellEditorPositioning, // TODO maybe not using this - using updatedCellPositioning in focusActions instead
 	updatedBlurEditorFunction,
 	updatedHandlingPaste,
 } from '../../actions/pasteOptionsModalActions';
@@ -119,12 +119,37 @@ const reinstateOriginalValue = cell =>
 	});
 
 // TODO BUG
-// Tabbing on a cell that has been edited replaces the contents of the next cell with the edited stuff from the previous cell
+// 1. add a column
+// 2. click on a cell
+// result: the cell editor is shown in the wrong place
+//
+// This might be to do with the usePositioning hook. It uses useCallback which returns a memoized callback
+// ... look at console logs - when clicking on a cell node is null
+// see this article - probably need to update the ref stuff as he says:
+// https://medium.com/welldone-software/usecallback-might-be-what-you-meant-by-useref-useeffect-773bc0278ae
+//
+// ...Well...seems like the usePositioning hook is doing what that article suggested.
+// Here's what is happening
+// The Cell sends the positioning to the CellInPlaceEditor...obviously this is not getting updated correctly
+// CellInPlaceEditor is receiving the correct cellToEdit, but the incorrect positioning
+// the positioning is for the cell to the left of the cell that was clicked
+// 
+// TODO NEXT
+/// can't seem to set the cell positioning in the store...but shouldn't be this hard
+// 1. load cell
+// 2. useEffect -> set positioning for that particular cell ...but this leads to an infinite loop
+// ..note can't do it without using useEffect because then we get console error
+// 
+// replaced useEffect with useCallback per this article
+// https://medium.com/welldone-software/usecallback-might-be-what-you-meant-by-useref-useeffect-773bc0278ae
+// ..this seems to be working, but doesn't help fix the bug
+// THe problem might be in Cell not CellInPlaceEditor, since it is Cell.js where the usePositioning gets the positioning values
+// so in there, somehow, we want to call that usePositioning function again when there is a change
+// because it must be the case that the DOM is getting updated and the node that Cell's ref is pointing to is changed by React when we add a column
+
 
 // TODO BUG
-// 1. paste a cell range or a clipboard with a cell range, at the edge of the sheet, so that new columns need to be made
-// 2. undo the paste
-// result: when clicking on a cell, the cell editor is shown in the wrong place
+// Tabbing on a cell that has been edited replaces the contents of the next cell with the edited stuff from the previous cell
 
 /* test data: TIDY
 some	thing
@@ -135,14 +160,23 @@ STUFF
 HERE
 */
 
-const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus }) => {
+const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
    // this ref is applied to the div containing the editor (see below) so that we can manage its focus
-   const cellInPlaceEditorRef = useRef();
+   // const cellInPlaceEditorRef = useRef(); // TIDY or reinstate
+	const [cellInPlaceEditorRef, setEditorRefNode]  = useState(null);
+	const setEditorRef = useCallback(node => setEditorRefNode(node));
+	console.log('CellInPlaceEditor got cellInPlaceEditorRef', cellInPlaceEditorRef);
+
+	if (cellHasFocus && isSomething(cellInPlaceEditorRef?.current)) {
+		cellInPlaceEditorRef.current.focus();
+		manageCellInPlaceEditorFocus(null);
+		// updatedCellEditorPositioning({ ...positioning }); // this is needed, in some circumstances, by PasteOptionsModal // TIDY using updatedCellPositioning instead
+		updatedCellPositioning(positioning);
+	}
 
 	const cellKey = createCellKey(cellRow(cellToEdit), cellColumn(cellToEdit));
    const cell = useSelector(state => statePresent(state)[cellKey]);
 	const editorState = useSelector(state => stateFocusEditor(state));
-	console.log('CellInPlaceEditor got editorState with text', editorState?.getCurrentContent().getPlainText());
 
 	// getting the system clipbaord is async, and we want to re-render CellInPlaceEditor when it changes
 	// so using a local state seems like a reasonable way to make it so that only the single CellInPlaceEditor changes,
@@ -166,7 +200,7 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus }) => {
    const handleSubmit = event => {
       event?.preventDefault();
 		editorChangeHandler(editorState); // this ensures we get the latest change updated into the redux store
-      stateFocusAbortControl(managedStore.state).abort();
+      stateFocusAbortControl(managedStore.state)?.abort();
       finalizeCellContent(cell);
       clearedFocus();
    }
@@ -191,7 +225,6 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus }) => {
 			// in this case arg1 is really the event (otherwise it would be the text to paste, but we're getting that from elsewhere)
 			arg1.preventDefault();
 		}
-		console.log('CellInPlaceEditor--handlePaste current focus is', stateFocus(managedStore.state));
 		updatedHandlingPaste(true);
       
       const fromCell = stateCellRangeFrom(managedStore.state);
@@ -209,21 +242,17 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus }) => {
 		}
 
 		if (typeof navigator.clipboard.readText === 'function') {
-			updatedCellEditorPositioning({ ...positioning }); // this is needed, in some circumstances, by PasteOptionsModal
+			updatedCellEditorPositioning({ ...positioning }); // this is needed, in some circumstances, by PasteOptionsModal // TODO - have PostOptionsModal look at focus.cellPositioning instead
 			updatedBlurEditorFunction(manageBlur); // this is needed, in some circumstances, by PasteOptionsModal
 			
 			navigator.clipboard.readText().then(
 				systemClipboardText => {
-               console.log('CellInPlaceEditor--handlePaste got systemClipboardText', systemClipboardText);
                capturedSystemClipboard(systemClipboardText);
 
                if (isSomething(fromCell) && isSomething(toCell)) {
                   if (isNothing(systemClipboardText)) {
                      // we have a cell range but no clipboard so just paste the cell range
                      // this is an edge case that may never happen
-                     console.log(
-                        'CellInPlaceEditor--handlePaste got nothing for the systemClipboardText so will doPasteRange()'
-                     );
                      doPasteRange();
                      return;
                   }
@@ -234,47 +263,28 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus }) => {
                      startingCellRowIndex: cellRow(fromCell),
                      startingCellColumnIndex: cellColumn(fromCell),
                   });
-                  console.log('CellInPlaceEditor--handlePaste got clipboardCellsArr', clipboardCellsArr);
 
                   const storeCellsArr = stateCellRangeCells(managedStore.state);
                   if (compareCellsArrays(clipboardCellsArr, storeCellsArr)) {
                      // the system clipboard and the cell range are the same, so paste the cell range
-                     console.log(
-                        'CellInPlaceEditor--handlePaste the system clipboard and the cell range are the same, so will paste the cell range'
-                     );
                      doPasteRange();
                      return;
                   }
                   // system clipboard and the cell range are different, so popup dialog box asking which to use
-                  console.log(
-                     'CellInPlaceEditor--handlePaste system clipboard and the cell range are different, so will popup dialog box'
-                  );
                   updatedShowPasteOptionsModal(true);
                   return;
                }
 
                // there's no cell range, only something in the clipbaord
-               console.log(
-                  "CellInPlaceEditor--handlePaste system there's no cell range, only something in the clipbaord"
-               );
                const clipboardAsCells = convertTextToCellRange({
                   text: systemClipboardText,
                   startingCellRowIndex: cellRow(cell),
                   startingCellColumnIndex: cellColumn(cell),
                });
                if (clipboardAsCells.length > 1) {
-                  console.log(
-                     'CellInPlaceEditor--handlePaste got clipboardAsCells',
-                     clipboardAsCells,
-                     'so will pop up dialog'
-                  );
                   updatedShowPasteOptionsModal(true);
                   return;
                }
-               console.log(
-                  'CellInPlaceEditor--handlePaste just before calling pasteText, current focus is',
-                  stateFocus(managedStore.state)
-               );
 					// note - this fn will call updatedHandlingPaste(false)
                pasteText({ text: typeof arg1 === 'string' ? arg1 : systemClipboardText }); 
             }
@@ -289,7 +299,6 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus }) => {
    }
 
 	const updateReduxStore = ({ text, formattedText }) => {
-		console.log('CellInPLaceEditor--updateReduxStore got formattedText', formattedText);
 		updatedCell({
 			...cell,
 			content: { 
@@ -305,19 +314,15 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus }) => {
 		updatedEditorState(newState);
 		const newText = editorState.getCurrentContent().getPlainText();
 		const rawState = convertToRaw(editorState.getCurrentContent());
-		console.log('CellInPlaceEditor--editorChangeHandler got newText', newText, 'rawState', rawState);
 		const text = editorState.getCurrentContent().getPlainText();
-		console.log('CellInPlaceEditor--editorChangeHandler updated has this text', text);
 		updateReduxStore({ text: newText, formattedText: rawState });
 	}
 
 	const handleStyling = (event, style) => {
 		event?.preventDefault();
-		console.log('clicked style', style);
 		const newState = RichUtils.toggleInlineStyle(editorState, style);
 		updatedEditorState(newState);
 		const rawState = convertToRaw(editorState.getCurrentContent());
-		console.log('CellInPlaceEditor--handleStyling got rawState', rawState);
 		updateReduxStore({ formattedText: rawState });
 	}
 
@@ -360,8 +365,6 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus }) => {
 			// we're not reacting to any key strokes until the user clicks on something in the PasteOptionsModal
 			return CELL_EDITOR_KEY_COMMAND_NOT_HANDLED; // TODO test this and check this is the right thing to do here
 		}
-
-		console.log('CellInPLaceEditor--keyBindingsCellInPlaceEditor got command', command);
 
       // use https://keycode.info/ to get key values
       switch(command) {
@@ -421,7 +424,6 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus }) => {
    
    const manageBlur = event => {
 		event?.preventDefault();
-		console.log('CellInPLaceEditor--manageBlur got stateShowPasteOptionsModal(managedStore.state)', stateShowPasteOptionsModal(managedStore.state));
 		if (stateShowPasteOptionsModal(managedStore.state) || stateIsHandlingPaste(managedStore.state)) {
 			//the PasteOptionsModal has popped up, so we should not blur, so the focus is retained for that modal
 			return; 
@@ -436,6 +438,7 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus }) => {
    }
 
    const manageCellInPlaceEditorFocus = event => {
+		console.log('CellInPlaceEditor--manageCellInPlaceEditorFocus, cellInPlaceEditorRef', cellInPlaceEditorRef);
       ifThen({
          ifCond: manageFocus, // returns true if the focus needed to be updated
          thenDo: () => startedEditing({ cell, editorState }),
@@ -510,8 +513,8 @@ const renderTextForm = () => <form onSubmit={handleSubmit}>
 				handleKeyCommand={keyBindingsCellInPlaceEditor } 
 				keyBindingFn={setKeyBindingCodes}
 				handlePastedText={handlePaste}
-				ref={cellInPlaceEditorRef}
-			/>
+				ref={setEditorRef}
+			/> // used to be ref={cellInPlaceEditorRef} // TIDY
 			: null
 		}
 	</div>
@@ -519,10 +522,12 @@ const renderTextForm = () => <form onSubmit={handleSubmit}>
 
    // need to useEffect so the cellInPlaceEditorRef can first be assigned to the textarea
    useEffect(() => {
-      if (cellHasFocus && isSomething(cellInPlaceEditorRef.current)) {
+      /* if (cellHasFocus && isSomething(cellInPlaceEditorRef?.current)) {
          cellInPlaceEditorRef.current.focus();
          manageCellInPlaceEditorFocus(null);
-      }
+			// updatedCellEditorPositioning({ ...positioning }); // this is needed, in some circumstances, by PasteOptionsModal // TIDY using updatedCellPositioning instead
+			updatedCellPositioning(positioning);
+      } */ // TODO reinstate this if we need it here...but really we can this code outside of useEffect since we're using useCallback above, so TIDY
 
 		// if there is something on the system clipboard, then that affects whether we display the PasteIcon
 		getSystemClipboard()

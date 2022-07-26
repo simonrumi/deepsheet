@@ -3,6 +3,7 @@ import managedStore from '../store';
 import {
    UPDATED_CELL,
    UPDATED_CELL_VISIBILITY,
+	// UPDATED_CELL_POSITIONING, // TIDY
    POSTING_UPDATED_CELLS,
    HAS_ADDED_CELL,
    HAS_CHANGED_CELL,
@@ -36,6 +37,14 @@ export const updatedCellVisibility = cell => {
    });
 }
 
+/* export const updatedCellPositioning = cell => {
+	managedStore.store.dispatch({
+      type: UPDATED_CELL_POSITIONING,
+      payload: cell,
+   });
+}
+ */ // TIDY
+ 
 export const updatedCells = async ({ sheetId, cells }) => {
    managedStore.store.dispatch({ type: POSTING_UPDATED_CELLS, payload: { sheetId, cells } });
 };
@@ -125,3 +134,4 @@ export const updatedEndOfRowCell = isEndOfRowCell => {
       payload: isEndOfRowCell,
    });
 }
+

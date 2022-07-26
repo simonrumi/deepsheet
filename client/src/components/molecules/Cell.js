@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import * as R from 'ramda';
 import managedStore from '../../store';
-import { focusedCell, updatedEditorState } from '../../actions/focusActions';
 import { hidePopups } from '../../actions';
-import { nothing, isSomething, ifThen, ifThenElse } from '../../helpers';
+import { focusedCell, updatedEditorState } from '../../actions/focusActions';
+// import { updatedCellPositioning } from '../../actions/cellActions'; // TIDY
+import { updatedCellPositioning } from '../../actions/focusActions';
+import { nothing, isSomething, isNothing, ifThen, ifThenElse } from '../../helpers';
 import { createCellId, isCellFocused, createCellKey } from '../../helpers/cellHelpers';
 import { isCellVisible } from '../../helpers/visibilityHelpers';
 import { rangeSelected, atEndOfRange, maybeClearSubsheetCellFocus } from '../../helpers/focusHelpers';
@@ -20,6 +22,8 @@ import {
    cellInCellRange,
    statePresent,
 	stateCellRangeTo,
+	stateTotalRows,
+	stateTotalColumns
 } from '../../helpers/dataStructureHelpers';
 import { usePositioning } from '../../helpers/hooks';
 import SubsheetCell from './SubsheetCell';
@@ -59,13 +63,14 @@ const Cell = React.memo(({ row, column, classes, blankCell, endCell, isVisible }
    const cellKey = createCellKey(row, column);
    const cell = useSelector(state => statePresent(state)[cellKey]);
    const cellHasFocus = useSelector(state => isCellFocused(cell, state));
-   const [cellRef, positioning] = usePositioning();
    const isSubsheetCell = R.pipe(cellSubsheetId, isSomething); // expects to get cell as a param
+	const totalCells = stateTotalRows(managedStore.state) * stateTotalColumns(managedStore.state);
+   const [cellRef, positioning] = usePositioning(row === 2 && column === 6, totalCells); // TIDY:  row === 2 && column === 6, cell ...this is a temp thing for console logging
+	// const [isRenderingEditor, setIsRenderingEditor] = useState(false);
 
    const inCellRange = cellInCellRange(cell);
 
    const renderRegularCell = cell => {
-		console.log('Cell--renderRegularCell cellFormattedTextBlocks(cell)', cellFormattedTextBlocks(cell));
 		const text = isSomething(cellFormattedTextBlocks(cell)) 
 			? R.pipe(cellFormattedText, decodeFormattedText, R.prop('blocks'), convertBlocksToJsx)(cell)
 			: cellText(cell);
@@ -85,10 +90,13 @@ const Cell = React.memo(({ row, column, classes, blankCell, endCell, isVisible }
    }
 
    const renderInPlaceEditor = cell => {
-         return <div className="w-full">
-            {/* renderRegularCell(cell) // TODO used to do this, but now with the cell editor working, probably should render a blank cell here */}
-            <CellInPlaceEditor positioning={positioning} cellToEdit={cell} cellHasFocus={cellHasFocus} key={cellKey + '_inPlaceEditor'} />
-         </div>;
+		console.log('Cell--renderInPlaceEditor got cell', cell, 'positioning', positioning);
+		// setIsRenderingEditor(true); // TIDY probably not using this
+		
+		return <div className="w-full">
+			{/* renderRegularCell(cell) // TODO used to do this, but now with the cell editor working, probably should render a blank cell here */}
+			<CellInPlaceEditor positioning={positioning} cellToEdit={cell} cellHasFocus={cellHasFocus} key={cellKey + '_inPlaceEditor'} />
+		</div>;
 	};
 
 	const renderRangeTools = () => blankCell ? null : <RangeTools cell={cell} />;

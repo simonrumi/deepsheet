@@ -7,6 +7,7 @@ import { addErrorMessage } from '../helpers/authHelpers';
 import {
    UPDATED_CELL,
    UPDATED_CELL_VISIBILITY,
+	// UPDATED_CELL_POSITIONING, // TIDY
    POSTING_UPDATED_CELLS,
    COMPLETED_SAVE_CELLS,
    CELLS_UPDATE_FAILED,
@@ -35,6 +36,9 @@ const processCellAction = R.curry((state, sheetId, action) => {
 
 		case UPDATED_END_OF_ROW_CELL:
 			return { ...state, isEndOfRow: action.payload.isEndOfRow } // didn't end up using isEndOfRow but keeping it in case it is useful in future
+
+		/* case UPDATED_CELL_POSITIONING:
+			return { ...state, positioning: action.payload.positioning } */ // TIDY
 
       case COMPLETED_SAVE_CELL:
          return createUpdatedCellState(action.payload, state, sheetId);

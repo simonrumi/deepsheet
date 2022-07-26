@@ -33,9 +33,7 @@ const UPDATE_CELLS_MUTATION = gql`
 `;
 
 export const updateCellsMutation = async ({ sheetId, cells, userId }) => {
-	console.log('cellMutations--updateCellsMutation got cells', cells);
    const preppedCells = prepCellsForDb(cells);
-	console.log('cellMutations--updateCellsMutation got cells', cells, 'preppedCells', preppedCells);
    const result = await apolloClient.mutate({
       mutation: UPDATE_CELLS_MUTATION,
       variables: { sheetId, cells: preppedCells, userId },

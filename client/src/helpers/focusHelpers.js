@@ -23,6 +23,8 @@ import {
 import { HIGHLIGHTED_CELL_RANGE } from '../actions/cellRangeTypes';
 import { updatedCell } from '../actions/cellActions';
 import { createHighlightRangeMessage } from '../components/displayText';
+import { log } from '../clientLogger';
+import { LOG } from '../constants';
 
 export const isStateCellRefThisCell = (cellRef, cell) => {
     const currentFocusedCell = stateFocusCell(managedStore.state);
@@ -32,9 +34,15 @@ export const isStateCellRefThisCell = (cellRef, cell) => {
        && isSomething(currentFocusedCellRef?.current)
        && cellRef?.current === currentFocusedCellRef.current;
 }
-// TODO rename - this is not managing the key bindings any more - Draft.js is
+
 export const manageFocus = ({ event, cell, cellRef }) => {
 	event?.preventDefault();
+	try {
+		cellRef.focus(); // this requires that cellRef is a DraftEditor which is exposing a focus function
+	} catch(err) {
+		log({ level: LOG.WARN }, 'focusHelper--manageFocus tried to use DraftEditor\'s focus() function but got this error', err);
+	}
+	
 
 	if (isStateCellRefThisCell(cellRef, cell)) {
 		return false; // indicates we didn't need to change focus
@@ -52,7 +60,6 @@ export const manageFocus = ({ event, cell, cellRef }) => {
 
 export const manageTab = ({ cell, callback, goBackwards }) => {
     const nextCell = tabToNextVisibleCell(cell.row, cell.column, goBackwards);
-	 console.log('focusHelpers--manageTab got nextCell', nextCell);
     return ifThenElse({
         ifCond: isSomething(nextCell),
         thenDo: [

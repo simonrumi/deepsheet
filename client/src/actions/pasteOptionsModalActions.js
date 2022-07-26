@@ -15,7 +15,8 @@ export const updatedShowPasteOptionsModal = showModal => {
    managedStore.store.dispatch({ type: UPDATED_SHOW_PASTE_OPTIONS_MODAL, payload: showModal });
 };
 
-export const updatedCellEditorPositioning = positioning => {
+export const updatedCellEditorPositioning = positioning => { // TODO remove this in favor of updatedCellPositioning in the focusReducer
+	console.log('updatedCellEditorPositioning got positioning', positioning);
    managedStore.store.dispatch({ type: UPDATED_CELL_EDITOR_POSITIONING, payload: positioning });
 };
 

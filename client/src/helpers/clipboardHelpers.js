@@ -457,9 +457,7 @@ export const convertTextToCellRange = ({ text, startingCellRowIndex, startingCel
 export const pasteText = ({ text }) => {
 	R.pipe(
 		addPastedTextToEditorState,
-		R.tap(data => console.log('clipboardHelpers--pasteText after addPastedTextToEditorState got', data)),
 		updatedEditorState,
-		R.tap(data => console.log('clipboardHelpers--pasteText after updatedEditorState')),
 	)(text); 
 	updatedHandlingPaste(false);
 }

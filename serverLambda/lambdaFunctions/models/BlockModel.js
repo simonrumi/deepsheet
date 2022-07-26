@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 mongoose.Promise = global.Promise; // Per Stephen Grider: Mongoose's built in promise library is deprecated, replace it with ES2015 Promise
 const { Schema } = mongoose;
 const InlineStyleRangeModel = require('./InlineStyleRangeModel');
-const PlaceholderObjectModel = require('./PlaceholderObjectModel');
 
 const blockSchema = new Schema({
 	data: {},

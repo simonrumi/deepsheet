@@ -84,11 +84,8 @@ export const getSaveableCellData = cell =>
       cellRowSetter(cellRow(cell)),
       cellColumnSetter(cellColumn(cell)),
       cellTextSetter(cellText(cell)),
-		R.tap(data => console.log('cellHelpers--getSaveableCellData after cellTextSetter has', data)),
 		cellFormattedTextSetter(cellFormattedText(cell)),
-		R.tap(data => console.log('cellHelpers--getSaveableCellData after cellFormattedTextSetter has', data)),
       cellSubsheetIdSetter(cellSubsheetId(cell)),
-		R.tap(data => console.log('cellHelpers--getSaveableCellData after cellSubsheetIdSetter has', data)),
       cellVisibleSetter(cellVisible(cell))
    )({});
 
@@ -231,7 +228,6 @@ export const encodeText = text => isSomething(text) ? text.replace(/([^a-zA-Z0-9
 export const encodeCellText = cell => R.pipe(
       cellText,
       encodeText,
-		R.tap(data => console.log('cellHelpers--encodeCellText after encodeText got', data)),
       cellTextSetter(R.__, cell)
    )(cell);
 
@@ -524,7 +520,6 @@ export const populateFormattedTextWithPlaceholders = cell => isSomething(cellFor
 		R.assoc('blocks', R.__, cellFormattedText(cell)),
 		R.assoc('entityMap', {}),
 		cellFormattedTextSetter(R.__, cell),
-		R.tap(data => console.log('cellHelpers--populateFormattedTextWithPlaceholders will return', data)),
 	)(cell)
 	: cell;
 

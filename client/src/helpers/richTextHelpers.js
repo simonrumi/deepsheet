@@ -26,7 +26,7 @@ export const encodeFormattedText = formattedText => isSomething(formattedText)
 		)(block)),
 		R.assoc('blocks', R.__, formattedText) // put the blocks back into formattedText
 	)(formattedText)
-	: null;
+	: formattedText; // this might be an empty string or undefined or null...either way we'll return whatever we got
 
 export const decodeFormattedText = formattedText => R.pipe(
 	R.prop('blocks'),
@@ -40,19 +40,13 @@ export const decodeFormattedText = formattedText => R.pipe(
 )(formattedText);
 
 const stylesOverlap = styleRanges => {
-	console.log('richTextHelpers--stylesOverlap got styleRanges', styleRanges);
 	const firstStyleRange = R.head(styleRanges);
 	const remainingStyleRanges = R.slice(1, Infinity, styleRanges);
 	if (!arrayContainsSomething(remainingStyleRanges)) {
-		console.log('richTextHelpers--stylesOverlap found no remainingStyleRanges so returning false');
 		return false;
 	}
 	const hasOverlap = R.reduce(
 		(accumulator, comparisonStyleRange) => {
-			console.log('richTextHelpers--stylesOverlap inside reduce got comparisonStyleRange.offset', comparisonStyleRange.offset, 
-			'firstStyleRange.offset', firstStyleRange.offset,
-			'firstStyleRange.offset + firstStyleRange.length', (firstStyleRange.offset + firstStyleRange.length)
-			);
 			return comparisonStyleRange.offset >= firstStyleRange.offset && 
 				comparisonStyleRange.offset < (firstStyleRange.offset + firstStyleRange.length)
 				? R.reduced(true)
@@ -62,7 +56,6 @@ const stylesOverlap = styleRanges => {
 		remainingStyleRanges
 	);
 	if (hasOverlap) {
-		console.log('richTextHelpers--stylesOverlap got hasOverlap true so returning true');
 		return true;
 	}
 	return stylesOverlap(remainingStyleRanges);
@@ -85,18 +78,13 @@ const applyStyling = ({ plainText, styleRanges }) => {
 	if (!arrayContainsSomething(styleRanges)) {
 		return { lastOffset: Infinity, formattedText: plainText }
 	}
-	console.log('richTextHelpers--applyStyling got plainText', plainText, 'styleRanges', styleRanges);
 	const firstOffset = R.pipe(
 		R.head,
-		R.tap(data => console.log('richTextHelpers--applyStyling getting firstOffset, got R.head', data)),
 		R.prop('offset'),
-		R.tap(data => console.log('richTextHelpers--applyStyling getting firstOffset, got R.prop(offset)', data)),
 	)(styleRanges);
 	const unformattedStartingText = R.slice(0, firstOffset, plainText);
-	console.log('richTextHelpers--applyStyling got firstOffset', firstOffset, 'unformattedStartingText', unformattedStartingText);
 	return R.reduce(
 		(accumulator, styleRange) => {
-			console.log('richTextHelpers--applyStyling inside reduce got accumulator', accumulator, 'styleRange', styleRange);
 			const unstyledHeadText = R.slice(accumulator.lastOffset, styleRange.offset, plainText);
 			const endOfTextToStyle = styleRange.offset + styleRange.length
 			const textToStyle = R.slice(styleRange.offset, endOfTextToStyle, plainText);
@@ -106,11 +94,6 @@ const applyStyling = ({ plainText, styleRanges }) => {
 				makeStartTagWithStyles(styleRange.styles) +
 				textToStyle +
 				END_TAG;
-			console.log('richTextHelpers--applyStyling inside reduce got unstyledHeadText', unstyledHeadText,
-				'endOfTextToStyle', endOfTextToStyle,
-				'textToStyle', textToStyle,
-				'so formattedText is', formattedText
-			);
 			return {
 				...accumulator,
 				lastOffset: endOfTextToStyle,
@@ -141,9 +124,7 @@ const createStyleRange = ({ offset, styleRanges }) => ({
 })
 
 const compareRangeSets = (rangeSet1, rangeSet2) => {
-	console.log('richTextHelpers--compareRangeSets got rangeSet1', rangeSet1, 'rangeSet2', rangeSet2);
 	if(rangeSet1.length !== rangeSet2.length) {
-		console.log('richTextHelpers--compareRangeSets got different lengths so will return false');
 		return false;
 	}
 	const { rangeSetsMatch } = R.reduce(
@@ -165,7 +146,6 @@ const compareRangeSets = (rangeSet1, rangeSet2) => {
 		{ rangeSetsMatch: true, remainingRanges: rangeSet2 }, // initially assume range sets are identical
 		rangeSet1
 	);
-	console.log('richTextHelpers--compareRangeSets an in-depth comparison of the rangeSets will return', rangeSetsMatch);
 	return rangeSetsMatch;
 }
 
@@ -176,36 +156,19 @@ const splitStyleRanges = ({ styleRanges, plainText }) => {
 	const { updatedStyleRanges } = reduceWithIndex(
 		(accumulator, char, charPosition) => {
 			const newCharRangeSet = whichRangesIsCharIn({ charPosition, styleRanges });
-			console.log('richTextHelpers--splitStyleRanges inside reduceWithIndex got accumulator', accumulator,
-			'charPosition', charPosition,
-			'newCharRangeSet', newCharRangeSet);
 			if (compareRangeSets(newCharRangeSet, accumulator.currentCharRangeSet)) {
-				console.log(
-               'richTextHelpers--splitStyleRanges inside reduceWithIndex, newCharRangeSet and currentCharRangeSet are equal, charPosition',
-               charPosition,
-               'plainText.length',
-               plainText.length
-            );
 				if (charPosition + 1 >= plainText.length) {
 					// note that normally we finalize a styleRange when we are at the beginning of the next styleRange, 
 					// but in this case we are at the end of plainText, 
 					// so we just have to pretend we're one charPosition further along than we really are
 					const updatedStyleRange = finalizeStyleRange({ styleRange: accumulator.currentStyleRange, charPosition: charPosition + 1 });
-					console.log(
-                  'richTextHelpers--splitStyleRanges inside reduceWithIndex got to the end of the plainText so called finalizeStyleRange, with accumulator.currentStyleRange',
-                  accumulator.currentStyleRange,
-                  'to get updatedStyleRange',
-                  updatedStyleRange
-               );
 					return {
 						...accumulator,
 						updatedStyleRanges: isNothing(updatedStyleRange) ? accumulator.updatedStyleRanges : R.append(updatedStyleRange, accumulator.updatedStyleRanges),
 					}
 				}
-				console.log('richTextHelpers--splitStyleRanges newCharRangeSet and currentCharRangeSet are equal so returning accumulator', accumulator);
 				return accumulator;
 			}
-			console.log('richTextHelpers--splitStyleRanges newCharRangeSet and currentCharRangeSet are not equal so about to call finalizeStyleRange')
 			const updatedStyleRange = finalizeStyleRange({ styleRange: accumulator.currentStyleRange, charPosition });
 			const newStyleRange = createStyleRange({ offset: charPosition, styleRanges: newCharRangeSet });
 			const updatedStyleRanges = charPosition + 1 >= plainText.length 
@@ -215,7 +178,6 @@ const splitStyleRanges = ({ styleRanges, plainText }) => {
 				: isSomething(updatedStyleRange) // the normal case
 					? R.append(updatedStyleRange, accumulator.updatedStyleRanges)
 					: accumulator.updatedStyleRanges
-			console.log('richTextHelpers--splitStyleRanges will start a new range, got updatedStyleRange', updatedStyleRange, 'newStyleRange', newStyleRange, 'updatedStyleRanges', updatedStyleRanges);
 			return {
             ...accumulator,
             currentCharRangeSet: newCharRangeSet,
@@ -226,7 +188,6 @@ const splitStyleRanges = ({ styleRanges, plainText }) => {
 		{ currentStyleRange: null, currentCharRangeSet: [], updatedStyleRanges: [] }, // the initial value
 		plainText, // the list to iterate over
 	);
-	console.log('richTextHelpers--splitStyleRanges will return updatedStyleRanges', updatedStyleRanges);
 	return updatedStyleRanges;
 }
 
@@ -242,20 +203,16 @@ const convertOneBlockToJsx = block => {
 	// but we need to convert them to this sort of thing to work with:
 	// [{offset: 6, length: 4, styles: ['BOLD', 'UNDERLINE'] }, ...]
 	const plainText = block.text;
-	console.log('richTextHelpers--convertOneBlockToJsx about to call stylesOverlap');
 	const sortedStyleRanges = sortStyleRanges(block.inlineStyleRanges);
 	const updatedStyleRanges = stylesOverlap(sortedStyleRanges) 
 		? splitStyleRanges({ styleRanges: sortedStyleRanges, plainText })
 		: addStylesToStyleRanges(sortedStyleRanges);
-	console.log('richTextHelpers--convertOneBlockToJsx got updatedStyleRanges', updatedStyleRanges);
 	const { lastOffset, formattedText } = applyStyling({ plainText, styleRanges: updatedStyleRanges });
 	return formattedText + R.slice(lastOffset, Infinity, plainText) + BLOCK_SEPARATOR;
 }
 
 export const convertBlocksToJsx = blocks => {
-	console.log('richTextHelpers--convertBlocksToJsx got blocks', blocks);
 	const blocksAsHtml = R.map(convertOneBlockToJsx, blocks);
-	console.log('richTextHelpers--convertBlocksToJsx got blocksAsHtml', blocksAsHtml);
 	return R.pipe(
 		R.last,
 		lastBlock => lastBlock.replace(BLOCK_SEPARATOR_REGEX, ''), // every block has a separator tag on the end, but the last block doesn't need it
@@ -298,7 +255,6 @@ const getRandomKey = ({ remainingKeys = [], usedKeys = [] }) => {
 
 const splitBlock = ({ block, keys }) => {
 	const textArr = R.pipe(R.prop('text'), R.split(NEWLINE_REGEX))(block);
-	console.log('richTextHelpers--splitBlock got textArr', textArr, 'block', block, 'keys', keys);
 
 	const basicBlock = {
 		data: {},
@@ -323,7 +279,6 @@ const splitBlock = ({ block, keys }) => {
 					
 					// case 1 - block starts before the style range and ends in the middle or at the end of the style range
 					if (blockOffset < styleRange.offset && endBlock > styleRange.offset && endBlock <= endStyleRange) {
-						console.log('richTextHelpers--splitBlock, case 1 - block starts before the style range and ends in the middle of it');
 						return R.append({
 							...styleRange,
 							offset: styleRange.offset - blockOffset,
@@ -333,7 +288,6 @@ const splitBlock = ({ block, keys }) => {
 					
 					// case 2 - block starts in the middle, or start of the style range, and ends after it
 					if (styleRange.offset <= blockOffset && blockOffset < endStyleRange && endStyleRange < endBlock) {
-						console.log('richTextHelpers--splitBlock, case 2 - block starts in the middle of the style range and ends after it');
 						return R.append({
 							...styleRange,
 							offset: 0,
@@ -343,7 +297,6 @@ const splitBlock = ({ block, keys }) => {
 
 					// case 3 - block starts at the same point as the style range, or in the middle of it, and ends in the middle or at the exact end of the style range
 					if (styleRange.offset <= blockOffset && endBlock <= endStyleRange) {
-						console.log('case 3 - block starts at the same point as the style range, or in the middle of it, and ends in the middle or at the exact end of the style range');
 						return R.append({
 							...styleRange,
 							offset: 0,
@@ -353,7 +306,6 @@ const splitBlock = ({ block, keys }) => {
 
 					// case 4 - block starts before and ends after the style range
 					if (blockOffset < styleRange.offset && endStyleRange < endBlock) {
-						console.log('richTextHelpers--splitBlock, case 4 - block starts before and ends after the style range');
 						return R.append({
 							...styleRange,
 							offset: styleRange.offset - blockOffset,
@@ -361,8 +313,7 @@ const splitBlock = ({ block, keys }) => {
 					}
 
 					// case 5 - block comes before or after style range
-					if (endBlock <= styleRange.offset || blockOffset >= endStyleRange) { 
-						console.log('richTextHelpers--createNewStyleRangesForPaste, case 5 - block comes before or after style range');
+					if (endBlock <= styleRange.offset || blockOffset >= endStyleRange) {
 						return accumulator
 					}
 				},
@@ -385,7 +336,6 @@ const splitBlock = ({ block, keys }) => {
 		{ remainingKeys: keys, usedKeys: [], blocks: [], blockOffset: 0 },
 		textArr
 	);
-	console.log('richTextHelpers--splitBlock created blocks', blocks);
 	return blocks;
 };
 
@@ -396,7 +346,6 @@ const concatenateBlocks = ({ blocksInSelection, editorState }) => {
 
 	return R.reduce(
 		(accumulator, block) => {
-			console.log('richTextHelpers--concatenateBlocks got block', block);
 			const updatedText = R.pipe(
 				R.prop('text'),
 				R.concat(R.prop('text', accumulator))
@@ -405,7 +354,6 @@ const concatenateBlocks = ({ blocksInSelection, editorState }) => {
 			const updatedStyles = R.map(
 				styleRange => R.assoc('offset', styleRange.offset + accumulator.text.length, styleRange)
 			)(block.inlineStyleRanges);
-			console.log('richTextHelpers--concatenateBlocks got updatedStyles', updatedStyles, 'for block', block);
 
 			// since the selection end is relative to the start of the last block that we are concatenating
 			// we keep updating the selection end to be the length of all the text so far (not including the current block)
@@ -467,7 +415,6 @@ const categorizeBlocks = ({ rawState, selectionState }) => {
 	const isBackward = selectionState.getIsBackward();
 	const firstKey = isBackward ? focusKey : anchorKey;
 	const lastKey = isBackward ? anchorKey : focusKey;
-	console.log('richTextHelpers--categorizeBlocks got anchorKey', anchorKey, 'focusKey', focusKey, 'isBackward', isBackward);
 
 	// blocks are in order, so divide them up depending on where the blocks with the firstKey and with the lastKey are found
 	return R.reduce(
@@ -496,8 +443,10 @@ const categorizeBlocks = ({ rawState, selectionState }) => {
 
 				case 'after_selection':
 					return appendBlockToArr(block, 'blocksAfterSelection', accumulator);
+
+				default:
 			}
-         R.prop('key', block);
+         R.prop('key', block); // TODO what is going on here....don't think we need this....and think we need a default case in the switch statement above
       },
       {
          blocksBeforeSelection: [],
@@ -511,13 +460,10 @@ const categorizeBlocks = ({ rawState, selectionState }) => {
 
 const createNewStyleRangesForPaste = ({ startSelection, endSelection, styleRange, textToPaste }) => {
 	const endStyleRange = styleRange.offset + styleRange.length;
-	console.log('richTextHelpers--createNewStyleRangesForPaste got startSelection', startSelection, 'endSelection', endSelection, 'styleRange', styleRange, 'textToPaste', textToPaste);
 	const textLength = R.pipe(R.replace, R.length)(NEWLINE_REGEX, '', textToPaste); // want to ignore any newlines for calculation of style range offsets, as we will split into multiple blocks if there are newlines
-	console.log('richTextHelpers--createNewStyleRangesForPaste got textLength', textLength);
 
 	// case 1 - selection starts before the style range and ends in the middle or at the end of the style range
 	if (startSelection < styleRange.offset && endSelection > styleRange.offset && endSelection <= endStyleRange) {
-		console.log('richTextHelpers--createNewStyleRangesForPaste, case 1 - selection starts before the style range and ends in the middle of it');
 		return R.pipe(
 			R.subtract,
 			length => length > 0
@@ -532,7 +478,6 @@ const createNewStyleRangesForPaste = ({ startSelection, endSelection, styleRange
 
 	// case 2 - selection starts in the middle, or start of the style range, and ends after it
 	if (styleRange.offset <= startSelection && startSelection < endStyleRange && endStyleRange < endSelection) {
-		console.log('richTextHelpers--createNewStyleRangesForPaste, case 2 - selection starts in the middle of the style range and ends after it');
 		return R.pipe(
 			R.subtract,
 			length => length > 0 
@@ -546,7 +491,6 @@ const createNewStyleRangesForPaste = ({ startSelection, endSelection, styleRange
 
 	// case 3a - selection starts & ends in the middle of the style range
 	if (styleRange.offset < startSelection && endSelection < endStyleRange) {
-		console.log('richTextHelpers--createNewStyleRangesForPaste, case 3a - selection starts & ends in the middle of the style range');
 		return R.pipe(
 			// new style range before the selection
 			R.subtract,
@@ -564,7 +508,6 @@ const createNewStyleRangesForPaste = ({ startSelection, endSelection, styleRange
 
 	// case 3b - selection & style range start at the same point, and the selection ends in the middle of the style range
 	if (styleRange.offset === startSelection && endSelection < endStyleRange) {
-		console.log('richTextHelpers--createNewStyleRangesForPaste, case 3b - selection & style range start at the same point, and the selection ends in the middle of the style range');
 		return R.pipe(
 			R.subtract,
 			R.assoc('length', R.__, styleRange),
@@ -575,7 +518,6 @@ const createNewStyleRangesForPaste = ({ startSelection, endSelection, styleRange
 
 	// case 3c - selection starts in the middle of the style range, and the selection & style range end at the same point
 	if (styleRange.offset < startSelection && endSelection === endStyleRange) {
-		console.log('richTextHelpers--createNewStyleRangesForPaste, case 3c - selection starts in the middle of the style range, and the selection & style range end at the same point');
 		return R.pipe(
 			R.subtract,
 			R.assoc('length', R.__, styleRange),
@@ -585,19 +527,16 @@ const createNewStyleRangesForPaste = ({ startSelection, endSelection, styleRange
 
 	// case 3d - selection and style range start and end at the same points
 	if (styleRange.offset === startSelection && endSelection === endStyleRange) {
-		console.log('richTextHelpers--createNewStyleRangesForPaste, case 3d - selection and style range start and end at the same points');
 		return [];
 	}
 
 	// case 4 - selection starts before and ends after the style range
 	if (startSelection < styleRange.offset && endStyleRange < endSelection) {
-		console.log('richTextHelpers--createNewStyleRangesForPaste, case 4 - selection starts before and ends after the style range');
 		return [];
 	}
 
 	// case 5a - selection comes before style range
-	if (endSelection <= styleRange.offset) { 
-		console.log('richTextHelpers--createNewStyleRangesForPaste, case 5a - selection comes before style range');
+	if (endSelection <= styleRange.offset) {
 		return R.pipe(
 			R.subtract, // gets the selection length
 			R.subtract(textLength), // gets the difference between the length of the selection and the length of the new text 
@@ -609,7 +548,6 @@ const createNewStyleRangesForPaste = ({ startSelection, endSelection, styleRange
 	
 	// case 5b - selection comes after style range
 	if (startSelection >= endStyleRange) {
-		console.log('richTextHelpers--createNewStyleRangesForPaste, case 5b - selection comes after style range');
 		return [styleRange];
 	}
 }
@@ -630,12 +568,10 @@ const pasteTextWithinOneBlock = ({ targetBlockKey, editorState, rawState, start,
 	const beforeSelection = R.slice(0, start, blockText);
 	const afterSelection = R.slice(end, Infinity, blockText);
 	const newText = beforeSelection + textToPaste + afterSelection;
-	console.log('richTextHelpers--pasteTextWithinOneBlock newText', newText, 'blockText', blockText, 'rawState', rawState, 	'start', start, 'end', end,);
 	const updatedBlocks = R.map(
 		block => {
 			if (block.key === targetBlockKey) {
 				const selectionStyleRanges = R.prop('inlineStyleRanges', block);
-				console.log('richTextHelpers--pasteTextWithinOneBlock got selectionStyleRanges', selectionStyleRanges);
 				return selectionStyleRanges.length > 0
 					? R.pipe(
 						R.map(styleRange =>
@@ -665,7 +601,6 @@ const pasteTextWithinOneBlock = ({ targetBlockKey, editorState, rawState, start,
 }
 
 export const addPastedTextToEditorState = textToPaste => {
-	console.log('richTextHelpers--addPastedTextToEditorState got textToPaste', textToPaste);
 	const editorState = stateFocusEditor(managedStore.state);
 	const selectionState = editorState.getSelection();
 	const anchorKey = selectionState.getAnchorKey(); // key for the start of the selection
@@ -675,23 +610,9 @@ export const addPastedTextToEditorState = textToPaste => {
 	const focusBlock = currentContent.getBlockForKey(focusKey);
 	const rawState = convertToRaw(editorState.getCurrentContent());
 	
-	console.log(
-      'richTextHelpers--addPastedTextToEditorState got anchorBlock', anchorBlock,
-		'focusBlock', focusBlock,
-		'textToPaste', textToPaste,
-		'editorState', editorState,
-		'rawState', rawState
-   );
-	
 	const { blocksBeforeSelection, blocksInSelection, blocksAfterSelection } = categorizeBlocks({ rawState, selectionState });
-	console.log(
-      'richTextHelpers--addPastedTextToEditorState got blocksBeforeSelection', blocksBeforeSelection,
-      'blocksInSelection', blocksInSelection,
-      'blocksAfterSelection', blocksAfterSelection,
-   );
 	
 	const selectionBlock = concatenateBlocks({ blocksInSelection, editorState });
-	console.log('richTextHelpers--addPastedTextToEditorState got selectionBlock', selectionBlock);
 	const { selectionStart, selectionEnd, key, keys } = selectionBlock;
 
 	const selectionBlockRawState = R.assoc('blocks', [selectionBlock], rawState);
@@ -710,13 +631,9 @@ export const addPastedTextToEditorState = textToPaste => {
 		stateWithNewText => convertToRaw(stateWithNewText.getCurrentContent()),
 		R.prop('blocks'),
 		R.head,
-		R.tap(data => console.log('richTextHelpers--addPastedTextToEditorState got combined block with pasted text', data)),
 		block => splitBlock({ block, keys }),
-		R.tap(data => console.log('richTextHelpers--addPastedTextToEditorState got slpit blocks', data)),
 		newBlocks => R.unnest([ blocksBeforeSelection, newBlocks, blocksAfterSelection ]),
-		R.tap(data => console.log('richTextHelpers--addPastedTextToEditorState combined blocks before and after selection with split blocks to get', data)),
 		R.assoc('blocks', R.__, rawState),
-		R.tap(data => console.log('richTextHelpers--addPastedTextToEditorState created the rawState (to be converted to editorState):', data)),
 		convertFromRaw,
 		EditorState.createWithContent,
 	)('blocks', [selectionBlock], rawState); // the 1st function in the pipe will put the selectionBlock into the rawState

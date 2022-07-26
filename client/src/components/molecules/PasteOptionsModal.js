@@ -31,17 +31,16 @@ const PasteOptionsModal = () => {
 	const systemClipboard = useSelector(state => stateSystemClipboard(state));
 	const fromCell = useSelector(state => stateCellRangeFrom(state));
 	const toCell = useSelector(state => stateCellRangeTo(state));
-	const positioning = useSelector(state => statePasteOptionsModalPositioning(state));
+	const positioning = useSelector(state => statePasteOptionsModalPositioning(state)); // TODO replace this with cellPositioning in the focusReducer
 	const cell = useSelector(state => stateFocusCell(state));
 	const blurCellInPlaceEditor = useSelector(state => stateBlurEditorFunction(state));
-	const cellInPlaceEditorRef = useSelector(state => stateFocusCellRef(state));
+	const cellInPlaceEditorRef = useSelector(state => stateFocusCellRef(state)); // TIDY
 
 	const clipboardAsCells = isNothing(systemClipboard) ? [] : convertTextToCellRange({ 
 		text: systemClipboard,
 		startingCellRowIndex: cellRow(cell), 
 		startingCellColumnIndex: cellColumn(cell)
 	});
-	console.log('PasteOptionsModal got clipboardAsCells', clipboardAsCells, 'function for blurCellInPlaceEditor is:', blurCellInPlaceEditor);
 
 	if (!showModal) {
 		return null;
@@ -67,7 +66,6 @@ const PasteOptionsModal = () => {
 			timestamp: Date.now(),
 		});
 	}
-
 	
 	const handlePasteClipboardAsRange = () => {
 		updatedShowPasteOptionsModal(false);
