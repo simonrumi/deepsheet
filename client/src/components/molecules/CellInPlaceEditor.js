@@ -373,68 +373,6 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
 				return getDefaultKeyBinding(event);
 		}
 	}
-
-   const keyBindingsCellInPlaceEditor = (command, editorState) => {
-		if (stateShowPasteOptionsModal(managedStore.state)) {
-			// we're not reacting to any key strokes until the user clicks on something in the PasteOptionsModal
-			return CELL_EDITOR_KEY_COMMAND_NOT_HANDLED; // TODO test this and check this is the right thing to do here
-		}
-
-      // use https://keycode.info/ to get key values
-      switch(command) {
-         case CELL_EDITOR_ESC:
-            handleCancel();
-            return CELL_EDITOR_KEY_COMMAND_HANDLED;
-
-         case CELL_EDITOR_ENTER:
-				handleSubmit();
-            return CELL_EDITOR_KEY_COMMAND_HANDLED;
-
-         case CELL_EDITOR_TAB:
-            manageTab({ cell, 
-					callback: () => {
-						editorChangeHandler(editorState);
-						finalizeCellContent(cell);
-					}, 
-					goBackwards: false 
-				});
-            return CELL_EDITOR_KEY_COMMAND_HANDLED;
-
-			case CELL_EDITOR_SHIFT_TAB:
-				manageTab({ 
-					cell, 
-					callback: () => { 
-						editorChangeHandler(editorState);
-						finalizeCellContent(cell) 
-					}, 
-					goBackwards: true 
-				});
-            return CELL_EDITOR_KEY_COMMAND_HANDLED;
-
-         case CELL_EDITOR_COPY:
-				const text = R.pipe(
-					createCellKey,
-					stateCell(managedStore.state),
-					cellText
-				)(cellRow(cell), cellColumn(cell));
-				updatedClipboard({ text });
-				updateSystemClipboard(text);
-            return CELL_EDITOR_KEY_COMMAND_HANDLED;
-
-         case CELL_EDITOR_PASTE:
-				handlePaste();
-            return CELL_EDITOR_KEY_COMMAND_HANDLED;
-
-			case CELL_EDITOR_ALT_ENTER:
-         default:
-				const newState = RichUtils.handleKeyCommand(editorState, command);
-				if (isSomething(newState)) {
-					editorChangeHandler(newState);
-					return CELL_EDITOR_KEY_COMMAND_HANDLED;
-				}
-				return CELL_EDITOR_KEY_COMMAND_NOT_HANDLED;
-      }
-   };
    
    const manageBlur = event => {
 		event?.preventDefault();
@@ -456,7 +394,7 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
       ifThen({
          ifCond: manageFocus, // returns true if the focus needed to be updated
          thenDo: () => startedEditing({ cell, editorState }),
-         params: { ifParams: { event, cell, cellRef: cellInPlaceEditorRef } }
+         params: { ifParams: { event, cell, cellRef: cellInPlaceEditorRef, keyBindings: keyBindingsCellInPlaceEditor } }
       });
    }
 
@@ -521,17 +459,20 @@ const renderTextForm = () => <form onSubmit={handleSubmit}>
 		onBlur={manageBlur}
 		>
 		{ isSomething(editorState)
-			? <Editor
-				editorState={editorState}
-				onChange={editorChangeHandler}
-				handleKeyCommand={keyBindingsCellInPlaceEditor } 
-				keyBindingFn={setKeyBindingCodes}
-				handlePastedText={handlePaste}
-				ref={setEditorRef}
-			/> // used to be ref={cellInPlaceEditorRef} // TIDY
+			? <form onSubmit={handleSubmit} >
+				{renderIcons()}
+				<textarea
+					className="focus:outline-none border-2 border-subdued-blue p-1 shadow-lg w-full h-full" 
+					ref={cellInPlaceEditorRef}
+					rows="3"
+					value={cellText(cell)}
+					onChange={evt => manageChange(evt, cell)}
+					onBlur={manageBlur}
+				/>
+			</form>
 			: null
 		}
-	</div>
+	</div>ref={setEditorRef}
 </form>
 
    // need to useEffect so the cellInPlaceEditorRef can first be assigned to the textarea

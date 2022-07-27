@@ -33,6 +33,9 @@ check-mark.svg
 verification-checkmark-symbol.svg
 
 #temp/old stuff
+/components/molecules/CellInPlaceEditorChanges
+sansDraftJs.js
+withDraftJs.js
 /oldTests
 oldFilterSheetFns.js
 ramdaTests.js
