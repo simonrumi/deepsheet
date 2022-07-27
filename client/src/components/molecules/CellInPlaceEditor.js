@@ -118,7 +118,7 @@ const reinstateOriginalValue = cell =>
 		},
 	});
 
-// TODO BUG
+// ******** OLD NOTES *******
 // 1. add a column
 // 2. click on a cell
 // result: the cell editor is shown in the wrong place
@@ -134,7 +134,6 @@ const reinstateOriginalValue = cell =>
 // CellInPlaceEditor is receiving the correct cellToEdit, but the incorrect positioning
 // the positioning is for the cell to the left of the cell that was clicked
 // 
-// TODO NEXT
 /// can't seem to set the cell positioning in the store...but shouldn't be this hard
 // 1. load cell
 // 2. useEffect -> set positioning for that particular cell ...but this leads to an infinite loop
@@ -146,10 +145,25 @@ const reinstateOriginalValue = cell =>
 // THe problem might be in Cell not CellInPlaceEditor, since it is Cell.js where the usePositioning gets the positioning values
 // so in there, somehow, we want to call that usePositioning function again when there is a change
 // because it must be the case that the DOM is getting updated and the node that Cell's ref is pointing to is changed by React when we add a column
-
-
-// TODO BUG
+//
+// BUG
 // Tabbing on a cell that has been edited replaces the contents of the next cell with the edited stuff from the previous cell
+// ******** END OLD NOTES *******
+
+/**
+ * branches:
+ * master - no DraftJs
+ * development = has DraftJs, working, except that adding columns messes up the node structure and can't seem to fix that
+ * removingDraftJS = this branch
+ * sansDraftJs = no DraftJs, just like master, saved just in case - swap back to this branch instead of master for seeing old setup
+ * updatePackages = old branch, should delete
+ * 
+ * TODO NEXT
+ * remove <Editor>, 
+ * ...need to see what renderTextForm looked like in the sansDraftJs branch
+ * THEN 
+ * reinstate old methods of editing text, but use the data structure from DraftJs
+ */
 
 /* test data: TIDY
 some	thing
