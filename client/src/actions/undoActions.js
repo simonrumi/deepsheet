@@ -34,6 +34,7 @@ export const startedEditing = initialValue => {
 };
 
 export const finishedEditing = editData => {
+	console.log('undoActions--finishedEditing got', editData);
    managedStore.store.dispatch({ type: FINISHED_EDITING, payload: editData });
 };
 

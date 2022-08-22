@@ -1,4 +1,3 @@
-import React from 'react';
 import htmlReactParser from 'html-react-parser';
 import * as R from 'ramda';
 import managedStore from '../store';
@@ -6,8 +5,10 @@ import { EditorState, convertToRaw, convertFromRaw, ContentState } from 'draft-j
 import { isSomething, isNothing, arrayContainsSomething, reduceWithIndex, ifThenElse } from '../helpers';
 import { encodeText, decodeText } from './cellHelpers';
 import { stateFocusEditor, cellText, cellFormattedText } from './dataStructureHelpers';
-import { BLOCK_SEPARATOR, BLOCK_SEPARATOR_REGEX, NEWLINE_REGEX, STYLE_TAGS } from '../constants';
+import { BLOCK_SEPARATOR, BLOCK_SEPARATOR_REGEX, NEWLINE_REGEX, BLOCK_END_CHAR_LENGTH, STYLE_TAGS, LOG } from '../constants';
+import { log } from '../clientLogger';
 
+// TODO do this without using DraftJs...or stop using it if unneeded
 export const getInitialEditorState = cell => ifThenElse({
 	ifCond: R.pipe(cellFormattedText, isSomething),
 	thenDo: [ cellFormattedText, decodeFormattedText, convertFromRaw, EditorState.createWithContent ],
@@ -15,6 +16,14 @@ export const getInitialEditorState = cell => ifThenElse({
 	params: { ifParams: cell, thenParams: cell, elseParams: cell }
 });
 
+export const makeEmptyFormattedText = () => ({ blocks: [] });
+
+export const makeBlockForText = ({ text = '', key, inlineStyleRanges = [] }) => {
+	key = isSomething(key) ? key : getRandomKey({ usedKeys: [] });
+	return { key, inlineStyleRanges, text }
+};
+
+// used by cellHelpers when sending data to db
 export const encodeFormattedText = formattedText => isSomething(formattedText) 
 	? R.pipe(
 		R.prop('blocks'),
@@ -38,6 +47,10 @@ export const decodeFormattedText = formattedText => R.pipe(
 	)(block)),
 	R.assoc('blocks', R.__, formattedText), // put the blocks back into formattedText
 )(formattedText);
+
+/***
+ * helpers for style ranges
+ */
 
 const stylesOverlap = styleRanges => {
 	const firstStyleRange = R.head(styleRanges);
@@ -197,6 +210,10 @@ const sortStyleRanges = R.sort((styleRange1, styleRange2) =>
 		: styleRange1.offset > styleRange2.offset ? 1 : 0
 );
 
+/***
+ * helpers for JSX
+ */
+
 const convertOneBlockToJsx = block => {
 	// note that inlineStyleRanges look like this
 	// [{offset: 6, length: 4, style: 'BOLD'}, ...]
@@ -221,6 +238,9 @@ export const convertBlocksToJsx = blocks => {
 	)(blocksAsHtml);
 }
 
+/***
+ * helpers for blocks
+ */
 
 /**
  * Draft.js has a generateRandomKey function, but hard to find how to use it due to missing documentation
@@ -339,10 +359,12 @@ const splitBlock = ({ block, keys }) => {
 	return blocks;
 };
 
-const concatenateBlocks = ({ blocksInSelection, editorState }) => {
-	const selectionState = editorState.getSelection();
-	const selectionStart = selectionState.getStartOffset();
-	const selectionEndWithinLastBlock = selectionState.getEndOffset();
+const concatenateBlocks = ({ blocksInSelection, editorState, selectionStart, selectionEnd }) => {
+
+	// TODO will need to remove editorState from this function and entirely use selectionStart and selectionEnd instead
+	const selectionState = editorState?.getSelection();
+	selectionStart = selectionStart ? selectionStart : selectionState?.getStartOffset();
+	const selectionEndWithinLastBlock = selectionEnd ? selectionEnd : selectionState?.getEndOffset();
 
 	return R.reduce(
 		(accumulator, block) => {
@@ -457,6 +479,10 @@ const categorizeBlocks = ({ rawState, selectionState }) => {
       R.prop('blocks', rawState)
    );
 }
+
+/***
+ * helpers for pasting
+ */
 
 const createNewStyleRangesForPaste = ({ startSelection, endSelection, styleRange, textToPaste }) => {
 	const endStyleRange = styleRange.offset + styleRange.length;
@@ -637,4 +663,315 @@ export const addPastedTextToEditorState = textToPaste => {
 		convertFromRaw,
 		EditorState.createWithContent,
 	)('blocks', [selectionBlock], rawState); // the 1st function in the pipe will put the selectionBlock into the rawState
+}
+
+/***
+ * helpers for managing change
+ */
+
+export const replaceBlockInFormattedText = ({ newBlock, formattedText }) => R.pipe(
+	R.prop('blocks'),
+	R.map(block => R.prop('key', block) === R.prop('key', newBlock) ? newBlock : block),
+	R.assoc('blocks', R.__, formattedText)
+)(formattedText);
+
+const accomodateCharInStyleRanges = ({ charPosition, styleRanges, charsAdded }) => R.pipe(
+	sortStyleRanges,
+	R.reduce(
+		(accumulator, styleRange) => {
+			if (accumulator.beforeCharStyleRanges) {
+				if (isCharInRange({ charPosition, styleRange })) {
+					return {
+						newStyleRanges: R.append({ ...styleRange, length: styleRange.length + charsAdded }, accumulator.newStyleRanges),
+						beforeCharStyleRanges: false,
+						beforeTailingStyleRanges: true
+					};
+				}
+				return {
+					newStyleRanges: R.append(styleRange, accumulator.newStyleRanges),
+					beforeCharStyleRanges: true,
+					beforeTailingStyleRanges: true
+				};
+			}
+			if (accumulator.beforeTailingStyleRanges && isCharInRange({ charPosition, styleRange })) {
+				return {
+					newStyleRanges: R.append({ ...styleRange, length: styleRange.length + charsAdded }, accumulator.newStyleRanges),
+					beforeCharStyleRanges: false,
+					beforeTailingStyleRanges: true
+				};
+			}
+			return {
+				newStyleRanges: R.append({ ...styleRange, offset: styleRange.offset + charsAdded }, accumulator.newStyleRanges),
+				beforeCharStyleRanges: false,
+				beforeTailingStyleRanges: false,
+			}
+		},
+		{ newStyleRanges: [], beforeCharStyleRanges: true, beforeTailingStyleRanges: true }, // initial value
+	)
+)(styleRanges);
+
+const deleteCharFromText = ({ text, index }) => {
+	console.log('richTextHelpers--deleteCharFromText got text', text, 'index', index);
+	const beginning = R.slice(0, index, text);
+	const end = R.slice(index + 1, Infinity, text);
+	return beginning + end;
+}
+
+const deleteCharFromBlock = ({ block, charIndexWithinBlock = 0 }) => {
+	const { newStyleRanges } = accomodateCharInStyleRanges({
+      charPosition: charIndexWithinBlock,
+      styleRanges: block.inlineStyleRanges,
+      charsAdded: -1,
+   });
+	console.log('richTextHelpers--deleteCharFromBlock got newStyleRanges', newStyleRanges);
+
+	const newText = deleteCharFromText({ text: block.text, index: charIndexWithinBlock });
+	console.log('richTextHelpers--deleteCharFromBlock got newText', newText);
+
+	return R.pipe(
+		R.assoc('inlineStyleRanges', newStyleRanges),
+		R.assoc('text', newText), 
+	)(block);
+}
+
+const addCharToText = ({ index, text, char }) => R.pipe(
+	R.splitAt,
+	([beginning, end]) => beginning + char + end
+)(index, text);
+
+const addCharToBlock = ({ block, charIndexWithinBlock = 0, char = '' }) => {
+	const { newStyleRanges } = accomodateCharInStyleRanges({
+      charPosition: charIndexWithinBlock,
+      styleRanges: block.inlineStyleRanges,
+      charsAdded: 1,
+   });
+	console.log('richTextHelpers--addCharToBlock got newStyleRanges', newStyleRanges);
+
+	const newText = addCharToText({ text: block.text, index: charIndexWithinBlock, char });
+	console.log('richTextHelpers--addCharToBlock got newText', newText);
+
+	return R.pipe(
+		R.assoc('inlineStyleRanges', newStyleRanges),
+		R.assoc('text', newText), 
+	)(block);
+}
+
+const getBlockWithCursor = ({ cursorPosition, blocks, newTextArr }) => {
+	if (isNothing(cursorPosition) || !arrayContainsSomething(blocks)) {
+		log({ level: LOG.ERROR }, 'richTextHelpers--getBlockWithCursor missing cursorPosition and/or blocks');
+		return { block: null, blockIndex: null, cursorPositionWithinBlock: null }
+	}
+
+	console.log('richTextHelpers--getBlockWithCursor got blocks', blocks, 'cursorPosition', cursorPosition);
+	return reduceWithIndex(
+		(accumulator, block, blockIndex) => {
+			console.log('richTextHelpers--getBlockWithCursor start of reduce function, got block', block, 'blockIndex', blockIndex);
+			const { totalTextLength } = accumulator;
+			const blockLength = R.pipe(R.prop('text'), R.length)(block);
+			const newTextLength = R.pipe(R.prop(blockIndex), R.length)(newTextArr);
+			console.log(
+            'richTextHelpers--getBlockWithCursor in reduce got blockLength', blockLength,
+				'newTextLength', newTextLength,
+            'blockIndex is', blockIndex,
+            'totalTextLength', totalTextLength
+         );
+			
+			if (newTextLength < blockLength) {
+				if (cursorPosition === totalTextLength + blockLength - 1) {
+					// case 1: last char deleted
+					console.log('richTextHelpers--getBlockWithCursor case 1: last char deleted');
+					return R.reduced({ block, cursorPositionWithinBlock: blockLength - 1, blockIndex });
+				}
+				if (cursorPosition === totalTextLength) {
+					// case 2: first char deleted
+					console.log('richTextHelpers--getBlockWithCursor case 2: first char deleted');
+					return R.reduced({ block, cursorPositionWithinBlock: 0, blockIndex });
+				}
+				if (cursorPosition < totalTextLength + blockLength - 1 && cursorPosition > totalTextLength) {
+					// case 3: deleted some char in the middle of the block
+					console.log('richTextHelpers--getBlockWithCursor case 3: deleted some char in the middle of the block');
+					return R.reduced({ block, cursorPositionWithinBlock: cursorPosition - totalTextLength, blockIndex });
+				}
+				log({ level: LOG.ERROR }, 'ERROR: richTextHelpers--getBlockWithCursor found the block with a deleted character, but could not find which character');
+			}
+		
+			if (newTextLength > blockLength) {
+				if (cursorPosition === totalTextLength + blockLength + 1) {
+					// case 4: added char to end of line
+					console.log('richTextHelpers--getBlockWithCursor case 4: added char to end of line');
+					return R.reduced({ block, cursorPositionWithinBlock: blockLength + 1, blockIndex });
+				}
+		
+				if (cursorPosition < totalTextLength + blockLength + 1 && cursorPosition >= totalTextLength + 1) {
+					// case 5: added a char before the end of the line
+					console.log('richTextHelpers--getBlockWithCursor case 5: added a char before the end of the line');
+					return R.reduced({ block, cursorPositionWithinBlock: cursorPosition - totalTextLength, blockIndex }) 
+				}
+			}
+		
+			if (newTextLength === blockLength) {
+				// we are not in the block with the added/deleted char, so move on to the next block
+				console.log('richTextHelpers--getBlockWithCursor cursor is not within current block');
+				return { totalTextLength: totalTextLength + blockLength + BLOCK_END_CHAR_LENGTH }
+			}
+		},
+		{ totalTextLength: 0 }, // initial value
+		blocks
+	);
+}
+
+const combineTwoBlocksStyles = blocks => {
+	const block1Styles = R.path([0, 'inlineStyleRanges'], blocks);
+	const block1Length = R.pipe(R.path([0, 'text']), R.length)(blocks);
+	const block2Styles = R.path([1, 'inlineStyleRanges'], blocks);
+	const block2SytlesUpdated = R.map(styleRange => R.pipe(
+			R.prop('offset'),
+			R.add(block1Length),
+			R.assoc('offset', R.__, styleRange)
+		)(styleRange), 
+	block2Styles);
+	return R.unnest([block1Styles, block2SytlesUpdated]);
+}
+
+const isBlockKeyInList = ({ block, keyList }) => R.pipe(
+	R.prop('key'),
+	blockKey => R.find(key => key === blockKey, keyList),
+	isSomething
+)(block);
+
+const categorizeBlocksForCombination = ({ blocks, combinedBlocksKeys }) => R.reduce(
+	(accumulator, block) => {
+		const { beforeCombinedBlock, afterCombinedBlock, headBlocks, combinedBlocks, tailBlocks } = accumulator;
+		if (beforeCombinedBlock && !afterCombinedBlock) {
+			if (isBlockKeyInList({ block, keyList: combinedBlocksKeys })) {
+				return {
+					...accumulator,
+					combinedBlocks: R.append(block,combinedBlocks),
+					beforeCombinedBlock: false, 
+					afterCombinedBlock: false
+				}
+			}
+			return { 
+				...accumulator,
+				headBlocks: R.append(block, headBlocks),
+			}
+		}
+		if (!beforeCombinedBlock && !afterCombinedBlock) {
+			if (isBlockKeyInList({ block, keyList: combinedBlocksKeys })) {
+				return {
+					...accumulator,
+					combinedBlocks: R.append(block,combinedBlocks),
+				}
+			}
+			return {
+				...accumulator,
+				tailBlocks: R.append(block, tailBlocks),
+				beforeCombinedBlock: false, 
+				afterCombinedBlock: true,
+			}
+		}
+		return {
+			...accumulator,
+			tailBlocks: R.append(block, tailBlocks),
+		}
+	},
+	{ headBlocks: [], combinedBlocks: [], tailBlocks: [], beforeCombinedBlock: true, afterCombinedBlock: false }, //initial value
+	blocks
+);
+
+const addKeyToList = ({ blocks, index, keyList = [] }) => R.pipe(
+	R.prop(index),
+	R.prop('key'),
+	R.append(R.__, keyList)
+)(blocks);
+
+const combineTwoBlocks = ({ blocks, newTextArr, cursorPosition }) => {
+	// find which section of newTextArr contains the cursor
+	// the combined blocks must therefore be the block at that same index, plus the block after it
+	const combinedBlockIndex = reduceWithIndex(
+		(accumulator, newText, index) => {
+			const textLength = accumulator.currentTextLength + newText.length + 1; // adding 1 to account for the \n char at the end of the text
+			if (cursorPosition <= textLength) {
+				return R.reduced(index);
+			}
+			return { currentTextLength: textLength }
+		},
+		{ currentTextLength: 0 },
+		newTextArr
+	);
+
+	const combinedBlocksKeys = R.pipe(
+		addKeyToList,
+		keyList => addKeyToList({ blocks, index: combinedBlockIndex + 1, keyList })
+	)({ blocks, index: combinedBlockIndex });
+
+	const { headBlocks, combinedBlocks, tailBlocks } = categorizeBlocksForCombination({ blocks, combinedBlocksKeys });
+	console.log('richTextHelpers--combineTwoBlocks got headBlocks', headBlocks, 'combinedBlocks', combinedBlocks, 'tailBlocks', tailBlocks);
+
+	const combinedBlockText = R.reduce(
+		(accumulator, block) => R.pipe(
+			R.prop('text'),
+			R.concat(accumulator)
+		)(block),
+		'',
+		combinedBlocks
+	);
+
+	const combinedStyles = combineTwoBlocksStyles(combinedBlocks);
+	console.log('richTextHelpers--combineTwoBlocks got combinedStyles', combinedStyles, 'combinedBlockText', combinedBlockText);
+
+	const combinedBlock = { 
+		key: R.path([0, 'key'], combinedBlocks),
+		text: combinedBlockText,
+		inlineStyleRanges: combinedStyles
+	}
+	console.log('richTextHelpers--combineTwoBlocks got combinedBlock', combinedBlock);
+
+	return R.unnest([headBlocks, combinedBlock, tailBlocks]);
+}
+
+// TODO NEXT
+// Not able to add styles
+// THEN - check pasting...will need to make updates for that...some TODOs in this file are already noted
+// THEN - need to move editor to display underlying cell
+
+export const updateEditedChar = ({ cursorPosition, newText, formattedText }) => {
+	const newTextArr = R.split(NEWLINE_REGEX, newText);
+	
+	const { blocks } = decodeFormattedText(formattedText);
+	console.log(
+      'richTextHelpers--updateEditedChar got cursorPosition',  cursorPosition,
+      'newText', newText,
+      'newTextArr',  newTextArr,
+      'formattedText', formattedText,
+		'decoded blocks', blocks,
+   );
+
+	if (blocks.length === newTextArr.length + 1) {
+		// case 1: a newline char has been deleted
+		return R.pipe(
+			combineTwoBlocks,
+			R.assoc('blocks', R.__, formattedText)
+		)({ blocks, newTextArr, cursorPosition });
+	}
+
+	if (blocks.length != newTextArr.length) {
+		log({ level: LOG.WARN }, 'richTextHelpers--updateEditedChar error: the blocks length is', blocks?.length, 'whereas the number of lines of text is', newTextArr?.length);
+		return formattedText; // MAYBE is this the right way to handle this error? will we ever see this error?
+	}
+
+	const { block, cursorPositionWithinBlock, blockIndex } = getBlockWithCursor({ cursorPosition, blocks, newTextArr });
+	console.log('richTextHelpers--updateEditedChar got block', block, 'cursorPositionWithinBlock', cursorPositionWithinBlock, 'blockIndex', blockIndex);
+
+	const newBlock = block.text.length + 1 === newTextArr[blockIndex].length
+		? R.pipe( // case 2: a char has been added 
+			R.nth,
+			char => addCharToBlock({ block, charIndexWithinBlock: cursorPositionWithinBlock - 1, char }) 
+		)(cursorPosition - 1, newText)
+		: block.text.length - 1 === newTextArr[blockIndex].length
+			? deleteCharFromBlock({ block, charIndexWithinBlock: cursorPositionWithinBlock }) // case 3: a char has been deleted
+			: block // case4: should never happen - neither added nor deleted a single character
+
+	console.log('richTextHelpers--updateEditedChar got newBlock', newBlock);
+	return replaceBlockInFormattedText({ newBlock, formattedText });
 }

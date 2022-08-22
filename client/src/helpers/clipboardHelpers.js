@@ -457,7 +457,7 @@ export const convertTextToCellRange = ({ text, startingCellRowIndex, startingCel
 export const pasteText = ({ text }) => {
 	R.pipe(
 		addPastedTextToEditorState,
-		updatedEditorState,
+		updatedEditorState, // TODO this will need changing to the non-DraftJs version
 	)(text); 
 	updatedHandlingPaste(false);
 }

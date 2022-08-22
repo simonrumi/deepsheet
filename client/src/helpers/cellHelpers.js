@@ -42,7 +42,7 @@ import {
    stateCellsUpdateInfo,
 } from './dataStructureHelpers';
 import { isCellVisible } from './visibilityHelpers';
-import { encodeFormattedText } from './richTextHelpers';
+import { encodeFormattedText, decodeFormattedText } from './richTextHelpers';
 import { addCellReducers } from '../reducers/cellReducers';
 import { addNewCellsToStore, addNewCellsToCellDbUpdates } from '../services/insertNewAxis';
 import { updatedCell, hasChangedCell, addedCellKeys } from '../actions/cellActions';
@@ -225,10 +225,16 @@ export const getCellsFromCellKeys = R.curry(
 
 export const encodeText = text => isSomething(text) ? text.replace(/([^a-zA-Z0-9\s])/g, '\\$1') : '';
 
-export const encodeCellText = cell => R.pipe(
+const encodeCellText = cell => R.pipe(
       cellText,
       encodeText,
-      cellTextSetter(R.__, cell)
+      cellTextSetter(R.__, cell),
+		cell => ifThenElse({
+			ifCond: R.pipe(cellFormattedText, isSomething),
+			thenDo: [ cellFormattedText, encodeFormattedText, cellFormattedTextSetter(R.__, cell), ],
+			elseDo: R.identity,
+			params: { ifParams: cell, thenParams: cell, elseParams: cell }
+		}),
    )(cell);
 
 export const decodeText = text => isSomething(text) ? text.replace(/\\/g, '') : '';
@@ -236,7 +242,13 @@ export const decodeText = text => isSomething(text) ? text.replace(/\\/g, '') : 
 export const decodeCellText = cell => R.pipe(
    cellText,
 	decodeText,
-	cellTextSetter(R.__, cell)
+	cellTextSetter(R.__, cell),
+	cell => ifThenElse({
+		ifCond: R.pipe(cellFormattedText, isSomething),
+		thenDo: [ cellFormattedText, decodeFormattedText, cellFormattedTextSetter(R.__, cell), ],
+		elseDo: R.identity,
+		params: { ifParams: cell, thenParams: cell, elseParams: cell }
+	})
 )(cell);
 
 export const removeCellFromArray = (cell, arr) => R.filter(
@@ -271,7 +283,8 @@ const tidyUpFormattedText = cell => R.pipe(
 	R.dissoc('entityMap'),
 	removeNamedKey('data'),
 	removeNamedKey('entityRanges'),
-	encodeFormattedText,
+	R.tap(data => console.log('cellHelpers--tidyUpFormattedText would have called encodeFormattedText, but not doing it, so cell is', data)),
+	// encodeFormattedText,
 	cellFormattedTextSetter(R.__, cell),
 )(cell);
 

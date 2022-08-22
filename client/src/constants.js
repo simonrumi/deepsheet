@@ -39,6 +39,7 @@ export const ALL_CELLS = 'all_cells'; // for use by cellsNeeding Update
 export const BLOCK_SEPARATOR = '<br>';
 export const BLOCK_SEPARATOR_REGEX = /<br>$/;
 export const NEWLINE_REGEX = /(?:\n\r|\r\n|\n|\r)/g;
+export const BLOCK_END_CHAR_LENGTH = 1; // this is the length of the '\n' char at the end of each line
 export const BOLD = 'BOLD';
 export const ITALIC = 'ITALIC';
 export const UNDERLINE = 'UNDERLINE';

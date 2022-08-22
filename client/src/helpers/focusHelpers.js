@@ -35,16 +35,12 @@ export const isStateCellRefThisCell = (cellRef, cell) => {
        && cellRef?.current === currentFocusedCellRef.current;
 }
 
-export const manageFocus = ({ event, cell, cellRef }) => {
+export const manageFocus = ({ event, cell, cellRef, keyBindings }) => {
 	event?.preventDefault();
-	try {
-		cellRef.focus(); // this requires that cellRef is a DraftEditor which is exposing a focus function
-	} catch(err) {
-		log({ level: LOG.WARN }, 'focusHelper--manageFocus tried to use DraftEditor\'s focus() function but got this error', err);
-	}
-	
+	console.log('focusHelpers--manageFocus got cell', cell);
 
 	if (isStateCellRefThisCell(cellRef, cell)) {
+		console.log('focusHelpers--manageFocus cell ref is this cell, so no need to change focus', cell);
 		return false; // indicates we didn't need to change focus
 	}
 	ifThen({
@@ -53,7 +49,9 @@ export const manageFocus = ({ event, cell, cellRef }) => {
 		params: {},
 	});
 	const controller = new AbortController();
+	console.log('focusHelpers--manageFocus made AbortController', controller);
 	updatedFocusAbortControl(controller, cell);
+	document.addEventListener('keydown', evt => keyBindings(evt), { signal: controller.signal });
 	updatedFocusRef(cellRef);
 	return true; // indicates we changed the focus
 }

@@ -329,7 +329,7 @@ const undoReducer = reducer => {
 							value: cellText(cell),
 							row: cellRow(cell),
 							column: cellColumn(cell),
-							formattedText: convertToRaw(editorState.getCurrentContent()),
+							formattedText: editorState,
 						}, // save the value we started editing for comparison when FINISHED_EDITING
 						present: reducer(present, action), // update the present
 						actionHistory: {

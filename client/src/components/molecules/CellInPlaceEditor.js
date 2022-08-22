@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import * as R from 'ramda';
-import {
+/* import {
    Editor,
    RichUtils,
    convertToRaw,
    getDefaultKeyBinding,
-} from 'draft-js';
-import 'draft-js/dist/Draft.css';
+} from 'draft-js'; 
+import 'draft-js/dist/Draft.css';*/ // TIDY
 import managedStore from '../../store';
 import { updatedCell, hasChangedCell } from '../../actions/cellActions';
 import { createdSheet } from '../../actions/sheetActions';
@@ -27,6 +27,9 @@ import { isNothing, isSomething, arrayContainsSomething, ifThen, runIfSomething 
 import { getUserInfoFromCookie } from '../../helpers/userHelpers';
 import { createDefaultAxisSizing } from '../../helpers/axisSizingHelpers';
 import { manageFocus, manageTab } from '../../helpers/focusHelpers';
+import {
+	updateEditedChar,
+} from '../../helpers/richTextHelpers';
 import {
    pasteCellRangeToTarget,
    updateSystemClipboard,
@@ -118,7 +121,7 @@ const reinstateOriginalValue = cell =>
 		},
 	});
 
-// ******** OLD NOTES *******
+/* // ******** OLD NOTES *******
 // 1. add a column
 // 2. click on a cell
 // result: the cell editor is shown in the wrong place
@@ -148,22 +151,7 @@ const reinstateOriginalValue = cell =>
 //
 // BUG
 // Tabbing on a cell that has been edited replaces the contents of the next cell with the edited stuff from the previous cell
-// ******** END OLD NOTES *******
-
-/**
- * branches:
- * master - no DraftJs
- * development = has DraftJs, working, except that adding columns messes up the node structure and can't seem to fix that
- * removingDraftJS = this branch
- * sansDraftJs = no DraftJs, just like master, saved just in case - swap back to this branch instead of master for seeing old setup
- * updatePackages = old branch, should delete
- * 
- * TODO NEXT
- * remove <Editor>, 
- * ...need to see what renderTextForm looked like in the sansDraftJs branch
- * THEN 
- * reinstate old methods of editing text, but use the data structure from DraftJs
- */
+// ******** END OLD NOTES ******* */
 
 /* test data: TIDY
 some	thing
@@ -174,19 +162,23 @@ STUFF
 HERE
 */
 
+const manageCellInPlaceEditorFocus = ({ event, cellInPlaceEditorRef, cell, editorState, editorKeyBindings }) => {
+	ifThen({
+		ifCond: manageFocus, // returns true if the focus needed to be updated
+		thenDo: [
+			() => cellInPlaceEditorRef.current.selectionStart = 0,
+			() => cellInPlaceEditorRef.current.selectionEnd = cellText(cell).length || 0,
+			() => startedEditing({ cell, editorState }),
+		],
+		params: { ifParams: { event, cell, cellRef: cellInPlaceEditorRef, keyBindings: editorKeyBindings } }
+	});
+}
+
 const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
    // this ref is applied to the div containing the editor (see below) so that we can manage its focus
-   // const cellInPlaceEditorRef = useRef(); // TIDY or reinstate
-	const [cellInPlaceEditorRef, setEditorRefNode]  = useState(null);
-	const setEditorRef = useCallback(node => setEditorRefNode(node));
-	console.log('CellInPlaceEditor got cellInPlaceEditorRef', cellInPlaceEditorRef);
-
-	if (cellHasFocus && isSomething(cellInPlaceEditorRef?.current)) {
-		cellInPlaceEditorRef.current.focus();
-		manageCellInPlaceEditorFocus(null);
-		// updatedCellEditorPositioning({ ...positioning }); // this is needed, in some circumstances, by PasteOptionsModal // TIDY using updatedCellPositioning instead
-		updatedCellPositioning(positioning);
-	}
+   const cellInPlaceEditorRef = useRef(); // TIDY or reinstate
+	// const [cellInPlaceEditorRef, setEditorRefNode]  = useState(null);
+	// const setEditorRef = useCallback(node => setEditorRefNode(node)); // TIDY or reinstate
 
 	const cellKey = createCellKey(cellRow(cellToEdit), cellColumn(cellToEdit));
    const cell = useSelector(state => statePresent(state)[cellKey]);
@@ -196,8 +188,89 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
 	// so using a local state seems like a reasonable way to make it so that only the single CellInPlaceEditor changes,
 	// rather than re-rendering every Cell, which would be the case if we gave systemClipboard as a param to CellInPlaceEditor
 	const [systemClipboardLocal, setSystemClipboardLocal] = useState(stateSystemClipboard(managedStore.state));
+	const [keystrokeHandled, setKeystrokeHandled] = useState(false); // for use by manageChange and editorKeyBindings
+
+	const editorKeyBindings = event => {
+		if (stateShowPasteOptionsModal(managedStore.state)) {
+			// we're not reacting to any key strokes until the user clicks on something in the PasteOptionsModal
+			runIfSomething(evt => evt.preventDefault, event);
+			return;
+		}
+      // use https://keycode.info/ to get key values
+      switch(event.keyCode) {
+         case 27: // esc
+            handleCancel(event);
+				setKeystrokeHandled(true);
+            break;
+
+         case 13: // enter
+				if (event.altKey) {
+					setKeystrokeHandled(true);
+					return handleAltEnter(event);
+				}
+				setKeystrokeHandled(true);
+            handleSubmit(event);
+            break;
+
+         case 9: // tab
+				setKeystrokeHandled(true);
+            manageTab({ event, cell, callback: () => finalizeCellContent(cell) });
+            break;
+
+			case 66: // B for bold
+				if (event.ctrlKey) {
+					setKeystrokeHandled(true);
+					handleStyling(event, BOLD);
+				}
+				break;
+
+			case 73: // I for italic
+				if (event.ctrlKey) {
+					setKeystrokeHandled(true);
+					handleStyling(event, UNDERLINE);
+				}
+				break;
+
+			case 85: // U for underline
+				if (event.ctrlKey) {
+					setKeystrokeHandled(true);
+					handleStyling(event, UNDERLINE);
+				}
+				break;
+
+         case 67: // "C" for copy
+            if (event.ctrlKey) {
+					setKeystrokeHandled(true);
+               const text = R.pipe(
+                  createCellKey,
+                  stateCell(managedStore.state),
+                  cellText
+               )(cellRow(cell), cellColumn(cell));
+               updatedClipboard({ text });
+               updateSystemClipboard(text);
+            }
+            break;
+
+         case 86: // "V" for paste 
+            if (event.ctrlKey) {
+					setKeystrokeHandled(true);
+					handlePaste(event);               
+            }
+            break;
+            
+         default:
+      }
+	};
+
+	/* if (cellHasFocus && isSomething(cellInPlaceEditorRef)) {
+		cellInPlaceEditorRef.current.focus();
+		manageCellInPlaceEditorFocus({ event: null, cellInPlaceEditorRef, cell, editorState, editorKeyBindings });
+		// updatedCellEditorPositioning({ ...positioning }); // this is needed, in some circumstances, by PasteOptionsModal // TIDY using updatedCellPositioning instead
+		updatedCellPositioning(positioning);
+	} */ // TIDY if not using ...does this in useEffect instead
 	
    const finalizeCellContent = cell => {
+		console.log('CellInPLaceEditor--finalizeCellContent got cellInPlaceEditorRef', cellInPlaceEditorRef, 'cellInPlaceEditorRef.current', cellInPlaceEditorRef.current, 'cellInPlaceEditorRef.current?.value', cellInPlaceEditorRef.current?.value);
       if (!R.equals(stateOriginalValue(managedStore.state), cellInPlaceEditorRef.current?.value)) {
          hasChangedCell({
             row: cellRow(cell),
@@ -213,14 +286,22 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
 
    const handleSubmit = event => {
       event?.preventDefault();
-		editorChangeHandler(editorState); // this ensures we get the latest change updated into the redux store
+		console.log('CellInPLaceEditor--handleSubmit got event', event, 'cell', cell, 'editorState', editorState);
+		// TIDY comment
+		// manageChange was added here because at some point the last edit made to the cell was not being captured
+		// however now when the checkmark icon is clicked, the target is that icon, not the textarea, 
+		// so manage change updates the cell text to "undefined"
+		// hence we are taking it out of here, but will later need to check that the last edit in a cell is captured
+		// manageChange(event, cell, editorState);  TIDY
+		// console.log('CellInPLaceEditor--handleSubmit after manageChange got event', event, 'cell', cell, 'editorState', editorState);
       stateFocusAbortControl(managedStore.state)?.abort();
       finalizeCellContent(cell);
+		console.log('CellInPLaceEditor--handleSubmit after finalizeCellContent got event', event, 'cell', cell, 'editorState', editorState);
       clearedFocus();
    }
    
    const handleCancel = event => {
-      event?.preventDefault(); //TIDy if not needed
+      event?.preventDefault();
       stateFocusAbortControl(managedStore.state).abort();
       reinstateOriginalValue(cell); // note: this does the updatedCell call
       finishedEditing({
@@ -312,7 +393,15 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
 		}
    }
 
-	const updateReduxStore = ({ text, formattedText }) => {
+	// TODO write this
+	const handleAltEnter = event => {
+		event?.preventDefault();
+		console.log('TODO - handle alt enter');
+		setKeystrokeHandled(false);
+	}
+	
+	// TIDY if not needed
+	const updateFormattedText = ({ text, formattedText }) => {
 		updatedCell({
 			...cell,
 			content: { 
@@ -324,54 +413,55 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
 		});
 	}
 
-	const editorChangeHandler = newState => {
-		updatedEditorState(newState);
-		const newText = editorState.getCurrentContent().getPlainText();
-		const rawState = convertToRaw(editorState.getCurrentContent());
-		const text = editorState.getCurrentContent().getPlainText();
-		updateReduxStore({ text: newText, formattedText: rawState });
+	const manageChange = (event, cell) => {
+		event.preventDefault();
+		if (keystrokeHandled) {
+			setKeystrokeHandled(false); // reset this value
+			return; // ...and do nothing else
+		}
+		if (isNothing(cellInPlaceEditorRef?.current)) {
+			log({ level: LOG.ERROR }, 'CellInPlaceEditor--manageChange had no value for cellInPlaceEditorRef.current');
+			return;
+		}
+		const newText = cellInPlaceEditorRef.current?.value || '';
+		const formattedText = cell.content?.formattedText;
+		console.log(
+         'CellInPLaceEditor--manageChange got event.target', event.target,
+			'cellInPlaceEditorRef.current', cellInPlaceEditorRef.current,
+         'cellInPlaceEditorRef.current.value', cellInPlaceEditorRef.current.value,
+			'cellInPlaceEditorRef.current.selectionStart', cellInPlaceEditorRef.current.selectionStart,
+			'cellInPlaceEditorRef.current.selectionEnd', cellInPlaceEditorRef.current.selectionEnd,
+			'cell.content.formattedText', formattedText,
+			'the newText is therefore', newText
+      );
+
+		// TODO NEXT - see notes
+		
+		const cursorPosition = cellInPlaceEditorRef.current.selectionStart;
+		if (cursorPosition != cellInPlaceEditorRef.current.selectionEnd) {
+			console.log('***TODO: received a selection CellInPlaceEditor--manageChange - need to handle with handlePaste instead');
+			return;
+		}
+		
+		const newFormattedText = updateEditedChar({ cursorPosition, newText, formattedText });
+		console.log('CellInPLaceEditor--manageChange got newFormattedText', newFormattedText);
+
+		updatedCell({
+			...cell,
+			content: { ...cell.content, text: newText, formattedText: newFormattedText },
+			isStale: true,
+		});
 	}
 
+	// TODO update this to work without DraftJs
 	const handleStyling = (event, style) => {
 		event?.preventDefault();
-		const newState = RichUtils.toggleInlineStyle(editorState, style);
-		updatedEditorState(newState);
-		const rawState = convertToRaw(editorState.getCurrentContent());
-		updateReduxStore({ formattedText: rawState });
-	}
-
-	const setKeyBindingCodes = event => {
-		switch(event.keyCode) {
-			case 27: // esc
-            return CELL_EDITOR_ESC;
-
-         case 13: // enter
-				if (event.altKey) {
-					return CELL_EDITOR_ALT_ENTER;
-				}
-				return CELL_EDITOR_ENTER;
-
-         case 9: // tab
-				if (event.shiftKey) {
-					return CELL_EDITOR_SHIFT_TAB;
-				}
-            return CELL_EDITOR_TAB;
-
-         case 67: // "C" for copy
-            if (event.ctrlKey) {
-               return CELL_EDITOR_COPY;
-            }
-            break;
-
-         case 86: // "V" for paste 
-            if (event.ctrlKey) {
-					return CELL_EDITOR_PASTE;               
-            } 
-            break;
-
-			default:
-				return getDefaultKeyBinding(event);
-		}
+		console.log('CellInPLaceEditor--handleStyling TODO get this working, got style', style);
+		// TODO what does toggleInlineStyle do? need to replace this with something
+		/* const newState = RichUtils.toggleInlineStyle(editorState, style);
+		updatedEditorState(newState); // TIDY
+		const rawState = convertToRaw(editorState.getCurrentContent()); // TODO shouldn't need this step - editorState should be the raw form
+		updateFormattedText({ formattedText: rawState }); */
 	}
    
    const manageBlur = event => {
@@ -389,24 +479,15 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
       clearedFocus();
    }
 
-   const manageCellInPlaceEditorFocus = event => {
-		console.log('CellInPlaceEditor--manageCellInPlaceEditorFocus, cellInPlaceEditorRef', cellInPlaceEditorRef);
-      ifThen({
-         ifCond: manageFocus, // returns true if the focus needed to be updated
-         thenDo: () => startedEditing({ cell, editorState }),
-         params: { ifParams: { event, cell, cellRef: cellInPlaceEditorRef, keyBindings: keyBindingsCellInPlaceEditor } }
-      });
-   }
-
    const renderPasteIcon = () =>
-      isSomething(stateClipboard(managedStore.state)) || isSomething(systemClipboardLocal) ? (
-         <PasteIcon
-            systemClipboard={systemClipboardLocal}
-            classes="bg-white mb-1"
-            svgClasses="w-6"
-            onMouseDownFn={handlePaste}
-         />
-      ) : null;
+      isSomething(stateClipboard(managedStore.state)) || isSomething(systemClipboardLocal) 
+		? <PasteIcon
+			systemClipboard={systemClipboardLocal}
+			classes="bg-white mb-1"
+			svgClasses="w-6"
+			onMouseDownFn={handlePaste}
+		/>
+      : null;
 
 	const richTextIconStyle = 'bg-white mb-1 self-center cursor-pointer text-subdued-blue hover:text-vibrant-blue text-2xl font-bold leading-6';
 	
@@ -452,37 +533,27 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
       );
    };
 
-const renderTextForm = () => <form onSubmit={handleSubmit}>
-	{renderIcons()}
-	<div
-		className="focus:outline-none border-2 border-subdued-blue p-1 shadow-lg bg-white w-full h-full"
-		onBlur={manageBlur}
-		>
-		{ isSomething(editorState)
-			? <form onSubmit={handleSubmit} >
-				{renderIcons()}
-				<textarea
-					className="focus:outline-none border-2 border-subdued-blue p-1 shadow-lg w-full h-full" 
-					ref={cellInPlaceEditorRef}
-					rows="3"
-					value={cellText(cell)}
-					onChange={evt => manageChange(evt, cell)}
-					onBlur={manageBlur}
-				/>
-			</form>
-			: null
-		}
-	</div>ref={setEditorRef}
-</form>
+const renderTextForm = () => 
+	<form onSubmit={handleSubmit} >
+		{renderIcons()}
+		<textarea
+			className="focus:outline-none border-2 border-subdued-blue p-1 shadow-lg w-full h-full" 
+			ref={cellInPlaceEditorRef}
+			rows="3"
+			value={cellText(cell)}
+			onChange={evt => manageChange(evt, cell)}
+			onBlur={manageBlur}
+		/>
+	</form>;
 
    // need to useEffect so the cellInPlaceEditorRef can first be assigned to the textarea
    useEffect(() => {
-      /* if (cellHasFocus && isSomething(cellInPlaceEditorRef?.current)) {
+      if (cellHasFocus && isSomething(cellInPlaceEditorRef?.current)) {
          cellInPlaceEditorRef.current.focus();
-         manageCellInPlaceEditorFocus(null);
+         manageCellInPlaceEditorFocus({ event: null, cellInPlaceEditorRef, cell, editorState, editorKeyBindings });
 			// updatedCellEditorPositioning({ ...positioning }); // this is needed, in some circumstances, by PasteOptionsModal // TIDY using updatedCellPositioning instead
 			updatedCellPositioning(positioning);
-      } */ // TODO reinstate this if we need it here...but really we can this code outside of useEffect since we're using useCallback above, so TIDY
+      } // TODO can useCallback above negate the need for putting this in useEffect... If so  TIDY
 
 		// if there is something on the system clipboard, then that affects whether we display the PasteIcon
 		getSystemClipboard()
