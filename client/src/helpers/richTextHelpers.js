@@ -4,6 +4,14 @@ import managedStore from '../store';
 import { EditorState, convertToRaw, convertFromRaw, ContentState } from 'draft-js';
 import { isSomething, isNothing, arrayContainsSomething, reduceWithIndex, ifThenElse } from '../helpers';
 import { encodeText, decodeText } from './cellHelpers';
+import { 
+	sortStyleRanges,
+	stylesOverlap,
+	splitStyleRanges,
+	addStylesToStyleRanges,
+	applyStyling,
+	isCharInRange
+} from './richTextStyleRangeHelpers';
 import { stateFocusEditor, cellText, cellFormattedText } from './dataStructureHelpers';
 import { BLOCK_SEPARATOR, BLOCK_SEPARATOR_REGEX, NEWLINE_REGEX, BLOCK_END_CHAR_LENGTH, STYLE_TAGS, LOG } from '../constants';
 import { log } from '../clientLogger';
@@ -47,168 +55,6 @@ export const decodeFormattedText = formattedText => R.pipe(
 	)(block)),
 	R.assoc('blocks', R.__, formattedText), // put the blocks back into formattedText
 )(formattedText);
-
-/***
- * helpers for style ranges
- */
-
-const stylesOverlap = styleRanges => {
-	const firstStyleRange = R.head(styleRanges);
-	const remainingStyleRanges = R.slice(1, Infinity, styleRanges);
-	if (!arrayContainsSomething(remainingStyleRanges)) {
-		return false;
-	}
-	const hasOverlap = R.reduce(
-		(accumulator, comparisonStyleRange) => {
-			return comparisonStyleRange.offset >= firstStyleRange.offset && 
-				comparisonStyleRange.offset < (firstStyleRange.offset + firstStyleRange.length)
-				? R.reduced(true)
-				: accumulator; // which is false
-		},
-		false, // initilly assume no overlap
-		remainingStyleRanges
-	);
-	if (hasOverlap) {
-		return true;
-	}
-	return stylesOverlap(remainingStyleRanges);
-}
-
-const makeStartTagWithStyles = styles => R.pipe(
-	R.reduce(
-		(accumulator, style) => R.pipe(
-			R.concat(R.__, ' '), 
-			R.concat(R.__, R.prop(style, STYLE_TAGS))
-		)(accumulator),
-		'<span className="', // initial value
-	),
-	R.concat(R.__, '">')
-)(styles);
-
-const END_TAG = '</span>';
-
-const applyStyling = ({ plainText, styleRanges }) => {
-	if (!arrayContainsSomething(styleRanges)) {
-		return { lastOffset: Infinity, formattedText: plainText }
-	}
-	const firstOffset = R.pipe(
-		R.head,
-		R.prop('offset'),
-	)(styleRanges);
-	const unformattedStartingText = R.slice(0, firstOffset, plainText);
-	return R.reduce(
-		(accumulator, styleRange) => {
-			const unstyledHeadText = R.slice(accumulator.lastOffset, styleRange.offset, plainText);
-			const endOfTextToStyle = styleRange.offset + styleRange.length
-			const textToStyle = R.slice(styleRange.offset, endOfTextToStyle, plainText);
-			const formattedText =
-				accumulator.formattedText +
-				unstyledHeadText +
-				makeStartTagWithStyles(styleRange.styles) +
-				textToStyle +
-				END_TAG;
-			return {
-				...accumulator,
-				lastOffset: endOfTextToStyle,
-				formattedText
-			};
-		},
-		{ lastOffset: firstOffset, formattedText: unformattedStartingText }, // initial value
-		styleRanges
-	);
-}
-
-const addStylesToStyleRanges = styleRanges => R.map(
-	styleRange => ({ ...styleRange, styles: [ styleRange.style ] }),
-	styleRanges
-);
-
-const finalizeStyleRange = ({ styleRange, charPosition }) => isNothing(styleRange) 
-	? null
-	: ({
-		...styleRange, // keep existing styles and offset
-		length: charPosition - styleRange.offset,
-	});
-
-const createStyleRange = ({ offset, styleRanges }) => ({
-	offset,
-	length: 1,
-	styles: R.map(styleRange => styleRange.style, styleRanges)
-})
-
-const compareRangeSets = (rangeSet1, rangeSet2) => {
-	if(rangeSet1.length !== rangeSet2.length) {
-		return false;
-	}
-	const { rangeSetsMatch } = R.reduce(
-		(accumulator, styleRange1) => {
-			const indexOfMatchingStyleRange2 = R.findIndex(
-				styleRange2 => styleRange1.offset === styleRange2.offset && styleRange1.length === styleRange2.length && styleRange1.style === styleRange2.style,
-				accumulator.remainingRanges
-			);
-			return indexOfMatchingStyleRange2 >= 0 
-				? {
-					...accumulator,
-					remainingRanges: R.remove(indexOfMatchingStyleRange2, 1, accumulator.remainingRanges)
-				}
-				: R.reduced({
-					...accumulator,
-					rangeSetsMatch: false,
-				})
-		},
-		{ rangeSetsMatch: true, remainingRanges: rangeSet2 }, // initially assume range sets are identical
-		rangeSet1
-	);
-	return rangeSetsMatch;
-}
-
-const isCharInRange = ({ charPosition, styleRange }) => charPosition >= styleRange.offset && charPosition < styleRange.offset + styleRange.length;
-const whichRangesIsCharIn = ({ charPosition, styleRanges }) => R.filter(styleRange => isCharInRange({ charPosition, styleRange }), styleRanges);
-
-const splitStyleRanges = ({ styleRanges, plainText }) => {
-	const { updatedStyleRanges } = reduceWithIndex(
-		(accumulator, char, charPosition) => {
-			const newCharRangeSet = whichRangesIsCharIn({ charPosition, styleRanges });
-			if (compareRangeSets(newCharRangeSet, accumulator.currentCharRangeSet)) {
-				if (charPosition + 1 >= plainText.length) {
-					// note that normally we finalize a styleRange when we are at the beginning of the next styleRange, 
-					// but in this case we are at the end of plainText, 
-					// so we just have to pretend we're one charPosition further along than we really are
-					const updatedStyleRange = finalizeStyleRange({ styleRange: accumulator.currentStyleRange, charPosition: charPosition + 1 });
-					return {
-						...accumulator,
-						updatedStyleRanges: isNothing(updatedStyleRange) ? accumulator.updatedStyleRanges : R.append(updatedStyleRange, accumulator.updatedStyleRanges),
-					}
-				}
-				return accumulator;
-			}
-			const updatedStyleRange = finalizeStyleRange({ styleRange: accumulator.currentStyleRange, charPosition });
-			const newStyleRange = createStyleRange({ offset: charPosition, styleRanges: newCharRangeSet });
-			const updatedStyleRanges = charPosition + 1 >= plainText.length 
-				? isSomething(updatedStyleRange) // the edge case where we are at the end of plainText with a one-char style
-					? R.concat(accumulator.updatedStyleRanges, [ updatedStyleRange, newStyleRange ]) 
-					: R.append(newStyleRange, accumulator.updatedStyleRanges)
-				: isSomething(updatedStyleRange) // the normal case
-					? R.append(updatedStyleRange, accumulator.updatedStyleRanges)
-					: accumulator.updatedStyleRanges
-			return {
-            ...accumulator,
-            currentCharRangeSet: newCharRangeSet,
-            updatedStyleRanges,
-            currentStyleRange: newStyleRange,
-         };			
-		},
-		{ currentStyleRange: null, currentCharRangeSet: [], updatedStyleRanges: [] }, // the initial value
-		plainText, // the list to iterate over
-	);
-	return updatedStyleRanges;
-}
-
-const sortStyleRanges = R.sort((styleRange1, styleRange2) =>
-   styleRange1.offset < styleRange2.offset 
-		? -1 
-		: styleRange1.offset > styleRange2.offset ? 1 : 0
-);
 
 /***
  * helpers for JSX
@@ -930,8 +776,7 @@ const combineTwoBlocks = ({ blocks, newTextArr, cursorPosition }) => {
 	return R.unnest([headBlocks, combinedBlock, tailBlocks]);
 }
 
-// TODO NEXT
-// Not able to add styles
+// TODO IN PROGRESS - Not able to add styles
 // THEN - check pasting...will need to make updates for that...some TODOs in this file are already noted
 // THEN - need to move editor to display underlying cell
 

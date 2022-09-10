@@ -1,17 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import * as R from 'ramda';
-/* import {
-   Editor,
-   RichUtils,
-   convertToRaw,
-   getDefaultKeyBinding,
-} from 'draft-js'; 
-import 'draft-js/dist/Draft.css';*/ // TIDY
+// TODO remove Draft.js from package.json
 import managedStore from '../../store';
 import { updatedCell, hasChangedCell } from '../../actions/cellActions';
 import { createdSheet } from '../../actions/sheetActions';
-import { clearedFocus, updatedFocusRef, updatedEditorState, updatedCellPositioning } from '../../actions/focusActions';
+import { clearedFocus, updatedFocusRef, updatedEditorState, updatedCellPositioning } from '../../actions/focusActions'; // TODO maybe need to remove everything to do with updatedEditorState
 import { updatedPastingCellRange } from '../../actions/cellRangeActions';
 import { startedEditing, finishedEditing, startedUndoableAction, completedUndoableAction, } from '../../actions/undoActions';
 import { PASTE_RANGE, } from '../../actions/cellRangeTypes';
@@ -27,9 +21,8 @@ import { isNothing, isSomething, arrayContainsSomething, ifThen, runIfSomething 
 import { getUserInfoFromCookie } from '../../helpers/userHelpers';
 import { createDefaultAxisSizing } from '../../helpers/axisSizingHelpers';
 import { manageFocus, manageTab } from '../../helpers/focusHelpers';
-import {
-	updateEditedChar,
-} from '../../helpers/richTextHelpers';
+import { updateEditedChar } from '../../helpers/richTextHelpers';
+import { updateStyles } from '../../helpers/richTextStyleRangeHelpers';
 import {
    pasteCellRangeToTarget,
    updateSystemClipboard,
@@ -46,6 +39,7 @@ import {
    cellText,
    cellRow,
    cellColumn,
+	cellFormattedTextBlocks,
    stateOriginalValue,
 	stateOriginaFormattedText,
    stateOriginalRow,
@@ -453,15 +447,16 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
 		});
 	}
 
-	// TODO update this to work without DraftJs
+	// TODO the history is not being updated when updating the styles
+
 	const handleStyling = (event, style) => {
 		event?.preventDefault();
-		console.log('CellInPLaceEditor--handleStyling TODO get this working, got style', style);
-		// TODO what does toggleInlineStyle do? need to replace this with something
-		/* const newState = RichUtils.toggleInlineStyle(editorState, style);
-		updatedEditorState(newState); // TIDY
-		const rawState = convertToRaw(editorState.getCurrentContent()); // TODO shouldn't need this step - editorState should be the raw form
-		updateFormattedText({ formattedText: rawState }); */
+		const cursorStart = cellInPlaceEditorRef.current.selectionStart;
+		const cursorEnd = cellInPlaceEditorRef.current.selectionEnd;
+		console.log('CellInPLaceEditor--handleStyling got style', style, 'cursorStart', cursorStart, 'cursorEnd', cursorEnd, 'cell', cell);
+		const newBlocks = updateStyles({ newStyle: style, cursorStart, cursorEnd, blocks: cellFormattedTextBlocks(cell) });
+		console.log('CellInPLaceEditor--handleStyling got newBlocks', newBlocks);
+		updateFormattedText({ formattedText: { blocks: newBlocks } });
 	}
    
    const manageBlur = event => {
