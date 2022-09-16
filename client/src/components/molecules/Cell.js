@@ -37,7 +37,7 @@ const onCellClick = (event, cell) => {
       ifCond: event.shiftKey,
       thenDo: [rangeSelected, maybeClearSubsheetCellFocus, hidePopups],
       elseDo: [
-			// R.pipe(getInitialEditorState, updatedEditorState), // TODO either update getInitialEditorState or don't do this if it is already baked into the cell
+			// R.pipe(getInitialEditorState, updatedEditorState), // TODO either update getInitialEditorState or ALMOST CERTAINLY don't do this if it is already baked into the cell
          () => {
 				focusedCell(cell)
 			},

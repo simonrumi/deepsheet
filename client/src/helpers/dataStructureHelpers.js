@@ -39,7 +39,7 @@ export const stateFuture = R.view(futureLens);
 const originalValueLens = R.lensPath(['original', 'value']);
 export const stateOriginalValue = R.view(originalValueLens);
 const originaFormattedTextLens = R.lensPath(['original', 'formattedText']);
-export const stateOriginaFormattedText = R.view(originaFormattedTextLens);
+export const stateOriginalFormattedText = R.view(originaFormattedTextLens);
 const originalRowLens = R.lensPath(['original', 'row']);
 export const stateOriginalRow = R.view(originalRowLens);
 const originalColumnLens = R.lensPath(['original', 'column']);
@@ -328,8 +328,8 @@ const stateFocusCellRefLens = R.compose(stateFocusLens, R.lensProp('ref'));
 export const stateFocusCellRef = R.view(stateFocusCellRefLens);
 const stateFocusAbortControlLens = R.compose(stateFocusLens, R.lensProp('abortControl'));
 export const stateFocusAbortControl = R.view(stateFocusAbortControlLens);
-const stateFocusEditorLens = R.compose(stateFocusLens, R.lensProp('editor'));
-export const stateFocusEditor = R.view(stateFocusEditorLens);
+/* const stateFocusEditorLens = R.compose(stateFocusLens, R.lensProp('editor'));
+export const stateFocusEditor = R.view(stateFocusEditorLens); */ // TIDY when not needed
 
 /************************************************ STATE CELL RANGE **********************************************/
 const cellRangeLens = R.lensProp('cellRange');

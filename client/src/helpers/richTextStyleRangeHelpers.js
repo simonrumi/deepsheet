@@ -164,77 +164,85 @@ export const sortStyleRanges = R.sort((styleRange1, styleRange2) =>
 		: styleRange1.offset > styleRange2.offset ? 1 : 0
 );
 
+const maybeAppendStyleRange = R.curry(
+	(newStyleRange, styleRanges) => isSomething(newStyleRange) && R.prop('length', newStyleRange) > 0 ? R.append(newStyleRange, styleRanges) : styleRanges
+);
+
+const maybePrependStyleRange = R.curry(
+	(newStyleRange, styleRanges) => isSomething(newStyleRange) && R.prop('length', newStyleRange) > 0 ? R.prepend(newStyleRange, styleRanges) : styleRanges
+);
+
+// TODO NEXT in here if any style has length 0 (or less) then remove it
+// see BUG description in CellInPlaceEditor
 const consolidateFirstTwoStyles = ({ matchingStyles, consolidatedStyles = [] }) => {
-	if (matchingStyles.length < 2) {
-		return matchingStyles.length === 1 ? R.append(matchingStyles[0], consolidatedStyles) : consolidatedStyles;
+	if (matchingStyles.length === 0) {
+		return consolidatedStyles;
+	}
+	if (matchingStyles.length === 1) {
+		return maybeAppendStyleRange(matchingStyles[0], consolidatedStyles);
 	}
 
 	const anchorStyle = R.head(matchingStyles);
+	if (R.prop('length', anchorStyle) === 0) {
+		// skip this "anchor" style altogether as it has no length
+		return consolidatedStyles;
+	}
 	const comparisonStyle = R.pipe(R.tail, R.head)(matchingStyles);
 	const anchorStyleEnd = anchorStyle.offset + anchorStyle.length;
 	const comparisonStyleEnd = comparisonStyle.offset + comparisonStyle.length;
 
 	if (comparisonStyle.offset > anchorStyleEnd || anchorStyle.offset > comparisonStyleEnd) {
 		// case 0: no overlap
-		console.log('richTextStyleRangeHelpers--consolidateFirstTwoStyles case 0: no overlap');
 		return consolidateFirstTwoStyles({ 
 			matchingStyles: R.tail(matchingStyles), 
-			consolidatedStyles: R.append(anchorStyle, consolidatedStyles) 
+			consolidatedStyles: maybeAppendStyleRange(anchorStyle, consolidatedStyles), 
 		});
 	}
 
 	if (comparisonStyle.offset < anchorStyle.offset) {
 		if (comparisonStyleEnd <= anchorStyleEnd) {
 			// case 1: the comparisonStyle starts before the anchorStyle and ends in the middle of it
-			console.log('richTextStyleRangeHelpers--consolidateFirstTwoStyles  case 1: the comparisonStyle starts before the anchorStyle and ends in the middle of it');
 			const combinedStyleRange = {
 				...comparisonStyle, // keep the style and the offset as-is
 				length: anchorStyleEnd - comparisonStyle.offset,
 			}
-			const newMatchingStyles = R.pipe(R.slice(2, Infinity), R.prepend(combinedStyleRange))(matchingStyles);
+			const newMatchingStyles = R.pipe(R.slice(2, Infinity), maybePrependStyleRange(combinedStyleRange))(matchingStyles);
 			return consolidateFirstTwoStyles({ matchingStyles: newMatchingStyles, consolidatedStyles });
 		}
 		// case 2: the anchorStyle is completely inside the comparisonStyle
-		console.log('richTextStyleRangeHelpers--consolidateFirstTwoStyles case 2: the anchorStyle is completely inside the comparisonStyle');
-		const newMatchingStyles = R.pipe(R.slice(2, Infinity), R.prepend(comparisonStyle))(matchingStyles);
+		const newMatchingStyles = R.pipe(R.slice(2, Infinity), maybePrependStyleRange(comparisonStyle))(matchingStyles);
 		return consolidateFirstTwoStyles({ matchingStyles: newMatchingStyles, consolidatedStyles });
 	}
 
 	if (anchorStyleEnd < comparisonStyleEnd) {
 		// case 3: the comparisonStyle starts in the middle of the anchorStyle and ends after it
-		console.log('richTextStyleRangeHelpers--consolidateFirstTwoStyles case 3: the comparisonStyle starts in the middle of the anchorStyle and ends after it');
 		const combinedStyleRange = {
 			...anchorStyle, // keep the anchorStyle offset and style
 			length: comparisonStyleEnd - anchorStyle.offset,
 		}
-		const newMatchingStyles = R.pipe(R.slice(2, Infinity), R.prepend(combinedStyleRange))(matchingStyles);
+		const newMatchingStyles = R.pipe(R.slice(2, Infinity), maybePrependStyleRange(combinedStyleRange))(matchingStyles);
 		return consolidateFirstTwoStyles({ matchingStyles: newMatchingStyles, consolidatedStyles });
 	}
 
 	// case 4: the anchorStyle completely contains the comparisonStyle,
-	console.log('richTextStyleRangeHelpers--consolidateFirstTwoStyles case 4: the anchorStyle completely contains the comparisonStyle');
-	const newMatchingStyles = R.pipe(R.slice(2, Infinity), R.prepend(anchorStyle))(matchingStyles);
+	const newMatchingStyles = R.pipe(R.slice(2, Infinity), maybePrependStyleRange(anchorStyle))(matchingStyles);
 	return consolidateFirstTwoStyles({ matchingStyles: newMatchingStyles, consolidatedStyles });
 }
 
-const consolidateStyleRanges = ({blocks, newStyle }) => R.map(block => {
+const consolidateStyleRanges = ({ blocks, newStyle }) => R.map(block => {
 	const matchingStyles = R.pipe(
 		R.prop('inlineStyleRanges'),
 		R.filter(styleRange => styleRange.style === newStyle),
 		sortStyleRanges,
 	)(block);
-	console.log('richTextStyleRangeHelpers--consolidateStyleRanges got matchingStyles', matchingStyles);
 	const consolidatedMatchingStyles = consolidateFirstTwoStyles({ matchingStyles });
 
 	return R.pipe(
 		R.prop('inlineStyleRanges'),
 		R.filter(styleRange => styleRange.style != newStyle),
-		R.tap(data => console.log('richTextStyleRangeHelpers--consolidateStyleRanges got non-matching style ranges', data)),
 		R.concat(consolidatedMatchingStyles),
-		R.tap(data => console.log('richTextStyleRangeHelpers--consolidateStyleRanges after concat with consolidatedMatchingStyles', data)),
 		sortStyleRanges,
-		R.assoc('inlineStyleRanges', R.__, block),
-		R.tap(data => console.log('richTextStyleRangeHelpers--consolidateStyleRanges will return block', data)),
+		R.assoc('inlineStyleRanges', R.__, block)
 	)(block);
 
 }, blocks);
@@ -252,13 +260,22 @@ const getMatchingStyleRanges = ({ blockKey, blocks, style }) => R.pipe(
 	)
 )({ blocks, blockKey });
 
-const replaceBlocks = R.curry((originalBlocks, newBlocks) => R.map(
+const replaceBlocks = R.curry((originalBlocks, newBlocks) => {
+	console.log('richTextStyleRangeHelpers--replaceblocks started with originalBlocks', originalBlocks, 'newBlocks', newBlocks);
+	const returnVal = R.map(
 	originalBlock => {
 		console.log('richTextStyleRangeHelpers--replaceBlocks got originalBlock', originalBlock, 'newBlocks', newBlocks);
-		return findBlockByKey({ blocks: newBlocks, blockKey: originalBlock.key }) || originalBlock
+		const foundBlockByKey = findBlockByKey({ blocks: newBlocks, blockKey: originalBlock.key });
+		console.log('richTextStyleRangeHelpers--replaceBlocks will return foundBlockByKey', foundBlockByKey, 'or the originalBlock', originalBlock);
+		return foundBlockByKey || originalBlock;
+		// return findBlockByKey({ blocks: newBlocks, blockKey: originalBlock.key }) || originalBlock // TIDY: reinstate this line instead of all the above lines
 	}, 
-	originalBlocks
-));
+	originalBlocks // TIDY
+);
+console.log('richTextStyleRangeHelpers--replaceBlocks will return', returnVal);
+return returnVal; // TIDY
+}
+);
 
 const replaceUpdatedBlock = R.curry((blocks, updatedBlock) => R.pipe(
 	() => R.append(updatedBlock, []),
@@ -290,7 +307,6 @@ const toggleStyleOn = ({ style, start, middle, end, blocks }) => {
 	// otherwise add style across all the blocks in the selection
 	const blocksWithStartUpdated = R.pipe(
 		findBlockByKey,
-		R.tap(data => console.log('richTextStyleRangeHelpers--updateStyles after findBlockByKey got', data)),
 		block => R.pipe(
 			getLengthFromBlock,
 			R.subtract(R.__, start.cursorPosition),
@@ -321,13 +337,16 @@ const incorporateNewStyles = ({ blocks, blockKey, newStyles, unchangedStyles }) 
 	findBlockByKey,
 	block => R.pipe(
 		R.concat,
+		R.tap(data => console.log('richTextStyleRangeHelpers--incorporateNewStyles concatenated new and unchanged styles to get', data)),
 		sortStyleRanges,
 		R.assoc('inlineStyleRanges', R.__, block),
+		R.tap(data => console.log('richTextStyleRangeHelpers--incorporateNewStyles put styles into block', data)),
 	)(newStyles, unchangedStyles),
 	R.append(R.__, []), // put the updated block in an array as that's the form replaceBlocks wants
+	R.tap(data => console.log('richTextStyleRangeHelpers--incorporateNewStyles about to call replaceBlocks with original blocks', blocks, 'and new blocks', data)),
 	replaceBlocks(blocks),
 )({ blocks, blockKey });
- 
+
 const toggleStyleOff = ({ style, start, middle, end, blocks }) => {
 	// get the matching styles in the start block
 	const { matchingStyleRanges: matchingStartStyles, nonMatchingStyleRanges: nonMatchingStartStyles } =
@@ -402,12 +421,7 @@ const toggleStyleOff = ({ style, start, middle, end, blocks }) => {
 		matchingStartStyles
 	);
 
-	const allBlocksWithStartUpdated = R.pipe(
-		findBlockByKey,
-		R.assoc('inlineStyleRanges', newMatchingStartStyles),
-		R.append(R.__, []),
-		replaceBlocks(blocks)		
-	)({ blocks, blockKey: start.blockKey });
+	const allBlocksWithStartUpdated = incorporateNewStyles({ blocks, blockKey: start.blockKey, newStyles: newMatchingStartStyles, unchangedStyles: nonMatchingStartStyles });
 	console.log('richTextStyleRangeHelpers--toggleStyleOff got allBlocksWithStartUpdated', allBlocksWithStartUpdated);
 	
 	const newMiddleBlocks = R.map(
@@ -416,13 +430,13 @@ const toggleStyleOff = ({ style, start, middle, end, blocks }) => {
 			return R.pipe(
 				R.prop('blockKey'),
 				blockKey => getMatchingStyleRanges({ blockKey, blocks, style }),
-				R.prop('nonMatchingStyleRanges'), //only keep these, the matchingStyles we throw away
+				R.prop('nonMatchingStyleRanges'), // getMatchingStyleRanges returns {nonMatchingStyleRanges, matchingStyles} but only keep nonMatchingStyleRanges
 				R.assoc('inlineStyleRanges', R.__, middleBlock)
 			)(middleData);
 		},
 		middle
 	);
-	console.log('richTextStyleRangeHelpers--toggleStyleOff got newMiddleBlocks', newMiddleBlocks);
+	console.log('richTextStyleRangeHelpers--toggleStyleOff about to call replaceBlocks with original blocks allBlocksWithStartUpdated', allBlocksWithStartUpdated, 'newMiddleBlocks', newMiddleBlocks);
 	const allBlocksWithMiddleUpdated = replaceBlocks(allBlocksWithStartUpdated, newMiddleBlocks);
 	console.log('richTextStyleRangeHelpers--toggleStyleOff got allBlocksWithMiddleUpdated', allBlocksWithMiddleUpdated);
 
@@ -436,18 +450,18 @@ const toggleStyleOff = ({ style, start, middle, end, blocks }) => {
 				// case 1: the end of the matching style is before the end cursor, so delete the matching style
 				return accumulator;
 			}
-			console.log('richTextStyleRangeHelpers--toggleStyleOff end styles case 2: the end of the matching style is after the end cursor', matchingStyle);
+			console.log('richTextStyleRangeHelpers--toggleStyleOff end styles case 2: the end of the matching style is after the end cursor', 'matchingStyle', matchingStyle);
 			// case 2: the end of the matching style is after the end cursor, so make the matching style's offset equal the end cursor
 			return R.append({ 
 				...matchingStyle, 
 				offset: end.cursorPosition, 
-				length: matchingStyle.length - (end.cursorPositon - matchingStyle.offset)
+				length: matchingStyle.length - (end.cursorPosition - matchingStyle.offset)
 			}, accumulator);
 		},
 		[], // initial matching styles
 		matchingEndStyles
 	);
-	console.log('richTextStyleRangeHelpers--toggleStyleOff got newEndStyles', newEndStyles);
+	console.log('richTextStyleRangeHelpers--toggleStyleOff got newEndStyles', newEndStyles, 'nonMatchingEndStyles', nonMatchingEndStyles);
 
 	return incorporateNewStyles({ blocks: allBlocksWithMiddleUpdated, blockKey: end.blockKey, newStyles: newEndStyles, unchangedStyles: nonMatchingEndStyles });
 }
@@ -544,10 +558,16 @@ export const updateStyles = ({ newStyle, cursorStart, cursorEnd, blocks }) => {
 	// decide whether we are toggling style on or off based on the first char in the first block
 	const isTogglingStyleOff = isStyleSetForFirstChar({ start, blocks, style: newStyle });
 
-	let blocksWithUpdatedStyles;
 	if (isTogglingStyleOff) {
-		blocksWithUpdatedStyles = toggleStyleOff({ style: newStyle, start, middle, end, blocks });
+		return consolidateStyleRanges({ 
+			blocks: toggleStyleOff({ style: newStyle, start, middle, end, blocks }), 
+			newStyle 
+		});
+		// blocksWithUpdatedStyles = toggleStyleOff({ style: newStyle, start, middle, end, blocks }); // TIDY
 	}
-	blocksWithUpdatedStyles = toggleStyleOn({ style: newStyle, start, middle, end, blocks });
-	return consolidateStyleRanges({ blocks: blocksWithUpdatedStyles, newStyle });
+	// blocksWithUpdatedStyles = toggleStyleOn({ style: newStyle, start, middle, end, blocks }); // TIDY
+	return consolidateStyleRanges({ 
+		blocks: toggleStyleOn({ style: newStyle, start, middle, end, blocks }), 
+		newStyle 
+	});
 }

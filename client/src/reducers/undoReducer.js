@@ -23,7 +23,7 @@ import {
    HIGHLIGHTED_CELL_RANGE,
 } from '../actions/cellRangeTypes';
 import { arrayContainsSomething, isSomething, isNothing, reduceWithIndex } from '../helpers';
-import { stateOriginalValue, cellText, cellRow, cellColumn } from '../helpers/dataStructureHelpers';
+import { stateOriginalValue, stateOriginalFormattedText, cellText, cellRow, cellColumn, cellFormattedText } from '../helpers/dataStructureHelpers';
 import { startMessage, editedTitleMessage, unhighlightedRangeMessage } from '../components/displayText';
 import { LOG } from '../constants';
 import { log } from '../clientLogger';
@@ -32,15 +32,15 @@ import { log } from '../clientLogger';
 // or there is some other startedAction yet to complete
 const cellNotReallyEdited = ({
    isPastingCellRange,
-   value,
+   formattedText,
    actionCancelled,
    startedActions,
    hasHighlightedRange = false,
    state,
 }) => !hasHighlightedRange && (
 	isPastingCellRange ||
-	value === null ||
-	(value !== undefined && R.equals(stateOriginalValue(state), value)) || // TOOD might need to compare formattedText here also
+	formattedText === null ||
+	R.equals(stateOriginalFormattedText(state), formattedText) ||
 	actionCancelled ||
 	startedActions.length > 1
 );
@@ -51,7 +51,7 @@ const updateHistory = ({
    actionCancelled = false,
    isPastingCellRange = false,
 	hasHighlightedRange = false,
-   value,
+   formattedText,
    state,
 }) => {
    const { startedActions, pastActions, presentAction } = actionHistory;
@@ -91,7 +91,7 @@ const updateHistory = ({
       reversedStartedActions
    );
 
-	return cellNotReallyEdited({ isPastingCellRange, value, actionCancelled, startedActions, hasHighlightedRange, state })
+	return cellNotReallyEdited({ isPastingCellRange, formattedText, actionCancelled, startedActions, hasHighlightedRange, state })
       ? {
       	...actionHistory, // keep the pastActions, presentAction & futureActions as they are
          startedActions: R.sortBy(R.prop('timestamp'), newStartedActions),
@@ -319,7 +319,8 @@ const undoReducer = reducer => {
 
          case STARTED_EDITING:
 				// this is used by CellInPlaceEditor, when the user starts editing a cell
-				const { cell, editorState } = action.payload;
+				const { cell } = action.payload;
+				console.log('***undoReducer--STARTED_EDITING got cell', cell);
 				return alreadyStartedEditingCell({ cell, startedActions })
 					? state // don't change anything as we have already recorded that the cell is being edited
 					: {
@@ -329,7 +330,7 @@ const undoReducer = reducer => {
 							value: cellText(cell),
 							row: cellRow(cell),
 							column: cellColumn(cell),
-							formattedText: editorState,
+							formattedText: cellFormattedText(cell),
 						}, // save the value we started editing for comparison when FINISHED_EDITING
 						present: reducer(present, action), // update the present
 						actionHistory: {
@@ -347,14 +348,14 @@ const undoReducer = reducer => {
 
          case FINISHED_EDITING:
             /**
-            * 1. Note that action.payload contains { value, message, isPastingCellRange, actionCancelled }, which is different from what it is for STARTED_EDITING
-            * 2. Note that in CellInPLaceEditor.js, the manageBlur() function may call finishedEditing() with the payload.value of null
+            * 1. Note that action.payload contains { formattedText, message, isPastingCellRange, actionCancelled }, which is different from what it is for STARTED_EDITING
+            * 2. Note that in CellInPLaceEditor.js, the manageBlur() function may call finishedEditing() with the payload.formattedText == null
             * This is to handle the situation where the user hits the esc key without ever having typed in the cell editor 
-            * (hence the value doesn't get populated)
-            * So then we need to check for the value being exactly null and treat it the same as when the original value 
-				* and the payload.value are the same - i.e. don't change the undo history
+            * So then we need to check for the formattedText being exactly null and treat it the same as when the original formattedText 
+				* and the payload.formattedText are the same - i.e. don't change the undo history
 				* 3. if isPastingCellRange is true, then we should ignore the payload.value and update the past
              */
+				console.log('***undoReducer--FINISHED_EDITING got action.payload', action.payload);
 				const historyAfterCellEdit = updateHistory({
 					actionHistory: state.actionHistory,
 					completedAction: { 
@@ -364,13 +365,13 @@ const undoReducer = reducer => {
 					}, 
 					actionCancelled: action.payload.actionCancelled || false,
 					isPastingCellRange: action.payload.isPastingCellRange || false,
-					value: action.payload.value,
+					formattedText: action.payload.formattedText,
 					state,
 				});
 
 				if (cellNotReallyEdited({ 
 						isPastingCellRange: action.payload.isPastingCellRange, 
-						value: action.payload.value, 
+						formattedText: action.payload.formattedText, 
 						actionCancelled: action.payload.actionCancelled, 
 						startedActions, 
 						state
@@ -478,7 +479,7 @@ const undoReducer = reducer => {
 							message: action.payload.message,
 						}, 
 						actionCancelled: action.payload.actionCancelled || false,
-						value: action.payload?.value,
+						value: action.payload?.value, // TODO updateHistory expects formattedText instead of value...so test what happens when updating the title
 						state,
 					});
                return R.equals(stateOriginalValue(state), action.payload?.value) || 
@@ -521,7 +522,7 @@ const undoReducer = reducer => {
 							message: editedTitleMessage(),
 						}, 
 						actionCancelled: true,
-						value: action.payload?.value,
+						value: action.payload?.value, // TODO updateHistory expects formattedText instead of value...so test what happens when updating the title
 						state,
 					});
                return {

@@ -12,7 +12,7 @@ import {
 	applyStyling,
 	isCharInRange
 } from './richTextStyleRangeHelpers';
-import { stateFocusEditor, cellText, cellFormattedText } from './dataStructureHelpers';
+import { /* stateFocusEditor, TIDY */ cellText, cellFormattedText } from './dataStructureHelpers';
 import { BLOCK_SEPARATOR, BLOCK_SEPARATOR_REGEX, NEWLINE_REGEX, BLOCK_END_CHAR_LENGTH, STYLE_TAGS, LOG } from '../constants';
 import { log } from '../clientLogger';
 
@@ -207,7 +207,7 @@ const splitBlock = ({ block, keys }) => {
 
 const concatenateBlocks = ({ blocksInSelection, editorState, selectionStart, selectionEnd }) => {
 
-	// TODO will need to remove editorState from this function and entirely use selectionStart and selectionEnd instead
+	// TODO will need to remove editorState from this function and entirely use [selectionStart and selectionEnd instead ?] OR maybe the formattedText
 	const selectionState = editorState?.getSelection();
 	selectionStart = selectionStart ? selectionStart : selectionState?.getStartOffset();
 	const selectionEndWithinLastBlock = selectionEnd ? selectionEnd : selectionState?.getEndOffset();
@@ -432,6 +432,7 @@ const createNewStyleRangesForPaste = ({ startSelection, endSelection, styleRange
  * the rest of the params are required
  */
 const pasteTextWithinOneBlock = ({ targetBlockKey, editorState, rawState, start, end, textToPaste }) => {
+	// TODO editorState will not exist - need to use formattedText from the cell instead
 	rawState = rawState || convertToRaw(editorState.getCurrentContent());
 	const selectionState = editorState?.getSelection();
 	start = start || selectionState.getStartOffset();
@@ -472,8 +473,9 @@ const pasteTextWithinOneBlock = ({ targetBlockKey, editorState, rawState, start,
 	)(rawState);
 }
 
+// TODO this will need to be updated to addPastedText to the formattedText ...there will be no editorState
 export const addPastedTextToEditorState = textToPaste => {
-	const editorState = stateFocusEditor(managedStore.state);
+	const editorState = {}; // TODO will need something other than editorState in here - likely formattedText from the cell // was stateFocusEditor(managedStore.state);
 	const selectionState = editorState.getSelection();
 	const anchorKey = selectionState.getAnchorKey(); // key for the start of the selection
 	const focusKey = selectionState.getFocusKey(); // key for the end of the selection

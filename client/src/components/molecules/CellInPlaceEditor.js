@@ -5,7 +5,7 @@ import * as R from 'ramda';
 import managedStore from '../../store';
 import { updatedCell, hasChangedCell } from '../../actions/cellActions';
 import { createdSheet } from '../../actions/sheetActions';
-import { clearedFocus, updatedFocusRef, updatedEditorState, updatedCellPositioning } from '../../actions/focusActions'; // TODO maybe need to remove everything to do with updatedEditorState
+import { clearedFocus, updatedFocusRef, updatedCellPositioning } from '../../actions/focusActions'; // TODO need to remove everything to do with updatedEditorState
 import { updatedPastingCellRange } from '../../actions/cellRangeActions';
 import { startedEditing, finishedEditing, startedUndoableAction, completedUndoableAction, } from '../../actions/undoActions';
 import { PASTE_RANGE, } from '../../actions/cellRangeTypes';
@@ -39,14 +39,12 @@ import {
    cellText,
    cellRow,
    cellColumn,
+	cellFormattedText,
 	cellFormattedTextBlocks,
-   stateOriginalValue,
-	stateOriginaFormattedText,
+	stateOriginalFormattedText,
    stateOriginalRow,
    stateOriginalColumn,
-	stateFocus,
    stateFocusAbortControl,
-	stateFocusEditor,
    stateCellRangeFrom,
    stateCellRangeTo,
    stateCellRangeCells,
@@ -71,15 +69,6 @@ import {
 	BOLD,
 	ITALIC,
 	UNDERLINE,
-	CELL_EDITOR_ESC,
-	CELL_EDITOR_ENTER,
-	CELL_EDITOR_ALT_ENTER,
-	CELL_EDITOR_TAB,
-	CELL_EDITOR_SHIFT_TAB,
-	CELL_EDITOR_COPY,
-	CELL_EDITOR_PASTE,
-	CELL_EDITOR_KEY_COMMAND_HANDLED,
-	CELL_EDITOR_KEY_COMMAND_NOT_HANDLED,
 } from '../../constants';
 import { SYSTEM_CLIPBOARD_UNAVAILABLE_MSG, createdEditedCellMessage } from '../displayText';
 import { log } from '../../clientLogger';
@@ -107,8 +96,8 @@ const reinstateOriginalValue = cell =>
 				...cell,
 				content: {
 					...cell.content,
-					text: stateOriginalValue(managedStore.state),
-					formattedText: stateOriginaFormattedText(managedStore.state),
+					// text: stateOriginalValue(managedStore.state),// TIDY when text is no longer used to display cell contents
+					formattedText: stateOriginalFormattedText(managedStore.state),
 				},
 				isStale: false,
 			},
@@ -156,13 +145,24 @@ STUFF
 HERE
 */
 
-const manageCellInPlaceEditorFocus = ({ event, cellInPlaceEditorRef, cell, editorState, editorKeyBindings }) => {
+// TODO NEXT
+// THEN change the display of the cells to use formattedText to get the text to display, not cell.text
+// THEN move the Editor, so we can see the cell updated in real time
+// THEN get rid of editorState and all the stuff related to it
+// THEN fix the bugs:
+//   1. check that startedEditing and finishedEditing are working properly (see undoReducer also)
+//      ....undo definitely has some bugs...
+//   2. BUT also the cell is not displaying correctly when highlighting a selection and replacing the text - HOWEVER the cellInPlaceEditor shows the correct text
+// THEN tackle copy-paste
+
+
+const manageCellInPlaceEditorFocus = ({ event, cellInPlaceEditorRef, cell, editorKeyBindings }) => {
 	ifThen({
 		ifCond: manageFocus, // returns true if the focus needed to be updated
 		thenDo: [
 			() => cellInPlaceEditorRef.current.selectionStart = 0,
 			() => cellInPlaceEditorRef.current.selectionEnd = cellText(cell).length || 0,
-			() => startedEditing({ cell, editorState }),
+			() => startedEditing({ cell }),
 		],
 		params: { ifParams: { event, cell, cellRef: cellInPlaceEditorRef, keyBindings: editorKeyBindings } }
 	});
@@ -176,7 +176,8 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
 
 	const cellKey = createCellKey(cellRow(cellToEdit), cellColumn(cellToEdit));
    const cell = useSelector(state => statePresent(state)[cellKey]);
-	const editorState = useSelector(state => stateFocusEditor(state));
+	// const editorState = useSelector(state => stateFocusEditor(state)); // TIDY when not needed
+	// console.log('CellInPlaceEditor got editorState', editorState);
 
 	// getting the system clipbaord is async, and we want to re-render CellInPlaceEditor when it changes
 	// so using a local state seems like a reasonable way to make it so that only the single CellInPlaceEditor changes,
@@ -255,24 +256,23 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
          default:
       }
 	};
-
-	/* if (cellHasFocus && isSomething(cellInPlaceEditorRef)) {
-		cellInPlaceEditorRef.current.focus();
-		manageCellInPlaceEditorFocus({ event: null, cellInPlaceEditorRef, cell, editorState, editorKeyBindings });
-		// updatedCellEditorPositioning({ ...positioning }); // this is needed, in some circumstances, by PasteOptionsModal // TIDY using updatedCellPositioning instead
-		updatedCellPositioning(positioning);
-	} */ // TIDY if not using ...does this in useEffect instead
 	
    const finalizeCellContent = cell => {
-		console.log('CellInPLaceEditor--finalizeCellContent got cellInPlaceEditorRef', cellInPlaceEditorRef, 'cellInPlaceEditorRef.current', cellInPlaceEditorRef.current, 'cellInPlaceEditorRef.current?.value', cellInPlaceEditorRef.current?.value);
-      if (!R.equals(stateOriginalValue(managedStore.state), cellInPlaceEditorRef.current?.value)) {
+		console.log('CellInPLaceEditor--finalizeCellContent got cellInPlaceEditorRef', cellInPlaceEditorRef, 
+			'cellInPlaceEditorRef.current', cellInPlaceEditorRef.current, 
+			'cellInPlaceEditorRef.current?.value', cellInPlaceEditorRef.current?.value,
+			'stateOriginalFormattedText(managedStore.state)', stateOriginalFormattedText(managedStore.state),
+			'cellFormattedText(cell)', cellFormattedText(cell)
+		);
+		if (!R.equals(stateOriginalFormattedText(managedStore.state), cellFormattedText(cell))) {
          hasChangedCell({
             row: cellRow(cell),
             column: cellColumn(cell),
          });
       }
       finishedEditing({
-         value: isSomething(cellInPlaceEditorRef.current) ? cellInPlaceEditorRef.current.value : null,
+         // value: isSomething(cellInPlaceEditorRef.current) ? cellInPlaceEditorRef.current.value : null, // TIDY
+			formattedText: cellFormattedText(cell),
          message: createdEditedCellMessage(cell),
 			isPastingCellRange: statePastingCellRange(managedStore.state),
       });
@@ -280,17 +280,10 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
 
    const handleSubmit = event => {
       event?.preventDefault();
-		console.log('CellInPLaceEditor--handleSubmit got event', event, 'cell', cell, 'editorState', editorState);
-		// TIDY comment
-		// manageChange was added here because at some point the last edit made to the cell was not being captured
-		// however now when the checkmark icon is clicked, the target is that icon, not the textarea, 
-		// so manage change updates the cell text to "undefined"
-		// hence we are taking it out of here, but will later need to check that the last edit in a cell is captured
-		// manageChange(event, cell, editorState);  TIDY
-		// console.log('CellInPLaceEditor--handleSubmit after manageChange got event', event, 'cell', cell, 'editorState', editorState);
+		console.log('CellInPLaceEditor--handleSubmit got event', event, 'cell', cell);
       stateFocusAbortControl(managedStore.state)?.abort();
       finalizeCellContent(cell);
-		console.log('CellInPLaceEditor--handleSubmit after finalizeCellContent got event', event, 'cell', cell, 'editorState', editorState);
+		console.log('CellInPLaceEditor--handleSubmit after finalizeCellContent got event', event, 'cell', cell);
       clearedFocus();
    }
    
@@ -299,7 +292,8 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
       stateFocusAbortControl(managedStore.state).abort();
       reinstateOriginalValue(cell); // note: this does the updatedCell call
       finishedEditing({
-         value: isSomething(cellInPlaceEditorRef.current) ? cellInPlaceEditorRef.current.value : null,
+         // value: isSomething(cellInPlaceEditorRef.current) ? cellInPlaceEditorRef.current.value : null, /// TODO think we can just send null here, to indicate a cancel - see undoReducer // TIDY
+			formattedText: null, // indicates a cancel
          message: `Cancelled editing cell ${createCellId(cellRow(cell), cellColumn(cell))}`,
 			actionCancelled: true,
       });
@@ -429,7 +423,7 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
 			'the newText is therefore', newText
       );
 
-		// TODO NEXT - see notes
+		// TODO - see notes
 		
 		const cursorPosition = cellInPlaceEditorRef.current.selectionStart;
 		if (cursorPosition != cellInPlaceEditorRef.current.selectionEnd) {
@@ -545,7 +539,7 @@ const renderTextForm = () =>
    useEffect(() => {
       if (cellHasFocus && isSomething(cellInPlaceEditorRef?.current)) {
          cellInPlaceEditorRef.current.focus();
-         manageCellInPlaceEditorFocus({ event: null, cellInPlaceEditorRef, cell, editorState, editorKeyBindings });
+         manageCellInPlaceEditorFocus({ event: null, cellInPlaceEditorRef, cell, editorKeyBindings });
 			// updatedCellEditorPositioning({ ...positioning }); // this is needed, in some circumstances, by PasteOptionsModal // TIDY using updatedCellPositioning instead
 			updatedCellPositioning(positioning);
       } // TODO can useCallback above negate the need for putting this in useEffect... If so  TIDY
