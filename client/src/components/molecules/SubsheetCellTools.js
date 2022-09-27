@@ -15,7 +15,7 @@ import { DEFAULT_COLUMN_WIDTH } from '../../constants';
 import {
    cellColumn,
    cellRow,
-   cellText,
+	cellFormattedText,
    stateSheetId,
    cellSubsheetId,
    stateColumnWidths
@@ -28,10 +28,10 @@ const SubsheetCellTools = ({ cell, cellHasFocus }) => {
    const unlinkSubsheet = async () => {
       const row = cellRow(cell);
       const column = cellColumn(cell);
-      const text = cellText(cell);
-      await R.pipe(
+		const formattedText = cellFormattedText(cell);
+      R.pipe(
          stateSheetId, 
-         deleteSubsheetId(row, column, text, subsheetId)
+         deleteSubsheetId(row, column, formattedText, subsheetId)
       )(managedStore.state);
       clearedFocus();
    }

@@ -242,6 +242,10 @@ const cellColumnLens = R.lensProp('column');
 export const cellColumn = cell => R.view(cellColumnLens, cell);
 export const cellColumnSetter = R.curry((newColumn, cell) => R.set(cellColumnLens, newColumn, cell));
 
+const cellContentLens = R.lensProp('content');
+export const cellContent = cell => R.view(cellContentLens, cell);
+export const cellContentSetter = R.curry((newContent, cell) => R.set(cellContentLens, newContent, cell));
+
 const cellTextLens = R.lensPath(['content', 'text']);
 export const cellText = cell => R.view(cellTextLens, cell);
 export const cellTextSetter = R.curry((newText, cell) => R.set(cellTextLens, newText, cell));

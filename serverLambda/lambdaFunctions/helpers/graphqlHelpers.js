@@ -51,7 +51,7 @@ const createServer = async () => {
  * authMiddleware however is able to call the targetFn with the arguments intended for it, which we have done
  * after first ensuring the user is authorized
  */
-const AUTH_ON = true; // needs to be on in production!
+const AUTH_ON = false; // TODO needs to be on in production!
 
 const withAuth = func => async (event, context) => {
    const authMiddleware = {

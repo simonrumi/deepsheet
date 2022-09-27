@@ -19,7 +19,13 @@ import {
    ifThenElse,
 } from '../helpers';
 import { getTotalForAxis, getAxisVisibilityName } from '../helpers/visibilityHelpers';
-import { getCellFromStore, getAllCells, maybeCorrectCellVisibility } from '../helpers/cellHelpers';
+import {
+   getCellFromStore,
+   getAllCells,
+   maybeCorrectCellVisibility,
+   isCellEmpty,
+   isTextInCell,
+} from '../helpers/cellHelpers';
 import {
    stateMetadataProp,
    stateFrozenRows,
@@ -81,15 +87,15 @@ const isCellShownByFilter = R.curry((cell, filter, axisOfFilter) => {
    if (cell[axisOfFilter] !== filter.index) {
       return true; // because this filter does not apply to this cell
    }
-   if (filter.hideBlanks && (isNothing(cellText(cell)) || /^\s+$/.test(cellText(cell)))) {
-      return false;
-   }
+	if (filter.hideBlanks && isCellEmpty(cell)) {
+		return false;
+	}
    const flags = filter.caseSensitive ? '' : 'i';
    const filterExpression = filter.regex
       ? filter.filterExpression || ''
       : escapeRegexChars(filter.filterExpression || '');
    const regex = new RegExp(filterExpression, flags);
-   return regex.test(cell.content.text);
+	return isTextInCell({ cell, text: regex, isRegex: true });
 });
 
 const getRowAndColumn = (axis, itemIndex, otherAxisIndex) =>

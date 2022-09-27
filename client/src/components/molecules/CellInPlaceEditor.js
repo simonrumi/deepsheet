@@ -21,7 +21,7 @@ import { isNothing, isSomething, arrayContainsSomething, ifThen, runIfSomething 
 import { getUserInfoFromCookie } from '../../helpers/userHelpers';
 import { createDefaultAxisSizing } from '../../helpers/axisSizingHelpers';
 import { manageFocus, manageTab } from '../../helpers/focusHelpers';
-import { updateEditedChar } from '../../helpers/richTextHelpers';
+import { updateEditedChar, getCellPlainText } from '../../helpers/richTextHelpers';
 import { updateStyles } from '../../helpers/richTextStyleRangeHelpers';
 import {
    pasteCellRangeToTarget,
@@ -76,7 +76,7 @@ import { log } from '../../clientLogger';
 const triggerCreatedSheetAction = cell => {
    const rows = DEFAULT_TOTAL_ROWS;
    const columns = DEFAULT_TOTAL_COLUMNS;
-   const title = cellText(cell) || null;
+   const title = getCellPlainText(cell) || null;
    const parentSheetId = stateSheetId(managedStore.state);
    const parentSheetCell = cell;
    const rowHeights = createDefaultAxisSizing(DEFAULT_TOTAL_ROWS, DEFAULT_ROW_HEIGHT);
@@ -146,7 +146,8 @@ HERE
 */
 
 // TODO NEXT
-// THEN change the display of the cells to use formattedText to get the text to display, not cell.text
+// changing the display of the cells to use formattedText to get the text to display, not cell.text
+
 // THEN move the Editor, so we can see the cell updated in real time
 // THEN get rid of editorState and all the stuff related to it
 // THEN fix the bugs:
@@ -161,7 +162,7 @@ const manageCellInPlaceEditorFocus = ({ event, cellInPlaceEditorRef, cell, edito
 		ifCond: manageFocus, // returns true if the focus needed to be updated
 		thenDo: [
 			() => cellInPlaceEditorRef.current.selectionStart = 0,
-			() => cellInPlaceEditorRef.current.selectionEnd = cellText(cell).length || 0,
+			() => cellInPlaceEditorRef.current.selectionEnd = getCellPlainText(cell).length || 0,
 			() => startedEditing({ cell }),
 		],
 		params: { ifParams: { event, cell, cellRef: cellInPlaceEditorRef, keyBindings: editorKeyBindings } }
@@ -529,7 +530,7 @@ const renderTextForm = () =>
 			className="focus:outline-none border-2 border-subdued-blue p-1 shadow-lg w-full h-full" 
 			ref={cellInPlaceEditorRef}
 			rows="3"
-			value={cellText(cell)}
+			value={getCellPlainText(cell)}
 			onChange={evt => manageChange(evt, cell)}
 			onBlur={manageBlur}
 		/>

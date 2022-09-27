@@ -12,7 +12,7 @@ import {
 	applyStyling,
 	isCharInRange
 } from './richTextStyleRangeHelpers';
-import { /* stateFocusEditor, TIDY */ cellText, cellFormattedText } from './dataStructureHelpers';
+import { /* stateFocusEditor, TIDY */ cellText, cellFormattedText, cellFormattedTextBlocks } from './dataStructureHelpers';
 import { BLOCK_SEPARATOR, BLOCK_SEPARATOR_REGEX, NEWLINE_REGEX, BLOCK_END_CHAR_LENGTH, STYLE_TAGS, LOG } from '../constants';
 import { log } from '../clientLogger';
 
@@ -84,6 +84,39 @@ export const convertBlocksToJsx = blocks => {
 	)(blocksAsHtml);
 }
 
+// TODO BUG - highlight text in the editor and try to overwrite it - doesn't work properly
+
+export const getFormattedText = cell => {
+	if (isNothing(cellFormattedText(cell))) {
+		return {
+			blocks: [{
+				inlineStyleRanges: [],
+				text: isSomething(cellText(cell)) ? cellText(cell) : '', // eventually we won't have any data in cellText
+			}]
+		}
+	}
+	return cellFormattedText(cell); // eventually everything should have cellFormattedText
+}
+
+export const getCellPlainText = (cell, includeNewLineChars = true) => R.pipe(
+	cellFormattedTextBlocks,
+	R.reduce(
+		(accumulator, block) => R.pipe(
+			R.prop('text'), 
+			R.concat(accumulator), 
+			text => includeNewLineChars ? R.concat(text, '\n') : R.concat(text, ' ')
+		)(block),
+		'', //initial text
+	),
+	R.slice(0,-1), // remove the last \n or space
+)(cell);
+
+export const cleanFormattedText = formattedText => R.pipe(
+	R.prop('blocks'),
+	R.map(block => R.pick(['inlineStyleRanges', 'key', 'text'], block)),
+	R.assoc('blocks', R.__, {})
+)(formattedText);
+
 /***
  * helpers for blocks
  */
@@ -93,8 +126,9 @@ export const convertBlocksToJsx = blocks => {
  * But did find their code for it here:
  * https://github.com/facebook/draft-js/blob/main/src/model/keys/generateRandomKey.js
  * and have based the following code on that
+ * // TIDY comment since we're dumping DraftJs
  */
-const getRandomKey = ({ remainingKeys = [], usedKeys = [] }) => {
+export const getRandomKey = ({ remainingKeys = [], usedKeys = [] }) => {
 	const MULTIPLIER = Math.pow(2, 24);
 	if (remainingKeys.length > 0) {
 		return {
@@ -123,13 +157,13 @@ const splitBlock = ({ block, keys }) => {
 	const textArr = R.pipe(R.prop('text'), R.split(NEWLINE_REGEX))(block);
 
 	const basicBlock = {
-		data: {},
-		depth: 0,
-		entityRanges: [],
-		inlineStyleRanges: [],
+		// data: {},
+		// depth: 0,
+		// entityRanges: [],// TIDY when sure these are not needed
+		inlineStyleRanges: [], 
 		key: null,
 		text: '',
-		type: 'unstyled'
+		// type: 'unstyled' // TIDY
 	}
 
 	const { blocks } = R.reduce(

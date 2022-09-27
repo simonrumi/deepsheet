@@ -15,12 +15,48 @@ const { log } = require('./logger');
 
 const SheetModel = mongoose.model('sheet');
 
+// This is a copy of a function on the client side
+const getRandomKey = ({ remainingKeys = [], usedKeys = [] }) => {
+	const MULTIPLIER = Math.pow(2, 24);
+	if (remainingKeys.length > 0) {
+		return {
+			key: R.head(remainingKeys),
+			remainingKeys: R.tail(remainingKeys), 
+			usedKeys: R.pipe(R.head, R.append(R.__, usedKeys))(remainingKeys)
+		}
+	}
+	// no remainingKeys to use, so we need to create a key, checking that it's not already in the usedKeys
+	const generateKey = () => Math.floor(Math.random() * MULTIPLIER).toString(32);
+
+	const key = R.until(
+		key => R.not(R.find(R.equals(key), usedKeys)), // this is the predicate - a function that returns true if the generated key is not already being used
+		generateKey, // this function is called until the predicate above returns true
+		generateKey() // initial value for "key" to try in the predicate function
+	)
+
+	return {
+		key,
+		remainingKeys,
+		usedKeys: R.append(key, usedKeys)
+	};
+}
+
+// note that we are not trying to make sure that the keys are unique amongst all cells in the sheet
+// only concerned that within a cell, each block has a unique key
+// so since this is just creating a single cell with one block, we don't need to give
+// the usedKeys in the call to getRandomKey
 const createBlankCell = (row, column) => ({
    row,
    column,
    content: {
       subsheetId: null,
-      text: '',
+      formattedText: {
+			blocks: [{
+				inlineStyleRanges: [],
+				text: '',
+				key: R.pipe(getRandomKey, R.prop('key'))({}),
+			}],
+		},
    },
    visible: true,
 });

@@ -11,14 +11,9 @@ import { createCellId, isCellFocused, createCellKey } from '../../helpers/cellHe
 import { isCellVisible } from '../../helpers/visibilityHelpers';
 import { rangeSelected, atEndOfRange, maybeClearSubsheetCellFocus } from '../../helpers/focusHelpers';
 import { clearRangeHighlight } from '../../helpers/rangeToolHelpers';
-import { convertBlocksToJsx, decodeFormattedText, getInitialEditorState } from '../../helpers/richTextHelpers';
+import { convertBlocksToJsx, decodeFormattedText, getFormattedText } from '../../helpers/richTextHelpers';
 import {
    cellSubsheetId,
-   cellText,
-	cellRow,
-	cellColumn,
-	cellFormattedText, 
-	cellFormattedTextBlocks,
    cellInCellRange,
    statePresent,
 	stateCellRangeTo,
@@ -71,9 +66,12 @@ const Cell = React.memo(({ row, column, classes, blankCell, endCell, isVisible }
    const inCellRange = cellInCellRange(cell);
 
    const renderRegularCell = cell => {
-		const text = isSomething(cellFormattedTextBlocks(cell)) 
-			? R.pipe(cellFormattedText, decodeFormattedText, R.prop('blocks'), convertBlocksToJsx)(cell)
-			: cellText(cell);
+		const jsxText = R.pipe(
+			getFormattedText,
+			decodeFormattedText, 
+			R.prop('blocks'), 
+			convertBlocksToJsx
+		)(cell);
       const cellId = createCellId(row, column);
       return (
          <div
@@ -84,7 +82,7 @@ const Cell = React.memo(({ row, column, classes, blankCell, endCell, isVisible }
             data-testid={cellId}
 				key={cellKey + (endCell ? '_endCell' : '') }
          >
-            {text}
+            {jsxText}
          </div>
       );
    }

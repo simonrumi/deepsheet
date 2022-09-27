@@ -5,7 +5,6 @@ const BlockModel = require('./BlockModel');
 
 const formattedTextSchema = new Schema({
 	blocks: [BlockModel],
-	entityMap: {},
 });
 
 mongoose.model('formattedText', formattedTextSchema);

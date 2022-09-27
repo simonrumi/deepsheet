@@ -1,22 +1,15 @@
 const { gql } = require('apollo-server-lambda');
 
-const SheetMutations = gql`
-   input UpdateSubsheetIdInput {
-      sheetId: ID!
-      row: Int!
-      column: Int!
-      text: String
-      subsheetId: ID!
-   }
-
+/*
+TIDY this comment
+Used to have these
 	input PlaceholderObjectInput {
 		placeholderString: String
 	}
 
-	input InlineStyleRangeInput {
-		offset: Int
-		length: Int
-		style: String
+	input FormattedTextInput {
+		blocks: [BlockInput]
+		entityMap: PlaceholderObjectInput
 	}
 
 	input BlockInput {
@@ -29,15 +22,75 @@ const SheetMutations = gql`
 		type: String
 	}
 
-	input FormattedTextInput {
-		blocks: [BlockInput]
-		entityMap: PlaceholderObjectInput
-	}
-
-   input CellContentInput {
+	input CellContentInput {
       text: String
       subsheetId: ID
 		formattedText: FormattedTextInput
+   }
+
+	// used to have summary cell:
+	input NewSheetInput {
+      userId: ID!
+      rows: Int
+      columns: Int
+      title: String
+      parentSheetId: ID
+      summaryCell: SheetSummaryCellInput
+      rowHeights: [SheetSizingInput]
+      columnWidths: [SheetSizingInput]
+      cellRange: [CellInput]
+   }
+
+	// used to have summary cell:
+	input UpdateMetadataInput {
+      id: ID!
+      totalRows: Int
+      totalColumns: Int
+      parentSheetId: ID
+      summaryCell: SheetSummaryCellInput
+      rowFilters: [SheetFilterInput]
+      columnFilters: [SheetFilterInput]
+      frozenRows: [SheetFreezeInput]
+      frozenColumns: [SheetFreezeInput]
+      rowHeights: [SheetSizingInput]
+      columnWidths: [SheetSizingInput]
+   }
+
+	input SheetSummaryCellInput {
+      row: Int
+      column: Int
+   }
+
+*/
+
+
+const SheetMutations = gql`
+	input InlineStyleRangeInput {
+		offset: Int
+		length: Int
+		style: String
+	}
+
+	input BlockInput {
+		inlineStyleRanges: [InlineStyleRangeInput]
+		key: String
+		text: String
+	}
+
+	input FormattedTextInput {
+		blocks: [BlockInput]
+	}
+
+   input CellContentInput {
+      subsheetId: ID
+		formattedText: FormattedTextInput
+   }
+
+	input UpdateSubsheetIdInput {
+      sheetId: ID!
+      row: Int!
+      column: Int!
+      content: CellContentInput
    }
 
    input CellInput {
@@ -71,17 +124,11 @@ const SheetMutations = gql`
       size: String!
    }
 
-   input SheetSummaryCellInput {
-      row: Int
-      column: Int
-   }
-
    input UpdateMetadataInput {
       id: ID!
       totalRows: Int
       totalColumns: Int
       parentSheetId: ID
-      summaryCell: SheetSummaryCellInput
       rowFilters: [SheetFilterInput]
       columnFilters: [SheetFilterInput]
       frozenRows: [SheetFreezeInput]
@@ -96,7 +143,6 @@ const SheetMutations = gql`
       columns: Int
       title: String
       parentSheetId: ID
-      summaryCell: SheetSummaryCellInput
       rowHeights: [SheetSizingInput]
       columnWidths: [SheetSizingInput]
       cellRange: [CellInput]

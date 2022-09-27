@@ -67,8 +67,18 @@ const CREATE_SHEET_MUTATION = gql`
             row
             column
             content {
-               text
                subsheetId
+					formattedText {
+						blocks {
+							text
+							key
+							inlineStyleRanges {
+								offset
+								length
+								style
+							}
+						}
+					}
             }
             visible
          }
@@ -200,17 +210,9 @@ const SHEET_BY_USER_ID_MUTATION = gql`
             row
             column
             content {
-               text
                subsheetId
 					formattedText {
 						blocks {
-							data {
-								placeholderString
-							}
-							depth
-							entityRanges {
-								placeholderString
-							}
 							inlineStyleRanges {
 								offset
 								length
@@ -218,10 +220,6 @@ const SHEET_BY_USER_ID_MUTATION = gql`
 							}
 							key
 							text
-							type
-						}
-						entityMap {
-							placeholderString
 						}
 					}
             }

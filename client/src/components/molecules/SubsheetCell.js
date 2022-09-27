@@ -16,6 +16,7 @@ import {
    stateCellRangeTo,
 } from '../../helpers/dataStructureHelpers';
 import { manageFocus, manageTab, rangeSelected, maybeClearSubsheetCellFocus } from '../../helpers/focusHelpers';
+import { getCellPlainText } from '../../helpers/richTextHelpers';
 import { clearRangeHighlight, maybeAbortFocus, } from '../../helpers/rangeToolHelpers';
 import SubsheetCellTools from './SubsheetCellTools';
 import { log } from '../../clientLogger';
@@ -115,7 +116,7 @@ const SubsheetCell = ({ cell, cellHasFocus }) => {
 					onClick={onSubsheetCellClick}
 				>
 					<SubsheetCellTools cell={cell} cellHasFocus={cellIsCurrentlyFocused} />
-					{cellText(cell)}
+					{getCellPlainText(cell)}
 				</div>
 			</div>
 			);

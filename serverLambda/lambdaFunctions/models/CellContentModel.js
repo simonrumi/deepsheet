@@ -5,8 +5,10 @@ const FormattedTextModel = require('./FormattedTextModel');
 
 const cellContentSchema = new Schema({
    subsheetId: { type: Schema.Types.ObjectId, ref: 'Sheet' },
-   text: { type: String },
 	formattedText: { type: FormattedTextModel },
 });
 
 mongoose.model('content', cellContentSchema);
+
+
+   // text: { type: String }, // TIDY/TODO do we need to keep this in cellContentSchema to be backwardly compatible?

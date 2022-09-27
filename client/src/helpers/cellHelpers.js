@@ -23,6 +23,8 @@ import {
    cellVisible,
    cellRowSetter,
    cellColumnSetter,
+	cellContent,
+	cellContentSetter,
    cellTextSetter,
 	cellFormattedText,
 	cellFormattedTextSetter,
@@ -42,7 +44,14 @@ import {
    stateCellsUpdateInfo,
 } from './dataStructureHelpers';
 import { isCellVisible } from './visibilityHelpers';
-import { encodeFormattedText, decodeFormattedText } from './richTextHelpers';
+import {
+   encodeFormattedText,
+   decodeFormattedText,
+   getFormattedText,
+   cleanFormattedText,
+   getCellPlainText,
+   getRandomKey,
+} from './richTextHelpers';
 import { addCellReducers } from '../reducers/cellReducers';
 import { addNewCellsToStore, addNewCellsToCellDbUpdates } from '../services/insertNewAxis';
 import { updatedCell, hasChangedCell, addedCellKeys } from '../actions/cellActions';
@@ -83,7 +92,6 @@ export const getSaveableCellData = cell =>
    R.pipe(
       cellRowSetter(cellRow(cell)),
       cellColumnSetter(cellColumn(cell)),
-      cellTextSetter(cellText(cell)),
 		cellFormattedTextSetter(cellFormattedText(cell)),
       cellSubsheetIdSetter(cellSubsheetId(cell)),
       cellVisibleSetter(cellVisible(cell))
@@ -274,7 +282,11 @@ export const cellsInRow = ({ state, rowIndex }) =>
       getAllCells(state)
    );
 
-
+const removeDeprecatedTextField = cell => R.pipe(
+	cellContent,
+	R.omit(['text']),
+	cellContentSetter(R.__, cell)
+)(cell)
 
 const tidyUpFormattedText = cell => R.pipe(
 	cellFormattedText,
@@ -289,12 +301,17 @@ const tidyUpFormattedText = cell => R.pipe(
 )(cell);
 
 export const prepCellsForDb = cells => R.map(
-   R.pipe(
-      encodeCellText,
+	R.pipe(
+		R.tap(data => console.log('cellHelpers--prepCellsForDb got cell', data)),
+		encodeCellText,
+		R.tap(data => console.log('cellHelpers--prepCellsForDb after encodeCellText got', data)),
 		tidyUpFormattedText,
-      R.pick(['row', 'column', 'visible', 'content']) // leave out unnecessary fields, like isStale and __typename
-   ), 
-   cells // each call to R.pipe will be giving it a cell
+		R.tap(data => console.log('cellHelpers--prepCellsForDb after tidyUpFormattedText got', data)),
+		removeDeprecatedTextField,
+		R.tap(data => console.log('cellHelpers--prepCellsForDb after removeDeprecatedTextField got', data)),
+		R.pick(['row', 'column', 'visible', 'content']) // leave out unnecessary fields, like isStale and __typename
+	),
+	cells // each call to R.pipe will be giving it a cell
 );
 
 export const ensureCorrectCellVisibility = R.curry((columnVisibility, rowVisibility, cell) => {
@@ -523,18 +540,24 @@ const reconcileTotalCells = sheet => {
 	}
 }
 
-// NOTE: if in future we want to use formattedText/blocks/data, formattedText/blocks/entityRanges or formattedText/entityMap
-// this function will have to be updated or removed   
-export const populateFormattedTextWithPlaceholders = cell => isSomething(cellFormattedText(cell)) 
-	? R.pipe(
-		cellFormattedTextBlocks,
-		R.map(block => R.assoc('data', {}, block)),
-		R.map(block => R.assoc('entityRanges', [], block)),
-		R.assoc('blocks', R.__, cellFormattedText(cell)),
-		R.assoc('entityMap', {}),
-		cellFormattedTextSetter(R.__, cell),
-	)(cell)
-	: cell;
+export const addKeysToBlocks = cell => R.pipe(
+	cellFormattedTextBlocks,
+	R.tap(data => console.log('cellHelpers--addKeysToBlocks after cellFormattedTextBlocks got', data)),
+	R.map(
+		block => R.prop('key', block) 
+			? block 
+			: R.pipe(
+				getRandomKey,
+				R.prop('key'),
+				R.assoc('key', R.__, block)
+			)({})
+	),
+	R.tap(data => console.log('cellHelpers--addKeysToBlocks after applying keys got', data)),
+	R.assoc('blocks', R.__, cellFormattedText(cell)),
+	R.tap(data => console.log('cellHelpers--addKeysToBlocks after putting blocks into the formattedText got', data)),
+	cellFormattedTextSetter(R.__, cell),
+	R.tap(data => console.log('cellHelpers--addKeysToBlocks after cellFormattedTextSetter got', data)),
+)(cell);
 
 export const populateCellsInStore = sheet => {
    R.pipe(
@@ -543,7 +566,40 @@ export const populateCellsInStore = sheet => {
       addedCellKeys
    )(sheet);
    R.forEach(cell => 
-		R.pipe(decodeCellText, updatedCell)(cell)
+		R.pipe(
+			getFormattedText,
+			decodeFormattedText,
+			cellFormattedTextSetter(R.__, cell),
+			updatedCell
+		)(cell)
 	)(dbCells(sheet));
 	reconcileTotalCells(sheet);
+}
+
+export const cleanCell = cell => R.pipe(
+	R.path(['content', 'formattedText']),
+	cleanFormattedText,
+	R.assocPath(['content', 'formattedText'], R.__, cell),
+	removeTypename,
+)(cell);
+
+export const isTextInCell = ({ cell, text, isCaseSensitive, isRegex }) => {
+	if (!arrayContainsSomething(cellFormattedTextBlocks(cell))) {
+		return false;
+	}
+	const textRegex = isRegex ? text : new RegExp(text, isCaseSensitive ? '' : 'i');
+	return R.pipe(
+		getCellPlainText,
+		cellPlainText => textRegex.test(cellPlainText)
+	)(cell, false) // 2nd param is includeNewLineChars
+}
+
+export const isCellEmpty = cell => {
+	if (!arrayContainsSomething(cellFormattedTextBlocks(cell))) {
+		return true;
+	}
+	return R.pipe(
+		getCellPlainText,
+		cellPlainText => R.equals('', cellPlainText) || /^\s+$/.test(cellPlainText)
+	)(cell, false) // 2nd param is includeNewLineChars
 }

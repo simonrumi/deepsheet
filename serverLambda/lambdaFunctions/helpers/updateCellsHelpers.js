@@ -30,10 +30,10 @@ const updateAndAddCells = (sheetDoc, updatedCells) => {
          : null;
 };
 
-const deleteSubsheetId = (originalCells, row, column, text = '') =>
+const deleteSubsheetId = ({ originalCells, row, column, formattedText }) =>
    R.map(cell => {
       if (cell.row === row && cell.column === column) {
-         const newContent = { ...cell.content, subsheetId: null, text };
+         const newContent = { ...cell.content, subsheetId: null, formattedText };
          return { ...cell, content: newContent };
       }
       return cell;

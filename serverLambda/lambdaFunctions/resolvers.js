@@ -57,6 +57,7 @@ module.exports = db => ({
       },
 
       text: async (parent, args, context) => {
+			console.log('resolvers--text query got parent', parent, 'args', args);
          try {
             return parent.subsheetId ? await SheetModel.getSummaryCellContent(parent.subsheetId) : parent.text;
          } catch (err) {
@@ -189,6 +190,7 @@ module.exports = db => ({
 
       updateCells: async (parent, args, context) => {
          const { sheetId, cells, userId } = args.input;
+			console.log('resolvers--updateCells got sheetId', sheetId, 'cells', cells, 'userId', userId);
          try {
             const sheetDoc = await SheetModel.findById(sheetId);
             if (sheetDoc.users.owner != userId) {
@@ -207,25 +209,27 @@ module.exports = db => ({
       // TODO should give user the option to delete the whole subsheet also
       /* This is to remove a cell's connection to a subsheet, while preserving the text in the cell from the subsheet */
       deleteSubsheetId: async (parent, args, context) => {
-         const { sheetId, row, column, text, subsheetId } = args.input;
+         const { sheetId, row, column, content } = args.input;
+			const { formattedText, subsheetId } = content;
          try {
             // remove the subsheetId from the cell which links to it
             const sheetDoc = await SheetModel.findById(sheetId);
-            const updatedCells = deleteSubsheetId(sheetDoc.cells, row, column, text);
-            sheetDoc.cells = updatedCells;
+            const updatedCells = deleteSubsheetId({ originalCells: sheetDoc.cells, row, column, formattedText });
+				sheetDoc.cells = updatedCells;
             sheetDoc.metadata.lastUpdated = new Date();
             await sheetDoc.save();
-
+            
             // remove the reference to the parent from the subsheet
             const subsheetDoc = await SheetModel.findById(subsheetId);
             subsheetDoc.metadata.parentSheetId = null;
+				log({ level: LOG.DEBUG }, 'resolvers--Mutation--deleteSubsheetId removed parentId from subsheet with Id:', subsheetId, 'so its metadata looks like this:', subsheetDoc?.metadata);
             await subsheetDoc.save();
 
             // return the cell that has had the subsheet unlinked from it
             const cell = findCellByRowAndColumn(row, column, sheetDoc.cells);
             return cell;
          } catch (err) {
-            log({ level: LOG.ERROR }, 'resolvers.Mutation.deleteSubsheetId Error deleting subsheet id:', err.message);
+            log({ level: LOG.ERROR }, 'resolvers--Mutation--deleteSubsheetId Error deleting subsheet id:', err.message);
             return err;
          }
       },

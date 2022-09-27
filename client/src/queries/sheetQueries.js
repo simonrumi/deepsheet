@@ -86,13 +86,6 @@ const SHEET_QUERY = gql`
                subsheetId
 					formattedText {
 						blocks {
-							data {
-								placeholderString
-							}
-							depth
-							entityRanges {
-								placeholderString
-							}
 							inlineStyleRanges {
 								offset
 								length
@@ -100,10 +93,6 @@ const SHEET_QUERY = gql`
 							}
 							key
 							text
-							type
-						}
-						entityMap {
-							placeholderString
 						}
 					}
             }

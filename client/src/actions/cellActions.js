@@ -17,16 +17,17 @@ import {
 } from './cellTypes';
 import { ADDED_CELL_TO_RANGE, } from './cellRangeTypes';
 import { isNothing } from '../helpers';
-import { populateFormattedTextWithPlaceholders } from '../helpers/cellHelpers';
+import { addKeysToBlocks } from '../helpers/cellHelpers';
 
 export const updatedCell = cell => {
    if (isNothing(cell) || R.not(R.has('content', cell))) {
       console.warn('WARNING: updatedCell could not create an action. It received', cell);
       return;
    }
+
    managedStore.store.dispatch({
       type: UPDATED_CELL,
-      payload: populateFormattedTextWithPlaceholders(cell),
+      payload: addKeysToBlocks(cell),
    });
 };
 
@@ -49,14 +50,15 @@ export const updatedCells = async ({ sheetId, cells }) => {
    managedStore.store.dispatch({ type: POSTING_UPDATED_CELLS, payload: { sheetId, cells } });
 };
 
-export const deleteSubsheetId = R.curry(async (row, column, text, subsheetId, sheetId) => {
+export const deleteSubsheetId = R.curry(async (row, column, /* text, TIDY */ formattedText, subsheetId, sheetId) => {
    managedStore.store.dispatch({
       type: POSTING_DELETE_SUBSHEET_ID,
       payload: {
          row, 
          column, 
          content: {
-            text, 
+            // text, // TIDY
+				formattedText,
             subsheetId
          },
          sheetId, 

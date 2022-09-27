@@ -49,7 +49,7 @@ const processCellAction = R.curry((state, sheetId, action) => {
             row, 
             column, 
             content: {
-               text, 
+               formattedText, 
                subsheetId
             },
             sheetId, 

@@ -20,7 +20,7 @@ import { updateCellsMutation, deleteSubsheetIdMutation } from '../queries/cellMu
 import { createSheetMutation } from '../queries/sheetMutations';
 import { isSomething, arrayContainsSomething, ifThenElse } from '../helpers';
 import { getUserInfoFromCookie } from '../helpers/userHelpers';
-import { getSaveableCellData } from '../helpers/cellHelpers';
+import { getSaveableCellData, cleanCell } from '../helpers/cellHelpers';
 import { createDefaultAxisSizing } from '../helpers/axisSizingHelpers';
 import { cellSubsheetIdSetter, cellTextSetter, dbSheetId, removeTypename } from '../helpers/dataStructureHelpers';
 import { DEFAULT_TOTAL_ROWS, DEFAULT_TOTAL_COLUMNS, DEFAULT_ROW_HEIGHT, DEFAULT_COLUMN_WIDTH } from '../constants';
@@ -79,7 +79,14 @@ const dbOperations = store => next => async action => {
    switch (action.type) {
       case POSTING_CREATE_SHEET:
          next(action); // get this action to the reducer before we do the next steps
-			const cleanedCreateSheetData = removeTypename(action.payload);
+			const cleanedCreateSheetData = R.pipe(
+				R.prop('payload'),
+				removeTypename,
+				cleanedData => R.prop('cellRange', cleanedData) || [],
+				R.map(cell => cleanCell(cell)),
+				R.assoc('cellRange', R.__, action.payload),
+			)(action);
+
          try {
             await saveAllUpdates(store.getState());
             const response = await createNewSheet(cleanedCreateSheetData);
@@ -123,9 +130,13 @@ const dbOperations = store => next => async action => {
          next(action); // get this action to the reducer before we do the next steps, so the UI can display "waiting" state
          try {
             const { userId } = getUserInfoFromCookie();
-				const cleanedCells = removeTypename(action.payload); // contains sheetId as well as cells
+				const { cells, sheetId } = action.payload;
+				const cleanedCells = R.map(cell => cleanCell(cell))(cells);
+				console.log('dbOperations--POSTING_UPDATED_CELLS got cells', cells, 'cleanedCells', cleanedCells, 'sheetId', sheetId);
+
             const response = await updateCellsMutation({
-               ...cleanedCells, 
+               cells: cleanedCells,
+					sheetId, 
                userId,
             });
             managedStore.store.dispatch({
@@ -138,10 +149,10 @@ const dbOperations = store => next => async action => {
             R.map(cell => {
                managedStore.store.dispatch({
                   type: COMPLETED_SAVE_CELL,
-                  payload: { ...cell, sheetId: action.payload.sheetId },
+                  payload: { ...cell, sheetId },
                });
                return null; // no return value needed - putting here to stop a warning from showing in the console
-            })(action.payload.cells);
+            })(cells);
          } catch (err) {
             log({ level: LOG.INFO }, 'dbOperations tried to update cells but failed', err);
             managedStore.store.dispatch({
@@ -151,11 +162,17 @@ const dbOperations = store => next => async action => {
          }
          break;
 
+// TODO 
+// note - have updated server so that all the unused data structure for formattedText is removed
+// continue mapping out all the steps for mutating graphql data
+
+// REMEMBER!!!! TODO - switch withAuth back on in graphqlHelpers.js on server when finished with apollo
+
       case POSTING_DELETE_SUBSHEET_ID:
          next(action); // get this action to the reducer before we do the next steps, so the UI can display "waiting" state
          try {
-				const cleanedData = removeTypename(action.payload); // action.payload contains { row, column, text, sheetId, subsheetId }
-            const response = await deleteSubsheetIdMutation(cleanedData); 
+				const cleanedData = cleanCell(action.payload); // action.payload contains { row, column, sheetId, content: { formattedText, subsheetId } };
+				const response = await deleteSubsheetIdMutation(cleanedData); 
             managedStore.store.dispatch({
                type: COMPLETED_DELETE_SUBSHEET_ID,
                payload: response,

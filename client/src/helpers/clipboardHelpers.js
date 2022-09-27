@@ -14,7 +14,7 @@ import {
 import { isRowDirectionForward, isColumnDirectionForward } from './rangeToolHelpers';
 import { orderFromAndToAxes } from './rangeToolHelpers';
 import { createCellKey } from './cellHelpers';
-import { addPastedTextToEditorState } from './richTextHelpers';
+import { addPastedTextToEditorState, getCellPlainText } from './richTextHelpers';
 import { 
     statePresent,
     stateCellRangeCells,
@@ -394,6 +394,7 @@ export const getCellRangeAsText = () => {
     )(managedStore.state); // this param is passed to both stateCellRangeFrom & stateCellRangeTo
 
     const cells = stateCellRangeCells(managedStore.state);
+	 const includeNewlineCharsWithinCells = false;
     return ifThen({
         ifCond: arrayContainsSomething,
         thenDo: R.reduce(
@@ -403,7 +404,9 @@ export const getCellRangeAsText = () => {
                         ? '' // at the very last cell so no end char is needed
                         : '\n' // at the end of a row, so add a newline
                     : '\t'; // in the middle of a row, so add a tab
-                return isSomething(cellText(cell)) ? accumulator + cellText(cell) + cellEndChar : accumulator + cellEndChar
+                return isSomething(getCellPlainText(cell, includeNewlineCharsWithinCells))
+                   ? accumulator + getCellPlainText(cell, includeNewlineCharsWithinCells) + cellEndChar
+                   : accumulator + cellEndChar;
             },
             '' // initial value is an empty string
         ),

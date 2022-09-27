@@ -2,7 +2,6 @@ import { gql } from '@apollo/client';
 import apolloClient from '../services/apolloClient';
 import { prepCellsForDb } from '../helpers/cellHelpers';
 
-
 const UPDATE_CELLS_MUTATION = gql`
    mutation UpdateCells($sheetId: ID!, $cells: [CellInput], $userId: ID!) {
       updateCells(input: { sheetId: $sheetId, cells: $cells, userId: $userId }) {
@@ -14,7 +13,6 @@ const UPDATE_CELLS_MUTATION = gql`
                subsheetId
 					formattedText {
 						blocks {
-							depth
 							inlineStyleRanges {
 								offset
 								length
@@ -22,7 +20,6 @@ const UPDATE_CELLS_MUTATION = gql`
 							}
 							key
 							text
-							type
 						}
 					}
             }
@@ -32,8 +29,10 @@ const UPDATE_CELLS_MUTATION = gql`
    }
 `;
 
+// TODO will need to check this when we can add newlines again
 export const updateCellsMutation = async ({ sheetId, cells, userId }) => {
    const preppedCells = prepCellsForDb(cells);
+	console.log('cellMutations--updateCellsMutation got variables: sheetId', sheetId, 'cells', preppedCells, 'userId', userId);
    const result = await apolloClient.mutate({
       mutation: UPDATE_CELLS_MUTATION,
       variables: { sheetId, cells: preppedCells, userId },
@@ -42,13 +41,40 @@ export const updateCellsMutation = async ({ sheetId, cells, userId }) => {
 };
 
 const DELETE_SUBSHEET_ID_MUTATION = gql`
-   mutation DeleteSubsheetId($sheetId: ID!, $row: Int!, $column: Int!, $text: String, $subsheetId: ID!) {
-      deleteSubsheetId(input: { sheetId: $sheetId, row: $row, column: $column, text: $text, subsheetId: $subsheetId }) {
+   mutation DeleteSubsheetId(
+      $sheetId: ID!
+      $row: Int!
+      $column: Int!
+      $formattedText: FormattedTextInput
+      $subsheetId: ID!
+   ) {
+      deleteSubsheetId(
+         input: {
+            sheetId: $sheetId
+            row: $row
+            column: $column
+            content: {
+					formattedText: $formattedText
+           		subsheetId: $subsheetId
+				}
+         }
+      ) {
          row
          column
          content {
             text
             subsheetId
+            formattedText {
+               blocks {
+                  inlineStyleRanges {
+                     offset
+                     length
+                     style
+                  }
+                  text
+                  key
+               }
+            }
          }
          visible
       }
@@ -60,17 +86,19 @@ const DELETE_SUBSHEET_ID_MUTATION = gql`
    row, 
    column, 
    content: {
-      text, 
+		text,
+      formattedText, 
       subsheetId
    },
    sheetId, 
 } */
 export const deleteSubsheetIdMutation = async data => {
    const { sheetId, row, column, content } = data;
-   const { text, subsheetId } = content;
+   const { text, formattedText, subsheetId } = content;
+	console.log('cellMutations--deleteSubsheetIdMutation got variables: sheetId', sheetId, 'row', row, 'column', column, 'text', text, 'formattedText', formattedText, 'subsheetId', subsheetId);
    const result = await apolloClient.mutate({
       mutation: DELETE_SUBSHEET_ID_MUTATION,
-      variables: { sheetId, row, column, text, subsheetId },
+      variables: { sheetId, row, column, text, formattedText, subsheetId },
    });
    return result.data.deleteSubsheetId; //note that "deleteSubsheetId" is the name of the mutation above
 };

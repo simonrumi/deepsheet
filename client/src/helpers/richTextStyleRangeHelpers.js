@@ -172,8 +172,6 @@ const maybePrependStyleRange = R.curry(
 	(newStyleRange, styleRanges) => isSomething(newStyleRange) && R.prop('length', newStyleRange) > 0 ? R.prepend(newStyleRange, styleRanges) : styleRanges
 );
 
-// TODO NEXT in here if any style has length 0 (or less) then remove it
-// see BUG description in CellInPlaceEditor
 const consolidateFirstTwoStyles = ({ matchingStyles, consolidatedStyles = [] }) => {
 	if (matchingStyles.length === 0) {
 		return consolidatedStyles;
@@ -239,7 +237,7 @@ const consolidateStyleRanges = ({ blocks, newStyle }) => R.map(block => {
 
 	return R.pipe(
 		R.prop('inlineStyleRanges'),
-		R.filter(styleRange => styleRange.style != newStyle),
+		R.filter(styleRange => styleRange.style !== newStyle),
 		R.concat(consolidatedMatchingStyles),
 		sortStyleRanges,
 		R.assoc('inlineStyleRanges', R.__, block)
@@ -397,7 +395,8 @@ const toggleStyleOff = ({ style, start, middle, end, blocks }) => {
 						accumulator
 					);
 				}
-				
+				// shouldn't get here, but putting this here to avoid a warning
+				return accumulator;
 			},
 			[] //initial set of new styleRanges
 		)(matchingStartStyles);
