@@ -57,7 +57,6 @@ module.exports = db => ({
       },
 
       text: async (parent, args, context) => {
-			console.log('resolvers--text query got parent', parent, 'args', args);
          try {
             return parent.subsheetId ? await SheetModel.getSummaryCellContent(parent.subsheetId) : parent.text;
          } catch (err) {
@@ -117,8 +116,7 @@ module.exports = db => ({
                await addSheetToUser({ user, sheetId: newSheet._id });
                return newSheet;
             }
-            const sheetResult = await getLatestSheet(user.sheets);
-            return sheetResult;
+            return await getLatestSheet(user.sheets);
          } catch (err) {
             log({ level: LOG.ERROR }, 'resolvers.Mutation.sheetByUserId Error finding sheet by user id:', err.message);
             return err;
@@ -190,7 +188,6 @@ module.exports = db => ({
 
       updateCells: async (parent, args, context) => {
          const { sheetId, cells, userId } = args.input;
-			console.log('resolvers--updateCells got sheetId', sheetId, 'cells', cells, 'userId', userId);
          try {
             const sheetDoc = await SheetModel.findById(sheetId);
             if (sheetDoc.users.owner != userId) {

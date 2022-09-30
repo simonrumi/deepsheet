@@ -258,22 +258,11 @@ const getMatchingStyleRanges = ({ blockKey, blocks, style }) => R.pipe(
 	)
 )({ blocks, blockKey });
 
-const replaceBlocks = R.curry((originalBlocks, newBlocks) => {
-	console.log('richTextStyleRangeHelpers--replaceblocks started with originalBlocks', originalBlocks, 'newBlocks', newBlocks);
-	const returnVal = R.map(
-	originalBlock => {
-		console.log('richTextStyleRangeHelpers--replaceBlocks got originalBlock', originalBlock, 'newBlocks', newBlocks);
-		const foundBlockByKey = findBlockByKey({ blocks: newBlocks, blockKey: originalBlock.key });
-		console.log('richTextStyleRangeHelpers--replaceBlocks will return foundBlockByKey', foundBlockByKey, 'or the originalBlock', originalBlock);
-		return foundBlockByKey || originalBlock;
-		// return findBlockByKey({ blocks: newBlocks, blockKey: originalBlock.key }) || originalBlock // TIDY: reinstate this line instead of all the above lines
-	}, 
-	originalBlocks // TIDY
-);
-console.log('richTextStyleRangeHelpers--replaceBlocks will return', returnVal);
-return returnVal; // TIDY
-}
-);
+const replaceBlocks = R.curry((originalBlocks, newBlocks) => R.map(
+	originalBlock => findBlockByKey({ blocks: newBlocks, blockKey: originalBlock.key }) || originalBlock, 
+	originalBlocks
+));
+
 
 const replaceUpdatedBlock = R.curry((blocks, updatedBlock) => R.pipe(
 	() => R.append(updatedBlock, []),
@@ -335,13 +324,10 @@ const incorporateNewStyles = ({ blocks, blockKey, newStyles, unchangedStyles }) 
 	findBlockByKey,
 	block => R.pipe(
 		R.concat,
-		R.tap(data => console.log('richTextStyleRangeHelpers--incorporateNewStyles concatenated new and unchanged styles to get', data)),
 		sortStyleRanges,
 		R.assoc('inlineStyleRanges', R.__, block),
-		R.tap(data => console.log('richTextStyleRangeHelpers--incorporateNewStyles put styles into block', data)),
 	)(newStyles, unchangedStyles),
 	R.append(R.__, []), // put the updated block in an array as that's the form replaceBlocks wants
-	R.tap(data => console.log('richTextStyleRangeHelpers--incorporateNewStyles about to call replaceBlocks with original blocks', blocks, 'and new blocks', data)),
 	replaceBlocks(blocks),
 )({ blocks, blockKey });
 
@@ -349,26 +335,17 @@ const toggleStyleOff = ({ style, start, middle, end, blocks }) => {
 	// get the matching styles in the start block
 	const { matchingStyleRanges: matchingStartStyles, nonMatchingStyleRanges: nonMatchingStartStyles } =
       getMatchingStyleRanges({ blockKey: start.blockKey, blocks, style });
-	console.log(
-      'richTextStyleRangeHelpers--toggleStyleOff got matchingStartStyles', matchingStartStyles,
-      'nonMatchingStartStyles', nonMatchingStartStyles,
-      'blocks', blocks
-   );
 					
 	if (start.blockKey === end.blockKey) {
 		const newStyles = R.reduce(
 			(accumulator, matchingStyle) => {
-				console.log('richTextStyleRangeHelpers--toggleStyleOff in reduce, got matchingStyle', matchingStyle, 'start', start, 'end', end);
 				if (matchingStyle.offset < start.cursorPosition) {
 					const shortenedStyleAdded = R.append({ ...matchingStyle, length: start.cursorPosition - matchingStyle.offset }, accumulator);
-					console.log('richTextStyleRangeHelpers--toggleStyleOff case 1 or 2: shortened Style Added to new styleRanges:', shortenedStyleAdded);
 					if (matchingStyle.offset + matchingStyle.length < end.cursorPosition) {
 						// case 1: style starts before selection and ends in the middle of the selection, so shorten the matching style to end at the start cursor
-						console.log('richTextStyleRangeHelpers--toggleStyleOff case 1: style starts before selection and ends in the middle of the selection');
 						return shortenedStyleAdded;
 					}
 					// case 2: style starts before the selection and ends after the selection..so as well as the shortened style, add a new style from end.cursorPosition to matchingStyle END
-					console.log('richTextStyleRangeHelpers--toggleStyleOff case 2: style starts before the selection and ends after the selection');
 					return R.append(
 						{ 
 							...matchingStyle, 
@@ -381,11 +358,9 @@ const toggleStyleOff = ({ style, start, middle, end, blocks }) => {
 				if (matchingStyle.offset >= start.cursorPosition) {
 					if (matchingStyle.offset + matchingStyle.length < end.cursorPosition) {
 						// case 3: matchingStyle is completely inside the selection.. so delete the matching style
-						console.log('richTextStyleRangeHelpers--toggleStyleOff case 3: matchingStyle is completely inside the selection');
 						return accumulator;
 					}
 					// case 4: matching style starts in the middle of the selection and ends after the selection .. so update the matchingStyle to start at the end.cursorPosition
-					console.log('richTextStyleRangeHelpers--toggleStyleOff case 4: matchingStyle starts in the middle of the selection and ends after the selection');
 					return R.append(
 						{
 							...matchingStyle,
@@ -400,7 +375,6 @@ const toggleStyleOff = ({ style, start, middle, end, blocks }) => {
 			},
 			[] //initial set of new styleRanges
 		)(matchingStartStyles);
-		console.log('richTextStyleRangeHelpers--toggleStyleOff got updatedStyles', newStyles);
 
 		return incorporateNewStyles({ blocks, blockKey: start.blockKey, newStyles, unchangedStyles: nonMatchingStartStyles });
 	}
@@ -408,11 +382,9 @@ const toggleStyleOff = ({ style, start, middle, end, blocks }) => {
 	const newMatchingStartStyles = R.reduce(
 		(accumulator, matchingStyle) => {
 			if(matchingStyle.offset < start.cursorPosition) {
-				console.log('richTextStyleRangeHelpers--toggleStyleOff start blcok case 1: matchingStyle starts before selection', matchingStyle);
 				// case 1: matchingStyle starts before selection, so shorten the matching style to end at the start cursor
 				return R.append({ ...matchingStyle, length: start.cursorPosition - matchingStyle.offset }, accumulator);
 			}
-			console.log('richTextStyleRangeHelpers--toggleStyleOff start block case 2: matchingStyle starts inside the selection', matchingStyle);
 			// case 2: matchingStyle starts inside the selection, so remove the selection
 			return accumulator;
 		},
@@ -421,7 +393,6 @@ const toggleStyleOff = ({ style, start, middle, end, blocks }) => {
 	);
 
 	const allBlocksWithStartUpdated = incorporateNewStyles({ blocks, blockKey: start.blockKey, newStyles: newMatchingStartStyles, unchangedStyles: nonMatchingStartStyles });
-	console.log('richTextStyleRangeHelpers--toggleStyleOff got allBlocksWithStartUpdated', allBlocksWithStartUpdated);
 	
 	const newMiddleBlocks = R.map(
 		middleData => {
@@ -435,21 +406,16 @@ const toggleStyleOff = ({ style, start, middle, end, blocks }) => {
 		},
 		middle
 	);
-	console.log('richTextStyleRangeHelpers--toggleStyleOff about to call replaceBlocks with original blocks allBlocksWithStartUpdated', allBlocksWithStartUpdated, 'newMiddleBlocks', newMiddleBlocks);
 	const allBlocksWithMiddleUpdated = replaceBlocks(allBlocksWithStartUpdated, newMiddleBlocks);
-	console.log('richTextStyleRangeHelpers--toggleStyleOff got allBlocksWithMiddleUpdated', allBlocksWithMiddleUpdated);
-
+	
 	const { matchingStyleRanges: matchingEndStyles, nonMatchingStyleRanges: nonMatchingEndStyles } = getMatchingStyleRanges({ blockKey: end.blockKey, blocks, style });
-	console.log('richTextStyleRangeHelpers--toggleStyleOff got matchingEndStyles', matchingEndStyles, 'nonMatchingEndStyles', nonMatchingEndStyles);
-
+	
 	const newEndStyles = R.reduce(
 		(accumulator, matchingStyle) => {
 			if (matchingStyle.offset + matchingStyle.length < end.cursorPosition) {
-				console.log('richTextStyleRangeHelpers--toggleStyleOff end styles case 1: the end of the matching style is before the end cursor', matchingStyle);
 				// case 1: the end of the matching style is before the end cursor, so delete the matching style
 				return accumulator;
 			}
-			console.log('richTextStyleRangeHelpers--toggleStyleOff end styles case 2: the end of the matching style is after the end cursor', 'matchingStyle', matchingStyle);
 			// case 2: the end of the matching style is after the end cursor, so make the matching style's offset equal the end cursor
 			return R.append({ 
 				...matchingStyle, 
@@ -460,8 +426,7 @@ const toggleStyleOff = ({ style, start, middle, end, blocks }) => {
 		[], // initial matching styles
 		matchingEndStyles
 	);
-	console.log('richTextStyleRangeHelpers--toggleStyleOff got newEndStyles', newEndStyles, 'nonMatchingEndStyles', nonMatchingEndStyles);
-
+	
 	return incorporateNewStyles({ blocks: allBlocksWithMiddleUpdated, blockKey: end.blockKey, newStyles: newEndStyles, unchangedStyles: nonMatchingEndStyles });
 }
 
@@ -482,7 +447,6 @@ const getCursorPositionInBlock = ({ cursorPosition, preceedingBlocksTextLength, 
 
 const getBlocksForSelection = ({ cursorStart, cursorEnd, blocks }) => {
 	const [ cursorRealStart, cursorRealEnd ] = cursorStart < cursorEnd ? [ cursorStart, cursorEnd ] : [ cursorEnd, cursorStart ]
-	console.log('richTextStyleRangeHelpers--getBlocksForSelection got cursorRealStart', cursorRealStart, 'cursorRealEnd', cursorRealEnd);
 	return R.reduce(
 		(accumulator, block) => {
 			const { totalTextLength, start } = accumulator;
@@ -496,17 +460,14 @@ const getBlocksForSelection = ({ cursorStart, cursorEnd, blocks }) => {
 				preceedingBlocksTextLength: totalTextLength,
 				block,
 			});
-			console.log('richTextStyleRangeHelpers--getBlocksForSelection got totalTextLength', totalTextLength, 'block.text.length', block.text.length, 'cursorStartPosition', cursorStartPosition, 'cursorEndPosition', cursorEndPosition);
 			if (isNothing(start.cursorPosition)) {
 				if (isNothing(cursorStartPosition)) {
 					//case 1: we're in a block before the start of the selection
-					console.log('richTextStyleRangeHelpers--getBlocksForSelection case 1: in a block before the start of the selection', block);
 					return { ...accumulator, totalTextLength: totalTextLength + block.text.length + BLOCK_END_CHAR_LENGTH, }
 				}
 				
 				if (isNothing(cursorEndPosition)) {
 					// case 2: we're in the starting block
-					console.log('richTextStyleRangeHelpers--getBlocksForSelection case 2: in the starting block', block);
 					return {
 						...accumulator,
 						start: { cursorPosition: cursorStartPosition, blockKey: block.key },
@@ -514,7 +475,6 @@ const getBlocksForSelection = ({ cursorStart, cursorEnd, blocks }) => {
 					}
 				}
 				// case 2a: the starting and ending block are both this block
-				console.log('richTextStyleRangeHelpers--getBlocksForSelection case 2a: the starting and ending block are both this block', block);
 				return R.reduced({
 					...accumulator,
 					start: { cursorPosition: cursorStartPosition, blockKey: block.key },
@@ -524,7 +484,6 @@ const getBlocksForSelection = ({ cursorStart, cursorEnd, blocks }) => {
 
 			if (isNothing(cursorStartPosition) && isNothing(cursorEndPosition)) {
 				// case 3: we're in a middle block
-				console.log('richTextStyleRangeHelpers--getBlocksForSelection case 3: in a middle block', block, 'accumulator', accumulator);
 				return {
 					...accumulator,
 					middle: R.append({ blockKey: block.key }, accumulator.middle),
@@ -533,7 +492,6 @@ const getBlocksForSelection = ({ cursorStart, cursorEnd, blocks }) => {
 			}
 
 			// case 4: we're in the end block
-			console.log('richTextStyleRangeHelpers--getBlocksForSelection case 4: in the end block', block, 'accumulator', accumulator);
 			return R.reduced({
 				...accumulator,
 				end: { cursorPosition: cursorEndPosition, blockKey: block.key }
@@ -552,8 +510,7 @@ const getBlocksForSelection = ({ cursorStart, cursorEnd, blocks }) => {
 export const updateStyles = ({ newStyle, cursorStart, cursorEnd, blocks }) => {
 	// Note: we assume blocks are in order as correct display (before getting to this function) depends on that
 	const { start, middle, end } = getBlocksForSelection({ cursorStart, cursorEnd, blocks });
-	console.log('reichTextHelpers--updateStyles got start', start, 'middle', middle, 'end', end);
-
+	
 	// decide whether we are toggling style on or off based on the first char in the first block
 	const isTogglingStyleOff = isStyleSetForFirstChar({ start, blocks, style: newStyle });
 
@@ -562,9 +519,7 @@ export const updateStyles = ({ newStyle, cursorStart, cursorEnd, blocks }) => {
 			blocks: toggleStyleOff({ style: newStyle, start, middle, end, blocks }), 
 			newStyle 
 		});
-		// blocksWithUpdatedStyles = toggleStyleOff({ style: newStyle, start, middle, end, blocks }); // TIDY
 	}
-	// blocksWithUpdatedStyles = toggleStyleOn({ style: newStyle, start, middle, end, blocks }); // TIDY
 	return consolidateStyleRanges({ 
 		blocks: toggleStyleOn({ style: newStyle, start, middle, end, blocks }), 
 		newStyle 

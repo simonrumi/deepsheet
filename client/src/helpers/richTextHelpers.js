@@ -1,6 +1,5 @@
 import htmlReactParser from 'html-react-parser';
 import * as R from 'ramda';
-import managedStore from '../store';
 import { EditorState, convertToRaw, convertFromRaw, ContentState } from 'draft-js';
 import { isSomething, isNothing, arrayContainsSomething, reduceWithIndex, ifThenElse } from '../helpers';
 import { encodeText, decodeText } from './cellHelpers';
@@ -12,7 +11,7 @@ import {
 	applyStyling,
 	isCharInRange
 } from './richTextStyleRangeHelpers';
-import { /* stateFocusEditor, TIDY */ cellText, cellFormattedText, cellFormattedTextBlocks } from './dataStructureHelpers';
+import { cellText, cellFormattedText, cellFormattedTextBlocks } from './dataStructureHelpers';
 import { BLOCK_SEPARATOR, BLOCK_SEPARATOR_REGEX, NEWLINE_REGEX, BLOCK_END_CHAR_LENGTH, STYLE_TAGS, LOG } from '../constants';
 import { log } from '../clientLogger';
 
@@ -121,13 +120,6 @@ export const cleanFormattedText = formattedText => R.pipe(
  * helpers for blocks
  */
 
-/**
- * Draft.js has a generateRandomKey function, but hard to find how to use it due to missing documentation
- * But did find their code for it here:
- * https://github.com/facebook/draft-js/blob/main/src/model/keys/generateRandomKey.js
- * and have based the following code on that
- * // TIDY comment since we're dumping DraftJs
- */
 export const getRandomKey = ({ remainingKeys = [], usedKeys = [] }) => {
 	const MULTIPLIER = Math.pow(2, 24);
 	if (remainingKeys.length > 0) {
@@ -157,13 +149,9 @@ const splitBlock = ({ block, keys }) => {
 	const textArr = R.pipe(R.prop('text'), R.split(NEWLINE_REGEX))(block);
 
 	const basicBlock = {
-		// data: {},
-		// depth: 0,
-		// entityRanges: [],// TIDY when sure these are not needed
 		inlineStyleRanges: [], 
 		key: null,
 		text: '',
-		// type: 'unstyled' // TIDY
 	}
 
 	const { blocks } = R.reduce(
@@ -593,7 +581,6 @@ const accomodateCharInStyleRanges = ({ charPosition, styleRanges, charsAdded }) 
 )(styleRanges);
 
 const deleteCharFromText = ({ text, index }) => {
-	console.log('richTextHelpers--deleteCharFromText got text', text, 'index', index);
 	const beginning = R.slice(0, index, text);
 	const end = R.slice(index + 1, Infinity, text);
 	return beginning + end;
@@ -605,10 +592,8 @@ const deleteCharFromBlock = ({ block, charIndexWithinBlock = 0 }) => {
       styleRanges: block.inlineStyleRanges,
       charsAdded: -1,
    });
-	console.log('richTextHelpers--deleteCharFromBlock got newStyleRanges', newStyleRanges);
 
 	const newText = deleteCharFromText({ text: block.text, index: charIndexWithinBlock });
-	console.log('richTextHelpers--deleteCharFromBlock got newText', newText);
 
 	return R.pipe(
 		R.assoc('inlineStyleRanges', newStyleRanges),
@@ -627,10 +612,8 @@ const addCharToBlock = ({ block, charIndexWithinBlock = 0, char = '' }) => {
       styleRanges: block.inlineStyleRanges,
       charsAdded: 1,
    });
-	console.log('richTextHelpers--addCharToBlock got newStyleRanges', newStyleRanges);
 
 	const newText = addCharToText({ text: block.text, index: charIndexWithinBlock, char });
-	console.log('richTextHelpers--addCharToBlock got newText', newText);
 
 	return R.pipe(
 		R.assoc('inlineStyleRanges', newStyleRanges),
@@ -644,34 +627,23 @@ const getBlockWithCursor = ({ cursorPosition, blocks, newTextArr }) => {
 		return { block: null, blockIndex: null, cursorPositionWithinBlock: null }
 	}
 
-	console.log('richTextHelpers--getBlockWithCursor got blocks', blocks, 'cursorPosition', cursorPosition);
 	return reduceWithIndex(
 		(accumulator, block, blockIndex) => {
-			console.log('richTextHelpers--getBlockWithCursor start of reduce function, got block', block, 'blockIndex', blockIndex);
 			const { totalTextLength } = accumulator;
 			const blockLength = R.pipe(R.prop('text'), R.length)(block);
 			const newTextLength = R.pipe(R.prop(blockIndex), R.length)(newTextArr);
-			console.log(
-            'richTextHelpers--getBlockWithCursor in reduce got blockLength', blockLength,
-				'newTextLength', newTextLength,
-            'blockIndex is', blockIndex,
-            'totalTextLength', totalTextLength
-         );
 			
 			if (newTextLength < blockLength) {
 				if (cursorPosition === totalTextLength + blockLength - 1) {
 					// case 1: last char deleted
-					console.log('richTextHelpers--getBlockWithCursor case 1: last char deleted');
 					return R.reduced({ block, cursorPositionWithinBlock: blockLength - 1, blockIndex });
 				}
 				if (cursorPosition === totalTextLength) {
 					// case 2: first char deleted
-					console.log('richTextHelpers--getBlockWithCursor case 2: first char deleted');
 					return R.reduced({ block, cursorPositionWithinBlock: 0, blockIndex });
 				}
 				if (cursorPosition < totalTextLength + blockLength - 1 && cursorPosition > totalTextLength) {
 					// case 3: deleted some char in the middle of the block
-					console.log('richTextHelpers--getBlockWithCursor case 3: deleted some char in the middle of the block');
 					return R.reduced({ block, cursorPositionWithinBlock: cursorPosition - totalTextLength, blockIndex });
 				}
 				log({ level: LOG.ERROR }, 'ERROR: richTextHelpers--getBlockWithCursor found the block with a deleted character, but could not find which character');
@@ -680,20 +652,17 @@ const getBlockWithCursor = ({ cursorPosition, blocks, newTextArr }) => {
 			if (newTextLength > blockLength) {
 				if (cursorPosition === totalTextLength + blockLength + 1) {
 					// case 4: added char to end of line
-					console.log('richTextHelpers--getBlockWithCursor case 4: added char to end of line');
 					return R.reduced({ block, cursorPositionWithinBlock: blockLength + 1, blockIndex });
 				}
 		
 				if (cursorPosition < totalTextLength + blockLength + 1 && cursorPosition >= totalTextLength + 1) {
 					// case 5: added a char before the end of the line
-					console.log('richTextHelpers--getBlockWithCursor case 5: added a char before the end of the line');
 					return R.reduced({ block, cursorPositionWithinBlock: cursorPosition - totalTextLength, blockIndex }) 
 				}
 			}
 		
 			if (newTextLength === blockLength) {
 				// we are not in the block with the added/deleted char, so move on to the next block
-				console.log('richTextHelpers--getBlockWithCursor cursor is not within current block');
 				return { totalTextLength: totalTextLength + blockLength + BLOCK_END_CHAR_LENGTH }
 			}
 		},
@@ -788,7 +757,6 @@ const combineTwoBlocks = ({ blocks, newTextArr, cursorPosition }) => {
 	)({ blocks, index: combinedBlockIndex });
 
 	const { headBlocks, combinedBlocks, tailBlocks } = categorizeBlocksForCombination({ blocks, combinedBlocksKeys });
-	console.log('richTextHelpers--combineTwoBlocks got headBlocks', headBlocks, 'combinedBlocks', combinedBlocks, 'tailBlocks', tailBlocks);
 
 	const combinedBlockText = R.reduce(
 		(accumulator, block) => R.pipe(
@@ -800,14 +768,12 @@ const combineTwoBlocks = ({ blocks, newTextArr, cursorPosition }) => {
 	);
 
 	const combinedStyles = combineTwoBlocksStyles(combinedBlocks);
-	console.log('richTextHelpers--combineTwoBlocks got combinedStyles', combinedStyles, 'combinedBlockText', combinedBlockText);
 
 	const combinedBlock = { 
 		key: R.path([0, 'key'], combinedBlocks),
 		text: combinedBlockText,
 		inlineStyleRanges: combinedStyles
 	}
-	console.log('richTextHelpers--combineTwoBlocks got combinedBlock', combinedBlock);
 
 	return R.unnest([headBlocks, combinedBlock, tailBlocks]);
 }
@@ -820,13 +786,6 @@ export const updateEditedChar = ({ cursorPosition, newText, formattedText }) => 
 	const newTextArr = R.split(NEWLINE_REGEX, newText);
 	
 	const { blocks } = decodeFormattedText(formattedText);
-	console.log(
-      'richTextHelpers--updateEditedChar got cursorPosition',  cursorPosition,
-      'newText', newText,
-      'newTextArr',  newTextArr,
-      'formattedText', formattedText,
-		'decoded blocks', blocks,
-   );
 
 	if (blocks.length === newTextArr.length + 1) {
 		// case 1: a newline char has been deleted
@@ -842,7 +801,6 @@ export const updateEditedChar = ({ cursorPosition, newText, formattedText }) => 
 	}
 
 	const { block, cursorPositionWithinBlock, blockIndex } = getBlockWithCursor({ cursorPosition, blocks, newTextArr });
-	console.log('richTextHelpers--updateEditedChar got block', block, 'cursorPositionWithinBlock', cursorPositionWithinBlock, 'blockIndex', blockIndex);
 
 	const newBlock = block.text.length + 1 === newTextArr[blockIndex].length
 		? R.pipe( // case 2: a char has been added 
@@ -853,6 +811,5 @@ export const updateEditedChar = ({ cursorPosition, newText, formattedText }) => 
 			? deleteCharFromBlock({ block, charIndexWithinBlock: cursorPositionWithinBlock }) // case 3: a char has been deleted
 			: block // case4: should never happen - neither added nor deleted a single character
 
-	console.log('richTextHelpers--updateEditedChar got newBlock', newBlock);
 	return replaceBlockInFormattedText({ newBlock, formattedText });
 }

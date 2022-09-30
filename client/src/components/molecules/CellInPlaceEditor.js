@@ -96,7 +96,6 @@ const reinstateOriginalValue = cell =>
 				...cell,
 				content: {
 					...cell.content,
-					// text: stateOriginalValue(managedStore.state),// TIDY when text is no longer used to display cell contents
 					formattedText: stateOriginalFormattedText(managedStore.state),
 				},
 				isStale: false,
@@ -136,19 +135,8 @@ const reinstateOriginalValue = cell =>
 // Tabbing on a cell that has been edited replaces the contents of the next cell with the edited stuff from the previous cell
 // ******** END OLD NOTES ******* */
 
-/* test data: TIDY
-some	thing
-too	do
-here	now
-NEW
-STUFF
-HERE
-*/
-
 // TODO NEXT
-// changing the display of the cells to use formattedText to get the text to display, not cell.text
-
-// THEN move the Editor, so we can see the cell updated in real time
+// move the Editor, so we can see the cell updated in real time
 // THEN get rid of editorState and all the stuff related to it
 // THEN fix the bugs:
 //   1. check that startedEditing and finishedEditing are working properly (see undoReducer also)
@@ -178,7 +166,6 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
 	const cellKey = createCellKey(cellRow(cellToEdit), cellColumn(cellToEdit));
    const cell = useSelector(state => statePresent(state)[cellKey]);
 	// const editorState = useSelector(state => stateFocusEditor(state)); // TIDY when not needed
-	// console.log('CellInPlaceEditor got editorState', editorState);
 
 	// getting the system clipbaord is async, and we want to re-render CellInPlaceEditor when it changes
 	// so using a local state seems like a reasonable way to make it so that only the single CellInPlaceEditor changes,
@@ -259,12 +246,6 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
 	};
 	
    const finalizeCellContent = cell => {
-		console.log('CellInPLaceEditor--finalizeCellContent got cellInPlaceEditorRef', cellInPlaceEditorRef, 
-			'cellInPlaceEditorRef.current', cellInPlaceEditorRef.current, 
-			'cellInPlaceEditorRef.current?.value', cellInPlaceEditorRef.current?.value,
-			'stateOriginalFormattedText(managedStore.state)', stateOriginalFormattedText(managedStore.state),
-			'cellFormattedText(cell)', cellFormattedText(cell)
-		);
 		if (!R.equals(stateOriginalFormattedText(managedStore.state), cellFormattedText(cell))) {
          hasChangedCell({
             row: cellRow(cell),
@@ -272,7 +253,6 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
          });
       }
       finishedEditing({
-         // value: isSomething(cellInPlaceEditorRef.current) ? cellInPlaceEditorRef.current.value : null, // TIDY
 			formattedText: cellFormattedText(cell),
          message: createdEditedCellMessage(cell),
 			isPastingCellRange: statePastingCellRange(managedStore.state),
@@ -281,10 +261,8 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
 
    const handleSubmit = event => {
       event?.preventDefault();
-		console.log('CellInPLaceEditor--handleSubmit got event', event, 'cell', cell);
       stateFocusAbortControl(managedStore.state)?.abort();
       finalizeCellContent(cell);
-		console.log('CellInPLaceEditor--handleSubmit after finalizeCellContent got event', event, 'cell', cell);
       clearedFocus();
    }
    
@@ -293,8 +271,7 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
       stateFocusAbortControl(managedStore.state).abort();
       reinstateOriginalValue(cell); // note: this does the updatedCell call
       finishedEditing({
-         // value: isSomething(cellInPlaceEditorRef.current) ? cellInPlaceEditorRef.current.value : null, /// TODO think we can just send null here, to indicate a cancel - see undoReducer // TIDY
-			formattedText: null, // indicates a cancel
+         formattedText: null, // indicates a cancel
          message: `Cancelled editing cell ${createCellId(cellRow(cell), cellColumn(cell))}`,
 			actionCancelled: true,
       });
@@ -389,7 +366,6 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
 		setKeystrokeHandled(false);
 	}
 	
-	// TIDY if not needed
 	const updateFormattedText = ({ text, formattedText }) => {
 		updatedCell({
 			...cell,

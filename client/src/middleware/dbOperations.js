@@ -132,8 +132,6 @@ const dbOperations = store => next => async action => {
             const { userId } = getUserInfoFromCookie();
 				const { cells, sheetId } = action.payload;
 				const cleanedCells = R.map(cell => cleanCell(cell))(cells);
-				console.log('dbOperations--POSTING_UPDATED_CELLS got cells', cells, 'cleanedCells', cleanedCells, 'sheetId', sheetId);
-
             const response = await updateCellsMutation({
                cells: cleanedCells,
 					sheetId, 

@@ -1,35 +1,5 @@
 const { gql } = require('apollo-server-lambda');
 
-/* 
-TIDY
-use to have
-	type PlaceholderObjectType {
-		placeholderString: String
-	}
-
-	type BlockType {
-		data: PlaceholderObjectType
-		depth: Int
-		entityRanges: [PlaceholderObjectType]
-		inlineStyleRanges: [InlineStyleRangeType]
-		key: String
-		text: String
-		type: String
-	}
-
-	type FormattedTextType {
-		blocks: [BlockType]
-		entityMap: PlaceholderObjectType
-	}
-
-	type CellContentType {
-      subsheetId: ID
-		text: String
-		formattedText: FormattedTextType
-   }
-
- */
-
 const SheetType = gql`
 	type InlineStyleRangeType {
 		offset: Int

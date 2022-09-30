@@ -6,9 +6,7 @@ const FormattedTextModel = require('./FormattedTextModel');
 const cellContentSchema = new Schema({
    subsheetId: { type: Schema.Types.ObjectId, ref: 'Sheet' },
 	formattedText: { type: FormattedTextModel },
+	text: { type: String }, // note that this has to be returned for backward compatibility - older sheets don't have formattedText
 });
 
 mongoose.model('content', cellContentSchema);
-
-
-   // text: { type: String }, // TIDY/TODO do we need to keep this in cellContentSchema to be backwardly compatible?

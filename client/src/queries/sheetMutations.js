@@ -211,6 +211,7 @@ const SHEET_BY_USER_ID_MUTATION = gql`
             column
             content {
                subsheetId
+					text
 					formattedText {
 						blocks {
 							inlineStyleRanges {
@@ -228,6 +229,8 @@ const SHEET_BY_USER_ID_MUTATION = gql`
       }
    }
 `;
+// note that we need to return cells.content.text as well as cells.content.formattedText
+// for backward compatibility
 
 export const sheetByUserIdMutation = async userId => {
 	const result = await apolloClient.mutate({

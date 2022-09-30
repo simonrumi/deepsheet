@@ -50,14 +50,13 @@ export const updatedCells = async ({ sheetId, cells }) => {
    managedStore.store.dispatch({ type: POSTING_UPDATED_CELLS, payload: { sheetId, cells } });
 };
 
-export const deleteSubsheetId = R.curry(async (row, column, /* text, TIDY */ formattedText, subsheetId, sheetId) => {
+export const deleteSubsheetId = R.curry(async (row, column, formattedText, subsheetId, sheetId) => {
    managedStore.store.dispatch({
       type: POSTING_DELETE_SUBSHEET_ID,
       payload: {
          row, 
          column, 
          content: {
-            // text, // TIDY
 				formattedText,
             subsheetId
          },

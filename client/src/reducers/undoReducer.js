@@ -320,7 +320,6 @@ const undoReducer = reducer => {
          case STARTED_EDITING:
 				// this is used by CellInPlaceEditor, when the user starts editing a cell
 				const { cell } = action.payload;
-				console.log('***undoReducer--STARTED_EDITING got cell', cell);
 				return alreadyStartedEditingCell({ cell, startedActions })
 					? state // don't change anything as we have already recorded that the cell is being edited
 					: {
@@ -355,7 +354,6 @@ const undoReducer = reducer => {
 				* and the payload.formattedText are the same - i.e. don't change the undo history
 				* 3. if isPastingCellRange is true, then we should ignore the payload.value and update the past
              */
-				console.log('***undoReducer--FINISHED_EDITING got action.payload', action.payload);
 				const historyAfterCellEdit = updateHistory({
 					actionHistory: state.actionHistory,
 					completedAction: { 

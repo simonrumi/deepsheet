@@ -32,8 +32,7 @@ const UPDATE_CELLS_MUTATION = gql`
 // TODO will need to check this when we can add newlines again
 export const updateCellsMutation = async ({ sheetId, cells, userId }) => {
    const preppedCells = prepCellsForDb(cells);
-	console.log('cellMutations--updateCellsMutation got variables: sheetId', sheetId, 'cells', preppedCells, 'userId', userId);
-   const result = await apolloClient.mutate({
+	const result = await apolloClient.mutate({
       mutation: UPDATE_CELLS_MUTATION,
       variables: { sheetId, cells: preppedCells, userId },
    });
@@ -95,8 +94,7 @@ const DELETE_SUBSHEET_ID_MUTATION = gql`
 export const deleteSubsheetIdMutation = async data => {
    const { sheetId, row, column, content } = data;
    const { text, formattedText, subsheetId } = content;
-	console.log('cellMutations--deleteSubsheetIdMutation got variables: sheetId', sheetId, 'row', row, 'column', column, 'text', text, 'formattedText', formattedText, 'subsheetId', subsheetId);
-   const result = await apolloClient.mutate({
+	const result = await apolloClient.mutate({
       mutation: DELETE_SUBSHEET_ID_MUTATION,
       variables: { sheetId, row, column, text, formattedText, subsheetId },
    });

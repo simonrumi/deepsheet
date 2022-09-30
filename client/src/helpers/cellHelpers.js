@@ -295,20 +295,14 @@ const tidyUpFormattedText = cell => R.pipe(
 	R.dissoc('entityMap'),
 	removeNamedKey('data'),
 	removeNamedKey('entityRanges'),
-	R.tap(data => console.log('cellHelpers--tidyUpFormattedText would have called encodeFormattedText, but not doing it, so cell is', data)),
-	// encodeFormattedText,
 	cellFormattedTextSetter(R.__, cell),
 )(cell);
 
 export const prepCellsForDb = cells => R.map(
 	R.pipe(
-		R.tap(data => console.log('cellHelpers--prepCellsForDb got cell', data)),
 		encodeCellText,
-		R.tap(data => console.log('cellHelpers--prepCellsForDb after encodeCellText got', data)),
 		tidyUpFormattedText,
-		R.tap(data => console.log('cellHelpers--prepCellsForDb after tidyUpFormattedText got', data)),
 		removeDeprecatedTextField,
-		R.tap(data => console.log('cellHelpers--prepCellsForDb after removeDeprecatedTextField got', data)),
 		R.pick(['row', 'column', 'visible', 'content']) // leave out unnecessary fields, like isStale and __typename
 	),
 	cells // each call to R.pipe will be giving it a cell
@@ -542,7 +536,6 @@ const reconcileTotalCells = sheet => {
 
 export const addKeysToBlocks = cell => R.pipe(
 	cellFormattedTextBlocks,
-	R.tap(data => console.log('cellHelpers--addKeysToBlocks after cellFormattedTextBlocks got', data)),
 	R.map(
 		block => R.prop('key', block) 
 			? block 
@@ -552,11 +545,8 @@ export const addKeysToBlocks = cell => R.pipe(
 				R.assoc('key', R.__, block)
 			)({})
 	),
-	R.tap(data => console.log('cellHelpers--addKeysToBlocks after applying keys got', data)),
 	R.assoc('blocks', R.__, cellFormattedText(cell)),
-	R.tap(data => console.log('cellHelpers--addKeysToBlocks after putting blocks into the formattedText got', data)),
 	cellFormattedTextSetter(R.__, cell),
-	R.tap(data => console.log('cellHelpers--addKeysToBlocks after cellFormattedTextSetter got', data)),
 )(cell);
 
 export const populateCellsInStore = sheet => {
