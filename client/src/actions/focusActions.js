@@ -4,7 +4,6 @@ import {
    UPDATED_FOCUS_REF,
    UPDATED_FOCUS_ABORT_CONTROL,
    CLEARED_FOCUS,
-	UPDATED_EDITOR_STATE,
 	UPDATED_CELL_POSITIONING,
 } from './focusTypes';
 
@@ -32,13 +31,6 @@ export const updatedFocusAbortControl = (abortControl, cell) => {
 export const clearedFocus = () => {
    managedStore.store.dispatch({
       type: CLEARED_FOCUS,
-   });
-};
-
-export const updatedEditorState = newEditorState => {
-   managedStore.store.dispatch({
-      type: UPDATED_EDITOR_STATE,
-		payload: newEditorState,
    });
 };
 

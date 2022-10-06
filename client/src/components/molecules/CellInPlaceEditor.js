@@ -5,7 +5,7 @@ import * as R from 'ramda';
 import managedStore from '../../store';
 import { updatedCell, hasChangedCell } from '../../actions/cellActions';
 import { createdSheet } from '../../actions/sheetActions';
-import { clearedFocus, updatedFocusRef, updatedCellPositioning } from '../../actions/focusActions'; // TODO need to remove everything to do with updatedEditorState
+import { clearedFocus, updatedFocusRef, updatedCellPositioning } from '../../actions/focusActions';
 import { updatedPastingCellRange } from '../../actions/cellRangeActions';
 import { startedEditing, finishedEditing, startedUndoableAction, completedUndoableAction, } from '../../actions/undoActions';
 import { PASTE_RANGE, } from '../../actions/cellRangeTypes';
@@ -69,6 +69,9 @@ import {
 	BOLD,
 	ITALIC,
 	UNDERLINE,
+	CELL_EDITOR_VERTICAL_MARGIN,
+	CELL_EDITOR_HORIZONTAL_MARGIN,
+	CELL_EDITOR_VERTICAL_PADDING,
 } from '../../constants';
 import { SYSTEM_CLIPBOARD_UNAVAILABLE_MSG, createdEditedCellMessage } from '../displayText';
 import { log } from '../../clientLogger';
@@ -136,13 +139,14 @@ const reinstateOriginalValue = cell =>
 // ******** END OLD NOTES ******* */
 
 // TODO NEXT
-// move the Editor, so we can see the cell updated in real time
-// THEN get rid of editorState and all the stuff related to it
+// get rid of editorState and all the stuff related to it
 // THEN fix the bugs:
 //   1. check that startedEditing and finishedEditing are working properly (see undoReducer also)
 //      ....undo definitely has some bugs...
 //   2. BUT also the cell is not displaying correctly when highlighting a selection and replacing the text - HOWEVER the cellInPlaceEditor shows the correct text
+//	  3. check the old notes above
 // THEN tackle copy-paste
+// THEN make the editor draggable
 
 
 const manageCellInPlaceEditorFocus = ({ event, cellInPlaceEditorRef, cell, editorKeyBindings }) => {
@@ -165,7 +169,6 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
 
 	const cellKey = createCellKey(cellRow(cellToEdit), cellColumn(cellToEdit));
    const cell = useSelector(state => statePresent(state)[cellKey]);
-	// const editorState = useSelector(state => stateFocusEditor(state)); // TIDY when not needed
 
 	// getting the system clipbaord is async, and we want to re-render CellInPlaceEditor when it changes
 	// so using a local state seems like a reasonable way to make it so that only the single CellInPlaceEditor changes,
@@ -346,8 +349,16 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
                   updatedShowPasteOptionsModal(true);
                   return;
                }
-					// note - this fn will call updatedHandlingPaste(false)
-               pasteText({ text: typeof arg1 === 'string' ? arg1 : systemClipboardText }); 
+
+					const cursorStart = R.path(['current','selectionStart'], cellInPlaceEditorRef);
+					const cursorEnd = R.path(['current','selectionEnd'], cellInPlaceEditorRef);
+					// note - this fn will call updatedHandlingPaste(false) // TODO check if this is happening still
+               pasteText({ 
+						text: typeof arg1 === 'string' ? arg1 : systemClipboardText,
+						cell,
+						cursorStart,
+						cursorEnd,
+					}); 
             }
 			)
 		} else {
@@ -499,18 +510,23 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
       );
    };
 
+const textareaStyle = {
+	height: positioning.height + CELL_EDITOR_VERTICAL_PADDING
+}
+
 const renderTextForm = () => 
 	<form onSubmit={handleSubmit} >
 		{renderIcons()}
 		<textarea
 			className="focus:outline-none border-2 border-subdued-blue p-1 shadow-lg w-full h-full" 
 			ref={cellInPlaceEditorRef}
-			rows="3"
+			style={textareaStyle}
 			value={getCellPlainText(cell)}
 			onChange={evt => manageChange(evt, cell)}
 			onBlur={manageBlur}
 		/>
 	</form>;
+	// textarea used to have rows="3" to make it 3 rows high every time
 
    // need to useEffect so the cellInPlaceEditorRef can first be assigned to the textarea
    useEffect(() => {
@@ -535,8 +551,14 @@ const renderTextForm = () =>
 			});
    });
 
+	const editorPositioning = {
+		...positioning,
+		left: positioning.left + CELL_EDITOR_HORIZONTAL_MARGIN,
+		top: positioning.top - positioning.height + CELL_EDITOR_VERTICAL_MARGIN,
+	}
+
    return (
-      <div style={positioning} className="absolute z-10 bg-white text-dark-dark-blue " >
+      <div style={editorPositioning} className="absolute z-10 bg-white text-dark-dark-blue " >
          {renderTextForm()}
       </div>
    );

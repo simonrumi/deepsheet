@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import * as R from 'ramda';
 import managedStore from '../../store';
 import { hidePopups } from '../../actions';
-import { focusedCell, updatedEditorState } from '../../actions/focusActions';
+import { focusedCell } from '../../actions/focusActions';
 // import { updatedCellPositioning } from '../../actions/cellActions'; // TIDY
 import { updatedCellPositioning } from '../../actions/focusActions';
 import { nothing, isSomething, isNothing, ifThen, ifThenElse } from '../../helpers';
@@ -32,7 +32,6 @@ const onCellClick = (event, cell) => {
       ifCond: event.shiftKey,
       thenDo: [rangeSelected, maybeClearSubsheetCellFocus, hidePopups],
       elseDo: [
-			// R.pipe(getInitialEditorState, updatedEditorState), // TODO either update getInitialEditorState or ALMOST CERTAINLY don't do this if it is already baked into the cell
          () => {
 				focusedCell(cell)
 			},
@@ -61,7 +60,6 @@ const Cell = React.memo(({ row, column, classes, blankCell, endCell, isVisible }
    const isSubsheetCell = R.pipe(cellSubsheetId, isSomething); // expects to get cell as a param
 	const totalCells = stateTotalRows(managedStore.state) * stateTotalColumns(managedStore.state);
    const [cellRef, positioning] = usePositioning(row === 2 && column === 6, totalCells); // TIDY:  row === 2 && column === 6, cell ...this is a temp thing for console logging
-	// const [isRenderingEditor, setIsRenderingEditor] = useState(false);
 
    const inCellRange = cellInCellRange(cell);
 
@@ -89,10 +87,9 @@ const Cell = React.memo(({ row, column, classes, blankCell, endCell, isVisible }
 
    const renderInPlaceEditor = cell => {
 		console.log('Cell--renderInPlaceEditor got cell', cell, 'positioning', positioning);
-		// setIsRenderingEditor(true); // TIDY probably not using this
 		
 		return <div className="w-full">
-			{/* renderRegularCell(cell) // TODO used to do this, but now with the cell editor working, probably should render a blank cell here */}
+			{renderRegularCell(cell)}
 			<CellInPlaceEditor positioning={positioning} cellToEdit={cell} cellHasFocus={cellHasFocus} key={cellKey + '_inPlaceEditor'} />
 		</div>;
 	};

@@ -332,8 +332,6 @@ const stateFocusCellRefLens = R.compose(stateFocusLens, R.lensProp('ref'));
 export const stateFocusCellRef = R.view(stateFocusCellRefLens);
 const stateFocusAbortControlLens = R.compose(stateFocusLens, R.lensProp('abortControl'));
 export const stateFocusAbortControl = R.view(stateFocusAbortControlLens);
-/* const stateFocusEditorLens = R.compose(stateFocusLens, R.lensProp('editor'));
-export const stateFocusEditor = R.view(stateFocusEditorLens); */ // TIDY when not needed
 
 /************************************************ STATE CELL RANGE **********************************************/
 const cellRangeLens = R.lensProp('cellRange');

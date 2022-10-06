@@ -14,7 +14,7 @@ import {
 import { isRowDirectionForward, isColumnDirectionForward } from './rangeToolHelpers';
 import { orderFromAndToAxes } from './rangeToolHelpers';
 import { createCellKey } from './cellHelpers';
-import { addPastedTextToEditorState, getCellPlainText } from './richTextHelpers';
+import { addPastedTextToCell, getCellPlainText } from './richTextHelpers';
 import { 
     statePresent,
     stateCellRangeCells,
@@ -37,7 +37,6 @@ import {
 } from './dataStructureHelpers';
 import { updatedCell, hasChangedCell } from '../actions/cellActions';
 import { updatedClipboardError } from '../actions/clipboardActions';
-import { updatedEditorState } from '../actions/focusActions';
 import { capturedSystemClipboard, updatedHandlingPaste } from '../actions/pasteOptionsModalActions';
 import { updatedMetadataErrorMessage } from '../actions/metadataActions';
 import insertNewColumns from '../services/insertNewColumns';
@@ -457,11 +456,13 @@ export const convertTextToCellRange = ({ text, startingCellRowIndex, startingCel
       firstColumnIndex: startingCellColumnIndex,
    });
 
-export const pasteText = ({ text }) => {
+// TODO this will need changing to the non-DraftJs version
+export const pasteText = ({ text, cell }) => {
 	R.pipe(
-		addPastedTextToEditorState,
-		updatedEditorState, // TODO this will need changing to the non-DraftJs version
-	)(text); 
+		addPastedTextToCell, 
+		// in here used to have an action updated Editor State which updated the focusReducer, 
+		// but instead we probably should be updating the cell.content.formattedText
+	)({ text, cell }); 
 	updatedHandlingPaste(false);
 }
 

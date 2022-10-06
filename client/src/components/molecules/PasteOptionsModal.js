@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { isSomething, isNothing, optimizeModalPositioning } from '../../helpers';
 import { createCellId } from '../../helpers/cellHelpers';
 import { pasteCellRangeToTarget, convertTextToCellRange, pasteText } from '../../helpers/clipboardHelpers';
+import { getSelectionRange } from '../../helpers/richTextHelpers';
 import {
    stateCellRangeFrom,
    stateCellRangeTo,
@@ -47,7 +48,8 @@ const PasteOptionsModal = () => {
 	}
 
 	const handlePasteClipboard = () => {
-		pasteText({ text: systemClipboard });
+		const { cursorStart, cursorEnd } = getSelectionRange(cellInPlaceEditorRef);
+		pasteText({ text: systemClipboard, cell, cursorStart, cursorEnd, });
 		updatedHandlingPaste(false);
 		updatedShowPasteOptionsModal(false);
 	}
@@ -76,10 +78,11 @@ const PasteOptionsModal = () => {
 			? R.pipe(updatedHandlingPaste, blurCellInPlaceEditor)(false)
 			// if pasteCellRangeToTarget returned false, it couldn't get a properly shaped range from the clippboard, 
 			// so just paste the raw clipboard text instead, and don't blur
-			: R.pipe( 
-				pasteText, 
+			: R.pipe(
+				getSelectionRange,
+				({ cursorStart, cursorEnd }) => pasteText({ text: systemClipboard, cell, cursorStart, cursorEnd }), 
 				() => updatedHandlingPaste(false)
-			)({ text: systemClipboard });
+			)(cellInPlaceEditorRef);
 		updatedPastingCellRange(false);
 		completedUndoableAction({
          undoableType: PASTE_CLIPBOARD,
@@ -91,7 +94,8 @@ const PasteOptionsModal = () => {
 	const handlePasteClipboardAsText = () => {
 		updatedShowPasteOptionsModal(false);
 		startedUndoableAction({ undoableType: PASTE_CLIPBOARD, timestamp: Date.now() });
-		pasteText({ text: systemClipboard });
+		const { cursorStart, cursorEnd } = getSelectionRange(cellInPlaceEditorRef);
+		pasteText({ text: systemClipboard, cell, cursorStart, cursorEnd });
 		updatedPastingCellRange(false);
 		updatedHandlingPaste(false);
 		completedUndoableAction({

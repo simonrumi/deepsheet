@@ -445,7 +445,7 @@ const getCursorPositionInBlock = ({ cursorPosition, preceedingBlocksTextLength, 
 		? cursorPosition - preceedingBlocksTextLength
 		: null;
 
-const getBlocksForSelection = ({ cursorStart, cursorEnd, blocks }) => {
+export const getBlocksForSelection = ({ cursorStart, cursorEnd, blocks }) => {
 	const [ cursorRealStart, cursorRealEnd ] = cursorStart < cursorEnd ? [ cursorStart, cursorEnd ] : [ cursorEnd, cursorStart ]
 	return R.reduce(
 		(accumulator, block) => {

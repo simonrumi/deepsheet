@@ -9,11 +9,17 @@ import {
 	splitStyleRanges,
 	addStylesToStyleRanges,
 	applyStyling,
-	isCharInRange
+	isCharInRange,
+	getBlocksForSelection,
 } from './richTextStyleRangeHelpers';
 import { cellText, cellFormattedText, cellFormattedTextBlocks } from './dataStructureHelpers';
 import { BLOCK_SEPARATOR, BLOCK_SEPARATOR_REGEX, NEWLINE_REGEX, BLOCK_END_CHAR_LENGTH, STYLE_TAGS, LOG } from '../constants';
 import { log } from '../clientLogger';
+
+export const getSelectionRange = cellInPlaceEditorRef => ({
+	cursorStart: R.path(['current','selectionStart'], cellInPlaceEditorRef),
+	cursorEnd: R.path(['current','selectionEnd'], cellInPlaceEditorRef)
+});
 
 // TODO do this without using DraftJs...or stop using it if unneeded
 export const getInitialEditorState = cell => ifThenElse({
@@ -227,13 +233,7 @@ const splitBlock = ({ block, keys }) => {
 	return blocks;
 };
 
-const concatenateBlocks = ({ blocksInSelection, editorState, selectionStart, selectionEnd }) => {
-
-	// TODO will need to remove editorState from this function and entirely use [selectionStart and selectionEnd instead ?] OR maybe the formattedText
-	const selectionState = editorState?.getSelection();
-	selectionStart = selectionStart ? selectionStart : selectionState?.getStartOffset();
-	const selectionEndWithinLastBlock = selectionEnd ? selectionEnd : selectionState?.getEndOffset();
-
+const concatenateBlocks = ({ blocksInSelection, selectionStart, selectionEnd }) => {
 	return R.reduce(
 		(accumulator, block) => {
 			const updatedText = R.pipe(
@@ -245,6 +245,8 @@ const concatenateBlocks = ({ blocksInSelection, editorState, selectionStart, sel
 				styleRange => R.assoc('offset', styleRange.offset + accumulator.text.length, styleRange)
 			)(block.inlineStyleRanges);
 
+			// TODO - the comment below will not be the case with the new selectionEnd, so should remove it
+			//
 			// since the selection end is relative to the start of the last block that we are concatenating
 			// we keep updating the selection end to be the length of all the text so far (not including the current block)
 			// plus the selection end (which is within the last block)
@@ -252,7 +254,7 @@ const concatenateBlocks = ({ blocksInSelection, editorState, selectionStart, sel
 			const updatedSelectionEnd = R.pipe(
 				R.prop('text'), 
 				R.length,
-				R.add(selectionEndWithinLastBlock)
+				R.add(selectionEnd) // selectionEnd should be relative to the last block
 			)(accumulator);
 
 			const newBlockOffsets = R.pipe(
@@ -279,7 +281,7 @@ const concatenateBlocks = ({ blocksInSelection, editorState, selectionStart, sel
 		},
 		// initial values:
 		{ 
-			data: {}, depth: 0, entityRanges: [], type: 'unstyled', // these empty values are required by Draft.js but we are not using them
+			// data: {}, depth: 0, entityRanges: [], type: 'unstyled', // these empty values are required by Draft.js but we are not using them
 			keys: [], // this will collect the keys from each block for re-use later 
 			text: '', // this will hold the string of all the blocks' text concatenated together
 			blockOffsets: [], // this will hold where each block originally started relative to the beginning of the concatenated text
@@ -299,12 +301,16 @@ const appendBlockToArr = R.curry((block, arrName, obj) =>
 	)(obj)
 );
 
-const categorizeBlocks = ({ rawState, selectionState }) => {
-	const anchorKey = selectionState.getAnchorKey(); // key for the start of the selection
+const categorizeBlocks = ({ formattedText, cursorStart, cursorEnd }) => {
+	const { start, end } = getBlocksForSelection({ cursorStart, cursorEnd, blocks: R.prop('blocks', formattedText) }); // we can also get middle but not using it here
+	const firstKey = R.prop('key', start);
+	const lastKey = R.prop('key', end);
+
+	/* const anchorKey = selectionState.getAnchorKey(); // key for the start of the selection
 	const focusKey = selectionState.getFocusKey(); // key for the end of the selection
 	const isBackward = selectionState.getIsBackward();
 	const firstKey = isBackward ? focusKey : anchorKey;
-	const lastKey = isBackward ? anchorKey : focusKey;
+	const lastKey = isBackward ? anchorKey : focusKey; */ // TIDY
 
 	// blocks are in order, so divide them up depending on where the blocks with the firstKey and with the lastKey are found
 	return R.reduce(
@@ -344,7 +350,7 @@ const categorizeBlocks = ({ rawState, selectionState }) => {
          blocksAfterSelection: [],
          currentAssumedPosition: 'before_selection',
       }, // initial values
-      R.prop('blocks', rawState)
+      R.prop('blocks', formattedText)
    );
 }
 
@@ -447,19 +453,21 @@ const createNewStyleRangesForPaste = ({ startSelection, endSelection, styleRange
 }
 
 /**
+ * // TODO/TIDY - this comment should not apply - should be getting formattedText, start and end, not editorState
  * pasteTextWithinOneBlock needs either
  * editorState
  * OR
  * rawState, start (of selection), & end (of selection) 
  * the rest of the params are required
  */
-const pasteTextWithinOneBlock = ({ targetBlockKey, editorState, rawState, start, end, textToPaste }) => {
+const pasteTextWithinOneBlock = ({ targetBlockKey, formattedText, /* editorState,  rawState, */ start, end, textToPaste }) => { // TIDY
 	// TODO editorState will not exist - need to use formattedText from the cell instead
-	rawState = rawState || convertToRaw(editorState.getCurrentContent());
-	const selectionState = editorState?.getSelection();
+	// rawState = rawState || convertToRaw(editorState.getCurrentContent());
+	/* const selectionState = editorState?.getSelection();
 	start = start || selectionState.getStartOffset();
-	end = end ||selectionState.getEndOffset();
-	const blockText = editorState.getCurrentContent().getBlockForKey(targetBlockKey).getText();
+	end = end ||selectionState.getEndOffset(); */ // TIDY we have to assume we have the start and end
+
+	const blockText = R.path(['blocks', 0], formattedText); //editorState.getCurrentContent().getBlockForKey(targetBlockKey).getText(); // TIDY
 	const beforeSelection = R.slice(0, start, blockText);
 	const afterSelection = R.slice(end, Infinity, blockText);
 	const newText = beforeSelection + textToPaste + afterSelection;
@@ -485,33 +493,31 @@ const pasteTextWithinOneBlock = ({ targetBlockKey, editorState, rawState, start,
 			}
 			return block;
 		},
-		rawState.blocks
+		formattedText.blocks
 	);
 	return R.pipe(
-		R.assoc('text', newText),
+		R.assoc('text', newText), // TODO what's this? formattedText has all the text within each block
 		R.assoc('blocks', updatedBlocks),
 		convertFromRaw,
 		EditorState.createWithContent,
-	)(rawState);
+	)(formattedText);
 }
 
-// TODO this will need to be updated to addPastedText to the formattedText ...there will be no editorState
-export const addPastedTextToEditorState = textToPaste => {
-	const editorState = {}; // TODO will need something other than editorState in here - likely formattedText from the cell // was stateFocusEditor(managedStore.state);
-	const selectionState = editorState.getSelection();
-	const anchorKey = selectionState.getAnchorKey(); // key for the start of the selection
-	const focusKey = selectionState.getFocusKey(); // key for the end of the selection
-	const currentContent = editorState.getCurrentContent();
-	const anchorBlock = currentContent.getBlockForKey(anchorKey);
-	const focusBlock = currentContent.getBlockForKey(focusKey);
-	const rawState = convertToRaw(editorState.getCurrentContent());
+// TODO - in the process of updating this to remove the use of editorState and all associated stuff
+export const addPastedTextToCell = ({ text, cell, cursorStart, cursorEnd }) => {
+	// const editorState = {}; // TODO will need something other than editorState in here - likely formattedText from the cell // was stateFocusEditor(managedStore.state);
+	// const selectionState = editorState.getSelection();
+	// const rawState = convertToRaw(editorState.getCurrentContent());
+	const formattedText = cellFormattedText(cell);
 	
-	const { blocksBeforeSelection, blocksInSelection, blocksAfterSelection } = categorizeBlocks({ rawState, selectionState });
+	const { blocksBeforeSelection, blocksInSelection, blocksAfterSelection } = categorizeBlocks({ formattedText, cursorStart, cursorEnd });
 	
-	const selectionBlock = concatenateBlocks({ blocksInSelection, editorState });
+	// TODO NEXT - check that concatenateBlocks is going to work with the new cursortStart and cursorEnd (there is at least one change in the notes for that function)
+	const selectionBlock = concatenateBlocks({ blocksInSelection, selectionStart: cursorStart, selectionEnd: cursorEnd });
 	const { selectionStart, selectionEnd, key, keys } = selectionBlock;
 
-	const selectionBlockRawState = R.assoc('blocks', [selectionBlock], rawState);
+	// TODO work on this pipe - eliminate all the rawState stuff
+	const selectionBlockRawState = R.assoc('blocks', [selectionBlock], formattedText);
 	return R.pipe(
 		R.assoc,
 		convertFromRaw,
@@ -521,8 +527,8 @@ export const addPastedTextToEditorState = textToPaste => {
 			start: selectionStart,
 			end: selectionEnd, 
 			rawState: selectionBlockRawState,
-			editorState: selectionBlockEditorState,
-			textToPaste,
+			// editorState: selectionBlockEditorState, // TIDY
+			text,
 		}),
 		stateWithNewText => convertToRaw(stateWithNewText.getCurrentContent()),
 		R.prop('blocks'),

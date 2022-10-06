@@ -3,7 +3,6 @@ import {
    UPDATED_FOCUS_REF,
    UPDATED_FOCUS_ABORT_CONTROL,
    CLEARED_FOCUS,
-	UPDATED_EDITOR_STATE,
 	UPDATED_CELL_POSITIONING,
 } from '../actions/focusTypes';
 
@@ -21,9 +20,6 @@ export const focusReducer = (state = {}, action) => {
 
       case CLEARED_FOCUS:
          return {};
-	
-		case UPDATED_EDITOR_STATE:
-			return { ...state, editor: action.payload };
 
 		case UPDATED_CELL_POSITIONING:
 			return { ...state, cellPositioning: action.payload };
