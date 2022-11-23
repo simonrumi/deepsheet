@@ -14,12 +14,12 @@ import { updateSystemClipboard, getCellRangeAsText } from './clipboardHelpers';
 import { clearCellRangeHighlight } from './focusHelpers';
 import { getUserInfoFromCookie } from './userHelpers';
 import { orderCells, createCellKey } from './cellHelpers';
+import { getCellPlainText } from './richTextHelpers';
 import {
    stateColumnWidths,
    stateRowHeights,
    cellRow,
    cellColumn,
-   cellText,
 	cellInCellRangeSetter,
    stateSheetId,
    stateRangeWasCopied,
@@ -112,6 +112,8 @@ export const calculateTotalForRow = ({ cells }) => {
    return oneCellPerRow.length > DEFAULT_TOTAL_ROWS ? oneCellPerRow.length : DEFAULT_TOTAL_ROWS;
 };
 
+const compareFormattedText = (cell1, cell2) => getCellPlainText(cell1, false) === getCellPlainText(cell2, false); // false = don't add newline characters
+
 export const orderCellsInRange = cellsInRange => R.pipe(getOneCellPerRow, orderCells(R.__, cellsInRange))(cellsInRange);
 
 export const compareCellsArrays = (cellRange1, cellRange2) => {
@@ -128,7 +130,7 @@ export const compareCellsArrays = (cellRange1, cellRange2) => {
       (accumulator, cellRange1Cell, index) =>
          cellRow(cellRange2Ordered[index]) === cellRow(cellRange1Cell) &&
          cellColumn(cellRange2Ordered[index]) === cellColumn(cellRange1Cell) &&
-         cellText(cellRange2Ordered[index]) === cellText(cellRange1Cell) &&
+         compareFormattedText(cellRange1Cell, cellRange2Ordered[index]) &&
          accumulator,
       true,
       cellRange1Ordered

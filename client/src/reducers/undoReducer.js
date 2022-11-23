@@ -1,5 +1,4 @@
 import * as R from 'ramda';
-import { convertToRaw } from 'draft-js';
 import { COMPLETED_SAVE_UPDATES } from '../actions/types';
 import {
    UNDO,
@@ -45,29 +44,24 @@ const cellNotReallyEdited = ({
 	startedActions.length > 1
 );
 
-const updateHistory = ({
-   actionHistory,
-   completedAction,
-   actionCancelled = false,
-   isPastingCellRange = false,
-	hasHighlightedRange = false,
-   formattedText,
-   state,
-}) => {
+const updateHistory = ({ actionHistory, completedAction, actionCancelled = false }) => {
    const { startedActions, pastActions, presentAction } = actionHistory;
    // completedAction & presentAction should look like this { undoableType, message, timestamp }
    const reversedStartedActions = R.pipe(R.sortBy(R.prop('timestamp')), R.reverse)(startedActions);
-	if (R.prop('undoableType', completedAction) === UPDATED_FOCUS && R.prop('undoableType', presentAction) === HIGHLIGHTED_CELL_RANGE) {
-		// there will be no started action, because this happened immediately after highlighting a range
-		return {
-			startedActions,
-			pastActions: R.append(presentAction, pastActions),
-			presentAction: completedAction,
-			futureActions: [], // blow away the future, since we're now taking a new course of action
-		};
-	}
+   if (
+      R.prop('undoableType', completedAction) === UPDATED_FOCUS &&
+      R.prop('undoableType', presentAction) === HIGHLIGHTED_CELL_RANGE
+   ) {
+      // there will be no started action, because this happened immediately after highlighting a range
+      return {
+         newStartedActions: startedActions,
+         newPastActions: R.append(presentAction, pastActions),
+         newPresentAction: completedAction,
+         newFutureActions: [], // blow away the future, since we're now taking a new course of action
+      };
+   }
 
-   const { newStartedActions, newPastActions, newPresentAction } = reduceWithIndex(
+   return reduceWithIndex(
       (accumulator, currentStartedAction, startedActionIndex) => {
          if (R.prop('undoableType', completedAction) === R.prop('undoableType', currentStartedAction)) {
             const newPastActions =
@@ -90,18 +84,6 @@ const updateHistory = ({
       }, //initial values of the "new" actions are the current actions (more or less)
       reversedStartedActions
    );
-
-	return cellNotReallyEdited({ isPastingCellRange, formattedText, actionCancelled, startedActions, hasHighlightedRange, state })
-      ? {
-      	...actionHistory, // keep the pastActions, presentAction & futureActions as they are
-         startedActions: R.sortBy(R.prop('timestamp'), newStartedActions),
-        }
-      : {
-           startedActions: R.sortBy(R.prop('timestamp'), newStartedActions),
-           pastActions: R.sortBy(R.prop('timestamp'), newPastActions),
-           presentAction: newPresentAction,
-           futureActions: [], // blow away the future, since we're now taking a new course of action
-        };
 };
 
 const alreadyStartedEditingCell = ({ cell, startedActions }) => R.pipe(
@@ -261,14 +243,12 @@ const undoReducer = reducer => {
 
          case COMPLETED_UNDOABLE_ACTION:
 				const historyAfterCompletion = updateHistory({
-					actionHistory: state.actionHistory,
+               actionHistory: state.actionHistory,
                completedAction: action.payload,
-					actionCancelled: action.payload.actionCancelled || false,
-					value: action.payload.value,
-					state,
+               actionCancelled: action.payload.actionCancelled || false,
             });
 
-				return historyAfterCompletion.startedActions.length === 0
+				return historyAfterCompletion.newStartedActions.length === 0
 					? {
 						...state,
 						past: R.append(state.maybePast, past), // the maybePast now becomes part of the real past
@@ -277,9 +257,9 @@ const undoReducer = reducer => {
 						maybePast: null, // reset this
 						actionHistory: {
 							...actionHistory,
-							startedActions: historyAfterCompletion.startedActions,
-							pastActions: historyAfterCompletion.pastActions,
-							presentAction: historyAfterCompletion.presentAction,
+							startedActions: historyAfterCompletion.newStartedActions,
+							pastActions: historyAfterCompletion.newPastActions,
+							presentAction: historyAfterCompletion.newPresentAction,
 							futureActions: [], // blow away the future, since we're now taking a new course of action
 						}
 					}
@@ -287,10 +267,9 @@ const undoReducer = reducer => {
 						...state, // leave maybePast, future & everything else as is
 						present: reducer(present, action), // update the present
 						actionHistory: {
-							...actionHistory,
-							startedActions: historyAfterCompletion.startedActions,
-							pastActions, // while there are still outstanding startedActions, pastActions stays the same...
-							presentAction: historyAfterCompletion.presentAction,
+							...actionHistory, // while there are still outstanding startedActions, pastActions stays the same...
+							startedActions: historyAfterCompletion.newStartedActions, 
+							presentAction: historyAfterCompletion.newPresentAction,
 							unregisteredActions: R.append(action.payload, unregisteredActions), //...and the completed action is unregistered
 						}
 					}
@@ -303,17 +282,15 @@ const undoReducer = reducer => {
 					actionHistory: state.actionHistory,
                completedAction: action.payload,
                actionCancelled: true,
-					value: action.payload.value,
-					state,
             });
             return {
                ...state, // keep everything as-is
 					maybePast: null, // reset this
 					actionHistory: {
 						...actionHistory,
-						startedActions: updatedActions.startedActions,
-						pastActions: updatedActions.pastActions,
-						presentAction: updatedActions.presentAction,
+						startedActions: updatedActions.newStartedActions,
+						pastActions: updatedActions.newPastActions,
+						presentAction: updatedActions.newPresentAction,
 					}
             }
 
@@ -354,7 +331,7 @@ const undoReducer = reducer => {
 				* and the payload.formattedText are the same - i.e. don't change the undo history
 				* 3. if isPastingCellRange is true, then we should ignore the payload.value and update the past
              */
-				const historyAfterCellEdit = updateHistory({
+				const { newStartedActions, newPastActions, newPresentAction } = updateHistory({
 					actionHistory: state.actionHistory,
 					completedAction: { 
 						timestamp: Date.now(), 
@@ -362,18 +339,31 @@ const undoReducer = reducer => {
 						message: action.payload.message,
 					}, 
 					actionCancelled: action.payload.actionCancelled || false,
-					isPastingCellRange: action.payload.isPastingCellRange || false,
-					formattedText: action.payload.formattedText,
-					state,
 				});
 
-				if (cellNotReallyEdited({ 
-						isPastingCellRange: action.payload.isPastingCellRange, 
-						formattedText: action.payload.formattedText, 
-						actionCancelled: action.payload.actionCancelled, 
-						startedActions, 
-						state
-				})) {
+				// cellNotReallyEdited({ isPastingCellRange, formattedText, actionCancelled, startedActions, hasHighlightedRange, state })
+
+				const isNotRealEdit = cellNotReallyEdited({ 
+					isPastingCellRange: action.payload.isPastingCellRange, 
+					formattedText: action.payload.formattedText, 
+					actionCancelled: action.payload.actionCancelled, 
+					startedActions, 
+					state
+				});
+
+				const historyAfterCellEdit = isNotRealEdit
+					? {
+						...actionHistory, // keep the pastActions, presentAction & futureActions as they are
+						startedActions: R.sortBy(R.prop('timestamp'), newStartedActions),
+					}
+					: {
+						startedActions: R.sortBy(R.prop('timestamp'), newStartedActions),
+						pastActions: R.sortBy(R.prop('timestamp'), newPastActions),
+						presentAction: newPresentAction,
+						futureActions: [], // blow away the future, since we're now taking a new course of action
+					};
+
+				if (isNotRealEdit) {
 					return {
 						...state, // keep the past & future as is
 						present: reducer(present, action), // update the present
@@ -397,9 +387,6 @@ const undoReducer = reducer => {
 					actionHistory: state.actionHistory,
 					completedAction: action.payload, 
 					actionCancelled: false, // you can't cancel highlighting of a range
-					isPastingCellRange: action.payload.isPastingCellRange || false,
-					hasHighlightedRange: true,
-					state,
 				});
 				return {
 					...state,
@@ -416,7 +403,12 @@ const undoReducer = reducer => {
 						R.append(state.maybePast)
 					)(past),
 					maybePast: null, // reset this
-					actionHistory: historyAfterRangeHighlight, 
+					actionHistory: {
+						pastActions: historyAfterRangeHighlight.newPastActions || [],
+						presentAction: historyAfterRangeHighlight.newPresentAction,
+						startedActions: historyAfterRangeHighlight.newStartedActions || [],
+						futureActions: historyAfterRangeHighlight.newFutureActions || [],
+					}, 
 				}
 
 			case CLEARED_FOCUS:
@@ -439,7 +431,12 @@ const undoReducer = reducer => {
 						past: R.append(state.present, past), //append the present, with the highlighted range, to the past (no maybePast involved here)
 						present: reducer(present, action), // update the present
 						future: [], // blow away the future, since we're now taking a new course of action
-						actionHistory: historyAfterFoucsUpdate,
+						actionHistory: {
+							pastActions: historyAfterFoucsUpdate.newPastActions || [],
+							presentAction: historyAfterFoucsUpdate.newPresentAction,
+							startedActions: historyAfterFoucsUpdate.newStartedActions || [],
+							futureActions: historyAfterFoucsUpdate.newFutureActions || [],
+						},
 					}
 				}
 				return {
@@ -477,8 +474,8 @@ const undoReducer = reducer => {
 							message: action.payload.message,
 						}, 
 						actionCancelled: action.payload.actionCancelled || false,
-						value: action.payload?.value, // TODO updateHistory expects formattedText instead of value...so test what happens when updating the title
-						state,
+						value: action.payload?.value, // TODO NEXT BUG updateHistory is not taking this .value into account and this causes an error when updating the title
+						// state,
 					});
                return R.equals(stateOriginalValue(state), action.payload?.value) || 
 						action.payload?.actionCancelled ||
@@ -490,9 +487,9 @@ const undoReducer = reducer => {
                      original: null, // reset this,
 							actionHistory: {
 								...actionHistory,
-								startedActions: historyAfterEdit.startedActions,
-								presentAction: historyAfterEdit.presentAction,
-								unregisteredActions: R.append(R.last(historyAfterEdit.pastActions), unregisteredActions),
+								startedActions: historyAfterEdit.newStartedActions,
+								presentAction: historyAfterEdit.newPresentAction,
+								unregisteredActions: R.append(R.last(historyAfterEdit.newPastActions), unregisteredActions),
 							}
                   } 
                   : { // the title has been edited
@@ -504,9 +501,9 @@ const undoReducer = reducer => {
                      maybePast: null, // reset this
 							actionHistory: {
 								...actionHistory,
-								startedActions:  historyAfterEdit.startedActions, 
-								pastActions: historyAfterEdit.pastActions,
-								presentAction: historyAfterEdit.presentAction,
+								startedActions:  historyAfterEdit.newStartedActions, 
+								pastActions: historyAfterEdit.newPastActions,
+								presentAction: historyAfterEdit.newPresentAction,
 								futureActions: [], // blow away the future, since we're now taking a new course of action
 							},
                   }
@@ -520,7 +517,7 @@ const undoReducer = reducer => {
 							message: editedTitleMessage(),
 						}, 
 						actionCancelled: true,
-						value: action.payload?.value, // TODO updateHistory expects formattedText instead of value...so test what happens when updating the title
+						value: action.payload?.value, // TODO updateHistory does not take value param ...so BUG updating the title
 						state,
 					});
                return {
@@ -530,8 +527,8 @@ const undoReducer = reducer => {
                   original: null, // reset this
 						actionHistory: {
 							...actionHistory, // keep the pastActions & futureActions as they are
-							startedActions: historyAfterCancel?.startedActions,
-							presentAction: historyAfterCancel?.presentAction,
+							startedActions: historyAfterCancel?.newStartedActions,
+							presentAction: historyAfterCancel?.newPresentAction,
 						}
                }
 

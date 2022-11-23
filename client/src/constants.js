@@ -56,13 +56,10 @@ export const STYLE_TAGS = {
 
 export const CELL_EDITOR_ESC = 'cell-editor-esc';
 export const CELL_EDITOR_ENTER = 'cell-editor-enter';
-export const CELL_EDITOR_ALT_ENTER = 'split-block'; // specific string required by Draft.js 
 export const CELL_EDITOR_TAB = 'cell-editor-tab';
 export const CELL_EDITOR_SHIFT_TAB = 'cell-editor-shift-tab';
 export const CELL_EDITOR_COPY = 'cell-editor-copy';
 export const CELL_EDITOR_PASTE = 'cell-editor-paste';
-export const CELL_EDITOR_KEY_COMMAND_HANDLED = 'handled'; // specific string required by Draft.js 
-export const CELL_EDITOR_KEY_COMMAND_NOT_HANDLED = 'not-handled'; // specific string required by Draft.js 
 
 /** logging levels **/
 export const LOG = {

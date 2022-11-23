@@ -2,7 +2,6 @@ export const HAS_CHANGED_CELL = 'has_changed_cell';
 export const HAS_ADDED_CELL = 'has_added_cell';
 export const UPDATED_CELL = 'updated_cell';
 export const UPDATED_CELL_VISIBILITY = 'updated_cell_visibility';
-// export const UPDATED_CELL_POSITIONING = 'updated_cell_positioning'; // TIDY
 export const POSTING_UPDATED_CELLS = 'posting_updated_cells';
 export const COMPLETED_SAVE_CELLS = 'completed_save_cells';
 export const COMPLETED_SAVE_CELL = 'completed_save_cell';

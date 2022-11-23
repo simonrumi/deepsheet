@@ -5,6 +5,7 @@ import {
    UPDATED_FOCUS_ABORT_CONTROL,
    CLEARED_FOCUS,
 	UPDATED_CELL_POSITIONING,
+	UPDATED_TEXT_SELECTION,
 } from './focusTypes';
 
 export const focusedCell = cellData => {
@@ -38,5 +39,12 @@ export const updatedCellPositioning = cellPositioning => {
 	managedStore.store.dispatch({
       type: UPDATED_CELL_POSITIONING,
 		payload: cellPositioning,
+   });
+};
+
+export const updatedTextSelection = textSelection => {
+	managedStore.store.dispatch({
+      type: UPDATED_TEXT_SELECTION,
+		payload: textSelection,
    });
 }

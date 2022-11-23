@@ -1,12 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useSelector } from 'react-redux';
 import * as R from 'ramda';
 import managedStore from '../../store';
 import { hidePopups } from '../../actions';
 import { focusedCell } from '../../actions/focusActions';
-// import { updatedCellPositioning } from '../../actions/cellActions'; // TIDY
-import { updatedCellPositioning } from '../../actions/focusActions';
-import { nothing, isSomething, isNothing, ifThen, ifThenElse } from '../../helpers';
+import { nothing, isSomething, ifThen, ifThenElse } from '../../helpers';
 import { createCellId, isCellFocused, createCellKey } from '../../helpers/cellHelpers';
 import { isCellVisible } from '../../helpers/visibilityHelpers';
 import { rangeSelected, atEndOfRange, maybeClearSubsheetCellFocus } from '../../helpers/focusHelpers';

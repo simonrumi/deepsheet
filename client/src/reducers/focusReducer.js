@@ -4,6 +4,7 @@ import {
    UPDATED_FOCUS_ABORT_CONTROL,
    CLEARED_FOCUS,
 	UPDATED_CELL_POSITIONING,
+	UPDATED_TEXT_SELECTION,
 } from '../actions/focusTypes';
 
 export const focusReducer = (state = {}, action) => {
@@ -23,6 +24,9 @@ export const focusReducer = (state = {}, action) => {
 
 		case UPDATED_CELL_POSITIONING:
 			return { ...state, cellPositioning: action.payload };
+
+		case UPDATED_TEXT_SELECTION:
+			return { ...state, textSelection: action.payload };
 
       default:
          return state;

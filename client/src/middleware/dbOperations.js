@@ -160,12 +160,6 @@ const dbOperations = store => next => async action => {
          }
          break;
 
-// TODO 
-// note - have updated server so that all the unused data structure for formattedText is removed
-// continue mapping out all the steps for mutating graphql data
-
-// REMEMBER!!!! TODO - switch withAuth back on in graphqlHelpers.js on server when finished with apollo
-
       case POSTING_DELETE_SUBSHEET_ID:
          next(action); // get this action to the reducer before we do the next steps, so the UI can display "waiting" state
          try {

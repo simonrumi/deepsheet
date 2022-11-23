@@ -17,6 +17,7 @@ import {
 import { UPDATED_TOTAL_COLUMNS } from '../actions/metadataTypes';
 import { forLoopMap, forLoopReduce } from '../helpers';
 import { shouldShowRow } from '../helpers/visibilityHelpers';
+import { makeBlockForText } from '../helpers/richTextHelpers';
 import {
    stateTotalColumns,
    stateTotalRows,
@@ -33,18 +34,21 @@ import { addCellReducers } from '../reducers/cellReducers';
 import { DEFAULT_COLUMN_WIDTH, } from '../constants';
 import { createInsertNewColumnsMessage } from '../components/displayText';
 
-const makeNewColumnCell = R.curry((rowIndex, columnIndex, rowVisibility) => {
-   const partialCell = {
-      row: rowIndex,
-      column: columnIndex,
-      content: { text: '', subsheetId: null },
-      isStale: true,
-   }
-   return R.pipe(
-      shouldShowRow(rowVisibility),
-      R.assoc('visible', R.__, partialCell)
-   )(partialCell);
-});
+const makeNewColumnCell = R.curry((rowIndex, columnIndex, rowVisibility) => R.pipe(
+	makeBlockForText, 
+	R.append(R.__, []),
+	R.assocPath(
+		['content', 'formattedText', 'blocks'], 
+		R.__,
+		{
+			row: rowIndex,
+			column: columnIndex,
+			content: { text: '', subsheetId: null },
+			isStale: true,
+		}
+	),
+	cellObj => R.assoc('visible', shouldShowRow(rowVisibility, cellObj), cellObj)
+)({}));
 
 const addOneCell = ({ columnIndex, rowIndex, cells }) => R.pipe(
       stateRowVisibility,

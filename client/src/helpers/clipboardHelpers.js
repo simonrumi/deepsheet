@@ -14,29 +14,30 @@ import {
 import { isRowDirectionForward, isColumnDirectionForward } from './rangeToolHelpers';
 import { orderFromAndToAxes } from './rangeToolHelpers';
 import { createCellKey } from './cellHelpers';
-import { addPastedTextToCell, getCellPlainText } from './richTextHelpers';
+import { addPastedTextToCell, getCellPlainText, makeBlockForText } from './richTextHelpers';
 import { 
-    statePresent,
-    stateCellRangeCells,
-    stateCellRangeFrom,
-    stateCellRangeTo,
-    cellColumn,
-    cellRow,
-    cellText,
-    cellSubsheetId,
-    cellRowSetter,
-    cellColumnSetter,
-    cellTextSetter,
-	 cellVisible,
-    cellVisibleSetter,
-    stateTotalRows,
-    stateTotalColumns,
-    stateColumnVisibility,
-    stateRowVisibility,
-	 stateSystemClipboard,
+	statePresent,
+	stateCellRangeCells,
+	stateCellRangeFrom,
+	stateCellRangeTo,
+	cellColumn,
+	cellRow,
+	cellSubsheetId,
+	cellRowSetter,
+	cellColumnSetter,
+	cellTextSetter,
+	cellFormattedTextSetter,
+	cellVisible,
+	cellVisibleSetter,
+	stateTotalRows,
+	stateTotalColumns,
+	stateColumnVisibility,
+	stateRowVisibility,
+	stateSystemClipboard,
 } from './dataStructureHelpers';
 import { updatedCell, hasChangedCell } from '../actions/cellActions';
 import { updatedClipboardError } from '../actions/clipboardActions';
+import { updatedTextSelection } from '../actions/focusActions';
 import { capturedSystemClipboard, updatedHandlingPaste } from '../actions/pasteOptionsModalActions';
 import { updatedMetadataErrorMessage } from '../actions/metadataActions';
 import insertNewColumns from '../services/insertNewColumns';
@@ -45,10 +46,10 @@ import { cellRangePasteError, SYSTEM_CLIPBOARD_UNAVAILABLE_MSG } from '../compon
 import { ROW_AXIS, COLUMN_AXIS, NEWLINE_REGEX, LOG } from '../constants';
 import { log } from '../clientLogger';
 
-const createPlaceholderCell = (row, column) => R.pipe(
+export const createPlaceholderCell = (row, column) => R.pipe(
         cellRowSetter(row),
         cellColumnSetter(column),
-        cellTextSetter(''),
+        cellFormattedTextSetter({ blocks: makeBlockForText({}) }),
         cellVisibleSetter(true),
     )({});
 
@@ -152,7 +153,7 @@ const pasteToTargetCells = targetMap => R.forEach(
     ([ sourceCell, targetCell ]) => R.pipe(
         cellRowSetter(cellRow(targetCell)),
         cellColumnSetter(cellColumn(targetCell)),
-        updatedCell
+        updatedCell,
     )(sourceCell), // start with the sourceCell object, but update the row and column to that of the targetCell
     targetMap
 );
@@ -413,12 +414,13 @@ export const getCellRangeAsText = () => {
     });
 }
 
-const createCell = ({ text, rowIndex, columnIndex }) => R.pipe(
-        cellColumnSetter(columnIndex),
-        cellRowSetter(rowIndex),
-        cellTextSetter(text),
-		  cellVisibleSetter(true), // since we're creating a cell range from the system clipboard, every cell should be visible
-    )({});
+export const createCell = ({ text, rowIndex, columnIndex }) => R.pipe(
+	cellColumnSetter(columnIndex),
+	cellRowSetter(rowIndex),
+	cellFormattedTextSetter({ blocks:[ makeBlockForText({text}) ] }),
+	cellTextSetter(text),
+	cellVisibleSetter(true), // since we're creating a cell range from the system clipboard, every cell should be visible
+)({});
 
 const createCellsInRow = ({ rowTextArr, rowIndex, columnIndex }) => {
     if ( rowTextArr.length === 0 || isNothing(rowIndex) || isNothing(columnIndex)) {
@@ -456,14 +458,24 @@ export const convertTextToCellRange = ({ text, startingCellRowIndex, startingCel
       firstColumnIndex: startingCellColumnIndex,
    });
 
-// TODO this will need changing to the non-DraftJs version
-export const pasteText = ({ text, cell }) => {
-	R.pipe(
-		addPastedTextToCell, 
-		// in here used to have an action updated Editor State which updated the focusReducer, 
-		// but instead we probably should be updating the cell.content.formattedText
-	)({ text, cell }); 
+export const pasteText = ({ text, cell, cursorStart, cursorEnd, }) => {
+	const newFormattedText = addPastedTextToCell({ text, cell, cursorStart, cursorEnd, }); 
 	updatedHandlingPaste(false);
+	return newFormattedText;
+}
+
+export const pasteTextIntoSingleCell = ({ text, cursorStart, cursorEnd, cell, cellInPlaceEditorRef }) => {
+	// note - pasteText() will call updatedHandlingPaste(false)
+	const newFormattedText = pasteText({ text, cell, cursorStart, cursorEnd, });
+	console.log('clipboardHelpers--pasteTextIntoSingleCell got text', text, 'cursorStart', cursorStart, 'cursorEnd', cursorEnd, 'cell', cell, 'newFormattedText', newFormattedText);
+	updatedCell({
+		...cell,
+		content: { ...cell.content, formattedText: newFormattedText },
+		isStale: true,
+	});
+	cellInPlaceEditorRef.current.selectionStart = cursorStart + text.length;
+	cellInPlaceEditorRef.current.selectionEnd = cursorStart + text.length;
+	updatedTextSelection(null);
 }
 
 export const getSystemClipboard = async () => {

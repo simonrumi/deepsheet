@@ -146,7 +146,7 @@ const saveTitleUpdate = async state => {
 }
 
 const getUpdatedCells = R.curry((state, updatedCellCoordinates) => {
-   if (isSomething(updatedCellCoordinates) && arrayContainsSomething(updatedCellCoordinates)) {
+   if (arrayContainsSomething(updatedCellCoordinates)) {
       return R.map(({ row, column }) => {
          const cellData = getCellFromStore({ row, column, state });
          return getSaveableCellData(cellData);

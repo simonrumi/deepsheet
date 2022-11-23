@@ -20,6 +20,8 @@ import {
    stateSheetErrorMessage,
 	stateCellKeys,
 } from '../helpers/dataStructureHelpers';
+import { LOG } from '../constants'
+import { log } from '../clientLogger';
 
 
 const initializeCells = R.curry((store, sheet) => {
@@ -88,12 +90,13 @@ const initializeSheet = store => next => async action => {
          }
          try {
             const sheetResult = await Promise.resolve(getSheet(store, action.payload));
+				log({ level: LOG.VERBOSE }, '*** initializeSheet got sheetResult', sheetResult);
             if (isNothing(sheetResult)) {
                fetchSheetError('No sheet found');
                return;
             }
          } catch (err) {
-            console.error('error fetching sheet');
+				log({ level: LOG.ERROR }, 'error fetching sheet', err);
             fetchSheetError('error fetching sheet: ' + err);
          }
          return next(action);

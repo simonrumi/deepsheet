@@ -12,5 +12,5 @@ module.exports = {
    googleClientID: process.env.GOOGLE_CLIENT_ID_DEV,
    mainUri: process.env.MAIN_URI_DEV,
    // netlifyUri: process.env.NETLIFY_URI,
-   loggingLevel: LOG.INFO,
+   loggingLevel: LOG.DEBUG,
 };

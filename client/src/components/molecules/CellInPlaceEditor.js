@@ -1,11 +1,15 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import * as R from 'ramda';
-// TODO remove Draft.js from package.json
 import managedStore from '../../store';
 import { updatedCell, hasChangedCell } from '../../actions/cellActions';
 import { createdSheet } from '../../actions/sheetActions';
-import { clearedFocus, updatedFocusRef, updatedCellPositioning } from '../../actions/focusActions';
+import {
+   clearedFocus,
+   updatedFocusRef,
+   updatedCellPositioning,
+   updatedTextSelection,
+} from '../../actions/focusActions';
 import { updatedPastingCellRange } from '../../actions/cellRangeActions';
 import { startedEditing, finishedEditing, startedUndoableAction, completedUndoableAction, } from '../../actions/undoActions';
 import { PASTE_RANGE, } from '../../actions/cellRangeTypes';
@@ -27,7 +31,7 @@ import {
    pasteCellRangeToTarget,
    updateSystemClipboard,
    convertTextToCellRange,
-	pasteText,
+	pasteTextIntoSingleCell,
 	getSystemClipboard,
 } from '../../helpers/clipboardHelpers';
 import { compareCellsArrays, updateCellsInRange } from '../../helpers/rangeToolHelpers';
@@ -45,6 +49,7 @@ import {
    stateOriginalRow,
    stateOriginalColumn,
    stateFocusAbortControl,
+	stateFocusTextSelection,
    stateCellRangeFrom,
    stateCellRangeTo,
    stateCellRangeCells,
@@ -115,6 +120,7 @@ const reinstateOriginalValue = cell =>
 // ... look at console logs - when clicking on a cell node is null
 // see this article - probably need to update the ref stuff as he says:
 // https://medium.com/welldone-software/usecallback-might-be-what-you-meant-by-useref-useeffect-773bc0278ae
+...think this is moot now
 //
 // ...Well...seems like the usePositioning hook is doing what that article suggested.
 // Here's what is happening
@@ -138,22 +144,12 @@ const reinstateOriginalValue = cell =>
 // Tabbing on a cell that has been edited replaces the contents of the next cell with the edited stuff from the previous cell
 // ******** END OLD NOTES ******* */
 
-// TODO NEXT
-// get rid of editorState and all the stuff related to it
-// THEN fix the bugs:
-//   1. check that startedEditing and finishedEditing are working properly (see undoReducer also)
-//      ....undo definitely has some bugs...
-//   2. BUT also the cell is not displaying correctly when highlighting a selection and replacing the text - HOWEVER the cellInPlaceEditor shows the correct text
-//	  3. check the old notes above
-// THEN tackle copy-paste
-// THEN make the editor draggable
-
 
 const manageCellInPlaceEditorFocus = ({ event, cellInPlaceEditorRef, cell, editorKeyBindings }) => {
 	ifThen({
 		ifCond: manageFocus, // returns true if the focus needed to be updated
 		thenDo: [
-			() => cellInPlaceEditorRef.current.selectionStart = 0,
+			() => cellInPlaceEditorRef.current.selectionStart = getCellPlainText(cell).length || 0,
 			() => cellInPlaceEditorRef.current.selectionEnd = getCellPlainText(cell).length || 0,
 			() => startedEditing({ cell }),
 		],
@@ -161,14 +157,11 @@ const manageCellInPlaceEditorFocus = ({ event, cellInPlaceEditorRef, cell, edito
 	});
 }
 
-const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
+const CellInPlaceEditor = ({ cellToEdit: cell, positioning, cellHasFocus, }) => {
    // this ref is applied to the div containing the editor (see below) so that we can manage its focus
    const cellInPlaceEditorRef = useRef(); // TIDY or reinstate
 	// const [cellInPlaceEditorRef, setEditorRefNode]  = useState(null);
 	// const setEditorRef = useCallback(node => setEditorRefNode(node)); // TIDY or reinstate
-
-	const cellKey = createCellKey(cellRow(cellToEdit), cellColumn(cellToEdit));
-   const cell = useSelector(state => statePresent(state)[cellKey]);
 
 	// getting the system clipbaord is async, and we want to re-render CellInPlaceEditor when it changes
 	// so using a local state seems like a reasonable way to make it so that only the single CellInPlaceEditor changes,
@@ -284,22 +277,33 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
       clearedFocus();
    }
 
-   const handlePaste = (arg1, styles, prePasteEditorState) => {
+   const handlePaste = (arg1) => {
+		console.log('*****CellInPlaceEditor--handlePaste started for cell', cell, 'with arg1:', arg1);
 		if (typeof arg1 === 'function') {
 			// in this case arg1 is really the event (otherwise it would be the text to paste, but we're getting that from elsewhere)
 			arg1.preventDefault();
 		}
 		updatedHandlingPaste(true);
+
+		const cursorStart = R.pipe(stateFocusTextSelection, R.prop('start'))(managedStore.state) || R.path(['current','selectionStart'], cellInPlaceEditorRef);
+		const cursorEnd = R.pipe(stateFocusTextSelection, R.prop('end'))(managedStore.state) || R.path(['current','selectionEnd'], cellInPlaceEditorRef);
+		const currentCellVersion = R.pipe(
+			createCellKey,
+   		cellKey => statePresent(managedStore.state)[cellKey]
+		)(cellRow(cell), cellColumn(cell));
+
+		console.log('CellInPlaceEditor--handlePaste got cursorStart', cursorStart, 'cursorEnd', cursorEnd, 'currentCellVersion', currentCellVersion);
       
       const fromCell = stateCellRangeFrom(managedStore.state);
       const toCell = stateCellRangeTo(managedStore.state);
 
 		const doPasteRange = () => {
-			const message = createPasteRangeUndoMessage({ fromCell, toCell, cell });
+			const message = createPasteRangeUndoMessage({ fromCell, toCell, cell: currentCellVersion });
 			startedUndoableAction({ undoableType: PASTE_RANGE, timestamp: Date.now() });
 			updatedPastingCellRange(true);
-			pasteCellRangeToTarget({ cell });
+			pasteCellRangeToTarget({ cell: currentCellVersion });
 			updatedHandlingPaste(false);
+			updatedTextSelection(null);
 			manageBlur(null); // null is in place of the event, which has already had preventDefault called on it (above); 
 			completedUndoableAction({ undoableType: PASTE_RANGE, message, timestamp: Date.now() });
 			updatedPastingCellRange(false);
@@ -342,23 +346,21 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
                // there's no cell range, only something in the clipbaord
                const clipboardAsCells = convertTextToCellRange({
                   text: systemClipboardText,
-                  startingCellRowIndex: cellRow(cell),
-                  startingCellColumnIndex: cellColumn(cell),
+                  startingCellRowIndex: cellRow(currentCellVersion),
+                  startingCellColumnIndex: cellColumn(currentCellVersion),
                });
                if (clipboardAsCells.length > 1) {
                   updatedShowPasteOptionsModal(true);
                   return;
                }
-
-					const cursorStart = R.path(['current','selectionStart'], cellInPlaceEditorRef);
-					const cursorEnd = R.path(['current','selectionEnd'], cellInPlaceEditorRef);
-					// note - this fn will call updatedHandlingPaste(false) // TODO check if this is happening still
-               pasteText({ 
-						text: typeof arg1 === 'string' ? arg1 : systemClipboardText,
-						cell,
-						cursorStart,
-						cursorEnd,
-					}); 
+					
+					pasteTextIntoSingleCell({
+                  text: typeof arg1 === 'string' ? arg1 : systemClipboardText,
+                  cursorStart,
+                  cursorEnd,
+						cell: currentCellVersion,
+						cellInPlaceEditorRef
+               });
             }
 			)
 		} else {
@@ -389,55 +391,65 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
 		});
 	}
 
+	const manageTextSelection = event => {
+		if (stateIsHandlingPaste(managedStore.state)) {
+			return; // don't update the text selection while we're in the middle of pasting
+		}
+		if (event.target.selectionStart === event.target.selectionEnd) {
+			updatedTextSelection(null);
+		}
+		updatedTextSelection({ start: event.target.selectionStart, end: event.target.selectionEnd });
+	}
+
 	const manageChange = (event, cell) => {
+		console.log('CellInPlaceEditor--manageChange started for cell', cell);
 		event.preventDefault();
 		if (keystrokeHandled) {
 			setKeystrokeHandled(false); // reset this value
 			return; // ...and do nothing else
 		}
+
 		if (isNothing(cellInPlaceEditorRef?.current)) {
 			log({ level: LOG.ERROR }, 'CellInPlaceEditor--manageChange had no value for cellInPlaceEditorRef.current');
 			return;
 		}
+
 		const newText = cellInPlaceEditorRef.current?.value || '';
 		const formattedText = cell.content?.formattedText;
-		console.log(
-         'CellInPLaceEditor--manageChange got event.target', event.target,
-			'cellInPlaceEditorRef.current', cellInPlaceEditorRef.current,
-         'cellInPlaceEditorRef.current.value', cellInPlaceEditorRef.current.value,
-			'cellInPlaceEditorRef.current.selectionStart', cellInPlaceEditorRef.current.selectionStart,
-			'cellInPlaceEditorRef.current.selectionEnd', cellInPlaceEditorRef.current.selectionEnd,
-			'cell.content.formattedText', formattedText,
-			'the newText is therefore', newText
-      );
+		const textSelection = stateFocusTextSelection(managedStore.state);
+		const selectionStart = R.prop('start', textSelection);
+		const selectionEnd = R.prop('end', textSelection);
 
-		// TODO - see notes
-		
-		const cursorPosition = cellInPlaceEditorRef.current.selectionStart;
-		if (cursorPosition != cellInPlaceEditorRef.current.selectionEnd) {
-			console.log('***TODO: received a selection CellInPlaceEditor--manageChange - need to handle with handlePaste instead');
-			return;
-		}
-		
-		const newFormattedText = updateEditedChar({ cursorPosition, newText, formattedText });
-		console.log('CellInPLaceEditor--manageChange got newFormattedText', newFormattedText);
-
-		updatedCell({
-			...cell,
-			content: { ...cell.content, text: newText, formattedText: newFormattedText },
-			isStale: true,
-		});
+		return isSomething(textSelection) && selectionStart !== selectionEnd
+         ? R.pipe(
+				R.path(['current', 'selectionStart']), 
+				R.subtract(R.__, 1), 
+				R.nth(R.__, newText), 
+				char => pasteTextIntoSingleCell({ 
+					text: char, 
+					cursorStart: selectionStart, 
+					cursorEnd: selectionEnd,
+					cell,
+					cellInPlaceEditorRef,
+				})
+           )(cellInPlaceEditorRef)
+         : R.pipe(
+              R.path(['current', 'selectionStart']),
+              cursorPosition => updateEditedChar({ cursorPosition, newText, formattedText }),
+              newFormattedText =>
+                 updatedCell({
+                    ...cell,
+                    content: { ...cell.content, text: newText, formattedText: newFormattedText },
+                    isStale: true,
+                 })
+           )(cellInPlaceEditorRef);
 	}
-
-	// TODO the history is not being updated when updating the styles
 
 	const handleStyling = (event, style) => {
 		event?.preventDefault();
 		const cursorStart = cellInPlaceEditorRef.current.selectionStart;
 		const cursorEnd = cellInPlaceEditorRef.current.selectionEnd;
-		console.log('CellInPLaceEditor--handleStyling got style', style, 'cursorStart', cursorStart, 'cursorEnd', cursorEnd, 'cell', cell);
 		const newBlocks = updateStyles({ newStyle: style, cursorStart, cursorEnd, blocks: cellFormattedTextBlocks(cell) });
-		console.log('CellInPLaceEditor--handleStyling got newBlocks', newBlocks);
 		updateFormattedText({ formattedText: { blocks: newBlocks } });
 	}
    
@@ -472,6 +484,19 @@ const CellInPlaceEditor = ({ cellToEdit, positioning, cellHasFocus, }) => {
       const leftPositioning = {
          left: positioning.width
       }
+
+		// if there is something on the system clipboard, then that affects whether we display the PasteIcon
+		getSystemClipboard()
+			.then(systemClipboard => {
+				ifThen({
+					ifCond: isSomething,
+					thenDo: setSystemClipboardLocal,
+					params: { ifParams: systemClipboard, thenParams: systemClipboard }
+				});
+			})
+			.catch(err => {
+				log({ level: LOG.ERROR }, 'Couldn\'t get system clipboard', err);
+			});
 
       return (
          <div className="relative w-full">
@@ -523,32 +548,21 @@ const renderTextForm = () =>
 			style={textareaStyle}
 			value={getCellPlainText(cell)}
 			onChange={evt => manageChange(evt, cell)}
+			onSelect={manageTextSelection}
 			onBlur={manageBlur}
 		/>
 	</form>;
-	// textarea used to have rows="3" to make it 3 rows high every time
 
    // need to useEffect so the cellInPlaceEditorRef can first be assigned to the textarea
    useEffect(() => {
       if (cellHasFocus && isSomething(cellInPlaceEditorRef?.current)) {
          cellInPlaceEditorRef.current.focus();
+			console.log('CellInPlaceEditor--useEffect before manageCellInPlaceEditorFocus cellInPlaceEditorRef.current.selectionStart is', cellInPlaceEditorRef.current.selectionStart, 'cellInPlaceEditorRef.current.selectionEnd', cellInPlaceEditorRef.current.selectionEnd)
          manageCellInPlaceEditorFocus({ event: null, cellInPlaceEditorRef, cell, editorKeyBindings });
+			console.log('CellInPlaceEditor--useEffect after manageCellInPlaceEditorFocus cellInPlaceEditorRef.current.selectionStart is', cellInPlaceEditorRef.current.selectionStart, 'cellInPlaceEditorRef.current.selectionEnd', cellInPlaceEditorRef.current.selectionEnd)
 			// updatedCellEditorPositioning({ ...positioning }); // this is needed, in some circumstances, by PasteOptionsModal // TIDY using updatedCellPositioning instead
 			updatedCellPositioning(positioning);
       } // TODO can useCallback above negate the need for putting this in useEffect... If so  TIDY
-
-		// if there is something on the system clipboard, then that affects whether we display the PasteIcon
-		getSystemClipboard()
-			.then( systemClipboard => {
-				ifThen({
-					ifCond: isSomething,
-					thenDo: setSystemClipboardLocal,
-					params: { ifParams: systemClipboard, thenParams: systemClipboard }
-				});
-			})
-			.catch(err => {
-				log({ level: LOG.ERROR }, 'Couldn\'t get system clipboard', err);
-			});
    });
 
 	const editorPositioning = {

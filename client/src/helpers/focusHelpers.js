@@ -37,7 +37,7 @@ export const isStateCellRefThisCell = (cellRef, cell) => {
 
 export const manageFocus = ({ event, cell, cellRef, keyBindings }) => {
 	event?.preventDefault();
-	console.log('focusHelpers--manageFocus got cell', cell);
+	console.log('focusHelpers--manageFocus got cell', cell, 'keyBindings', keyBindings);
 
 	if (isStateCellRefThisCell(cellRef, cell)) {
 		console.log('focusHelpers--manageFocus cell ref is this cell, so no need to change focus', cell);

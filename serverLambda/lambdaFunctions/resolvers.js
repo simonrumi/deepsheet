@@ -26,7 +26,7 @@ module.exports = db => ({
          try {
             const startTime = log({ level: LOG.DEBUG, printTime: true }, 'resolvers.Query.sheet starting findOne query for sheetId', args.sheetId, 'userId', args.userId);
             const sheetResult = await SheetModel.findOne({ _id: args.sheetId, 'users.owner': args.userId });
-            log({ level: LOG.DEBUG, startTime }, 'resolvers.Query.sheet finished findOne query');
+            log({ level: LOG.DEBUG, startTime }, 'resolvers.Query.sheet finished findOne query got sheetResult', sheetResult);
             return sheetResult;
          } catch (err) {
             log({ level: LOG.ERROR}, 'resolvers.Query.sheet error finding sheet:', err.message);

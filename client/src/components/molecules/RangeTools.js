@@ -58,7 +58,7 @@ const RangeTools = ({ cell }) => {
 
    useEffect(() => {
       if (inCellRange) {
-         manageFocus({ event: null, cell, rangeToolsRef });
+         manageFocus({ event: null, cell, rangeToolsRef, keyBindings: keyBindingsRangeTool });
       }
    });
 

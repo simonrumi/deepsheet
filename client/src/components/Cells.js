@@ -15,7 +15,7 @@ import {
    isLastVisibleItemInAxis,
    isVisibilityCalculated,
 } from '../helpers/visibilityHelpers';
-import { orderCells, getAllCells } from '../helpers/cellHelpers';
+import { orderCells, getAllCells, } from '../helpers/cellHelpers';
 import { updatedEndOfRowCell } from '../actions/cellActions';
 import { COLUMN_AXIS } from '../constants';
 import ColumnHeaders from './organisms/ColumnHeaders';
@@ -86,9 +86,6 @@ const Cells = () => {
          )(cells)
       : null;
 
-   return R.pipe(
-      getAllCells,
-      renderAllCells,
-   )(managedStore.state)
+   return R.pipe(getAllCells, renderAllCells)(managedStore.state);
 }
 export default Cells;

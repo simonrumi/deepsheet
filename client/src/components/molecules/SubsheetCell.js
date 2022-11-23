@@ -56,14 +56,14 @@ const SubsheetCell = ({ cell, cellHasFocus }) => {
 		}
 	};
 
-	// TODO BUG Tabbing out of a subsheet cell is broken
+	// TODO BUG Tabbing is broken
 
 	// note when a cell is clicked onSubsheetCellClick will focus the cell, which will cause the useEffect to fire manageFocus
 	// whereas when a cell is tabbed into, the focus will be updated by the manageTab function, again causing the useEffect below to fire this function
    useEffect(() => {
       ifThen({
          ifCond: cellHasFocus,
-         thenDo: () => manageFocus({ event: null, cell, cellRef }),
+         thenDo: () => manageFocus({ event: null, cell, cellRef, keyBindings: keyBindingsSubsheetCell }),
          params: {} 
       });
    });

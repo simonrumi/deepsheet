@@ -3,7 +3,7 @@ import * as R from 'ramda';
 import { useSelector } from 'react-redux';
 import { isSomething, isNothing, optimizeModalPositioning } from '../../helpers';
 import { createCellId } from '../../helpers/cellHelpers';
-import { pasteCellRangeToTarget, convertTextToCellRange, pasteText } from '../../helpers/clipboardHelpers';
+import { pasteCellRangeToTarget, convertTextToCellRange, pasteText, pasteTextIntoSingleCell } from '../../helpers/clipboardHelpers';
 import { getSelectionRange } from '../../helpers/richTextHelpers';
 import {
    stateCellRangeFrom,
@@ -35,7 +35,7 @@ const PasteOptionsModal = () => {
 	const positioning = useSelector(state => statePasteOptionsModalPositioning(state)); // TODO replace this with cellPositioning in the focusReducer
 	const cell = useSelector(state => stateFocusCell(state));
 	const blurCellInPlaceEditor = useSelector(state => stateBlurEditorFunction(state));
-	const cellInPlaceEditorRef = useSelector(state => stateFocusCellRef(state)); // TIDY
+	const cellInPlaceEditorRef = useSelector(state => stateFocusCellRef(state));
 
 	const clipboardAsCells = isNothing(systemClipboard) ? [] : convertTextToCellRange({ 
 		text: systemClipboard,
@@ -49,8 +49,13 @@ const PasteOptionsModal = () => {
 
 	const handlePasteClipboard = () => {
 		const { cursorStart, cursorEnd } = getSelectionRange(cellInPlaceEditorRef);
-		pasteText({ text: systemClipboard, cell, cursorStart, cursorEnd, });
-		updatedHandlingPaste(false);
+		pasteTextIntoSingleCell({
+			text: systemClipboard,
+			cursorStart,
+			cursorEnd,
+			cell,
+			cellInPlaceEditorRef
+		});
 		updatedShowPasteOptionsModal(false);
 	}
 
@@ -95,7 +100,13 @@ const PasteOptionsModal = () => {
 		updatedShowPasteOptionsModal(false);
 		startedUndoableAction({ undoableType: PASTE_CLIPBOARD, timestamp: Date.now() });
 		const { cursorStart, cursorEnd } = getSelectionRange(cellInPlaceEditorRef);
-		pasteText({ text: systemClipboard, cell, cursorStart, cursorEnd });
+		pasteTextIntoSingleCell({
+			text: systemClipboard,
+			cursorStart,
+			cursorEnd,
+			cell,
+			cellInPlaceEditorRef
+		});
 		updatedPastingCellRange(false);
 		updatedHandlingPaste(false);
 		completedUndoableAction({
@@ -129,23 +140,32 @@ const PasteOptionsModal = () => {
 		<div className="flex justify-end">
 			<CloseIcon classes="p-1" svgClasses="w-6" onClickFn={handleCancelPaste}/>
 		</div>
-	)
+	);
 
-	return clipboardAsCells.length > 1 && isNothing(toCell)
-		? (
+	const renderTwoClipboardAndCellRangeOptions = () => {
+		return (
 			<div className="relative w-full z-50">
 				<div className="absolute top-0 bg-white border border-grey-blue shadow-lg p-1" style={modalPositioning}>
 					{closeButton}
 					<div className="flex justify-center">
-						<Button label="Paste clipboard as range of cells" classes="p-3" onClickFn={handlePasteClipboardAsRange}/>
-						<Button label="Paste clipboard in one cell" classes="p-3" onClickFn={handlePasteClipboardAsText}/>
+						<Button label="Paste cell range" classes="p-3" onClickFn={handlePasteRange}/>
+						<Button label="Paste clipboard" classes="p-3" onClickFn={handlePasteClipboard}/>
 					</div>
+					<p>You can either paste the cell range from 
+						<span className="text-vibrant-purple"> {fromCellId} </span>
+						to 
+						<span className="text-vibrant-purple"> {toCellId} </span>
+					</p>
+					<p>Or the system clipboard, which contains this:</p>
+					<p>"<span className="text-vibrant-purple">{systemClipboard}</span>"</p>
 				</div>
 			</div>
 		)
-		: clipboardAsCells.length > 1 && isSomething(toCell) 
-			? (
-				<div className="relative w-full z-50">
+	}
+
+	const renderThreeClipboardAndCellRangeOptions = () => {
+		return (
+			<div className="relative w-full z-50">
 					<div className="absolute top-0 bg-white border border-grey-blue shadow-lg p-1" style={modalPositioning}>
 						{closeButton}
 						<div className="grid grid-cols-3">
@@ -162,25 +182,27 @@ const PasteOptionsModal = () => {
 						<p>"<span className="text-vibrant-purple">{systemClipboard}</span>"</p>
 					</div>
 				</div>
-			)
-			: (
-				<div className="relative w-full z-50">
-					<div className="absolute top-0 bg-white border border-grey-blue shadow-lg p-1" style={modalPositioning}>
-						{closeButton}
-						<div className="flex justify-center">
-							<Button label="Paste cell range" classes="p-3" onClickFn={handlePasteRange}/>
-							<Button label="Paste clipboard" classes="p-3" onClickFn={handlePasteClipboard}/>
-						</div>
-						<p>You can either paste the cell range from 
-							<span className="text-vibrant-purple"> {fromCellId} </span>
-							to 
-							<span className="text-vibrant-purple"> {toCellId} </span>
-						</p>
-						<p>Or the system clipboard, which contains this:</p>
-						<p>"<span className="text-vibrant-purple">{systemClipboard}</span>"</p>
-					</div>
+		)
+	}
+
+	const renderClipboardOnlyOptions = () => {
+		return (
+		<div className="relative w-full z-50">
+			<div className="absolute top-0 bg-white border border-grey-blue shadow-lg p-1" style={modalPositioning}>
+				{closeButton}
+				<div className="flex justify-center">
+					<Button label="Paste clipboard as range of cells" classes="p-3" onClickFn={handlePasteClipboardAsRange}/>
+					<Button label="Paste clipboard in one cell" classes="p-3" onClickFn={handlePasteClipboardAsText}/>
 				</div>
-		);
+			</div>
+		</div>)
+	}
+
+	return clipboardAsCells.length > 1 && isNothing(toCell)
+		? renderClipboardOnlyOptions()
+		: clipboardAsCells.length > 1 && isSomething(toCell) 
+			? renderThreeClipboardAndCellRangeOptions() : renderTwoClipboardAndCellRangeOptions();
+
 }
 
 export default PasteOptionsModal;

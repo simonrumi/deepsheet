@@ -43,7 +43,6 @@ import {
 	stateRowVisibility,
    stateCellsUpdateInfo,
 } from './dataStructureHelpers';
-import { isCellVisible } from './visibilityHelpers';
 import {
    encodeFormattedText,
    decodeFormattedText,
@@ -52,6 +51,7 @@ import {
    getCellPlainText,
    getRandomKey,
 } from './richTextHelpers';
+import { createCell } from './clipboardHelpers';
 import { addCellReducers } from '../reducers/cellReducers';
 import { addNewCellsToStore, addNewCellsToCellDbUpdates } from '../services/insertNewAxis';
 import { updatedCell, hasChangedCell, addedCellKeys } from '../actions/cellActions';
@@ -94,7 +94,7 @@ export const getSaveableCellData = cell =>
       cellColumnSetter(cellColumn(cell)),
 		cellFormattedTextSetter(cellFormattedText(cell)),
       cellSubsheetIdSetter(cellSubsheetId(cell)),
-      cellVisibleSetter(cellVisible(cell))
+      cellVisibleSetter(cellVisible(cell)),
    )({});
 
 export const isCellFocused = (cell, state) => {
@@ -387,16 +387,6 @@ const tryIncreasingAxisCount = ({ totalinAxis, totalinOtherAxis, totalCellKeys }
 	return { extra, perfectFit: false }
 }
 
-const createDefaultCell = (row, column) => ({
-		row,
-		column,
-		content: {
-			subsheetId: null,
-			text: ''
-		}, 
-		visible: isCellVisible({ row, column })
-	});
-
 const concatRowWithAccumulator = ({ newRowCells, newRowCellKeys, accumulator }) => {
 	if (!arrayContainsSomething(newRowCells) || !arrayContainsSomething(newRowCellKeys)) {
 		return accumulator;
@@ -408,7 +398,7 @@ const concatRowWithAccumulator = ({ newRowCells, newRowCellKeys, accumulator }) 
 
 const addCellToRowAccumulator = ({ rowAccumulator, cellKey, row, column }) => {
 	const newRowCellKeys = R.pipe(R.prop, R.append(cellKey))('newRowCellKeys', rowAccumulator);
-	const newCell = createDefaultCell(row, column);
+	const newCell = createCell({ text: '', rowIndex: row, columnIndex: column });
 	const newRowCells = R.pipe(R.prop, R.append(newCell))('newRowCells', rowAccumulator);
 	return { newRowCells, newRowCellKeys };
 }

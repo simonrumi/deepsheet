@@ -11,6 +11,7 @@ import { updatedRowVisibility, hasChangedMetadata, updatedRowHeight, updatedTota
 import { startedUndoableAction, completedUndoableAction } from '../actions/undoActions';
 import { UPDATED_TOTAL_ROWS } from '../actions/metadataTypes';
 import { shouldShowColumn } from '../helpers/visibilityHelpers';
+import { makeBlockForText } from '../helpers/richTextHelpers';
 import {
    addNewCellsToStore,
    addNewCellsToCellDbUpdates,
@@ -28,19 +29,21 @@ import { addCellReducers } from '../reducers/cellReducers';
 import { DEFAULT_ROW_HEIGHT, } from '../constants';
 import { createInsertNewRowsMessage } from '../components/displayText';
 
-const makeNewRowCell = R.curry((rowIndex, columnIndex, columnVisibility) => {
-   const partialCell = {
-      row: rowIndex,
-      column: columnIndex,
-      content: { text: '', subsheetId: null },
-      isStale: true,
-   }
-   return R.pipe(
-      shouldShowColumn,
-      R.assoc('visible', R.__, partialCell)
-   )(columnVisibility, columnIndex);
-
-});
+const makeNewRowCell = R.curry((rowIndex, columnIndex, columnVisibility) => R.pipe(
+	makeBlockForText,
+	R.append(R.__, []),
+	R.assocPath(
+		['content', 'formattedText', 'blocks'], 
+		R.__,
+		{
+			row: rowIndex,
+			column: columnIndex,
+			content: { text: '', subsheetId: null },
+			isStale: true,
+			visible: shouldShowColumn(columnVisibility, columnIndex)
+		}
+	)
+)({}));
 
 const addOneCell = ({ rowIndex, columnIndex, cells }) => R.pipe(
       stateColumnVisibility,
