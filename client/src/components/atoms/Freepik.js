@@ -4,11 +4,13 @@ const Freepik = () => {
    return (
       <div className="text-xs text-center">
          <span>Icons made by </span>
+			<a target="_blank" rel="noopener noreferrer" href="https://icons8.com">Icons8</a>
+			and
          <a href="https://www.flaticon.com/authors/freepik" title="Freepik">
             Freepik
          </a>
          <span> from </span>
-         <a href="https://www.flaticon.com/" title="Flaticon">
+         <a target="_blank" rel="noopener noreferrer" href="https://www.flaticon.com/" title="Flaticon">
             www.flaticon.com
          </a>
          <span> is licensed by </span>

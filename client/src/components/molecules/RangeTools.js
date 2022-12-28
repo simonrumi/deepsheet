@@ -45,7 +45,7 @@ const RangeTools = ({ cell }) => {
             break;
 
          case 9: // tab
-            manageTab({ event, cell, callback: clearRangeHighlight });
+            manageTab({ event, cell, callback: clearRangeHighlight, goBackwards: event.shiftKey });
             break;
 
 			case 27: //esc

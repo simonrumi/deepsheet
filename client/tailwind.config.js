@@ -52,6 +52,7 @@ module.exports = {
       },
    },
    plugins: [
+		// this is something to do with getting the checked option added to the FilterOptions modal
       function ({ addVariant, e }) {
          addVariant('checked', ({ modifySelectors, separator }) => {
             modifySelectors(({ className }) => {
@@ -59,5 +60,14 @@ module.exports = {
             });
          });
       },
+		// by default tailwind set "resize: vertical" for textareas
+		// but we want to resize the cell editor in both directions 
+		function ({ addBase }) {
+			addBase({ 
+				'textarea': {
+					'resize': 'both',
+				}
+			});
+		}
    ],
 };

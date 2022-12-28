@@ -2,10 +2,12 @@ import React, { useRef, useState } from 'react';
 import { startedDrag, endedDrag } from '../../actions/dragActions';
 import { DRAGGABLE_MODAL } from '../../actions/dragTypes';
 
-const DraggableModal = ({ dragData = {}, children, classes = '', positioning = {} }) => {
+const DraggableModal = ({ dragData = {}, children, classes = '', positioning = {}, showBorder=true, id = 'draggableModal' }) => {
 	const [ isDragging, setIsDragging ]  = useState(false); // we have isDragging in the redux store also, but it's convenient to have it here so that we don't have to figure out if it is this particular component that is being dragged
    const [ currentPosition, setCurrentPosition ] = useState(positioning);
 	const modalRef = useRef(null);
+
+	console.log('DraggabelModal started with positioning', positioning);
 
 	const handleDragStart = event => {
       event.dataTransfer.effectAllowed = 'move'; // unclear as to whether this is necessary. MDN says to use it but doesn't seem to be in the example here: https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer/dropEffect
@@ -16,15 +18,16 @@ const DraggableModal = ({ dragData = {}, children, classes = '', positioning = {
 
    const handleDragEnd = event => {
       setIsDragging(false);
-		setCurrentPosition({ left: event.clientX, top: event.clientY });
+		setCurrentPosition({ ...positioning, left: event.clientX, top: event.clientY });
       endedDrag();
    }
 
-	const allClasses = isDragging ? 'border border-vibrant-blue ' + classes : classes;
+	const allClasses = isDragging && showBorder ? 'border border-vibrant-blue ' + classes : classes; // 
 
 	return (
       <div
          className={allClasses}
+			id={id}
          draggable="true"
          onDragStart={handleDragStart}
          onDragEnd={handleDragEnd}

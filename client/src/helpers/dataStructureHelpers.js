@@ -334,6 +334,10 @@ const stateFocusAbortControlLens = R.compose(stateFocusLens, R.lensProp('abortCo
 export const stateFocusAbortControl = R.view(stateFocusAbortControlLens);
 const stateFocusTextSelectionLens = R.compose(stateFocusLens, R.lensProp('textSelection'));
 export const stateFocusTextSelection = R.view(stateFocusTextSelectionLens);
+const stateFocusClickedEditorHeaderLens = R.compose(stateFocusLens, R.lensProp('clickedEditorHeader'));
+export const stateFocusClickedEditorHeader = R.view(stateFocusClickedEditorHeaderLens);
+const stateFocusEditorPositioningLens = R.compose(stateFocusLens, R.lensProp('editorPositioning'));
+export const stateFocusEditorPositioning = R.view(stateFocusEditorPositioningLens);
 
 /************************************************ STATE CELL RANGE **********************************************/
 const cellRangeLens = R.lensProp('cellRange');
@@ -366,8 +370,6 @@ const stateSystemClipboardLens = R.compose(statePasteOptionsModalLens, R.lensPro
 export const stateSystemClipboard = R.view(stateSystemClipboardLens);
 const stateShowPasteOptionsModalLens = R.compose(statePasteOptionsModalLens, R.lensProp('showModal'));
 export const stateShowPasteOptionsModal = R.view(stateShowPasteOptionsModalLens);
-const statePasteOptionsModalPositioningLens = R.compose(statePasteOptionsModalLens, R.lensProp('positioning'));
-export const statePasteOptionsModalPositioning = R.view(statePasteOptionsModalPositioningLens);
 const stateBlurEditorFunctionLens = R.compose(statePasteOptionsModalLens, R.lensProp('blurEditorFunction'));
 export const stateBlurEditorFunction = R.view(stateBlurEditorFunctionLens);
 const stateIsHandlingPasteLens = R.compose(statePasteOptionsModalLens, R.lensProp('isHandlingPaste'));

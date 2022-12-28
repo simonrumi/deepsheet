@@ -12,6 +12,7 @@ import {
 } from './dataStructureHelpers';
 import { tabToNextVisibleCell } from './cellHelpers';
 import { updateCellsInRange } from './rangeToolHelpers';
+import { optimizeModalPositioning, } from '.'; //index
 import { isSomething, arrayContainsSomething, ifThen, ifThenElse, } from '.';
 import { updatedFocusRef, updatedFocusAbortControl, focusedCell, clearedFocus } from '../actions/focusActions';
 import {
@@ -23,8 +24,10 @@ import {
 import { HIGHLIGHTED_CELL_RANGE } from '../actions/cellRangeTypes';
 import { updatedCell } from '../actions/cellActions';
 import { createHighlightRangeMessage } from '../components/displayText';
-import { log } from '../clientLogger';
-import { LOG } from '../constants';
+import {
+	CELL_EDITOR_VERTICAL_MARGIN,
+	CELL_EDITOR_HORIZONTAL_MARGIN,
+} from '../constants';
 
 export const isStateCellRefThisCell = (cellRef, cell) => {
     const currentFocusedCell = stateFocusCell(managedStore.state);
@@ -37,10 +40,9 @@ export const isStateCellRefThisCell = (cellRef, cell) => {
 
 export const manageFocus = ({ event, cell, cellRef, keyBindings }) => {
 	event?.preventDefault();
-	console.log('focusHelpers--manageFocus got cell', cell, 'keyBindings', keyBindings);
+	console.log('focusHelpers--manageFocus got cell', cell);
 
 	if (isStateCellRefThisCell(cellRef, cell)) {
-		console.log('focusHelpers--manageFocus cell ref is this cell, so no need to change focus', cell);
 		return false; // indicates we didn't need to change focus
 	}
 	ifThen({
@@ -49,27 +51,27 @@ export const manageFocus = ({ event, cell, cellRef, keyBindings }) => {
 		params: {},
 	});
 	const controller = new AbortController();
-	console.log('focusHelpers--manageFocus made AbortController', controller);
 	updatedFocusAbortControl(controller, cell);
 	document.addEventListener('keydown', evt => keyBindings(evt), { signal: controller.signal });
 	updatedFocusRef(cellRef);
 	return true; // indicates we changed the focus
 }
 
-export const manageTab = ({ cell, callback, goBackwards }) => {
-    const nextCell = tabToNextVisibleCell(cell.row, cell.column, goBackwards);
-    return ifThenElse({
-        ifCond: isSomething(nextCell),
-        thenDo: [
-            () => isSomething(callback) ? callback() : null,
-            () => stateFocusAbortControl(managedStore.state).abort(),
-            () => updatedFocusRef({ ref: null }), // clear the existing focusRef
-            () => focusedCell(nextCell),
-            R.T // indicates that we found a nextCell and tabbed to it
-        ],
-        elseDo: R.F, // indicates we didn't move cells
-        params: {}
-    });
+export const manageTab = ({ event, cell, callback, goBackwards }) => {
+	event?.preventDefault();
+	const nextCell = tabToNextVisibleCell(cell.row, cell.column, goBackwards);
+	return ifThenElse({
+		ifCond: isSomething(nextCell),
+		thenDo: [
+			() => isSomething(callback) ? callback() : null,
+			() => stateFocusAbortControl(managedStore.state).abort(),
+			() => updatedFocusRef({ ref: null }), // clear the existing focusRef
+			() => focusedCell(nextCell),
+			R.T // indicates that we found a nextCell and tabbed to it
+		],
+		elseDo: R.F, // indicates we didn't move cells
+		params: {}
+	});
 }
 
 export const clearCellRangeHighlight = () => R.pipe(
@@ -119,3 +121,22 @@ export const atEndOfRange = cell => {
 	cell.row === toCell.row && 
 	cell.column === toCell.column;
 }
+
+export const calcEditorPositioning = cellPositioning => R.pipe(
+	R.assoc('left', cellPositioning.left + CELL_EDITOR_HORIZONTAL_MARGIN),
+	R.assoc('top', cellPositioning.top + CELL_EDITOR_VERTICAL_MARGIN),
+	// R.assoc('width', ) // TODO - probably need to tell optimizeModalPositioning what the width is with the full width of the textarea plus the CellEditorTools
+	// TODO make sure the height sent to optimizeModalPositioning is the real height
+	initialPositioning => optimizeModalPositioning({
+		initialTop: initialPositioning.top,
+		initialLeft: initialPositioning.left,
+		modalWidth: initialPositioning.width,
+		// modalHeight: initialPositioning.height + CELL_EDITOR_VERTICAL_PADDING,
+	}),
+	optimized => ({
+		...cellPositioning,
+		left: optimized.left,
+		top: optimized.top,
+		// height: cellPositioning.height + CELL_EDITOR_VERTICAL_PADDING,
+	})
+)(cellPositioning);

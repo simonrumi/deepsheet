@@ -29,7 +29,6 @@ const UPDATE_CELLS_MUTATION = gql`
    }
 `;
 
-// TODO will need to check this when we can add newlines again
 export const updateCellsMutation = async ({ sheetId, cells, userId }) => {
    const preppedCells = prepCellsForDb(cells);
 	const result = await apolloClient.mutate({

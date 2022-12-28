@@ -19,7 +19,7 @@ import {
    stateIsHandlingPaste,
    stateFocusTextSelection,
 } from './dataStructureHelpers';
-import { BLOCK_SEPARATOR, BLOCK_SEPARATOR_REGEX, NEWLINE_REGEX, BLOCK_END_CHAR_LENGTH, LOG } from '../constants';
+import { NEWLINE_REGEX, BLOCK_END_CHAR_LENGTH, LOG } from '../constants';
 import { log } from '../clientLogger';
 
 export const getSelectionRange = cellInPlaceEditorRef => stateIsHandlingPaste(managedStore.state) 
@@ -74,6 +74,24 @@ export const decodeFormattedText = formattedText => R.pipe(
  * helpers for JSX
  */
 
+const addBlockSeparators = blocksAsHtml => R.reduce(
+	(accumulator, blockHtml) => {
+		if (blocksAsHtml.length - 1 === accumulator.htmlArr.length) {
+			// we're in the last block, so we don't need a block separator and we just return the html array
+			return R.append(blockHtml, accumulator.htmlArr);
+		}
+		// adding keys to the br tags because if we get brs by themselves then they need a key or React throws warnings. Safest to add keys to every one
+		const { key, usedKeys: updatedUsedKeys } = getRandomKey({ usedKeys: accumulator.usedKeys });
+		const newBlockHtml = blockHtml + '<br key="' + key + '">'; 
+		return {
+			htmlArr: R.append(newBlockHtml, accumulator.htmlArr), 
+			usedKeys: updatedUsedKeys
+		}
+	}, 
+	{ htmlArr: [], usedKeys: [] }, // initial values
+	blocksAsHtml
+);
+
 const convertOneBlockToJsx = block => {
 	// note that inlineStyleRanges look like this
 	// [{offset: 6, length: 4, style: 'BOLD'}, ...]
@@ -85,18 +103,14 @@ const convertOneBlockToJsx = block => {
 		? splitStyleRanges({ styleRanges: sortedStyleRanges, plainText })
 		: addStylesToStyleRanges(sortedStyleRanges);
 	const { lastOffset, formattedText } = applyStyling({ plainText, styleRanges: updatedStyleRanges });
-	return formattedText + R.slice(lastOffset, Infinity, plainText) + BLOCK_SEPARATOR;
+	return formattedText + R.slice(lastOffset, Infinity, plainText);
 }
 
-export const convertBlocksToJsx = blocks => {
-	const blocksAsHtml = R.map(convertOneBlockToJsx, blocks);
-	return R.pipe(
-		R.last,
-		lastBlock => lastBlock.replace(BLOCK_SEPARATOR_REGEX, ''), // every block has a separator tag on the end, but the last block doesn't need it
-		R.append(R.__, R.slice(0, -1, blocksAsHtml)), 
-		R.map(htmlReactParser)
-	)(blocksAsHtml);
-}
+export const convertBlocksToJsx = blocks => R.pipe(
+	R.map(convertOneBlockToJsx),
+	addBlockSeparators,
+	R.map(htmlReactParser)
+)(blocks);
 
 export const getFormattedText = cell => {
 	if (isNothing(cellFormattedText(cell))) {
@@ -621,10 +635,13 @@ const getBlockWithCursor = ({ cursorPosition, blocks, newTextArr }) => {
 					return R.reduced({ block, cursorPositionWithinBlock: blockLength + 1, blockIndex });
 				}
 		
-				if (cursorPosition < totalTextLength + blockLength + 1 && cursorPosition >= totalTextLength + 1) {
-					// case 5: added a char before the end of the line
-					return R.reduced({ block, cursorPositionWithinBlock: cursorPosition - totalTextLength, blockIndex }) 
-				}
+				// case 5: added a char before the end of the line
+				return R.reduced({ block, cursorPositionWithinBlock: cursorPosition - totalTextLength, blockIndex });
+			}
+
+			if (cursorPosition <= totalTextLength + blockLength && newTextLength === blockLength) {
+				// case 6: we are probably adding a newline in the middle of the block, so as yet no char has been added or deleted
+				return R.reduced({ block, cursorPositionWithinBlock: cursorPosition - totalTextLength, blockIndex });
 			}
 		
 			if (newTextLength === blockLength) {
@@ -655,6 +672,7 @@ const isBlockKeyInList = ({ block, keyList }) => R.pipe(
 	blockKey => R.find(key => key === blockKey, keyList),
 	isSomething
 )(block);
+
 
 const categorizeBlocksForCombination = ({ blocks, combinedBlocksKeys }) => R.reduce(
 	(accumulator, block) => {
@@ -702,6 +720,92 @@ const addKeyToList = ({ blocks, index, keyList = [] }) => R.pipe(
 	R.append(R.__, keyList)
 )(blocks);
 
+const replaceBlockWithDividedBlocks = ({ blocks, newBlock1, newBlock2 }) => R.reduce(
+	(accumulator, block) => R.prop('key', block) === R.prop('key', newBlock1)
+		? R.pipe(
+			R.append(newBlock1),
+			R.append(newBlock2)
+		)(accumulator)
+		: R.append(block, accumulator), 
+	[], 
+	blocks
+);
+
+const divideStyleRangesInTwo = ({ styleRanges, cursorPositionWithinBlock }) => {
+	const { styleRangesBeforeDivide, styleRangesAfterDivide } = R.reduce(
+		(accumulator, styleRange) => {
+			if (cursorPositionWithinBlock <= styleRange.offset) {
+				// case 1: split is before the styleRange
+				return { 
+					...accumulator,
+					styleRangesAfterDivide: R.append(
+						{ 
+							...styleRange,
+							offset: styleRange.offset - cursorPositionWithinBlock
+						}, 
+						accumulator.styleRangesAfterDivide
+					)
+				}
+			}
+
+			const originalStyleRangeEnd = styleRange.offset + styleRange.length;
+
+			if (originalStyleRangeEnd <= cursorPositionWithinBlock) {
+				// case 2: split is after the styleRange
+				return { 
+					...accumulator,
+					styleRangesBeforeDivide: R.append(styleRange, accumulator.styleRangesBeforeDivide)
+				}
+			}
+
+			// case 3: split is in the middle of the styleRange
+			return {
+				styleRangesBeforeDivide: R.append(
+					{
+						...styleRange, // offset and style are the same
+						length: cursorPositionWithinBlock - styleRange.offset,
+					}, 
+					accumulator.styleRangesBeforeDivide
+				),
+
+				styleRangesAfterDivide: R.append(
+					{
+						...styleRange, // style is the same
+						offset: 0,
+						length: originalStyleRangeEnd - cursorPositionWithinBlock,
+					}, 
+					accumulator.styleRangesAfterDivide
+				)
+			}
+		}, 
+		{ styleRangesBeforeDivide: [], styleRangesAfterDivide: [] }, 
+		styleRanges
+	);
+
+	return [
+		sortStyleRanges(styleRangesBeforeDivide),
+		sortStyleRanges(styleRangesAfterDivide),
+	];
+}
+
+const divideBlockInTwo = ({ block, cursorPositionWithinBlock, originalBlocks }) => {
+	const originalKeys = R.map(block => R.prop('key', block), originalBlocks);
+	const [ styleRangesBeforeDivide, styleRangesAfterDivide ] = divideStyleRangesInTwo({ styleRanges: R.prop('inlineStyleRanges', block), cursorPositionWithinBlock });
+	const [ textBeforeDivide, textAfterDivide ] = R.pipe(R.prop('text'), R.splitAt(cursorPositionWithinBlock))(block);
+	return [
+		{
+			text: textBeforeDivide,
+			inlineStyleRanges: styleRangesBeforeDivide,
+			key: R.prop('key', block), // the first block keeps the original key
+		},
+		{
+			text: textAfterDivide,
+			inlineStyleRanges: styleRangesAfterDivide,
+			key: R.pipe(getRandomKey, R.prop('key'))({ usedKeys: originalKeys }),
+		}
+	]
+}
+
 const combineTwoBlocks = ({ blocks, newTextArr, cursorPosition }) => {
 	// find which section of newTextArr contains the cursor
 	// the combined blocks must therefore be the block at that same index, plus the block after it
@@ -744,34 +848,51 @@ const combineTwoBlocks = ({ blocks, newTextArr, cursorPosition }) => {
 	return R.unnest([headBlocks, combinedBlock, tailBlocks]);
 }
 
-export const updateEditedChar = ({ cursorPosition, newText, formattedText }) => {
+export const updateEditedChar = ({ cursorPosition, newText, formattedText, isNewline }) => {
+	console.log('richTextHelpers--updateEditedChar started with cursorPosition', cursorPosition, 'newText', newText, 'formattedText', formattedText, 'isNewline', isNewline);
 	const newTextArr = R.split(NEWLINE_REGEX, newText);
 	
 	const { blocks } = decodeFormattedText(formattedText);
 
 	if (blocks.length === newTextArr.length + 1) {
 		// case 1: a newline char has been deleted
-		return R.pipe(
-			combineTwoBlocks,
-			R.assoc('blocks', R.__, formattedText)
-		)({ blocks, newTextArr, cursorPosition });
+		return {
+			formattedText: R.pipe(
+				combineTwoBlocks,
+				R.assoc('blocks', R.__, formattedText)
+			)({ blocks, newTextArr, cursorPosition }),
+			cursorPosition: cursorPosition - 1,
+		};
 	}
 
 	if (blocks.length !== newTextArr.length) {
 		log({ level: LOG.WARN }, 'richTextHelpers--updateEditedChar error: the blocks length is', blocks?.length, 'whereas the number of lines of text is', newTextArr?.length);
-		return formattedText; // MAYBE is this the right way to handle this error? will we ever see this error?
+		return { formattedText, cursorPosition }; // MAYBE is this the right way to handle this error? will we ever see this error?
 	}
 
 	const { block, cursorPositionWithinBlock, blockIndex } = getBlockWithCursor({ cursorPosition, blocks, newTextArr });
 
-	const newBlock = block.text.length + 1 === newTextArr[blockIndex].length
-		? R.pipe( // case 2: a char has been added 
-			R.nth,
-			char => addCharToBlock({ block, charIndexWithinBlock: cursorPositionWithinBlock - 1, char }) 
-		)(cursorPosition - 1, newText)
-		: block.text.length - 1 === newTextArr[blockIndex].length
-			? deleteCharFromBlock({ block, charIndexWithinBlock: cursorPositionWithinBlock }) // case 3: a char has been deleted
-			: block // case4: should never happen - neither added nor deleted a single character
+	if (isNewline) {
+		// case 2: a newline has been added
+		const [ newBlock1, newBlock2 ] = divideBlockInTwo({ block, cursorPositionWithinBlock, originalBlocks: blocks }); // note: newBlock1 will have the same key as the original block
+		const newBlocks = replaceBlockWithDividedBlocks({ blocks, newBlock1, newBlock2 });
+		return { formattedText: {...formattedText, blocks: newBlocks}, cursorPosition: cursorPosition + 1 };
+	}
 
-	return replaceBlockInFormattedText({ newBlock, formattedText });
+	const charWasAdded = block.text.length + 1 === newTextArr[blockIndex].length;
+	const charWasDeleted = block.text.length - 1 === newTextArr[blockIndex].length;
+
+	const newBlock = charWasAdded
+		? R.pipe( // case 3: a char has been added 
+			R.nth,
+			char => addCharToBlock({ block, charIndexWithinBlock: cursorPositionWithinBlock, char })
+		)(cursorPosition, newText)
+		: charWasDeleted
+			? deleteCharFromBlock({ block, charIndexWithinBlock: cursorPositionWithinBlock - 1 }) // case 4: a char has been deleted
+			: block // case5: should never happen - neither added nor deleted a single character
+	const newFormattedText = replaceBlockInFormattedText({ newBlock, formattedText });
+	return {
+		formattedText: newFormattedText,
+		cursorPosition: charWasAdded ? cursorPosition + 1 : charWasDeleted ? cursorPosition - 1 : cursorPosition,
+	}
 }

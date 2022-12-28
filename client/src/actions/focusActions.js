@@ -4,8 +4,10 @@ import {
    UPDATED_FOCUS_REF,
    UPDATED_FOCUS_ABORT_CONTROL,
    CLEARED_FOCUS,
-	UPDATED_CELL_POSITIONING,
+	UPDATED_EDITOR_POSITIONING,
 	UPDATED_TEXT_SELECTION,
+	CLICKED_EDITOR_HEADER,
+	RELEASED_EDITOR_HEADER,
 } from './focusTypes';
 
 export const focusedCell = cellData => {
@@ -35,10 +37,10 @@ export const clearedFocus = () => {
    });
 };
 
-export const updatedCellPositioning = cellPositioning => {
+export const updatedEditorPositioning = positioning => {
 	managedStore.store.dispatch({
-      type: UPDATED_CELL_POSITIONING,
-		payload: cellPositioning,
+      type: UPDATED_EDITOR_POSITIONING,
+		payload: positioning,
    });
 };
 
@@ -47,4 +49,12 @@ export const updatedTextSelection = textSelection => {
       type: UPDATED_TEXT_SELECTION,
 		payload: textSelection,
    });
+}
+
+export const clickedEditorHeader = () => {
+	managedStore.store.dispatch({ type: CLICKED_EDITOR_HEADER });
+}
+
+export const releasedEditorHeader = () => {
+	managedStore.store.dispatch({ type: RELEASED_EDITOR_HEADER });
 }

@@ -44,27 +44,28 @@ const onCellClick = (event, cell) => {
    });
 }
 
-const createClassNames = ({ classes, inCellRange, isEndCell }) => {
-   const backgroundClasses = inCellRange && !isEndCell ? 'bg-light-light-blue ' : '';
-   const cellBaseClasses = 'regular-cell col-span-1 row-span-1 w-full h-full p-0.5 overflow-hidden text-dark-dark-blue border-t border-l ';
+const createClassNames = ({ classes, inCellRange, isEndCell, cellHasFocus }) => {
+	const outline = cellHasFocus ? 'border border-burnt-orange ' : 'border-t border-l ';
+   const backgroundClasses = inCellRange && !isEndCell ? 'bg-light-light-blue ' : cellHasFocus ? 'bg-white ' : '';
+   const cellBaseClasses = 'regular-cell col-span-1 row-span-1 w-full h-full p-0.5 overflow-hidden text-dark-dark-blue ';
    const otherClasses = classes ? classes : '';
-   return cellBaseClasses + backgroundClasses + otherClasses;
+   return cellBaseClasses + outline + backgroundClasses + otherClasses;
 };
 
 const Cell = React.memo(({ row, column, classes, blankCell, endCell, isVisible }) => {
    const cellKey = createCellKey(row, column);
    const cell = useSelector(state => statePresent(state)[cellKey]);
    const cellHasFocus = useSelector(state => isCellFocused(cell, state));
-   const isSubsheetCell = R.pipe(cellSubsheetId, isSomething); // expects to get cell as a param
+   const isSubsheetCell = R.pipe(cellSubsheetId, isSomething); // makes a function that expects to get cell as a param
 	const totalCells = stateTotalRows(managedStore.state) * stateTotalColumns(managedStore.state);
-   const [cellRef, positioning] = usePositioning(row === 2 && column === 6, totalCells); // TIDY:  row === 2 && column === 6, cell ...this is a temp thing for console logging
+   const [cellRef, positioning] = usePositioning(totalCells);
 
    const inCellRange = cellInCellRange(cell);
 
    const renderRegularCell = cell => {
 		const jsxText = R.pipe(
 			getFormattedText,
-			decodeFormattedText, 
+			decodeFormattedText,
 			R.prop('blocks'), 
 			convertBlocksToJsx
 		)(cell);
@@ -72,7 +73,7 @@ const Cell = React.memo(({ row, column, classes, blankCell, endCell, isVisible }
       return (
          <div
             ref={cellRef}
-            className={createClassNames({ classes, inCellRange, isEndCell: endCell })}
+            className={createClassNames({ classes, inCellRange, isEndCell: endCell, cellHasFocus })}
             onClick={event => onCellClick(event, cell)}
             id={cellId}
             data-testid={cellId}
@@ -84,11 +85,12 @@ const Cell = React.memo(({ row, column, classes, blankCell, endCell, isVisible }
    }
 
    const renderInPlaceEditor = cell => {
-		console.log('Cell--renderInPlaceEditor got cell', cell, 'positioning', positioning);
-		
-		return <div className="w-full">
+		if (R.equals(positioning, {})) {
+			return null;
+		}
+		return <div className="w-full h-full">
 			{renderRegularCell(cell)}
-			<CellInPlaceEditor positioning={positioning} cellToEdit={cell} cellHasFocus={cellHasFocus} key={cellKey + '_inPlaceEditor'} />
+			<CellInPlaceEditor cellToEdit={cell} cellPositioning={positioning} cellHasFocus={cellHasFocus} key={cellKey + '_inPlaceEditor'} />
 		</div>;
 	};
 

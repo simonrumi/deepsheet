@@ -14,7 +14,7 @@ import {
 	stateFocusCellRef,
    stateShowPasteOptionsModal,
 	stateSystemClipboard,
-	statePasteOptionsModalPositioning,
+	stateFocusEditorPositioning,
 	stateBlurEditorFunction,
 } from '../../helpers/dataStructureHelpers';
 import { updatedPastingCellRange, replacedCellsInRange } from '../../actions/cellRangeActions';
@@ -32,7 +32,7 @@ const PasteOptionsModal = () => {
 	const systemClipboard = useSelector(state => stateSystemClipboard(state));
 	const fromCell = useSelector(state => stateCellRangeFrom(state));
 	const toCell = useSelector(state => stateCellRangeTo(state));
-	const positioning = useSelector(state => statePasteOptionsModalPositioning(state)); // TODO replace this with cellPositioning in the focusReducer
+	const positioning = useSelector(state => stateFocusEditorPositioning(state));
 	const cell = useSelector(state => stateFocusCell(state));
 	const blurCellInPlaceEditor = useSelector(state => stateBlurEditorFunction(state));
 	const cellInPlaceEditorRef = useSelector(state => stateFocusCellRef(state));

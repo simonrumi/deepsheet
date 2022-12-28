@@ -2,7 +2,6 @@ import { gql } from '@apollo/client';
 import apolloClient from '../services/apolloClient';
 import { prepCellsForDb } from '../helpers/cellHelpers';
 
-// 1. try creating a sheet TODO TEST
 const CREATE_SHEET_MUTATION = gql`
    mutation CreateSheet(
       $userId: ID!

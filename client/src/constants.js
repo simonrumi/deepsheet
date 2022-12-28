@@ -23,9 +23,10 @@ export const PASTE_OPTIONS_MODAL_MIN_HEIGHT = parseFloat(getComputedStyle(docume
 export const HISTORY_MODAL_MIN_WIDTH = parseFloat(getComputedStyle(document.body).fontSize) * 15;
 export const HISTORY_MODAL_MIN_HEIGHT = parseFloat(getComputedStyle(document.body).fontSize) * 15;
 
-export const CELL_EDITOR_VERTICAL_MARGIN = -10; // pixels
+export const CELL_EDITOR_VERTICAL_MARGIN = -40; // pixels
 export const CELL_EDITOR_HORIZONTAL_MARGIN = 10; // pixels
-export const CELL_EDITOR_VERTICAL_PADDING = 10; // pixels
+export const CELL_EDITOR_VERTICAL_PADDING = 40; // pixels
+export const CELL_EDITOR_LINE_HEIGHT = 40; //pixels
 
 export const SORT_INCREASING = 'sort_increasing';
 export const SORT_DECREASING = 'sort_decreasing';
@@ -40,8 +41,6 @@ export const LOCAL_STORAGE_TIME_KEY = 'dds_time';
 export const ALL_CELLS = 'all_cells'; // for use by cellsNeeding Update
 
 /** Rich text editing **/
-export const BLOCK_SEPARATOR = '<br>';
-export const BLOCK_SEPARATOR_REGEX = /<br>$/;
 export const NEWLINE_REGEX = /(?:\n\r|\r\n|\n|\r)/g;
 export const BLOCK_END_CHAR_LENGTH = 1; // this is the length of the '\n' char at the end of each line
 export const BOLD = 'BOLD';
@@ -54,6 +53,7 @@ export const STYLE_TAGS = {
 	[UNDERLINE]: 'underline'
 }
 
+// TIDY - check if these are needed anymore now that we don't have draft.js
 export const CELL_EDITOR_ESC = 'cell-editor-esc';
 export const CELL_EDITOR_ENTER = 'cell-editor-enter';
 export const CELL_EDITOR_TAB = 'cell-editor-tab';

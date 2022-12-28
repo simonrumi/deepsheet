@@ -6,7 +6,6 @@ import { hidePopups } from '../../actions';
 import { focusedCell, clearedFocus, updatedFocusRef } from '../../actions/focusActions';
 import { ifThen, ifThenElse, isSomething, runIfSomething } from '../../helpers';
 import {
-   cellText,
    cellRow,
    cellColumn,
 	cellInCellRange,
@@ -50,13 +49,11 @@ const SubsheetCell = ({ cell, cellHasFocus }) => {
 				manageEsc(event);
 				break;
 			case 9: // tab
-				manageTab({ event, cell });
+				manageTab({ event, cell, goBackwards: event.shiftKey });
 				break;
 			default:
 		}
 	};
-
-	// TODO BUG Tabbing is broken
 
 	// note when a cell is clicked onSubsheetCellClick will focus the cell, which will cause the useEffect to fire manageFocus
 	// whereas when a cell is tabbed into, the focus will be updated by the manageTab function, again causing the useEffect below to fire this function

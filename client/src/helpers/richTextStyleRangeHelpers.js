@@ -1,5 +1,6 @@
 import * as R from 'ramda';
 import { isSomething, isNothing, arrayContainsSomething, reduceWithIndex } from '../helpers';
+import { getRandomKey } from './richTextHelpers';
 import { BLOCK_END_CHAR_LENGTH, STYLE_TAGS } from '../constants';
 
 /***
@@ -28,13 +29,13 @@ import { BLOCK_END_CHAR_LENGTH, STYLE_TAGS } from '../constants';
 	return stylesOverlap(remainingStyleRanges);
 }
 
-const makeStartTagWithStyles = styles => R.pipe(
+const makeStartTagWithStyles = ({ styles, key }) => R.pipe(
 	R.reduce(
 		(accumulator, style) => R.pipe(
 			R.concat(R.__, ' '), 
 			R.concat(R.__, R.prop(style, STYLE_TAGS))
 		)(accumulator),
-		'<span className="', // initial value
+		`<span key=${key} className="`, // initial value
 	),
 	R.concat(R.__, '">')
 )(styles);
@@ -55,19 +56,21 @@ export const applyStyling = ({ plainText, styleRanges }) => {
 			const unstyledHeadText = R.slice(accumulator.lastOffset, styleRange.offset, plainText);
 			const endOfTextToStyle = styleRange.offset + styleRange.length
 			const textToStyle = R.slice(styleRange.offset, endOfTextToStyle, plainText);
+			const { key, usedKeys } = getRandomKey({ usedKeys: accumulator.usedKeys });
 			const formattedText =
 				accumulator.formattedText +
 				unstyledHeadText +
-				makeStartTagWithStyles(styleRange.styles) +
+				makeStartTagWithStyles({ styles: styleRange.styles, key }) +
 				textToStyle +
 				END_TAG;
 			return {
 				...accumulator,
 				lastOffset: endOfTextToStyle,
-				formattedText
+				formattedText,
+				usedKeys,
 			};
 		},
-		{ lastOffset: firstOffset, formattedText: unformattedStartingText }, // initial value
+		{ lastOffset: firstOffset, formattedText: unformattedStartingText, usedKeys: [] }, // initial value
 		styleRanges
 	);
 }
