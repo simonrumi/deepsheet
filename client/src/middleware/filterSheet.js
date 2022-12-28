@@ -30,7 +30,6 @@ import {
    stateMetadataProp,
    stateFrozenRows,
    stateFrozenColumns,
-   cellText,
 	cellRow,
 	cellColumn,
 } from '../helpers/dataStructureHelpers';
