@@ -467,7 +467,6 @@ export const pasteText = ({ text, cell, cursorStart, cursorEnd, }) => {
 export const pasteTextIntoSingleCell = ({ text, cursorStart, cursorEnd, cell, cellInPlaceEditorRef }) => {
 	// note - pasteText() will call updatedHandlingPaste(false)
 	const newFormattedText = pasteText({ text, cell, cursorStart, cursorEnd, });
-	console.log('clipboardHelpers--pasteTextIntoSingleCell got text', text, 'cursorStart', cursorStart, 'cursorEnd', cursorEnd, 'cell', cell, 'newFormattedText', newFormattedText);
 	updatedCell({
 		...cell,
 		content: { ...cell.content, formattedText: newFormattedText },

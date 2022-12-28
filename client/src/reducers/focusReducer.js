@@ -13,7 +13,6 @@ export const focusReducer = (state = {}, action) => {
    switch (action.type) {
       case UPDATED_FOCUS:
          // FYI payload: { cell: cellData },
-			console.log('focusReducer--UPDATED_FOCUS got action.payload', action.payload);
          return { ...state, ...action.payload };
 
       case UPDATED_FOCUS_REF:
@@ -26,7 +25,6 @@ export const focusReducer = (state = {}, action) => {
          return {};
 
 		case UPDATED_EDITOR_POSITIONING:
-			console.log('focusREducer--UPDATED_EDITOR_POSITIONING got payload', action.payload);
 			return { ...state, editorPositioning: action.payload };
 
 		case UPDATED_TEXT_SELECTION:

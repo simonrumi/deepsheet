@@ -614,9 +614,9 @@ const getBlockWithCursor = ({ cursorPosition, blocks, newTextArr }) => {
 			const newTextLength = R.pipe(R.prop(blockIndex), R.length)(newTextArr);
 			
 			if (newTextLength < blockLength) {
-				if (cursorPosition === totalTextLength + blockLength - 1) {
+				if (cursorPosition === totalTextLength + blockLength) {
 					// case 1: last char deleted
-					return R.reduced({ block, cursorPositionWithinBlock: blockLength - 1, blockIndex });
+					return R.reduced({ block, cursorPositionWithinBlock: blockLength, blockIndex });
 				}
 				if (cursorPosition === totalTextLength) {
 					// case 2: first char deleted
@@ -849,7 +849,6 @@ const combineTwoBlocks = ({ blocks, newTextArr, cursorPosition }) => {
 }
 
 export const updateEditedChar = ({ cursorPosition, newText, formattedText, isNewline }) => {
-	console.log('richTextHelpers--updateEditedChar started with cursorPosition', cursorPosition, 'newText', newText, 'formattedText', formattedText, 'isNewline', isNewline);
 	const newTextArr = R.split(NEWLINE_REGEX, newText);
 	
 	const { blocks } = decodeFormattedText(formattedText);
@@ -887,7 +886,7 @@ export const updateEditedChar = ({ cursorPosition, newText, formattedText, isNew
 			R.nth,
 			char => addCharToBlock({ block, charIndexWithinBlock: cursorPositionWithinBlock, char })
 		)(cursorPosition, newText)
-		: charWasDeleted
+		: charWasDeleted // case 4: a char has been deleted 
 			? deleteCharFromBlock({ block, charIndexWithinBlock: cursorPositionWithinBlock - 1 }) // case 4: a char has been deleted
 			: block // case5: should never happen - neither added nor deleted a single character
 	const newFormattedText = replaceBlockInFormattedText({ newBlock, formattedText });

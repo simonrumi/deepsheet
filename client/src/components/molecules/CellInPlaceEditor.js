@@ -467,7 +467,7 @@ const CellInPlaceEditor = ({ cellToEdit: cell, cellPositioning, cellHasFocus, })
 						onBlur={manageBlur}
 					/>
 				</form>
-			); // onBlur={manageBlur} // TODO reinstate!!!!!!!!!!!
+			);
 		},
 		[editorPositioning, cell, editorRef, textareaStyle, handleCancel, handlePaste, handleStyling, handleSubmit, manageChange, manageBlur, manageTextSelection, setEditorPositioning]
 	)

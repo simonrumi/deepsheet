@@ -7,8 +7,6 @@ const DraggableModal = ({ dragData = {}, children, classes = '', positioning = {
    const [ currentPosition, setCurrentPosition ] = useState(positioning);
 	const modalRef = useRef(null);
 
-	console.log('DraggabelModal started with positioning', positioning);
-
 	const handleDragStart = event => {
       event.dataTransfer.effectAllowed = 'move'; // unclear as to whether this is necessary. MDN says to use it but doesn't seem to be in the example here: https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer/dropEffect
       event.dataTransfer.setDragImage(modalRef.current, 0, 0); 

@@ -1,7 +1,6 @@
 import {
    CAPTURED_SYSTEM_CLIPBOARD,
    UPDATED_SHOW_PASTE_OPTIONS_MODAL,
-   UPDATED_CELL_EDITOR_POSITIONING,
 	UPDATED_BLUR_EDITOR_FUNCTION,
 	UPDATED_HANDLING_PASTE,
 } from '../actions/pasteOptionsModalTypes';
@@ -13,9 +12,6 @@ const pasteOptionsModalReducer = (state = { showModal: false }, action) => {
 
       case UPDATED_SHOW_PASTE_OPTIONS_MODAL:
          return { ...state, showModal: action.payload };
-
-      case UPDATED_CELL_EDITOR_POSITIONING:
-         return { ...state, positioning: action.payload };
 
 		case UPDATED_BLUR_EDITOR_FUNCTION:
          return { ...state, blurEditorFunction: action.payload };

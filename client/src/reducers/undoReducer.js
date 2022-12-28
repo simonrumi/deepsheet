@@ -46,7 +46,6 @@ const cellNotReallyEdited = ({
 
 const updateHistory = ({ actionHistory, completedAction, actionCancelled = false }) => {
    const { startedActions, pastActions, presentAction } = actionHistory;
-	console.log('undoReducer--updateHistory started with completedAction', completedAction, 'actionHistory', actionHistory);
    // completedAction & presentAction should look like this { undoableType, message, timestamp }
    const reversedStartedActions = R.pipe(R.sortBy(R.prop('timestamp')), R.reverse)(startedActions);
    if (
@@ -64,14 +63,12 @@ const updateHistory = ({ actionHistory, completedAction, actionCancelled = false
 
    return reduceWithIndex(
       (accumulator, currentStartedAction, startedActionIndex) => {
-			console.log('undoReducer--updateHistory in reduce - if the types of completedAction', completedAction, 'and currentStartedAction', currentStartedAction, 'match, then we\'re finished');
          if (R.prop('undoableType', completedAction) === R.prop('undoableType', currentStartedAction)) {
             const newPastActions =
                actionCancelled || isNothing(presentAction)
                   ? R.prop('newPastActions', accumulator) // the action has been cancelled, or there's no presentAction, so don't record a new undoableAction
                   : R.append(presentAction, R.prop('newPastActions', accumulator));
             const newStartedActions = R.remove(startedActionIndex, 1, reversedStartedActions);
-				console.log('undoReducer--updateHistory in reduce got newPastActions', newPastActions, 'newStartedActions', newStartedActions, 'newPresentAction', actionCancelled ? presentAction : completedAction);
             return R.reduced({
                newPastActions: newPastActions,
                newStartedActions: newStartedActions,
@@ -245,7 +242,6 @@ const undoReducer = reducer => {
 				}
 
          case COMPLETED_UNDOABLE_ACTION:
-				console.log('undoReducer--COMPLETED_UNDOABLE_ACTION started with action.payload', action.payload);
 				const historyAfterCompletion = updateHistory({
                actionHistory: state.actionHistory,
                completedAction: action.payload,
@@ -281,7 +277,6 @@ const undoReducer = reducer => {
             if (isNothing(maybePast)) {
                return state;
             }
-				console.log('undoReducer--CANCELLED_UNDOABLE_ACTION started with action.payload', action.payload);
 				const updatedActions = updateHistory({
 					actionHistory: state.actionHistory,
                completedAction: action.payload,
@@ -335,7 +330,6 @@ const undoReducer = reducer => {
 				* and the payload.formattedText are the same - i.e. don't change the undo history
 				* 3. if isPastingCellRange is true, then we should ignore the payload.value and update the past
              */
-				console.log('undoReducer--FINISHED_EDITING started with action.payload', action.payload);
 				const { newStartedActions, newPastActions, newPresentAction } = updateHistory({
 					actionHistory: state.actionHistory,
 					completedAction: { 
@@ -416,7 +410,6 @@ const undoReducer = reducer => {
 
 			case CLEARED_FOCUS:
 			case UPDATED_FOCUS:
-				console.log('undoReducer--UPDATED_FOCUS/CLEARED_FOCUS started with action.payload', action.payload);
 				// a special case: after highlighting a cell range, if you click on another cell UPDATED_FOCUS is fired				
 				if (state.actionHistory.presentAction.undoableType === HIGHLIGHTED_CELL_RANGE) {
 					const historyAfterFoucsUpdate = updateHistory({

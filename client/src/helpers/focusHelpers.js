@@ -40,7 +40,6 @@ export const isStateCellRefThisCell = (cellRef, cell) => {
 
 export const manageFocus = ({ event, cell, cellRef, keyBindings }) => {
 	event?.preventDefault();
-	console.log('focusHelpers--manageFocus got cell', cell);
 
 	if (isStateCellRefThisCell(cellRef, cell)) {
 		return false; // indicates we didn't need to change focus
@@ -125,18 +124,14 @@ export const atEndOfRange = cell => {
 export const calcEditorPositioning = cellPositioning => R.pipe(
 	R.assoc('left', cellPositioning.left + CELL_EDITOR_HORIZONTAL_MARGIN),
 	R.assoc('top', cellPositioning.top + CELL_EDITOR_VERTICAL_MARGIN),
-	// R.assoc('width', ) // TODO - probably need to tell optimizeModalPositioning what the width is with the full width of the textarea plus the CellEditorTools
-	// TODO make sure the height sent to optimizeModalPositioning is the real height
 	initialPositioning => optimizeModalPositioning({
 		initialTop: initialPositioning.top,
 		initialLeft: initialPositioning.left,
 		modalWidth: initialPositioning.width,
-		// modalHeight: initialPositioning.height + CELL_EDITOR_VERTICAL_PADDING,
 	}),
 	optimized => ({
 		...cellPositioning,
 		left: optimized.left,
 		top: optimized.top,
-		// height: cellPositioning.height + CELL_EDITOR_VERTICAL_PADDING,
 	})
 )(cellPositioning);
