@@ -464,7 +464,7 @@ export const pasteText = ({ text, cell, cursorStart, cursorEnd, }) => {
 	return newFormattedText;
 }
 
-export const pasteTextIntoSingleCell = ({ text, cursorStart, cursorEnd, cell, cellInPlaceEditorRef }) => {
+export const pasteTextIntoSingleCell = ({ text, cursorStart, cursorEnd, cell, editorRef }) => {
 	// note - pasteText() will call updatedHandlingPaste(false)
 	const newFormattedText = pasteText({ text, cell, cursorStart, cursorEnd, });
 	updatedCell({
@@ -472,8 +472,8 @@ export const pasteTextIntoSingleCell = ({ text, cursorStart, cursorEnd, cell, ce
 		content: { ...cell.content, formattedText: newFormattedText },
 		isStale: true,
 	});
-	cellInPlaceEditorRef.current.selectionStart = cursorStart + text.length;
-	cellInPlaceEditorRef.current.selectionEnd = cursorStart + text.length;
+	editorRef.current.selectionStart = cursorStart + text.length;
+	editorRef.current.selectionEnd = cursorStart + text.length;
 	updatedTextSelection(null);
 }
 
