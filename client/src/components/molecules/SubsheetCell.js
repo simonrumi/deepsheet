@@ -30,7 +30,7 @@ const innerDivClassNames = cellHasFocus => {
 const manageEsc = event => {
    event.preventDefault();
    maybeAbortFocus();
-   updatedFocusRef({ ref: null }); // clear the existing focusRef
+   updatedFocusRef(null); // clear the existing focusRef
    clearedFocus();
 }
 
@@ -97,7 +97,7 @@ const SubsheetCell = ({ cell, cellHasFocus }) => {
 				abortControl => runIfSomething(abortCtrl => abortCtrl.abort(), abortControl)
 			)(managedStore.state);
 			log({ level: LOG.DEBUG }, 'SubsheetCell--manageBlur about to call updatedFocusRef & clearedFocus');
-			updatedFocusRef({ ref: null }); // clear the existing focusRef
+			updatedFocusRef(null); // clear the existing focusRef
 			clearedFocus();
 		}
 

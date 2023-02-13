@@ -6,12 +6,15 @@ import { triggeredFetchSheet } from '../actions/sheetActions';
 import { cellsRedrawCompleted } from '../actions/cellActions';
 import {
    isNothing,
+	isSomething,
    arrayContainsSomething,
    forLoopReduce,
    getObjectFromArrayByKeyValue,
 } from '../helpers';
 import { has401Error } from '../helpers/authHelpers';
 import {
+	floatingCellNumber,
+	floatingCellPosition,
    stateIsLoggedIn,
    stateShowLoginModal,
    stateSheetId,
@@ -30,6 +33,7 @@ import {
 	stateHasErrorMessages,
    stateGlobalInfoModalIsVisible,
 	stateShowUndoHistory,
+	stateFocusCell,
 } from '../helpers/dataStructureHelpers';
 import { isVisibilityCalculated } from '../helpers/visibilityHelpers';
 import { isAxisSizingCalculated,handleResizerDragOver, handleResizerDrop } from '../helpers/axisSizingHelpers';
@@ -55,6 +59,8 @@ import LoginModal from './organisms/LoginModal';
 import GlobalErrorModal from './organisms/GlobalErrorModal';
 import GlobalInfoModal from './organisms/GlobalInfoModal';
 import UndoHistory from './molecules/UndoHistoryModal';
+import AddFloatingCellBtn from './molecules/AddFloatingCellBtn';
+import FloatingCells from './molecules/FloatingCells';
 
 const compareSizesByIndex = (size1, size2) => {
    if (size1.index === size2.index) {
@@ -109,7 +115,8 @@ const getGridSizingStyle = ({ columnWidths, columnVisibility, rowHeights, rowVis
 	};
 }
 
-const Sheet = props => {
+const Sheet = () => {
+	log({ level: LOG.DEBUG }, '\n\n***Sheet started');
    const isLoggedIn = useSelector(state => stateIsLoggedIn(state));
 	const hasErrors = useSelector(state => stateHasErrorMessages(state));
    const showFilterModal = useSelector(state => stateShowFilterModal(state));
@@ -124,7 +131,17 @@ const Sheet = props => {
    const cellsLoaded = useSelector(state => stateSheetCellsLoaded(state));
    const globalInfoModalIsVisible = useSelector(state => stateGlobalInfoModalIsVisible(state));
 	const showHistory = useSelector(state => stateShowUndoHistory(state));
-   
+	const cellWithFocus = useSelector(state => stateFocusCell(state));
+	console.log('Sheet got cellWithFocus', cellWithFocus);
+
+	const renderFloatingCells = () => {
+		console.log('Sheet--renderFloatingCells started');
+		return (<>
+			<AddFloatingCellBtn sheetId={sheetId} />
+			<FloatingCells />
+		</>)
+	}
+
    const cellsRenderCount = stateCellsRenderCount(managedStore.state); // not getting this value using useSelector as we don't want to retrigger a render when it changes (useEffect below manages the re-render)
    const memoizedCells = useMemo(() => {
       return <Cells renderCount={cellsRenderCount}/>;
@@ -155,7 +172,6 @@ const Sheet = props => {
       </div>);
    }
   
-
    /**
     * useEffect runs after the DOM is updated, so then we can fire cellsRedrawCompleted which increments the cellsRenderCount
     * that in turn will cause the useMemo above to redraw the cells next time through (perhaps incrementing cellsRenderCount causes a rerender?)
@@ -247,6 +263,7 @@ const Sheet = props => {
 				<PasteOptionsModal />
             {maybeRenderLoginOrFetchSheet()}
             {renderCells()}
+				{renderFloatingCells()}
          </div>
       );
    }

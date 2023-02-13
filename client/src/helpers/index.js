@@ -84,9 +84,9 @@ export const removeObjectFromArrayByKeyValue = R.curry((key, value, arr) =>
 );
 
 export const indexToColumnLetter = index => {
+	const BASE = 26;
    let num = index + 1; // counting from 1, A = 1, Z = 26
    const getPlaceValue = (num, placeValues = []) => {
-      const BASE = 26;
       let remainder = num % BASE;
       let quotient = Math.floor(num / BASE);
       if (remainder === 0) {

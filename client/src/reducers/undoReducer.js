@@ -22,7 +22,15 @@ import {
    HIGHLIGHTED_CELL_RANGE,
 } from '../actions/cellRangeTypes';
 import { arrayContainsSomething, isSomething, isNothing, reduceWithIndex } from '../helpers';
-import { stateOriginalValue, stateOriginalFormattedText, cellText, cellRow, cellColumn, cellFormattedText } from '../helpers/dataStructureHelpers';
+import { getCellPlainText } from '../helpers/richTextHelpers';
+import {
+   stateOriginalValue,
+   stateOriginalFormattedText,
+   cellRow,
+   cellColumn,
+   cellFormattedText,
+   floatingCellNumber,
+} from '../helpers/dataStructureHelpers';
 import { startMessage, editedTitleMessage, unhighlightedRangeMessage } from '../components/displayText';
 import { LOG } from '../constants';
 import { log } from '../clientLogger';
@@ -86,15 +94,46 @@ const updateHistory = ({ actionHistory, completedAction, actionCancelled = false
    );
 };
 
-const alreadyStartedEditingCell = ({ cell, startedActions }) => R.pipe(
-	R.find(
-		currentAction =>
-			isSomething(currentAction.cell) &&
-			cellRow(currentAction.cell) === cellRow(cell) &&
-			cellColumn(currentAction.cell) === cellColumn(cell),
-	),
-	isSomething
-)(startedActions);
+const createOriginalCell = cell => {
+	if (isSomething(floatingCellNumber(cell))) {
+		// we have a floating cell
+		return {
+			value: getCellPlainText(cell),
+			number: floatingCellNumber(cell),
+			formattedText: cellFormattedText(cell),
+		}
+	}
+	return {
+		value: getCellPlainText(cell),
+		row: cellRow(cell),
+		column: cellColumn(cell),
+		formattedText: cellFormattedText(cell),
+	}
+}
+
+const alreadyStartedEditingCell = ({ cell, startedActions }) => {
+	if (isSomething(floatingCellNumber(cell))) {
+		// we have a floating cell
+		return R.pipe(
+			R.find(
+				currentAction =>
+					isSomething(currentAction.cell) &&
+					floatingCellNumber(currentAction.cell) === floatingCellNumber(cell),
+			),
+			isSomething
+		)(startedActions);
+	}
+	// we have a regular cell
+	return R.pipe(
+		R.find(
+			currentAction =>
+				isSomething(currentAction.cell) &&
+				cellRow(currentAction.cell) === cellRow(cell) &&
+				cellColumn(currentAction.cell) === cellColumn(cell),
+		),
+		isSomething
+	)(startedActions);
+}
 
 const getIndexOfAction = ({ action, actionArray }) => R.findIndex(
 	currentAction => 
@@ -301,12 +340,7 @@ const undoReducer = reducer => {
 					: {
 						...state, // keep the past & future as is
 						maybePast: R.assoc('focus', {}, present), // the mabyePast might become the official past...note that the focus is reset to nothing: we don't want focus remembered when undoing
-							original: {
-							value: cellText(cell),
-							row: cellRow(cell),
-							column: cellColumn(cell),
-							formattedText: cellFormattedText(cell),
-						}, // save the value we started editing for comparison when FINISHED_EDITING
+						original: createOriginalCell(cell), // save the value we started editing for comparison when FINISHED_EDITING
 						present: reducer(present, action), // update the present
 						actionHistory: {
 							...actionHistory,

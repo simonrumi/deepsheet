@@ -4,8 +4,8 @@ import { indexToRowNumber, indexToColumnLetter, capitalCase, concatAll } from '.
 import { ROW_AXIS, COLUMN_AXIS } from '../../constants';
 import Heading from '../atoms/Heading';
 
-const ToolModalHeading = props => {
-   const { rowIndex, columnIndex } = props;
+const ToolModalHeading = ({ rowIndex, columnIndex }) => {
+	console.log('ToolModalHeading started with columnIndex', columnIndex);
    const capitalCaseAxisName = R.pipe(
       rowIndex => (rowIndex ? ROW_AXIS : COLUMN_AXIS),
       capitalCase

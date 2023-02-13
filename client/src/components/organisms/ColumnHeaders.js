@@ -1,6 +1,6 @@
-import React, { Component } from 'react';
+import React, { useMemo } from 'react';
 import * as R from 'ramda';
-import { connect } from 'react-redux';
+import managedStore from '../../store';
 import { shouldShowColumn } from '../../helpers/visibilityHelpers';
 import { stateTotalColumns, stateColumnVisibility } from '../../helpers/dataStructureHelpers';
 import ColumnHeader from './ColumnHeader';
@@ -9,17 +9,13 @@ import ColumnAdder from '../molecules/ColumnAdder';
 
 const COLUMN_HEADER_CLASSES = 'col-span-1 row-span-1 w-full h-full p-0.5 align-middle text-center text-grey-blue border-t border-l';
 
-class ColumnHeaders extends Component {
-   constructor(props) {
-      super(props);
-      this.renderColumnHeaders = this.renderColumnHeaders.bind(this);
-   }
+const checkHeaders = headers => (headers instanceof Array && headers.length > 0 ? true : false);
+const outputHeaders = arr => R.when(checkHeaders, R.identity, arr);
 
-   checkHeaders = headers => (headers instanceof Array && headers.length > 0 ? true : false);
-   outputHeaders = arr => R.when(this.checkHeaders, R.identity, arr);
-
-   renderColumnHeaders() {
-      if (!stateTotalColumns(this.props.state)) {
+const ColumnHeaders = () => {
+	const totalColumns = stateTotalColumns(managedStore.state);
+   const renderColumnHeaders = totalColumns => {
+      if (!totalColumns) {
          return null;
       }
 
@@ -35,30 +31,24 @@ class ColumnHeaders extends Component {
             headers.push(<TopLeftHeader classes={COLUMN_HEADER_CLASSES} key="topLeftCorner" />);
          }
 
-         if (shouldShowColumn(stateColumnVisibility(this.props.state), currentIndex)) {
+         if (shouldShowColumn(stateColumnVisibility(managedStore.state), currentIndex)) {
             headers.push(
                <ColumnHeader index={currentIndex} key={'col' + currentIndex} classes={COLUMN_HEADER_CLASSES} />
             );
          }
 
          //after the last column add a "+" to allow adding more columns
-         if (currentIndex === stateTotalColumns(this.props.state) - 1) {
+         if (currentIndex === stateTotalColumns(managedStore.state) - 1) {
             headers.push(<ColumnAdder key="columnAdder" classes={COLUMN_HEADER_CLASSES} />);
          }
 
          return generateHeaders(totalHeaders, ++currentIndex, headers);
       };
-      return R.pipe(stateTotalColumns, generateHeaders)(this.props.state);
+		return generateHeaders(totalColumns);
    }
 
-   render() {
-      const headers = this.renderColumnHeaders();
-      return this.outputHeaders(headers);
-   }
+	const renderedHeadersArr = useMemo(() => renderColumnHeaders(totalColumns), [totalColumns]);
+	return outputHeaders(renderedHeadersArr);
 }
 
-function mapStateToProps(state) {
-   return { state };
-}
-
-export default connect(mapStateToProps)(ColumnHeaders);
+export default ColumnHeaders;

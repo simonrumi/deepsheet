@@ -22,6 +22,7 @@ import {
 	stateCellRangeTo,
 	cellColumn,
 	cellRow,
+	floatingCellNumber,
 	cellSubsheetId,
 	cellRowSetter,
 	cellColumnSetter,
@@ -36,6 +37,7 @@ import {
 	stateSystemClipboard,
 } from './dataStructureHelpers';
 import { updatedCell, hasChangedCell } from '../actions/cellActions';
+import { updatedFloatingCell } from '../actions/floatingCellActions';
 import { updatedClipboardError } from '../actions/clipboardActions';
 import { updatedTextSelection } from '../actions/focusActions';
 import { capturedSystemClipboard, updatedHandlingPaste } from '../actions/pasteOptionsModalActions';
@@ -424,7 +426,7 @@ export const createCell = ({ text, rowIndex, columnIndex }) => R.pipe(
 
 const createCellsInRow = ({ rowTextArr, rowIndex, columnIndex }) => {
     if ( rowTextArr.length === 0 || isNothing(rowIndex) || isNothing(columnIndex)) {
-        log({ level: LOG.DEBUG }, 'clipboardHelpers--createCellsInRow unable to continue, rowTextArr', rowTextArr, 'rowIndex', rowIndex, 'columnIndex', columnIndex);
+        log({ level: LOG.SILLY }, 'clipboardHelpers--createCellsInRow unable to continue, rowTextArr', rowTextArr, 'rowIndex', rowIndex, 'columnIndex', columnIndex);
         return;
     }
     const nextCell = createCell({ text: rowTextArr[0], rowIndex, columnIndex });
@@ -438,7 +440,7 @@ const createCellsInRow = ({ rowTextArr, rowIndex, columnIndex }) => {
 
 const createRowsOfCells = ({ rowsArr, rowIndex, firstColumnIndex }) => {
     if ( rowsArr.length === 0 || isNothing(rowIndex) || isNothing(firstColumnIndex)) {
-        log({ level: LOG.DEBUG }, 'clipboardHelpers--createRowsOfCells will not continue, rowsArr', rowsArr, 'rowIndex', rowIndex, 'firstColumnIndex', firstColumnIndex);
+        log({ level: LOG.SILLY }, 'clipboardHelpers--createRowsOfCells will not continue, rowsArr', rowsArr, 'rowIndex', rowIndex, 'firstColumnIndex', firstColumnIndex);
         return;
     }
     const rowTextArr = rowsArr[0].split('\t');
@@ -466,12 +468,15 @@ export const pasteText = ({ text, cell, cursorStart, cursorEnd, }) => {
 
 export const pasteTextIntoSingleCell = ({ text, cursorStart, cursorEnd, cell, editorRef }) => {
 	// note - pasteText() will call updatedHandlingPaste(false)
-	const newFormattedText = pasteText({ text, cell, cursorStart, cursorEnd, });
-	updatedCell({
-		...cell,
-		content: { ...cell.content, formattedText: newFormattedText },
-		isStale: true,
-	});
+	const newCell = {
+      ...cell,
+      content: { 
+			...cell.content, 
+			formattedText: pasteText({ text, cell, cursorStart, cursorEnd }) 
+		},
+      isStale: true,
+   };
+	isSomething(floatingCellNumber(cell)) ? updatedFloatingCell(newCell) : updatedCell(newCell);	
 	editorRef.current.selectionStart = cursorStart + text.length;
 	editorRef.current.selectionEnd = cursorStart + text.length;
 	updatedTextSelection(null);

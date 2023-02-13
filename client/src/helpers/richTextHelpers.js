@@ -595,6 +595,8 @@ const addCharToBlock = ({ block, charIndexWithinBlock = 0, char = '' }) => {
 
 	const newText = addCharToText({ text: block.text, index: charIndexWithinBlock, char });
 
+	console.log('richTextHelpers--addCharToBlock got newText', newText, 'newStyleRanges', newStyleRanges);
+
 	return R.pipe(
 		R.assoc('inlineStyleRanges', newStyleRanges),
 		R.assoc('text', newText), 
@@ -849,6 +851,7 @@ const combineTwoBlocks = ({ blocks, newTextArr, cursorPosition }) => {
 }
 
 export const updateEditedChar = ({ cursorPosition, newText, formattedText, isNewline }) => {
+	console.log('richTextHelpers--updateEditedChar got cursorPosition', cursorPosition, 'newText', newText, 'formattedText', formattedText, 'isNewline', isNewline);
 	const newTextArr = R.split(NEWLINE_REGEX, newText);
 	
 	const { blocks } = decodeFormattedText(formattedText);
@@ -881,6 +884,8 @@ export const updateEditedChar = ({ cursorPosition, newText, formattedText, isNew
 	const charWasAdded = block.text.length + 1 === newTextArr[blockIndex].length;
 	const charWasDeleted = block.text.length - 1 === newTextArr[blockIndex].length;
 
+	console.log('richTextHelpers--updateEditedChar got charWasAdded', charWasAdded, 'charWasDeleted', charWasDeleted);
+
 	const newBlock = charWasAdded
 		? R.pipe( // case 3: a char has been added 
 			R.nth,
@@ -889,7 +894,11 @@ export const updateEditedChar = ({ cursorPosition, newText, formattedText, isNew
 		: charWasDeleted // case 4: a char has been deleted 
 			? deleteCharFromBlock({ block, charIndexWithinBlock: cursorPositionWithinBlock - 1 }) // case 4: a char has been deleted
 			: block // case5: should never happen - neither added nor deleted a single character
+
 	const newFormattedText = replaceBlockInFormattedText({ newBlock, formattedText });
+	
+	console.log('richTextHelpers--updateEditedChar got newBlock', newBlock, 'newFormattedText', newFormattedText);
+	
 	return {
 		formattedText: newFormattedText,
 		cursorPosition: charWasAdded ? cursorPosition + 1 : charWasDeleted ? cursorPosition - 1 : cursorPosition,

@@ -6,8 +6,8 @@ export const INVISIBLE_PIXEL = '/img/FFFFFF-0.png'; // not used so far, but keep
 
 export const ROW_AXIS = 'row';
 export const COLUMN_AXIS = 'column';
-export const DEFAULT_TOTAL_ROWS = 6;
-export const DEFAULT_TOTAL_COLUMNS = 6;
+export const DEFAULT_TOTAL_ROWS = 3;
+export const DEFAULT_TOTAL_COLUMNS = 2;
 export const THIN_COLUMN = '3em';
 export const SPLIT_THIN_COLUMN = '1.05em 1.05em';
 export const THIN_ROW = '2em';
@@ -53,13 +53,9 @@ export const STYLE_TAGS = {
 	[UNDERLINE]: 'underline'
 }
 
-// TIDY - check if these are needed anymore now that we don't have draft.js
-export const CELL_EDITOR_ESC = 'cell-editor-esc';
-export const CELL_EDITOR_ENTER = 'cell-editor-enter';
-export const CELL_EDITOR_TAB = 'cell-editor-tab';
-export const CELL_EDITOR_SHIFT_TAB = 'cell-editor-shift-tab';
-export const CELL_EDITOR_COPY = 'cell-editor-copy';
-export const CELL_EDITOR_PASTE = 'cell-editor-paste';
+// floating cell stuff
+export const FLOATING_CELL_DEFAULT_POSITION = { left: 100, top: 100, width: 200, height: 40 };
+export const DEFAULT_FLOATING_CELL_TEXT = 'new floating cell';
 
 /** logging levels **/
 export const LOG = {

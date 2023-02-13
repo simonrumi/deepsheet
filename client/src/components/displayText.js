@@ -1,5 +1,5 @@
 import React from 'react';
-import { cellRow, cellColumn } from '../helpers/dataStructureHelpers';
+import { cellRow, cellColumn, floatingCellNumber } from '../helpers/dataStructureHelpers';
 import { createCellId } from '../helpers/cellHelpers';
 import { indexToColumnLetter, indexToRowNumber, isSomething } from '../helpers';
 import { ROW_AXIS, SORT_TYPE_TEXT, SORT_TYPE_NUMBERS, SORT_INCREASING } from '../constants';
@@ -49,13 +49,30 @@ export const createPasteRangeUndoMessage = ({ fromCell, toCell, cell }) => {
 	return `Pasted cell-range ${fromCellId} - ${toCellId} to cell ${pasteCellId}`;
 }
 
-export const createPasteClipboardMessage = cell => `Pasted contents of clipboard to cell ${createCellId(cellRow(cell), cellColumn(cell))}`;
+export const createPasteClipboardMessage = cell => {
+	if (isSomething(floatingCellNumber(cell))) {
+		return `Pasted contents of clipboard to cell ${floatingCellNumber(cell)}`;
+	}
+	return `Pasted contents of clipboard to cell ${createCellId(cellRow(cell), cellColumn(cell))}`;
+}
 
 export const createInsertNewColumnsMessage = columnCount => `Added ${columnCount} column${columnCount > 1 ? 's': ''}`;
 
 export const createInsertNewRowsMessage = rowCount => `Added ${rowCount} row${rowCount > 1 ? 's': ''}`;
 
-export const createdEditedCellMessage = cell => `Edited cell ${createCellId(cellRow(cell), cellColumn(cell))}`;
+export const createdEditedCellMessage = cell => {
+	if (isSomething(floatingCellNumber(cell))) {
+		return `Edited floating cell ${floatingCellNumber(cell)}`;
+	}
+	return `Edited cell ${createCellId(cellRow(cell), cellColumn(cell))}`;
+}
+
+export const createCancelledEditingCellMessage = cell => {
+	if (isSomething(floatingCellNumber(cell))) {
+		return `Cancelled editing floating cell ${floatingCellNumber(cell)}`;
+	}
+	return `Cancelled editing cell ${createCellId(cellRow(cell), cellColumn(cell))}`;
+}
 
 export const createColumnDropMessage = ({ columnMovingIndex, toIndex }) => `Moved column ${indexToColumnLetter(columnMovingIndex)} to ${indexToColumnLetter(toIndex)}`;
 

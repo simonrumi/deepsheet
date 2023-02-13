@@ -44,6 +44,8 @@ const originalRowLens = R.lensPath(['original', 'row']);
 export const stateOriginalRow = R.view(originalRowLens);
 const originalColumnLens = R.lensPath(['original', 'column']);
 export const stateOriginalColumn = R.view(originalColumnLens);
+const originalNumberLens = R.lensPath(['original', 'number']);
+export const stateOriginalNumber = R.view(originalNumberLens);
 
 export const removeNamedKey = R.curry((key, data) => {
 	if (isNothing(data)) {
@@ -284,6 +286,29 @@ export const stateCellDbUpdatesErrorMessage = subObjectGetter(stateCellDbUpdates
 export const stateCellDbUpdatesIsStale = subObjectGetter(stateCellDbUpdatesLens, 'isStale');
 export const stateCellDbUpdatesLastUpdated = subObjectGetter(stateCellDbUpdatesLens, 'lastUpdated');
 export const stateChangedCells = subObjectGetter(stateCellDbUpdatesLens, 'changedCells');
+
+/************************************************ STATE FLOATING CELLS **********************************************/
+const floatingCellKeysLens = R.lensProp('floatingCellKeys');
+const stateFloatingCellKeysLens = R.compose(presentLens, floatingCellKeysLens);
+export const stateFloatingCellKeys = R.view(stateFloatingCellKeysLens);
+
+export const stateFloatingCell = R.curry((state, floatingCellKey) =>
+   R.view(
+      R.compose(
+         presentLens,
+         R.lensProp(floatingCellKey)
+      ),
+      state
+   )
+);
+
+/* values for the cell itself */
+const floatingCellPositionLens = R.lensProp('position');
+export const floatingCellPosition = floatingCell => R.view(floatingCellPositionLens, floatingCell);
+export const floatingCellPositionSetter = R.curry((newPosition, floatingCell) => R.set(floatingCellPositionLens, newPosition, floatingCell));
+
+const floatingCellNumberLens = R.lensProp('number');
+export const floatingCellNumber = cell => R.view(floatingCellNumberLens, cell);
 
 /************************************************ STATE SHEET **********************************************/
 

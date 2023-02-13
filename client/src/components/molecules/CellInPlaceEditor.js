@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import * as R from 'ramda';
 import managedStore from '../../store';
 import { updatedCell, hasChangedCell } from '../../actions/cellActions';
+import { updatedFloatingCell } from '../../actions/floatingCellActions';
 import {
    clearedFocus,
    updatedFocusRef,
@@ -37,7 +38,8 @@ import {
 	pasteTextIntoSingleCell,
 } from '../../helpers/clipboardHelpers';
 import { compareCellsArrays, updateCellsInRange } from '../../helpers/rangeToolHelpers';
-import { createCellKey, createCellId, } from '../../helpers/cellHelpers';
+import { createCellKey, } from '../../helpers/cellHelpers';
+import { createFloatingCellKey, isFloatingCellTest } from '../../helpers/floatingCellHelpers';
 import {
 	statePresent,
    stateCell,
@@ -46,9 +48,11 @@ import {
    cellColumn,
 	cellFormattedText,
 	cellFormattedTextBlocks,
+	floatingCellNumber,
 	stateOriginalFormattedText,
    stateOriginalRow,
    stateOriginalColumn,
+	stateOriginalNumber,
    stateFocusAbortControl,
 	stateFocusTextSelection,
 	stateFocusClickedEditorHeader,
@@ -61,7 +65,7 @@ import {
 	stateIsHandlingPaste,
 } from '../../helpers/dataStructureHelpers';
 import { useEditorPositioning } from '../../helpers/hooks';
-import { createPasteRangeUndoMessage } from '../displayText';
+import { createPasteRangeUndoMessage, createCancelledEditingCellMessage } from '../displayText';
 import MoveIcon from '../atoms/IconMove';
 import {
    LOG,
@@ -75,66 +79,90 @@ import DraggableModal from '../atoms/DraggableModal';
 import { log } from '../../clientLogger';
 import CellEditorTools from './CellEditorTools';
 
-const reinstateOriginalValue = cell =>
-	ifThen({
-		ifCond:
-			cell.row === stateOriginalRow(managedStore.state) &&
-			cell.column === stateOriginalColumn(managedStore.state),
-		thenDo: updatedCell,
-		params: {
-			thenParams: {
-				...cell,
-				content: {
-					...cell.content,
-					formattedText: stateOriginalFormattedText(managedStore.state),
-				},
-				isStale: false,
-			},
+const reinstateOriginalValue = cell => {
+	const originalCell = {
+		...cell,
+		content: {
+			...cell.content,
+			formattedText: stateOriginalFormattedText(managedStore.state),
 		},
-	});
+		isStale: false,
+	};
+	
+	const condition = isFloatingCellTest(cell)
+		? floatingCellNumber(cell) === stateOriginalNumber(managedStore.state)
+		: cellRow(cell) === stateOriginalRow(managedStore.state) && cellColumn(cell) === stateOriginalColumn(managedStore.state);
+	const updateFn = isFloatingCellTest(cell) ? updatedFloatingCell : updatedCell;
+	ifThen({
+      ifCond: condition,
+      thenDo: updateFn,
+      params: { thenParams: originalCell },
+   });
+}
 
 const manageCellInPlaceEditorFocus = ({ event, editorRef, cell, editorKeyBindings }) => {
+	const changedFocus = manageFocus({ event, cell, cellRef: editorRef, keyBindings: editorKeyBindings });
 	ifThen({
-		ifCond: manageFocus, // returns true if the focus needed to be updated
+		ifCond: changedFocus,
 		thenDo: [
 			() => editorRef.current.selectionStart = getCellPlainText(cell).length || 0,
 			() => editorRef.current.selectionEnd = getCellPlainText(cell).length || 0,
 			() => startedEditing({ cell }),
 		],
-		params: { ifParams: { event, cell, cellRef: editorRef, keyBindings: editorKeyBindings } }
+		params: {}
 	});
+	return changedFocus;
 }
 
-const cellFromStore = cell => R.pipe(
-	createCellKey,
-	cellKey => statePresent(managedStore.state)[cellKey]
-)(cellRow(cell), cellColumn(cell));
+const cellFromStore = cell => {
+	if (isSomething(floatingCellNumber(cell))) {
+		return R.pipe(
+			floatingCellNumber,
+			createFloatingCellKey,
+			floatingCellKey => statePresent(managedStore.state)[floatingCellKey]
+		)(cell);
+	}
+	return R.pipe(
+		createCellKey,
+		cellKey => statePresent(managedStore.state)[cellKey]
+	)(cellRow(cell), cellColumn(cell));
+}
 
-const CellInPlaceEditor = ({ cellToEdit: cell, cellPositioning, cellHasFocus, }) => {
+const CellInPlaceEditor = ({ cellToEdit: cell, cellPositioning, cellHasFocus }) => {
+	log({ level: LOG.DEBUG }, '\n***CellInPlaceEditor started for cell', cell);
 	const [editorRef, editorPositioning, setEditorPositioning] = useEditorPositioning({ cellPositioning, cell }); // editorRef is applied to the div containing the editor (see below) so that we can manage its focus
 	const [keystrokeHandled, setKeystrokeHandled] = useState(false); // for use by manageChange and editorKeyBindings
-	
+	const isFloatingCell = isFloatingCellTest(cell);
 	const editorId = useMemo(
-		() => R.pipe(createCellKey, R.concat('editor_'))(cellRow(cell), cellColumn(cell)),
-		[cell]
+		() => isFloatingCell 
+			? R.pipe(floatingCellNumber, createFloatingCellKey, R.concat('editor_'))(cell)
+			: R.pipe(createCellKey, R.concat('editor_'))(cellRow(cell), cellColumn(cell)),
+		[cell, isFloatingCell]
 	);
-
-   const finalizeCellContent = cell => {
-		if (!R.equals(stateOriginalFormattedText(managedStore.state), cellFormattedText(cell))) {
-         hasChangedCell({
-            row: cellRow(cell),
-            column: cellColumn(cell),
-         });
-      }
-		finishedEditing({
-			formattedText: R.pipe(cellFromStore, cellFormattedText)(cell),
-         message: createdEditedCellMessage(cell),
-			isPastingCellRange: statePastingCellRange(managedStore.state),
-      });
-   }
+	console.log('CellInPlaceEditor got editorPositioning',editorPositioning);
 
 	const generateMemoizedFns = useCallback(
 		() => {
+			const finalizeCellContent = cell => {
+				if (!R.equals(stateOriginalFormattedText(managedStore.state), cellFormattedText(cell))) {
+					if (isFloatingCell) {
+						// TODO - make hasChangedFloatingCell .. OR update hasChangedCell to include number in the object sent
+					}
+					if (isSomething(cellRow(cell))) {
+						// for a regular cell only...unless we update hasChangedCell as described above - TODO
+						hasChangedCell({
+							row: cellRow(cell),
+							column: cellColumn(cell),
+						});
+					}
+				}
+				finishedEditing({
+					formattedText: R.pipe(cellFromStore, cellFormattedText)(cell),
+					message: createdEditedCellMessage(cell),
+					isPastingCellRange: statePastingCellRange(managedStore.state),
+				});
+			}
+
 			const handleSubmit = event => {
 				event?.preventDefault();
 				stateFocusAbortControl(managedStore.state)?.abort();
@@ -148,7 +176,7 @@ const CellInPlaceEditor = ({ cellToEdit: cell, cellPositioning, cellHasFocus, })
 				reinstateOriginalValue(cell); // note: this does the updatedCell call
 				finishedEditing({
 					formattedText: null, // indicates a cancel
-					message: `Cancelled editing cell ${createCellId(cellRow(cell), cellColumn(cell))}`,
+					message: createCancelledEditingCellMessage(cell),
 					actionCancelled: true,
 				});
 				if (!stateRangeWasCopied(managedStore.state)) {
@@ -158,6 +186,7 @@ const CellInPlaceEditor = ({ cellToEdit: cell, cellPositioning, cellHasFocus, })
 			}
 
 			const manageBlur = event => {
+				console.log('CellInPlaceEditor--manageBlur started');
 				event?.preventDefault();
 				if (
 					stateShowPasteOptionsModal(managedStore.state) || //the PasteOptionsModal has popped up, or
@@ -172,7 +201,8 @@ const CellInPlaceEditor = ({ cellToEdit: cell, cellPositioning, cellHasFocus, })
 					abortControl => runIfSomething(abortCtrl => abortCtrl.abort(), abortControl)
 				)(managedStore.state);
 				finalizeCellContent(cell);
-				updatedFocusRef({ ref: null }); // clear the existing focusRef
+				updatedFocusRef(null); // clear the existing focusRef
+				console.log('CellInPlaceEditor--manageBlur about to call clearedFocus');
 				clearedFocus();
 			}
 
@@ -209,44 +239,48 @@ const CellInPlaceEditor = ({ cellToEdit: cell, cellPositioning, cellHasFocus, })
 					navigator.clipboard.readText().then(
 						systemClipboardText => {
 							capturedSystemClipboard(systemClipboardText);
-	
-							if (isSomething(fromCell) && isSomething(toCell)) {
-								if (isNothing(systemClipboardText)) {
-									// we have a cell range but no clipboard so just paste the cell range
-									// this is an edge case that may never happen
-									doPasteRange();
-									return;
-								}
-	
-								// there is a cell range and something in the clipboard, so covert the clipboard to an array of cells, then compare it to the actual cell range
-								const clipboardCellsArr = convertTextToCellRange({
-									text: systemClipboardText,
-									startingCellRowIndex: cellRow(fromCell),
-									startingCellColumnIndex: cellColumn(fromCell),
-								});
-	
-								const storeCellsArr = stateCellRangeCells(managedStore.state);
-								if (compareCellsArrays(clipboardCellsArr, storeCellsArr)) {
-									// the system clipboard and the cell range are the same, so paste the cell range
-									doPasteRange();
-									return;
-								}
-								// system clipboard and the cell range are different, so popup dialog box asking which to use
-								updatedShowPasteOptionsModal(true);
-								return;
-							}
-	
-							// there's no cell range, only something in the clipbaord
-							const clipboardAsCells = convertTextToCellRange({
-								text: systemClipboardText,
-								startingCellRowIndex: cellRow(currentCellVersion),
-								startingCellColumnIndex: cellColumn(currentCellVersion),
-							});
-							if (clipboardAsCells.length > 1) {
-								updatedShowPasteOptionsModal(true);
-								return;
-							}
 							
+							if (isNothing(floatingCellNumber(cell))) {
+								if (isSomething(fromCell) && isSomething(toCell)) {
+									if (isNothing(systemClipboardText)) {
+										// we have a cell range but no clipboard so just paste the cell range
+										// this is an edge case that may never happen
+										doPasteRange();
+										return;
+									}
+		
+									// there is a cell range and something in the clipboard, so covert the clipboard to an array of cells, then compare it to the actual cell range
+									const clipboardCellsArr = convertTextToCellRange({
+										text: systemClipboardText,
+										startingCellRowIndex: cellRow(fromCell),
+										startingCellColumnIndex: cellColumn(fromCell),
+									});
+		
+									const storeCellsArr = stateCellRangeCells(managedStore.state);
+									if (compareCellsArrays(clipboardCellsArr, storeCellsArr)) {
+										// the system clipboard and the cell range are the same, so paste the cell range
+										doPasteRange();
+										return;
+									}
+									// system clipboard and the cell range are different, so popup dialog box asking which to use
+									updatedShowPasteOptionsModal(true);
+									return;
+								}
+		
+								// there's no cell range, only something in the clipbaord
+								const clipboardAsCells = convertTextToCellRange({
+									text: systemClipboardText,
+									startingCellRowIndex: cellRow(currentCellVersion),
+									startingCellColumnIndex: cellColumn(currentCellVersion),
+								});
+								if (clipboardAsCells.length > 1) {
+									updatedShowPasteOptionsModal(true);
+									return;
+								}
+							}
+
+							// EITHER we're dealing with a floating cell OR there's no cell range, and the clipboard is not a cell range 
+							// ...this is the default thing to do:
 							pasteTextIntoSingleCell({
 								text: typeof arg1 === 'string' ? arg1 : systemClipboardText,
 								cursorStart,
@@ -296,49 +330,55 @@ const CellInPlaceEditor = ({ cellToEdit: cell, cellPositioning, cellHasFocus, })
 							cursorStart: selectionStart, 
 							cursorEnd: selectionEnd,
 							cell,
-							cellInPlaceEditorRef: editorRef,
+							editorRef,
 						})
 					)(editorRef);
 				}
-				return R.pipe(
-					updateEditedChar,
-					({ formattedText, cursorPosition }) => {
-						updatedCell({
-							...currentCellVersion,
-							content: { ...currentCellVersion.content, text: newText, formattedText },
-							isStale: true,
-						});
-						event.target.selectionStart = cursorPosition;
-						event.target.selectionEnd = cursorPosition;
-						updatedTextSelection({ start: cursorPosition, end:cursorPosition });
-						setKeystrokeHandled(false);
-					},
-				)({ cursorPosition: selectionStart, newText, formattedText, isNewline: isAltEnter });
+				const { formattedText: newFormattedText, cursorPosition } = updateEditedChar({ cursorPosition: selectionStart, newText, formattedText, isNewline: isAltEnter });
+				if (isSomething(cellRow(cell))) {
+					// we have a regular cell
+					updatedCell({
+						...currentCellVersion,
+						content: { ...currentCellVersion.content, text: newText, formattedText: newFormattedText },
+						isStale: true,
+					});
+				}
+				if (isFloatingCell) {
+					// we have a floating cell
+					updatedFloatingCell({
+						...currentCellVersion,
+						content: { ...currentCellVersion.content, text: newText, formattedText: newFormattedText },
+						isStale: true,
+					});
+				}
+				
+				event.target.selectionStart = cursorPosition;
+				event.target.selectionEnd = cursorPosition;
+				updatedTextSelection({ start: cursorPosition, end:cursorPosition });
+				setKeystrokeHandled(false);
 			}
 
 			const handleStyling = (event, style) => {
 				event?.preventDefault();
 				const cursorStart = editorRef.current.selectionStart;
 				const cursorEnd = editorRef.current.selectionEnd;
-				const newBlocks = updateStyles({
-					newStyle: style,
-					cursorStart,
-					cursorEnd,
-					blocks: R.pipe(cellFromStore, cellFormattedTextBlocks)(cell),
-				});
-	
-				const updateFormattedText = ({ text, formattedText }) => {
-					updatedCell({
-						...cell,
-						content: { 
-							...cell.content, 
-							text: text ? text : cell.content.text, 
-							formattedText: arrayContainsSomething(formattedText?.blocks) ? formattedText : cell.content.formattedText,
-						},
-						isStale: true,
-					});
+				const newFormattedText = {
+					blocks: updateStyles({
+						newStyle: style,
+						cursorStart,
+						cursorEnd,
+						blocks: R.pipe(cellFromStore, cellFormattedTextBlocks)(cell),
+					})
 				}
-				updateFormattedText({ formattedText: { blocks: newBlocks } });
+				const newCell = {
+					...cell,
+					content: { 
+						...cell.content, 
+						formattedText: arrayContainsSomething(newFormattedText?.blocks) ? newFormattedText : cell.content.formattedText,
+					},
+					isStale: true,
+				}
+				isFloatingCell ? updatedFloatingCell(newCell) : updatedCell(newCell);
 			}
 
 			const editorKeyBindings =  event => {
@@ -426,7 +466,7 @@ const CellInPlaceEditor = ({ cellToEdit: cell, cellPositioning, cellHasFocus, })
 
 			return { handleSubmit, handleCancel, manageBlur, handlePaste, manageChange, handleStyling, editorKeyBindings, manageTextSelection };
 		},
-		[cell, editorPositioning, keystrokeHandled, editorRef]
+		[cell, editorPositioning, keystrokeHandled, editorRef, isFloatingCell]
 	);
 	const { handleSubmit, handleCancel, manageBlur, handlePaste, manageChange, handleStyling, editorKeyBindings, manageTextSelection } = generateMemoizedFns();
 
@@ -438,10 +478,6 @@ const CellInPlaceEditor = ({ cellToEdit: cell, cellPositioning, cellHasFocus, })
 		},
 		[editorPositioning]
 	);
-
-	const renderEditorHeader = () => (
-      <MoveIcon classes="bg-white mb-1 w-6" onMouseDownFn={clickedEditorHeader} onMouseUpFn={releasedEditorHeader} />
-   );
 
 	const renderTextForm = useCallback(
 		() => {
@@ -464,11 +500,12 @@ const CellInPlaceEditor = ({ cellToEdit: cell, cellPositioning, cellHasFocus, })
 						value={getCellPlainText(cell)}
 						onChange={manageChange}
 						onSelect={manageTextSelection}
-						onBlur={manageBlur}
+						
 					/>
 				</form>
 			);
 		},
+		// TODO reinstate onBlur={manageBlur} !!!!!!!!!!!
 		[editorPositioning, cell, editorRef, textareaStyle, handleCancel, handlePaste, handleStyling, handleSubmit, manageChange, manageBlur, manageTextSelection, setEditorPositioning]
 	)
 
@@ -477,15 +514,19 @@ const CellInPlaceEditor = ({ cellToEdit: cell, cellPositioning, cellHasFocus, })
 		() => {
 			if (cellHasFocus && isSomething(editorRef?.current)) {
 				editorRef.current.focus();
-				manageCellInPlaceEditorFocus({ event: null, editorRef, cell, editorKeyBindings });
+				const changedFocus = manageCellInPlaceEditorFocus({ event: null, editorRef, cell, editorKeyBindings });
+				console.log('CellInPlaceEditor--useEffect has just finished calling manageCellInPlaceEditorFocus, and gave it cell', cell, 'editorRef', editorRef, '...in response it got changedFocus', changedFocus);
+				if (changedFocus) {
+					console.log('CellInPlaceEditor--useEffect, changedFocus was true and editorPositioning is now', editorPositioning);
+				}
 			}
    	},
 		[cellHasFocus, editorRef, cell, editorKeyBindings]
 	);
 
    return (
-		<DraggableModal classes="absolute z-10 text-dark-dark-blue" positioning={editorPositioning} showBorder={false} id={editorId}>
-			{renderEditorHeader()}
+		<DraggableModal classes="absolute z-20 text-dark-dark-blue flex items-start" positioning={editorPositioning} showBorder={false} id={editorId}>
+			<MoveIcon classes="bg-white mr-1 w-6" onMouseDownFn={clickedEditorHeader} onMouseUpFn={releasedEditorHeader} />
 			{renderTextForm()}
 		</DraggableModal>
    );

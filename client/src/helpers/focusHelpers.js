@@ -30,20 +30,25 @@ import {
 } from '../constants';
 
 export const isStateCellRefThisCell = (cellRef, cell) => {
-    const currentFocusedCell = stateFocusCell(managedStore.state);
-    const currentFocusedCellRef = stateFocusCellRef(managedStore.state);
-    return currentFocusedCell?.row === cell.row 
-       && currentFocusedCell?.column === cell.column
-       && isSomething(currentFocusedCellRef?.current)
-       && cellRef?.current === currentFocusedCellRef.current;
+	const currentFocusedCell = stateFocusCell(managedStore.state);
+	const currentFocusedCellRef = stateFocusCellRef(managedStore.state);
+	return (
+			(currentFocusedCell?.row === cell.row && currentFocusedCell?.column === cell.column)
+			|| currentFocusedCell?.number === cell.number
+		) && isSomething(currentFocusedCellRef?.current)
+		&& cellRef?.current === currentFocusedCellRef.current;
 }
 
 export const manageFocus = ({ event, cell, cellRef, keyBindings }) => {
+	console.log('focusHelpers--manageFocus called for cell', cell, 'stateFocusCell(managedStore.state) is', stateFocusCell(managedStore.state));
 	event?.preventDefault();
 
 	if (isStateCellRefThisCell(cellRef, cell)) {
+		console.log('focusHelpers--manageFocus found that the existing cellRef is for the given cell', cell, 'so will exit without doing anything');
 		return false; // indicates we didn't need to change focus
 	}
+	console.log('focusHelpers--manageFocus found that the existing cellRef is *not* for the given cell', cell, 'so will proceed with focusing the new cell');
+
 	ifThen({
 		ifCond: isSomething(stateFocusAbortControl(managedStore.state)),
 		thenDo: () => stateFocusAbortControl(managedStore.state).abort(),
@@ -64,7 +69,7 @@ export const manageTab = ({ event, cell, callback, goBackwards }) => {
 		thenDo: [
 			() => isSomething(callback) ? callback() : null,
 			() => stateFocusAbortControl(managedStore.state).abort(),
-			() => updatedFocusRef({ ref: null }), // clear the existing focusRef
+			() => updatedFocusRef(null), // clear the existing focusRef
 			() => focusedCell(nextCell),
 			R.T // indicates that we found a nextCell and tabbed to it
 		],
@@ -108,7 +113,7 @@ export const maybeClearSubsheetCellFocus = () => {
 	const focusedCell = stateFocusCell(managedStore.state);
 	if (fromCell === focusedCell) {
 		stateFocusAbortControl(managedStore.state).abort();
-   	updatedFocusRef({ ref: null }); // this is probably redundant, since clearedFocus clears everything
+   	updatedFocusRef(null); // this is probably redundant, since clearedFocus clears everything
 		clearedFocus();
 	}
 }

@@ -9,8 +9,8 @@ const IconMove = ({
    classes = '',
    viewBox = '0 0 700 700',
    onClickFn,
-   onMouseDownFn,
-	onMouseUpFn
+   onMouseDownFn = () => {},
+	onMouseUpFn = () => {}
 }) => {
    const allClasses = 'text-subdued-blue hover:text-vibrant-blue cursor-pointer ' + classes;
    return (
