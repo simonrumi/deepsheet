@@ -85,8 +85,6 @@ const useResizeObserver = ({ editorRef, cellChanged, getCellPositioning, getLate
 		setCurrentEditorRef(editorRef.current);
 	}
 
-	console.log('hooks--useResizeObserver got cellChanged', cellChanged);
-
 	const resizeObserver = useMemo(
 		() => createEditorResizeObserver({ cellChanged, getCellPositioning, getLatestEditorPositioning, setEditorPositioning }),
 		[cellChanged, getCellPositioning, getLatestEditorPositioning, setEditorPositioning]
@@ -112,20 +110,17 @@ const isSameCell = (cell1, cell2) => {
 	const cell2Number = floatingCellNumber(cell2);
 	if (isSomething(cell1Number) && isSomething(cell2Number)) {
 		// case 1: both cells are floating cells
-		console.log('hooks--isSameCell case 1: both cells are floating cells ... got cell1', cell1, 'cell2', cell2);
 		return cell1Number === cell2Number;
 	}
 	const row1 = cellRow(cell1);
 	const row2 = cellRow(cell2);
 	if (isSomething(row1) && isSomething(row2)) {
 		// case 2: both cells are not floating cells
-		console.log('hooks--isSameCell case 2: both cells are not floating cells ... got cell1', cell1, 'cell2', cell2);
 		const column1 = cellColumn(cell1);
 		const column2 = cellColumn(cell2);
 		return row1 === row2 && column1 === column2;
 	}
 	// case 3: one cell is floating and the other is not floating, so they can't be the same
-	console.log('hooks--isSameCell case 3: one cell is floating and the other is not floating ... got cell1', cell1, 'cell2', cell2);
 	return false;
 }
 
@@ -133,35 +128,27 @@ export const useEditorPositioning = ({ cellPositioning, cell }) => {
 	const [currentCell, setCurrentCell] = useState();
 	const [editorPositioning, setEditorPositioning] = useState();
 	const getCellPositioning = () => cellPositioning;
-	console.log('***hooks--useEditorPositioning started for cell', cell, 'cellPositioning', cellPositioning, 'editorPositioning', editorPositioning);
 
 	const cellChanged = !isSameCell(currentCell, cell);
 	if(cellChanged) {
-		console.log('hooks--useEditorPositioning, cellChanged is true so about to setCurrentCell to cell', cell);
 		setCurrentCell(cell);
 	}
-	console.log('hooks--useEditorPositioning, currentCell is', currentCell);
 
 	const getLatestEditorPositioning = () => {
 		const newPositioning = calcEditorPositioning(cellPositioning);
-		console.log('hooks--useEditorPositioning--getLatestEditorPositioning got newPositioning', newPositioning, 'editorPositioning', editorPositioning, 'cellChanged', cellChanged);
-		if (cellChanged || !R.equals(newPositioning, editorPositioning)) {
+		if (cellChanged) { 
 			setEditorPositioning(newPositioning);
 			setCurrentCell(cell);
-			console.log('hooks--useEditorPositioning--getLatestEditorPositioning either the cell has changed or the newPositioning is different from the current positioning, so has setEditorPositioning and will return newPositioning', newPositioning);
 			return newPositioning;
 		}
 		if (isSomething(editorPositioning)) {
-			console.log('hooks--useEditorPositioning--getLatestEditorPositioning isSomething(editorPositioning) was true so will return editorPositioning', editorPositioning);
 			return editorPositioning;
 		}
 		if (isSomething(cellPositioning)) {
 			setEditorPositioning(newPositioning);
-			console.log('hooks--useEditorPositioning--getLatestEditorPositioning isSomething(cellPositioning) was true so calculated new positioning from that and will return newPositioning', newPositioning);
 			return newPositioning
 		}
 		// shouldn't get to here
-		console.log('hooks--useEditorPositioning--getLatestEditorPositioning should not be seeing this!!...will return existing editorPositioning', editorPositioning);
 		return editorPositioning;
 	}
 

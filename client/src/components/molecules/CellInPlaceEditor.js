@@ -111,7 +111,7 @@ const manageCellInPlaceEditorFocus = ({ event, editorRef, cell, editorKeyBinding
 		],
 		params: {}
 	});
-	return changedFocus;
+	return changedFocus; // no one is using this value, but can't hurt
 }
 
 const cellFromStore = cell => {
@@ -139,7 +139,6 @@ const CellInPlaceEditor = ({ cellToEdit: cell, cellPositioning, cellHasFocus }) 
 			: R.pipe(createCellKey, R.concat('editor_'))(cellRow(cell), cellColumn(cell)),
 		[cell, isFloatingCell]
 	);
-	console.log('CellInPlaceEditor got editorPositioning',editorPositioning);
 
 	const generateMemoizedFns = useCallback(
 		() => {
@@ -186,7 +185,6 @@ const CellInPlaceEditor = ({ cellToEdit: cell, cellPositioning, cellHasFocus }) 
 			}
 
 			const manageBlur = event => {
-				console.log('CellInPlaceEditor--manageBlur started');
 				event?.preventDefault();
 				if (
 					stateShowPasteOptionsModal(managedStore.state) || //the PasteOptionsModal has popped up, or
@@ -202,7 +200,6 @@ const CellInPlaceEditor = ({ cellToEdit: cell, cellPositioning, cellHasFocus }) 
 				)(managedStore.state);
 				finalizeCellContent(cell);
 				updatedFocusRef(null); // clear the existing focusRef
-				console.log('CellInPlaceEditor--manageBlur about to call clearedFocus');
 				clearedFocus();
 			}
 
@@ -500,12 +497,11 @@ const CellInPlaceEditor = ({ cellToEdit: cell, cellPositioning, cellHasFocus }) 
 						value={getCellPlainText(cell)}
 						onChange={manageChange}
 						onSelect={manageTextSelection}
-						
+						onBlur={manageBlur}
 					/>
 				</form>
 			);
 		},
-		// TODO reinstate onBlur={manageBlur} !!!!!!!!!!!
 		[editorPositioning, cell, editorRef, textareaStyle, handleCancel, handlePaste, handleStyling, handleSubmit, manageChange, manageBlur, manageTextSelection, setEditorPositioning]
 	)
 
@@ -515,10 +511,6 @@ const CellInPlaceEditor = ({ cellToEdit: cell, cellPositioning, cellHasFocus }) 
 			if (cellHasFocus && isSomething(editorRef?.current)) {
 				editorRef.current.focus();
 				const changedFocus = manageCellInPlaceEditorFocus({ event: null, editorRef, cell, editorKeyBindings });
-				console.log('CellInPlaceEditor--useEffect has just finished calling manageCellInPlaceEditorFocus, and gave it cell', cell, 'editorRef', editorRef, '...in response it got changedFocus', changedFocus);
-				if (changedFocus) {
-					console.log('CellInPlaceEditor--useEffect, changedFocus was true and editorPositioning is now', editorPositioning);
-				}
 			}
    	},
 		[cellHasFocus, editorRef, cell, editorKeyBindings]

@@ -132,10 +132,8 @@ const Sheet = () => {
    const globalInfoModalIsVisible = useSelector(state => stateGlobalInfoModalIsVisible(state));
 	const showHistory = useSelector(state => stateShowUndoHistory(state));
 	const cellWithFocus = useSelector(state => stateFocusCell(state));
-	console.log('Sheet got cellWithFocus', cellWithFocus);
 
 	const renderFloatingCells = () => {
-		console.log('Sheet--renderFloatingCells started');
 		return (<>
 			<AddFloatingCellBtn sheetId={sheetId} />
 			<FloatingCells />

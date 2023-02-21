@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import * as R from 'ramda';
 import managedStore from '../../store';
 import { createdSheet } from '../../actions/sheetActions';
@@ -24,8 +24,8 @@ import {
    DEFAULT_TOTAL_COLUMNS,
    DEFAULT_COLUMN_WIDTH,
    DEFAULT_ROW_HEIGHT,
-	MIN_COLUMN_WIDTH,
-	CELL_EDITOR_HORIZONTAL_MARGIN,
+	CELL_EDITOR_TOOLS_LEFT_OFFSET,
+	CELL_EDITOR_TOOLS_TOP_OFFSET,
    LOG,
 	BOLD,
 	ITALIC,
@@ -45,28 +45,25 @@ const triggerCreatedSheetAction = cell => {
    createdSheet({ rows, columns, title, parentSheetId, parentSheetCell, rowHeights, columnWidths, userId });
 }
 
-const calcToolPositioning = editorPositioning => R.pipe(
-	editorPos => R.prop('width', editorPos) || MIN_COLUMN_WIDTH,
-	R.add(CELL_EDITOR_HORIZONTAL_MARGIN),
-	R.assoc('left', R.__, {}),
-	R.assoc('top', 0),
-)(editorPositioning);
+const createToolsPositioning = () => R.pipe(
+		R.assoc('left', CELL_EDITOR_TOOLS_LEFT_OFFSET),
+		R.assoc('top', CELL_EDITOR_TOOLS_TOP_OFFSET)
+	)({});
 
 const CellEditorTools = ({ handleSubmit, handleCancel, handleStyling, handlePaste, cell, editorPositioning, setEditorPositioning, editorRef }) => {
 	// getting the system clipbaord is async,
 	// so using a local state seems like a reasonable way to make it so that only the single CellInPlaceEditor changes,
-	// rather than re-rendering every Cell, which would be the case if we gave systemClipboard as a param to CellInPlaceEditor
+	// rather than re-rendering every Cell, which would be the case if we gave systemClipboard as a param to CellInPlaceEditor // TODO BUG here - seems like copying to the system clipboard doesn't work
 	const [systemClipboardLocal, setSystemClipboardLocal] = useState(stateSystemClipboard(managedStore.state));
-	const [leftPositioning, setLeftPositioning] = useState(0);
+	const [toolsPositioning, setToolsPositioning] = useState(0);
 	R.pipe(
-		calcToolPositioning, 
-		R.prop('left'),
-		newLeftPositioning => ifThen({
-			ifCond: !R.equals(newLeftPositioning, leftPositioning),
-			thenDo: setLeftPositioning,
-			params: { thenParams: newLeftPositioning }
+		createToolsPositioning,
+		createdPositioning => ifThen({
+			ifCond: !R.equals(createdPositioning.left, toolsPositioning.left) || !R.equals(createdPositioning.top, toolsPositioning.top),
+			thenDo: setToolsPositioning,
+			params: { thenParams: createdPositioning }
 		})
-	)(editorPositioning);
+	)();
 
 	const renderPasteIcon = () =>
 		isSomething(stateClipboard(managedStore.state)) || isSomething(systemClipboardLocal) 
@@ -80,7 +77,7 @@ const CellEditorTools = ({ handleSubmit, handleCancel, handleStyling, handlePast
 
 	const richTextIconStyle = 'bg-white mb-1 self-center cursor-pointer text-subdued-blue hover:text-vibrant-blue text-2xl font-bold leading-6';
 
-	const toolId = R.pipe(createCellKey, R.concat('tool_'))(cellRow(cell), cellColumn(cell));
+	const toolId = R.pipe(createCellKey, R.concat('tool_'))(cellRow(cell), cellColumn(cell)); // TODO update this for floating cells!!! currently we get id=tool_cell_undefined_undefined
 
 	const handleMouseUpOverTools = event => {
 		R.pipe(
@@ -90,17 +87,11 @@ const CellEditorTools = ({ handleSubmit, handleCancel, handleStyling, handlePast
 		)(editorPositioning)
 
 		R.pipe(
-         R.assoc('width', editorRef?.current?.offsetWidth),
-         calcToolPositioning,
-			R.prop('left'),
-         setLeftPositioning,
-      )(editorPositioning);
+         createToolsPositioning,
+         setToolsPositioning,
+			R.assoc('width', editorRef?.current?.offsetWidth)
+      )();
 	}
-
-	const getLeftStyle = useCallback(
-		() => ({ left: leftPositioning, top: 0 }),
-		[leftPositioning]
-	);
 
 	const renderTools = () => {
 		// if there is something on the system clipboard, then that affects whether we display the PasteIcon
@@ -121,7 +112,7 @@ const CellEditorTools = ({ handleSubmit, handleCancel, handleStyling, handlePast
 				<div
 					id={toolId}
 					className="absolute top-0 flex justify-items-start bg-white border border-grey-blue shadow-lg p-1"
-					style={getLeftStyle()}
+					style={toolsPositioning}
 				>
 					{/* onMouseDown is fired before onBlur, whereas onClick is after onBlur. 
 					Since the textarea has the focus, clicking on NewDocIcon will cause

@@ -40,14 +40,11 @@ export const isStateCellRefThisCell = (cellRef, cell) => {
 }
 
 export const manageFocus = ({ event, cell, cellRef, keyBindings }) => {
-	console.log('focusHelpers--manageFocus called for cell', cell, 'stateFocusCell(managedStore.state) is', stateFocusCell(managedStore.state));
 	event?.preventDefault();
 
 	if (isStateCellRefThisCell(cellRef, cell)) {
-		console.log('focusHelpers--manageFocus found that the existing cellRef is for the given cell', cell, 'so will exit without doing anything');
 		return false; // indicates we didn't need to change focus
 	}
-	console.log('focusHelpers--manageFocus found that the existing cellRef is *not* for the given cell', cell, 'so will proceed with focusing the new cell');
 
 	ifThen({
 		ifCond: isSomething(stateFocusAbortControl(managedStore.state)),
@@ -138,5 +135,5 @@ export const calcEditorPositioning = cellPositioning => R.pipe(
 		...cellPositioning,
 		left: optimized.left,
 		top: optimized.top,
-	})
+	}),
 )(cellPositioning);

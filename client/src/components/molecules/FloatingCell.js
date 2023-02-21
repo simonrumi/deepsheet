@@ -49,9 +49,7 @@ const FloatingCell = ({ floatingCellKey }) => {
 
 		if (cellHasFocus) {
 			const focusedCellPositioning = R.pipe(stateFocusCell, R.prop('positioning'))(managedStore.state);
-			console.log('FloatingCell--handleDragEnd got the focused floatingCell', floatingCell, 'with focusedCellPositioning', focusedCellPositioning);
 			if (!R.equals(floatingCellPositioning, focusedCellPositioning)) {
-				console.log('FloatingCell--handleDragEnd since the floatingCellPositioning is different from the focusedCellPositioning will call focusedCell for floatingCell', floatingCell);
 				focusedCell(floatingCell);
 			}
 		}
@@ -60,32 +58,22 @@ const FloatingCell = ({ floatingCellKey }) => {
 	const handleFloatingCellClick = event => {
 		console.log('--->FloatingCell--handleFloatingCellClick started for floatingCell', floatingCell);
 		event.preventDefault();
-
-		// make sure any old focus info is cleared first - TODO make sure we need all of these steps
+		// make sure any old focus info is cleared first
 		R.pipe(
 			stateFocusAbortControl,
 			abortControl => runIfSomething(abortCtrl => abortCtrl.abort(), abortControl)
 		)(managedStore.state);
 		// finalizeCellContent(cell); // TODO might need this in here but currently the functionality is in CellInPlaceEditor
 		updatedFocusRef(null); // clear the existing focusRef
-		console.log('FloatingCell--handleFloatingCellClick about to call clearedFocus');
 		clearedFocus(); 
 		// end of clearing old focus
-		console.log('FloatingCell--handleFloatingCellClick about to call focusedCell for via the floatingCellKey', floatingCellKey);
 		R.pipe(stateFloatingCell, focusedCell)(managedStore.state, floatingCellKey); //make sure we have the latest version of the floatingCell, otherwise we might be using something with an old position
 		hidePopups();
 	}
 
 	const floatingCellPositioning = floatingCellPosition(floatingCell);
-	console.log(
-      'FloatingCell started with floatingCellKey', floatingCellKey,
-      'cellHasFocus', cellHasFocus,
-      'floatingCell', floatingCell,
-      'floatingCellPositioning', floatingCellPositioning
-   );
 
 	const maybeRenderEditor = () => {
-		console.log('FloatingCell--maybeRenderEditor got cellHasFocus', cellHasFocus);
 		if (cellHasFocus) {
 			return (
             <CellInPlaceEditor

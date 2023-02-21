@@ -23,7 +23,6 @@ const DraggableModal = ({
    };
 
    const handleDragEnd = event => {
-		console.log('DraggableModal--handleDragEnd got event', event);
       setIsDragging(false);
       setCurrentPosition({ ...positioning, left: event.clientX, top: event.clientY });
 		onDragEndFn(event)

@@ -25,14 +25,12 @@ import CellInPlaceEditor from './CellInPlaceEditor';
 import RangeTools from './RangeTools';
 
 const onCellClick = (event, cell) => {
-	console.log('***Cell--onCellClick started for cell', cell);
    event.preventDefault();
    ifThenElse({
       ifCond: event.shiftKey,
       thenDo: [rangeSelected, maybeClearSubsheetCellFocus, hidePopups],
       elseDo: [
          () => {
-				console.log('Cell--onCellClick about to call focusedCell for cell', cell);
 				focusedCell(cell)
 			},
          () => ifThen({

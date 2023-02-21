@@ -13,7 +13,6 @@ import { FLOATING_CELL_DEFAULT_POSITION, DEFAULT_FLOATING_CELL_TEXT } from '../c
 const processFloatingCellAction = R.curry((state, sheetId, action) => {
 	switch (action.type) {
       case UPDATED_FLOATING_CELL:
-			console.log('floatingCellReducers--processFloatingCellAction--UPDATED_FLOATING_CELL got action.payload', action.payload);
 			return { ...state, ...action.payload };
 
 		default:
@@ -66,7 +65,6 @@ export const createFloatingCellReducer = sheetId => {
 export const floatingCellKeysReducer = (state = [], action) => {
    switch (action.type) {
       case ADDED_FLOATING_CELL_KEYS:
-			console.log('floatingCellReducers--floatingCellKeysReducer--ADDED_FLOATING_CELL_KEYS got action.payload', action.payload);
          return action.payload instanceof Array ? R.concat(state, action.payload) : R.append(action.payload, state);
 
       case REMOVED_FLOATING_CELL_KEYS:

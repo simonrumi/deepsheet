@@ -8,7 +8,7 @@ export const ROW_AXIS = 'row';
 export const COLUMN_AXIS = 'column';
 export const DEFAULT_TOTAL_ROWS = 3;
 export const DEFAULT_TOTAL_COLUMNS = 2;
-export const THIN_COLUMN = '3em';
+export const THIN_COLUMN = '4em';
 export const SPLIT_THIN_COLUMN = '1.05em 1.05em';
 export const THIN_ROW = '2em';
 export const DEFAULT_COLUMN_WIDTH = '16em';
@@ -23,10 +23,13 @@ export const PASTE_OPTIONS_MODAL_MIN_HEIGHT = parseFloat(getComputedStyle(docume
 export const HISTORY_MODAL_MIN_WIDTH = parseFloat(getComputedStyle(document.body).fontSize) * 15;
 export const HISTORY_MODAL_MIN_HEIGHT = parseFloat(getComputedStyle(document.body).fontSize) * 15;
 
-export const CELL_EDITOR_VERTICAL_MARGIN = -40; // pixels
-export const CELL_EDITOR_HORIZONTAL_MARGIN = 10; // pixels
+export const CELL_EDITOR_HORIZONTAL_MARGIN = -30; // pixels
 export const CELL_EDITOR_VERTICAL_PADDING = 40; // pixels
-export const CELL_EDITOR_LINE_HEIGHT = 40; //pixels
+export const CELL_EDITOR_LINE_HEIGHT = 80; //pixels
+export const CELL_EDITOR_VERTICAL_MARGIN = -1 * CELL_EDITOR_LINE_HEIGHT - 5; // pixels
+
+export const CELL_EDITOR_TOOLS_LEFT_OFFSET = -60; // pixels
+export const CELL_EDITOR_TOOLS_TOP_OFFSET = -1 * CELL_EDITOR_VERTICAL_MARGIN - 25; // pixels
 
 export const SORT_INCREASING = 'sort_increasing';
 export const SORT_DECREASING = 'sort_decreasing';

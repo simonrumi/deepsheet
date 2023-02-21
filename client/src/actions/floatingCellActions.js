@@ -26,7 +26,6 @@ export const updatedFloatingCell = floatingCell => {
 };
 
 export const addedFloatingCellKeys = floatingCellKey => {
-	console.log('floatingCellActions--addedFloatingCellKeys got floatingCellKey', floatingCellKey );
    managedStore.store.dispatch({
       type: ADDED_FLOATING_CELL_KEYS,
       payload: floatingCellKey

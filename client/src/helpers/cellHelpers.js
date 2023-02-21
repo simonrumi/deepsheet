@@ -245,7 +245,12 @@ const encodeCellText = cell => R.pipe(
 		}),
    )(cell);
 
-export const decodeText = text => isSomething(text) ? text.replace(/\\/g, '') : '';
+export const decodeText = text => {
+	// first replace every char except \ 
+	const unescapedChars = isSomething(text) ? text.replace(/\\[~`!@#$%^&*()_+={}[\]|;:'"<,>.?/-]/g, '') : '';
+	// ...then reduce \\ to just \
+	return unescapedChars.replace(/\\{2}([a-zA-Z0-9\s])/g, '\\$1');
+}
 
 export const decodeCellText = cell => R.pipe(
    cellText,
