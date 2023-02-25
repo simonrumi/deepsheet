@@ -7,12 +7,14 @@ import { createDefaultAxisSizing } from '../../helpers/axisSizingHelpers';
 import { createCellKey } from '../../helpers/cellHelpers';
 import { getUserInfoFromCookie } from '../../helpers/userHelpers';
 import { getSystemClipboard } from '../../helpers/clipboardHelpers';
+import { isFloatingCellTest, createFloatingCellKey } from '../../helpers/floatingCellHelpers';
 import {
    stateSheetId,
    stateClipboard,
    stateSystemClipboard,
 	cellRow,
-	cellColumn
+	cellColumn,
+	floatingCellNumber,
 } from '../../helpers/dataStructureHelpers';
 import { getCellPlainText } from '../../helpers/richTextHelpers';
 import NewDocIcon from '../atoms/IconNewDoc';
@@ -53,7 +55,7 @@ const createToolsPositioning = () => R.pipe(
 const CellEditorTools = ({ handleSubmit, handleCancel, handleStyling, handlePaste, cell, editorPositioning, setEditorPositioning, editorRef }) => {
 	// getting the system clipbaord is async,
 	// so using a local state seems like a reasonable way to make it so that only the single CellInPlaceEditor changes,
-	// rather than re-rendering every Cell, which would be the case if we gave systemClipboard as a param to CellInPlaceEditor // TODO BUG here - seems like copying to the system clipboard doesn't work
+	// rather than re-rendering every Cell, which would be the case if we gave systemClipboard as a param to CellInPlaceEditor
 	const [systemClipboardLocal, setSystemClipboardLocal] = useState(stateSystemClipboard(managedStore.state));
 	const [toolsPositioning, setToolsPositioning] = useState(0);
 	R.pipe(
@@ -77,7 +79,9 @@ const CellEditorTools = ({ handleSubmit, handleCancel, handleStyling, handlePast
 
 	const richTextIconStyle = 'bg-white mb-1 self-center cursor-pointer text-subdued-blue hover:text-vibrant-blue text-2xl font-bold leading-6';
 
-	const toolId = R.pipe(createCellKey, R.concat('tool_'))(cellRow(cell), cellColumn(cell)); // TODO update this for floating cells!!! currently we get id=tool_cell_undefined_undefined
+	const toolId = isFloatingCellTest(cell) 
+		? R.pipe(floatingCellNumber, createFloatingCellKey, R.concat('tool_'))(cell)
+		: R.pipe(createCellKey, R.concat('tool_'))(cellRow(cell), cellColumn(cell)); 
 
 	const handleMouseUpOverTools = event => {
 		R.pipe(
@@ -111,7 +115,7 @@ const CellEditorTools = ({ handleSubmit, handleCancel, handleStyling, handlePast
 			<div className="relative z-10 w-full" onMouseUp={handleMouseUpOverTools}>
 				<div
 					id={toolId}
-					className="absolute top-0 flex justify-items-start bg-white border border-grey-blue shadow-lg p-1"
+					className="absolute top-0 flex justify-items-start bg-white border-2 border-subdued-blue shadow-lg p-1"
 					style={toolsPositioning}
 				>
 					{/* onMouseDown is fired before onBlur, whereas onClick is after onBlur. 

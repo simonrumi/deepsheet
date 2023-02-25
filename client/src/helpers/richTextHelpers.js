@@ -117,7 +117,7 @@ export const getFormattedText = cell => {
 		return {
 			blocks: [{
 				inlineStyleRanges: [],
-				text: isSomething(cellText(cell)) ? cellText(cell) : '', // eventually we won't have any data in cellText
+				text: isSomething(cellText(cell)) ? cellText(cell) : '', // eventually we won't have any data in cellText ...can we replace cellText with getCellPlainText? TODO
 			}]
 		}
 	}

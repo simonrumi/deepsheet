@@ -43,11 +43,11 @@ import { createFloatingCellKey, isFloatingCellTest } from '../../helpers/floatin
 import {
 	statePresent,
    stateCell,
-   cellText,
    cellRow,
    cellColumn,
 	cellFormattedText,
 	cellFormattedTextBlocks,
+	stateFloatingCell,
 	floatingCellNumber,
 	stateOriginalFormattedText,
    stateOriginalRow,
@@ -430,13 +430,24 @@ const CellInPlaceEditor = ({ cellToEdit: cell, cellPositioning, cellHasFocus }) 
 					case 67: // "C" for copy
 						if (event.ctrlKey) {
 							setKeystrokeHandled(true);
-							const text = R.pipe(
-								createCellKey,
-								stateCell(managedStore.state),
-								cellText
-							)(cellRow(cell), cellColumn(cell));
-							updatedClipboard({ text });
-							updateSystemClipboard(text);
+							const text = isFloatingCellTest(cell) 
+								? R.pipe(
+									floatingCellNumber,
+									createFloatingCellKey,
+									stateFloatingCell(managedStore.state),
+									getCellPlainText,
+								)(cell)
+								: R.pipe(
+									createCellKey,
+									stateCell(managedStore.state),
+									getCellPlainText,
+								)(cellRow(cell), cellColumn(cell));
+							const selectedText = R.pipe(
+								stateFocusTextSelection,
+								selection => R.slice(selection.start, selection.end, text),
+							)(managedStore.state);
+							updatedClipboard({ selectedText });
+							updateSystemClipboard(selectedText);
 						}
 						break;
 	
@@ -503,14 +514,16 @@ const CellInPlaceEditor = ({ cellToEdit: cell, cellPositioning, cellHasFocus }) 
 			);
 		},
 		[editorPositioning, cell, editorRef, textareaStyle, handleCancel, handlePaste, handleStyling, handleSubmit, manageChange, manageBlur, manageTextSelection, setEditorPositioning]
-	)
+	);
+
+	// TODO NEXT  look into getting floating cell data saved to the db ...see TODO in CellInPLaceEditor
 
    // need to useEffect so the editorRef can first be assigned to the textarea
    useEffect(
 		() => {
 			if (cellHasFocus && isSomething(editorRef?.current)) {
 				editorRef.current.focus();
-				const changedFocus = manageCellInPlaceEditorFocus({ event: null, editorRef, cell, editorKeyBindings });
+				manageCellInPlaceEditorFocus({ event: null, editorRef, cell, editorKeyBindings });
 			}
    	},
 		[cellHasFocus, editorRef, cell, editorKeyBindings]

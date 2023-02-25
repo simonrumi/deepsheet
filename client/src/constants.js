@@ -29,7 +29,7 @@ export const CELL_EDITOR_LINE_HEIGHT = 80; //pixels
 export const CELL_EDITOR_VERTICAL_MARGIN = -1 * CELL_EDITOR_LINE_HEIGHT - 5; // pixels
 
 export const CELL_EDITOR_TOOLS_LEFT_OFFSET = -60; // pixels
-export const CELL_EDITOR_TOOLS_TOP_OFFSET = -1 * CELL_EDITOR_VERTICAL_MARGIN - 25; // pixels
+export const CELL_EDITOR_TOOLS_TOP_OFFSET = -1 * CELL_EDITOR_VERTICAL_MARGIN - 55; // pixels
 
 export const SORT_INCREASING = 'sort_increasing';
 export const SORT_DECREASING = 'sort_decreasing';

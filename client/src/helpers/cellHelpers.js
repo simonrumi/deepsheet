@@ -234,7 +234,7 @@ export const getCellsFromCellKeys = R.curry(
 export const encodeText = text => isSomething(text) ? text.replace(/([^a-zA-Z0-9\s])/g, '\\$1') : '';
 
 const encodeCellText = cell => R.pipe(
-      cellText,
+      cellText, // TODO replace with getCellPlainText from richTextHelpers
       encodeText,
       cellTextSetter(R.__, cell),
 		cell => ifThenElse({
@@ -253,7 +253,7 @@ export const decodeText = text => {
 }
 
 export const decodeCellText = cell => R.pipe(
-   cellText,
+   cellText, // TODO replace with getCellPlainText from richTextHelpers
 	decodeText,
 	cellTextSetter(R.__, cell),
 	cell => ifThenElse({
