@@ -1,20 +1,17 @@
 import * as R from 'ramda';
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import managedStore from '../store';
 import { triggeredFetchSheet } from '../actions/sheetActions';
 import { cellsRedrawCompleted } from '../actions/cellActions';
 import {
    isNothing,
-	isSomething,
    arrayContainsSomething,
    forLoopReduce,
    getObjectFromArrayByKeyValue,
 } from '../helpers';
 import { has401Error } from '../helpers/authHelpers';
 import {
-	floatingCellNumber,
-	floatingCellPosition,
    stateIsLoggedIn,
    stateShowLoginModal,
    stateSheetId,
@@ -33,7 +30,6 @@ import {
 	stateHasErrorMessages,
    stateGlobalInfoModalIsVisible,
 	stateShowUndoHistory,
-	stateFocusCell,
 } from '../helpers/dataStructureHelpers';
 import { isVisibilityCalculated } from '../helpers/visibilityHelpers';
 import { isAxisSizingCalculated,handleResizerDragOver, handleResizerDrop } from '../helpers/axisSizingHelpers';
@@ -131,14 +127,13 @@ const Sheet = () => {
    const cellsLoaded = useSelector(state => stateSheetCellsLoaded(state));
    const globalInfoModalIsVisible = useSelector(state => stateGlobalInfoModalIsVisible(state));
 	const showHistory = useSelector(state => stateShowUndoHistory(state));
-	const cellWithFocus = useSelector(state => stateFocusCell(state));
+	const floatingCellContainerRef = useRef();
 
-	const renderFloatingCells = () => {
-		return (<>
-			<AddFloatingCellBtn sheetId={sheetId} />
+	const renderFloatingCells = () => 
+		<div className="mt-1 p-1" ref={floatingCellContainerRef}>
+			<AddFloatingCellBtn sheetId={sheetId} floatingCellContainerRef={floatingCellContainerRef} />
 			<FloatingCells />
-		</>)
-	}
+		</div>;
 
    const cellsRenderCount = stateCellsRenderCount(managedStore.state); // not getting this value using useSelector as we don't want to retrigger a render when it changes (useEffect below manages the re-render)
    const memoizedCells = useMemo(() => {

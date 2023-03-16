@@ -39,6 +39,8 @@ const FloatingCell = ({ floatingCellKey }) => {
 	const cellHasFocus = useSelector(state => isFloatingCellFocused({ floatingCell, state })); 
 	const cellRef = useRef();
 
+	const floatingCellPositioning = floatingCellPosition(floatingCell);
+
 	const handleDragEnd = event => { 
 		R.pipe(
 			R.assoc('left', event.clientX),
@@ -56,22 +58,18 @@ const FloatingCell = ({ floatingCellKey }) => {
 	}
 
 	const handleFloatingCellClick = event => {
-		console.log('--->FloatingCell--handleFloatingCellClick started for floatingCell', floatingCell);
 		event.preventDefault();
 		// make sure any old focus info is cleared first
 		R.pipe(
 			stateFocusAbortControl,
 			abortControl => runIfSomething(abortCtrl => abortCtrl.abort(), abortControl)
 		)(managedStore.state);
-		// finalizeCellContent(cell); // TODO might need this in here but currently the functionality is in CellInPlaceEditor
 		updatedFocusRef(null); // clear the existing focusRef
 		clearedFocus(); 
 		// end of clearing old focus
 		R.pipe(stateFloatingCell, focusedCell)(managedStore.state, floatingCellKey); //make sure we have the latest version of the floatingCell, otherwise we might be using something with an old position
 		hidePopups();
 	}
-
-	const floatingCellPositioning = floatingCellPosition(floatingCell);
 
 	const maybeRenderEditor = () => {
 		if (cellHasFocus) {

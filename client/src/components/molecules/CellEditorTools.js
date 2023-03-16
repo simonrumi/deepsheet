@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import * as R from 'ramda';
 import managedStore from '../../store';
 import { createdSheet } from '../../actions/sheetActions';
+import { deletedFloatingCell, removedFloatingCellKeys } from '../../actions/floatingCellActions';
 import { isSomething, ifThen } from '../../helpers';
 import { createDefaultAxisSizing } from '../../helpers/axisSizingHelpers';
 import { createCellKey } from '../../helpers/cellHelpers';
@@ -20,6 +21,7 @@ import { getCellPlainText } from '../../helpers/richTextHelpers';
 import NewDocIcon from '../atoms/IconNewDoc';
 import CloseIcon from '../atoms/IconClose';
 import PasteIcon from '../atoms/IconPaste';
+import DeleteIcon from '../atoms/IconDelete';
 import CheckmarkSubmitIcon from '../atoms/IconCheckmarkSubmit';
 import {
    DEFAULT_TOTAL_ROWS,
@@ -34,6 +36,21 @@ import {
 	UNDERLINE,
 } from '../../constants';
 import { log } from '../../clientLogger';
+
+const handleDeleteFloatingCell = cell => R.pipe(
+	R.tap(data => console.log('CellEditorTools--handleDeleteFloatingCell started for cell', data)),
+	floatingCellNumber,
+	R.tap(data => console.log('CellEditorTools--handleDeleteFloatingCell got floatingCellNumber', data)),
+	createFloatingCellKey,
+	R.tap(data => console.log('CellEditorTools--handleDeleteFloatingCell createFloatingCellKey', data)),
+	removedFloatingCellKeys,
+	R.tap(data => console.log('CellEditorTools--handleDeleteFloatingCell after removedFloatingCellKeys, about to call deletedFloatingCell')),
+	() => deletedFloatingCell(cell),
+)(cell);
+
+const maybeRenderDeleteIcon = cell => isFloatingCellTest(cell) 
+	? <DeleteIcon classes="mb-1" svgClasses="w-6" onMouseDownFn={() => handleDeleteFloatingCell(cell)}/>
+	: null;
 
 const triggerCreatedSheetAction = cell => {
    const rows = DEFAULT_TOTAL_ROWS;
@@ -87,6 +104,7 @@ const CellEditorTools = ({ handleSubmit, handleCancel, handleStyling, handlePast
 		R.pipe(
 			R.assoc('width', editorRef?.current?.offsetWidth),
 			R.assoc('height', editorRef?.current?.offsetHeight),
+			R.tap(data => console.log('CellEditorTools--handleMouseUpOverTools about to setEditorPositioning to', data)),
 			setEditorPositioning
 		)(editorPositioning)
 
@@ -127,6 +145,7 @@ const CellEditorTools = ({ handleSubmit, handleCancel, handleStyling, handlePast
 						<CloseIcon classes="bg-white mb-1" svgClasses="w-6" onMouseDownFn={handleCancel} />
 						{renderPasteIcon()}
 						<NewDocIcon classes="mb-1" svgClasses="w-6" onMouseDownFn={() => triggerCreatedSheetAction(cell)} />
+						{maybeRenderDeleteIcon(cell)} 
 					</div>
 					<div className="flex flex-col pl-2">
 						<span

@@ -286,6 +286,7 @@ export const stateCellDbUpdatesErrorMessage = subObjectGetter(stateCellDbUpdates
 export const stateCellDbUpdatesIsStale = subObjectGetter(stateCellDbUpdatesLens, 'isStale');
 export const stateCellDbUpdatesLastUpdated = subObjectGetter(stateCellDbUpdatesLens, 'lastUpdated');
 export const stateChangedCells = subObjectGetter(stateCellDbUpdatesLens, 'changedCells');
+export const stateAddedCells = subObjectGetter(stateCellDbUpdatesLens, 'addedCells');
 
 /************************************************ STATE FLOATING CELLS **********************************************/
 const floatingCellKeysLens = R.lensProp('floatingCellKeys');
@@ -301,6 +302,13 @@ export const stateFloatingCell = R.curry((state, floatingCellKey) =>
       state
    )
 );
+
+/* the global floatingCellPosition */
+const floatingCellPositionObjLens = R.lensProp('floatingCellPosition');
+const stateFloatingCellPositionLens = R.compose(presentLens, floatingCellPositionObjLens);
+export const stateFloatingCellPosition = R.view(stateFloatingCellPositionLens);
+const startingPositionLens = R.compose(stateFloatingCellPositionLens, R.lensProp('startingPosition'));
+export const stateFloatingCellStartingPosition = R.view(startingPositionLens);
 
 /* values for the cell itself */
 const floatingCellPositionLens = R.lensProp('position');

@@ -11,6 +11,7 @@ const stateKeys = [
 	'dragMonitor',
 	'filterModal',
 	'floatingCellKeys',
+	'floatingCellPosition',
 	'focus',
 	'globalInfoModal',
 	'menu',

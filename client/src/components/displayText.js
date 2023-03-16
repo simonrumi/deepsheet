@@ -74,6 +74,8 @@ export const createCancelledEditingCellMessage = cell => {
 	return `Cancelled editing cell ${createCellId(cellRow(cell), cellColumn(cell))}`;
 }
 
+export const createNewFloatingCellMessage = floatingCellKey => `Added new floating cell ${floatingCellKey}`;
+
 export const createColumnDropMessage = ({ columnMovingIndex, toIndex }) => `Moved column ${indexToColumnLetter(columnMovingIndex)} to ${indexToColumnLetter(toIndex)}`;
 
 export const createRowDropMessage = ({ rowMovingIndex, toIndex }) => `Moved row ${indexToRowNumber(rowMovingIndex)} to ${indexToRowNumber(toIndex)}`;

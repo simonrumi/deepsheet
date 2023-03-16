@@ -143,12 +143,14 @@ const CellInPlaceEditor = ({ cellToEdit: cell, cellPositioning, cellHasFocus }) 
 	const generateMemoizedFns = useCallback(
 		() => {
 			const finalizeCellContent = cell => {
-				if (!R.equals(stateOriginalFormattedText(managedStore.state), cellFormattedText(cell))) {
+				const latestFormattedText = R.pipe(cellFromStore, cellFormattedText)(cell);
+
+				if (!R.equals(stateOriginalFormattedText(managedStore.state), latestFormattedText)) {
 					if (isFloatingCell) {
-						// TODO - make hasChangedFloatingCell .. OR update hasChangedCell to include number in the object sent
+						updatedFloatingCell(cell);
 					}
 					if (isSomething(cellRow(cell))) {
-						// for a regular cell only...unless we update hasChangedCell as described above - TODO
+						// for a regular cell only
 						hasChangedCell({
 							row: cellRow(cell),
 							column: cellColumn(cell),
@@ -156,7 +158,7 @@ const CellInPlaceEditor = ({ cellToEdit: cell, cellPositioning, cellHasFocus }) 
 					}
 				}
 				finishedEditing({
-					formattedText: R.pipe(cellFromStore, cellFormattedText)(cell),
+					formattedText: latestFormattedText,
 					message: createdEditedCellMessage(cell),
 					isPastingCellRange: statePastingCellRange(managedStore.state),
 				});
@@ -387,8 +389,8 @@ const CellInPlaceEditor = ({ cellToEdit: cell, cellPositioning, cellHasFocus }) 
 				// use https://keycode.info/ to get key values
 				switch(event.keyCode) {
 					case 27: // esc
-						handleCancel(event);
 						setKeystrokeHandled(true);
+						handleCancel(event);
 						break;
 	
 					case 13: // enter
@@ -502,7 +504,7 @@ const CellInPlaceEditor = ({ cellToEdit: cell, cellPositioning, cellHasFocus }) 
 						editorRef={editorRef}
 					/>
 					<textarea
-						className="focus:outline-none border-2 border-subdued-blue p-1 shadow-lg w-full h-full absolute z-20"
+						className="focus:outline-none border-2 border-subdued-blue p-1 shadow-lg absolute z-20"
 						ref={editorRef}
 						style={textareaStyle}
 						value={getCellPlainText(cell)}
@@ -515,8 +517,6 @@ const CellInPlaceEditor = ({ cellToEdit: cell, cellPositioning, cellHasFocus }) 
 		},
 		[editorPositioning, cell, editorRef, textareaStyle, handleCancel, handlePaste, handleStyling, handleSubmit, manageChange, manageBlur, manageTextSelection, setEditorPositioning]
 	);
-
-	// TODO NEXT  look into getting floating cell data saved to the db ...see TODO in CellInPLaceEditor
 
    // need to useEffect so the editorRef can first be assigned to the textarea
    useEffect(

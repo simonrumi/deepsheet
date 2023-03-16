@@ -1,19 +1,30 @@
 import * as R from 'ramda';
+import managedStore from '../store';
 import { cellReducerCreator } from './cellReducers';
 import { isSomething } from '../helpers';
-import { createFloatingCellKey } from '../helpers/floatingCellHelpers';
+import { createFloatingCellKey, FLOATING_CELL_KEY_PREFIX } from '../helpers/floatingCellHelpers';
+import { stateFloatingCellKeys } from '../helpers/dataStructureHelpers';
 import { 
+	ADDED_FLOATING_CELL,
 	UPDATED_FLOATING_CELL,
 	ADDED_FLOATING_CELL_KEYS,
 	REMOVED_FLOATING_CELL_KEYS,
 	CLEARED_ALL_FLOATING_CELL_KEYS,
+	UPDATED_FLOATING_CELL_STARTING_POSITION,
+	DELETED_FLOATING_CELL,
 } from '../actions/floatingCellTypes';
-import { FLOATING_CELL_DEFAULT_POSITION, DEFAULT_FLOATING_CELL_TEXT } from '../constants';
+import { DEFAULT_FLOATING_CELL_TEXT } from '../constants';
 
 const processFloatingCellAction = R.curry((state, sheetId, action) => {
 	switch (action.type) {
+		case ADDED_FLOATING_CELL:
+			return { ...state, ...action.payload };
+
       case UPDATED_FLOATING_CELL:
 			return { ...state, ...action.payload };
+
+		case DELETED_FLOATING_CELL:
+			return null;
 
 		default:
          return state;
@@ -27,22 +38,35 @@ const isMatchingCell = ({ floatingCell, action }) => isFloatingCellAction({ acti
 const floatingCellReducerFactory = (floatingCell, sheetId) => 
 	(state = {}, action) => isMatchingCell({ floatingCell, action }) ? processFloatingCellAction(state, sheetId, action) : state;
 
-let _lastFloatingCellNumber = -1;
-const getNextFloatingCellNumber = () => ++_lastFloatingCellNumber;
+const cellNumberRegex = new RegExp(`${FLOATING_CELL_KEY_PREFIX}(\\d*)`);
 
-const createNewFloatingCell = () => {
+const getNextFloatingCellNumber = () => {
+	const highestFloatingCellNum = R.reduce(
+		(accumulator, floatingCellKey) => R.pipe(
+			R.match(cellNumberRegex),
+			R.prop(1),
+			parseInt,
+			floatingCellNum => floatingCellNum > accumulator ? floatingCellNum : accumulator
+		)(floatingCellKey),
+		-1, // initial value is lower than the lowest possible floating cell number
+		stateFloatingCellKeys(managedStore.state)
+	);
+	return highestFloatingCellNum + 1;
+}
+
+const createNewFloatingCell = floatingCellPositioning => {
 	const number = getNextFloatingCellNumber();
 	const floatingCellKey = createFloatingCellKey(number);
 	const floatingCell = {
 		number,
-		position: FLOATING_CELL_DEFAULT_POSITION,
+		position: floatingCellPositioning,
 		content: {
 			formattedText: {
 				blocks: [
 					{
 						inlineStyleRanges: [],
 						text: DEFAULT_FLOATING_CELL_TEXT 
-						// note that keys are added by the updatedFloatingCell action
+						// note that keys are added by either the addedFloatingCell or the updatedFloatingCell actions
 					}
 
 				]
@@ -52,8 +76,8 @@ const createNewFloatingCell = () => {
 	return { number, floatingCellKey, floatingCell } 
 }
 
-export const createFloatingCellReducer = sheetId => {
-	const { floatingCellKey, floatingCell } = createNewFloatingCell();
+export const createFloatingCellReducer = (sheetId, floatingCellPositioning) => {
+	const { floatingCellKey, floatingCell } = createNewFloatingCell(floatingCellPositioning);
 	const creatorFunc = () => {
 		const floatingCellReducer = floatingCellReducerFactory(floatingCell, sheetId);
 		return { [floatingCellKey]: floatingCellReducer }
@@ -74,6 +98,16 @@ export const floatingCellKeysReducer = (state = [], action) => {
          return [];
 
       default:
+         return state;
+   }
+}
+
+export const floatingCellPositionReducer = (state = [], action) => {
+   switch (action.type) {
+		case UPDATED_FLOATING_CELL_STARTING_POSITION:
+			return { ...state, startingPosition: action.payload }
+
+		default:
          return state;
    }
 }

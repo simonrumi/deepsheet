@@ -4,7 +4,7 @@ import cellRangeReducer from './cellRangeReducer';
 import clipboardReducer from './clipboardReducer';
 import dragMonitorReducer from './dragMonitorReducer';
 import filterModalReducer from './filterModalReducer';
-import { floatingCellKeysReducer } from './floatingCellReducers';
+import { floatingCellKeysReducer, floatingCellPositionReducer } from './floatingCellReducers';
 import { focusReducer } from './focusReducer';
 import globalInfoModalReducer from './globalInfoModalReducer';
 import menuReducer from './menuReducer';
@@ -25,6 +25,7 @@ export const staticReducers = {
    dragMonitor: dragMonitorReducer,
    filterModal: filterModalReducer,
 	floatingCellKeys: floatingCellKeysReducer,
+	floatingCellPosition: floatingCellPositionReducer,
    focus: focusReducer,
    globalInfoModal: globalInfoModalReducer,
    menu: menuReducer,

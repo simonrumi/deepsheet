@@ -31,6 +31,10 @@ export const CELL_EDITOR_VERTICAL_MARGIN = -1 * CELL_EDITOR_LINE_HEIGHT - 5; // 
 export const CELL_EDITOR_TOOLS_LEFT_OFFSET = -60; // pixels
 export const CELL_EDITOR_TOOLS_TOP_OFFSET = -1 * CELL_EDITOR_VERTICAL_MARGIN - 55; // pixels
 
+export const FLOATING_CELL_TOP_OFFSET = 20; //pixels
+export const FLOATING_CELL_LEFT_OFFSET = 20; //pixels
+export const ADD_FLOATING_CELL_BTN_WIDTH = 50; // pixels - this is approximate, as it is changeable with screensize
+
 export const SORT_INCREASING = 'sort_increasing';
 export const SORT_DECREASING = 'sort_decreasing';
 export const SORT_TYPE_TEXT = 'sort_type_text';
@@ -57,7 +61,6 @@ export const STYLE_TAGS = {
 }
 
 // floating cell stuff
-export const FLOATING_CELL_DEFAULT_POSITION = { left: 100, top: 100, width: 200, height: 40 };
 export const DEFAULT_FLOATING_CELL_TEXT = 'new floating cell';
 
 /** logging levels **/
