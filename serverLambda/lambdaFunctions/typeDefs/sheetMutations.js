@@ -42,6 +42,27 @@ const SheetMutations = gql`
       userId: ID!
    }
 
+	input PositionInput {
+		left: Int!
+		top: Int!
+		width: Int
+		height: Int
+		right: Int
+		bottom: Int
+	}
+
+	input FloatingCellInput {
+      number: Int!
+		position: PositionInput
+      content: CellContentInput
+   }
+
+	input UpdateFloatingCellsInput {
+      sheetId: ID!
+      floatingCells: [FloatingCellInput]
+      userId: ID!
+   }
+
    input SheetFilterInput {
       index: Int!
       filterExpression: String
@@ -90,6 +111,8 @@ const SheetMutations = gql`
       updateMetadata(input: UpdateMetadataInput): SheetMetadataType
       updateSheetLastAccessed(id: ID!, lastAccessed: String!): SheetType
       updateCells(input: UpdateCellsInput): SheetType
+		addFloatingCells(input: UpdateFloatingCellsInput): SheetType
+		updateFloatingCells(input: UpdateFloatingCellsInput): SheetType
       deleteSubsheetId(input: UpdateSubsheetIdInput): SheetCellType
       deleteSheet(sheetId: ID!, userId: ID!): [SheetType]
       deleteSheets(ids: [ID], userId: ID!): [SheetType]

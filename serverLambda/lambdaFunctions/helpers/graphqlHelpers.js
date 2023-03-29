@@ -13,9 +13,9 @@ const createServer = async () => {
       return cachedServer;
    }
    try {
-      const startTime = log({ level: LOG.DEBUG, printTime: true }, 'graphqlHelpers.createServer getting db from dbConnector');
+      const startTime = log({ level: LOG.VERBOSE, printTime: true }, 'graphqlHelpers.createServer getting db from dbConnector');
       const db = await dbConnector();
-      log({ level: LOG.DEBUG, startTime }, 'graphqlHelpers.createServer got db from dbConnector');
+      log({ level: LOG.VERBOSE, startTime }, 'graphqlHelpers.createServer got db from dbConnector');
       
       const server = new ApolloServer({
          typeDefs,
@@ -60,26 +60,26 @@ const withAuth = func => async (event, context) => {
             log({ level: LOG.WARN }, '\n******\nWARNING! Auth is off! Turn on before publishing!\n******\n');
          }
 
-         const startTime = log({ level: LOG.DEBUG, printTime: true }, 'graphqlHelpers.withAuth gettingdb');
+         const startTime = log({ level: LOG.VERBOSE, printTime: true }, 'graphqlHelpers.withAuth gettingdb');
          const db = await dbConnector(); // stuff breaks if we don't make sure we have the db connection first
-         log({ level: LOG.DEBUG, startTime }, 'graphqlHelpers.withAuth got db');
+         log({ level: LOG.VERBOSE, startTime }, 'graphqlHelpers.withAuth got db');
          
          const event = args[0];
          const context = args[1];
          try {
-            const startTime = log({ level: LOG.DEBUG, printTime: true }, 'graphqlHelpers.withAuth about to check authorization');
+            const startTime = log({ level: LOG.VERBOSE, printTime: true }, 'graphqlHelpers.withAuth about to check authorization');
             const isAuthorized = await validateUserSession(event.headers);
-            log({ level: LOG.DEBUG, startTime }, 'graphqlHelpers.withAuth got isAuthorized', isAuthorized);
+            log({ level: LOG.VERBOSE, startTime }, 'graphqlHelpers.withAuth got isAuthorized', isAuthorized);
             
             if (!isAuthorized && AUTH_ON) {
-					log({ level: LOG.DEBUG }, 'graphqlHelpers.withAuth found user is not authorized so will return standardAuthError', standardAuthError);
+					log({ level: LOG.VERBOSE }, 'graphqlHelpers.withAuth found user is not authorized so will return standardAuthError', standardAuthError);
                return standardAuthError;
             }
          } catch (err) {
             log({ level: LOG.ERROR }, 'graphqlHelpers.withAuth error in call to validateUserSession:', err);
             return standardAuthError;
          }
-         log({ level: LOG.DEBUG, startTime }, 'graphqlHelpers.withAuth completed the whole middleware function');
+         log({ level: LOG.VERBOSE, startTime }, 'graphqlHelpers.withAuth completed the whole middleware function');
          return await targetFn(event, context);
       },
    };

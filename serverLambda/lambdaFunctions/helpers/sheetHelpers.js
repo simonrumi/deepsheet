@@ -175,7 +175,7 @@ const getAllSheetsForUser = async userId => {
    try {
       const startTime = log({ level: LOG.VERBOSE, printTime: true }, 'sheetHelpers.getAllSheetsForUser starting find query for userId', userId);
       const allSheets = await SheetModel.find({ 'users.owner': userId });
-      log({ level: LOG.DEBUG, startTime }, 'sheetHelpers.getAllSheetsForUser finished find query.');
+      log({ level: LOG.VERBOSE, startTime }, 'sheetHelpers.getAllSheetsForUser finished find query.');
 
       return allSheets;
    } catch (err) {
@@ -186,13 +186,14 @@ const getAllSheetsForUser = async userId => {
 
 const getLatestSheet = async sheetIds => {
    try {
-      const startTime = log({ level: LOG.DEBUG, printTime: true }, 'sheetHelpers.getLatestSheet starting find query for multiple sheetIds', sheetIds);
+      const startTime = log({ level: LOG.VERBOSE, printTime: true }, 'sheetHelpers.getLatestSheet starting find query for multiple sheetIds', sheetIds);
       const latestSheet = await SheetModel.find({ _id: { $in: sheetIds } })
          .sort({ 'metadata.lastAccessed': -1,  'metadata.lastUpdated': -1})
          .limit(1)
          .exec();
       log({ level: LOG.DEBUG, startTime }, 'sheetHelpers.getLatestSheet finished find query got latestSheet[0]', latestSheet[0]);
-      return latestSheet[0];   
+      console.log('sheetHelpers.getLatestSheet finished find query got latestSheet[0]', latestSheet[0]);
+		return latestSheet[0];   
 
    } catch (err) {
       log({ level: LOG.ERROR }, 'sheetHelpers.getLatestSheet', err.message);

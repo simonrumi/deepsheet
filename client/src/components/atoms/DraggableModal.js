@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { startedDrag, endedDrag } from '../../actions/dragActions';
 import { DRAGGABLE_MODAL } from '../../actions/dragTypes';
 
@@ -12,7 +12,7 @@ const DraggableModal = ({
 	onDragEndFn = () => {},
 }) => {
    const [isDragging, setIsDragging] = useState(false); // we have isDragging in the redux store also, but it's convenient to have it here so that we don't have to figure out if it is this particular component that is being dragged
-   const [currentPosition, setCurrentPosition] = useState(positioning);
+   const [currentPosition, setCurrentPosition] = useState({});
    const modalRef = useRef(null);
 
    const handleDragStart = event => {
@@ -29,7 +29,15 @@ const DraggableModal = ({
       endedDrag();
    };
 
-   const allClasses = isDragging && showBorder ? 'border border-vibrant-blue ' + classes : classes; //
+   const allClasses = isDragging && showBorder ? 'border border-vibrant-blue ' + classes : classes;
+
+	useEffect(() => {
+		setCurrentPosition(positioning);
+		// putting this here so that on first render, the positioning prop affects where the element shows up.
+		// previously we didn't have useEffect and just did this at the top:
+		// const [currentPosition, setCurrentPosition] = useState({positioning});
+		// ...but then the positioning value was getting set after the render, so it had no effect
+	}, [currentPosition]); 
 
    return (
       <div

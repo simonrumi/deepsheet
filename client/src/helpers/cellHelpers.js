@@ -123,6 +123,7 @@ export const getAllCells = state => R.pipe(
 
 // when the cell reducer needs to update the cell, this creates the new state that the reducer returns
 export const createUpdatedCellState = (payloadCell, state, sheetId) => {
+	// note that payloadCell is like a propper cell with the sheetId prop added
    if (R.equals(sheetId, payloadCell.sheetId)) {
       return R.pipe(
             R.dissoc('sheetId'),
@@ -308,7 +309,9 @@ export const prepCellsForDb = cells => R.map(
 		encodeCellText,
 		tidyUpFormattedText,
 		removeDeprecatedTextField,
-		R.pick(['row', 'column', 'visible', 'content']) // leave out unnecessary fields, like isStale and __typename
+		cell => isSomething(R.prop('number', cell))
+			? R.pick(['number', 'content', 'position'], cell)
+			: R.pick(['row', 'column', 'visible', 'content'], cell), // leave out unnecessary fields, like isStale and __typename
 	),
 	cells // each call to R.pipe will be giving it a cell
 );

@@ -8,9 +8,9 @@ const { log } = require('./helpers/logger');
 const { AUTH_PROVIDER_FACEBOOK, LOG } = require('../constants');
 
 const handler = async (event, context) => {
-	const startTime = log({ level: LOG.DEBUG, printTime: true }, 'autReturn starting by getting db');
+	const startTime = log({ level: LOG.VERBOSE, printTime: true }, 'autReturn starting by getting db');
    await dbConnector(); // for some reason we need to have this line here, in order for the findUser() call (within prepareAuthResponse) to work
-   log({ level: LOG.DEBUG, startTime }, 'autReturn got db.');
+   log({ level: LOG.VERBOSE, startTime }, 'autReturn got db.');
 
    const { code, state, error, error_reason, error_description } = event.queryStringParameters;
 
@@ -33,11 +33,11 @@ const handler = async (event, context) => {
 
    if (access_token) {
       try {
-         const startTime1 = log({ level: LOG.DEBUG, printTime: true }, 'autReturn getting userId from FB');
+         const startTime1 = log({ level: LOG.VERBOSE, printTime: true }, 'autReturn getting userId from FB');
          const userIdFromProvider = await getFbUserId(access_token);
-         log({ level: LOG.DEBUG, startTime1 }, 'autReturn got userIdFromProvider', userIdFromProvider);
+         log({ level: LOG.VERBOSE, startTime1 }, 'autReturn got userIdFromProvider', userIdFromProvider);
 
-         const startTime2 = log({ level: LOG.DEBUG, printTime: true }, 'autReturn preparing Auth Response');
+         const startTime2 = log({ level: LOG.VERBOSE, printTime: true }, 'autReturn preparing Auth Response');
          const authResponse = await prepareAuthResponse(userIdFromProvider, AUTH_PROVIDER_FACEBOOK, access_token);
          log({ level: LOG.DEBUG, startTime: startTime2 }, 'autReturn got authResponse', authResponse);
 

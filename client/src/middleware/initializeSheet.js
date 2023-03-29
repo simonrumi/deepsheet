@@ -3,18 +3,23 @@ import { TRIGGERED_FETCH_SHEET, COMPLETED_CREATE_SHEET } from '../actions/sheetT
 import { fetchSheet, fetchSheetByUserId } from '../services/sheetServices';
 import { fetchedSheet, fetchingSheet, fetchSheetError } from '../actions/sheetActions';
 import { cellsLoaded, clearedAllCellKeys } from '../actions/cellActions';
+import { clearedAllFloatingCellKeys } from '../actions/floatingCellActions';
 import { clearedCellRange } from '../actions/cellRangeActions';
 import { clearedFocus } from '../actions/focusActions';
 import { hidePopups } from '../actions';
 import { createCellReducers } from '../reducers/cellReducers';
+import { fromDbCreateFloatingCellReducers } from '../reducers/floatingCellReducers';
 import { isNothing, isSomething, arrayContainsSomething } from '../helpers';
 import { populateCellsInStore } from '../helpers/cellHelpers';
+import { populateFloatingCellsInStore } from '../helpers/floatingCellHelpers';
 import { applyFilters, initializeAxesVisibility } from '../helpers/visibilityHelpers';
 import { updateCellsInRange } from '../helpers/rangeToolHelpers';
 import { removeAllCellReducers, clearCells } from '../helpers/cellHelpers';
+import { removeAllFloatingCellReducers } from '../helpers/floatingCellHelpers';
 import { getUserInfoFromCookie } from '../helpers/userHelpers';
 import {
    dbCells,
+	dbFloatingCells,
    stateIsLoggedIn,
    stateSheetIsCallingDb,
    stateSheetErrorMessage,
@@ -30,17 +35,24 @@ const initializeCells = R.curry((store, sheet) => {
 
       if (arrayContainsSomething(stateCellKeys(store.getState()))) {
          removeAllCellReducers();
-         clearCells(store.getState());
+         clearCells(store.getState()); // unclear whether we need this step as well as removeAllCellReducers
          clearedAllCellKeys();
       }
 
       createCellReducers(sheet);
       populateCellsInStore(sheet);
       applyFilters(sheet);
-      clearedFocus();
    } else {
-      console.warn('WARNING: Missing Data');
+		log({ level: LOG.WARN }, 'initializeSheet--initializeCells got no cells data');
    }
+	console.log('initializeSheet--initializeCells got dbFloatingCells(sheet)', dbFloatingCells(sheet), 'sheet', sheet);
+	if (arrayContainsSomething(dbFloatingCells(sheet))) {
+		removeAllFloatingCellReducers();
+		clearedAllFloatingCellKeys();
+		fromDbCreateFloatingCellReducers(sheet);
+		populateFloatingCellsInStore(sheet);
+	}
+	clearedFocus();
 });
 
 const runFetchFunctionForId = async ({ sheetId, userId }) => {

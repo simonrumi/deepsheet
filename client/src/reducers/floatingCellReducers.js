@@ -3,7 +3,8 @@ import managedStore from '../store';
 import { cellReducerCreator } from './cellReducers';
 import { isSomething } from '../helpers';
 import { createFloatingCellKey, FLOATING_CELL_KEY_PREFIX } from '../helpers/floatingCellHelpers';
-import { stateFloatingCellKeys } from '../helpers/dataStructureHelpers';
+import { createUpdatedCellState } from '../helpers/cellHelpers';
+import { stateFloatingCellKeys, dbFloatingCells, floatingCellNumber, dbSheetId } from '../helpers/dataStructureHelpers';
 import { 
 	ADDED_FLOATING_CELL,
 	UPDATED_FLOATING_CELL,
@@ -12,6 +13,7 @@ import {
 	CLEARED_ALL_FLOATING_CELL_KEYS,
 	UPDATED_FLOATING_CELL_STARTING_POSITION,
 	DELETED_FLOATING_CELL,
+	COMPLETED_SAVE_FLOATING_CELL,
 } from '../actions/floatingCellTypes';
 import { DEFAULT_FLOATING_CELL_TEXT } from '../constants';
 
@@ -25,6 +27,9 @@ const processFloatingCellAction = R.curry((state, sheetId, action) => {
 
 		case DELETED_FLOATING_CELL:
 			return null;
+
+		case COMPLETED_SAVE_FLOATING_CELL:
+			return createUpdatedCellState(action.payload, state, sheetId); // note that this is the same fn as used for regular cells - a separate fn wasn't needed
 
 		default:
          return state;
@@ -84,6 +89,23 @@ export const createFloatingCellReducer = (sheetId, floatingCellPositioning) => {
 	};
 	cellReducerCreator(creatorFunc);
 	return { floatingCellKey, floatingCell };
+}
+
+export const fromDbCreateFloatingCellReducers = sheet => {
+	const thunkifiedCreatorFunc = R.thunkify(
+		R.pipe(
+			dbFloatingCells,
+			R.reduce(
+				(accumulator, floatingCell) => {
+					const floatingCellReducer = floatingCellReducerFactory(floatingCell, dbSheetId(sheet));
+					const floatingCellKey = createFloatingCellKey(floatingCellNumber(floatingCell));
+					return R.assoc(floatingCellKey, floatingCellReducer, accumulator);
+				},
+				{},
+			)
+		)
+	)(sheet);
+	cellReducerCreator(thunkifiedCreatorFunc);
 }
 
 export const floatingCellKeysReducer = (state = [], action) => {

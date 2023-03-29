@@ -13,6 +13,9 @@ import {
    CLEARED_ALL_CELL_KEYS,
    CELLS_REDRAW_COMPLETED,
 	UPDATED_END_OF_ROW_CELL,
+	COMPLETED_SAVE_CELLS,
+	COMPLETED_SAVE_CELL,
+	UPDATE_CELLS_FAILED
 } from './cellTypes';
 import { ADDED_CELL_TO_RANGE, } from './cellRangeTypes';
 import { isNothing } from '../helpers';
@@ -127,3 +130,25 @@ export const updatedEndOfRowCell = isEndOfRowCell => {
    });
 }
 
+export const completedSaveCells = response => {
+	console.log('cellActions--completedSaveCells got response', response);
+	managedStore.store.dispatch({
+      type: COMPLETED_SAVE_CELLS,
+      payload: response,
+   });
+}
+
+export const completedSaveCell = completedCell => {
+	managedStore.store.dispatch({
+      type: COMPLETED_SAVE_CELL,
+      payload: completedCell, // this includes the sheetId
+   });
+}
+
+
+export const updateCellsFailed = () => {
+	managedStore.store.dispatch({
+		type: UPDATE_CELLS_FAILED,
+		payload: { errorMessage: 'Could not save updates to cells'}, // don't publish the exact error, err for security reasons
+	});
+}

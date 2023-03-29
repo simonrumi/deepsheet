@@ -9,12 +9,14 @@ const UserModel = mongoose.model('user');
 require('./models/SessionModel');
 const { isSomething, isNothing, arrayContainsSomething } = require('./helpers');
 const { getAllSheetsForUser, createNewSheet, getLatestSheet } = require('./helpers/sheetHelpers');
+const { updateExistingFloatingCells } = require('./helpers/updateCellsHelpers');
 const { addSheetToUser } = require('./helpers/userHelpers');
 const {
    updateAndAddCells,
    deleteSubsheetId,
    findCellByRowAndColumn,
    updateParentWithSubsheetTitle,
+	addNewFloatingCells,
 } = require('./helpers/updateCellsHelpers');
 const { AuthenticationError } = require('apollo-server-lambda');
 const { log } = require('./helpers/logger');
@@ -24,7 +26,7 @@ module.exports = db => ({
    Query: {
       sheet: async (parent, args, context) => {
          try {
-            const startTime = log({ level: LOG.DEBUG, printTime: true }, 'resolvers.Query.sheet starting findOne query for sheetId', args.sheetId, 'userId', args.userId);
+            const startTime = log({ level: LOG.VERBOSE, printTime: true }, 'resolvers.Query.sheet starting findOne query for sheetId', args.sheetId, 'userId', args.userId);
             const sheetResult = await SheetModel.findOne({ _id: args.sheetId, 'users.owner': args.userId });
             log({ level: LOG.DEBUG, startTime }, 'resolvers.Query.sheet finished findOne query got sheetResult', sheetResult);
             return sheetResult;
@@ -35,16 +37,16 @@ module.exports = db => ({
       },
 
       sheets: async (parent, args, context) => {
-         log({ level: LOG.DEBUG, printTime: true }, 'resolvers.Query.sheets about to call getAllSheetsForUser with userId', args.userId);
+         log({ level: LOG.VERBOSE, printTime: true }, 'resolvers.Query.sheets about to call getAllSheetsForUser with userId', args.userId);
          return await getAllSheetsForUser(args.userId);
       },
 
       subsheetId: async (parent, args, context) => {
          if (parent.subsheetId) {
             try {
-               log({ level: LOG.DEBUG, printTime: true }, 'resolvers.Query.subsheetId starting findById query for subsheetId', parent.subsheetId);
+               log({ level: LOG.VERBOSE, printTime: true }, 'resolvers.Query.subsheetId starting findById query for subsheetId', parent.subsheetId);
                const subsheet = await SheetModel.findById(parent.subsheetId);
-               log({ level: LOG.DEBUG, startTime }, 'resolvers.Query.subsheetId finished findbyId query.');
+               log({ level: LOG.VERBOSE, startTime }, 'resolvers.Query.subsheetId finished findbyId query.');
                if (isSomething(subsheet)) {
                   return parent.subsheetId;
                }
@@ -203,6 +205,49 @@ module.exports = db => ({
          }
       },
 
+		addFloatingCells: async (parent, args, context) => {
+			console.log('resolvers--addFloatingCells started with args', args);
+			const { sheetId, floatingCells, userId } = args.input;
+			try {
+				console.log('resolvers--addFloatingCells about to call findById with the sheetId');
+				const sheetDoc = await SheetModel.findById(sheetId);
+				console.log('resolvers--addFloatingCells got sheetDoc', sheetDoc);
+            if (sheetDoc.users.owner != userId) {
+               return new Error('User not authorized to update sheet');
+            }
+				console.log('resolvers--addFloatingCells about to call addNewFloatingCells with floatingCells', floatingCells);
+				const addedFloatingCells = addNewFloatingCells(sheetDoc, floatingCells);
+				console.log('resolvers--addFloatingCells got addedFloatingCells', addedFloatingCells);
+            sheetDoc.floatingCells = addedFloatingCells;
+            sheetDoc.metadata.lastUpdated = new Date();
+            return await sheetDoc.save();
+			} catch (err) {
+            log({ level: LOG.ERROR }, 'resolvers.Mutation.addFloatingCells Error adding floating cells:', err.message);
+            return err;
+         }
+		},
+
+		updateFloatingCells: async (parent, args, context) => {
+			console.log('resolvers--updateFloatingCells started with args', args);
+			const { sheetId, floatingCells, userId } = args.input;
+			try {
+				const sheetDoc = await SheetModel.findById(sheetId);
+				console.log('resolvers--updateFloatingCells got sheetDoc', sheetDoc);
+            if (sheetDoc.users.owner != userId) {
+               return new Error('User not authorized to update sheet');
+            }
+				console.log('resolvers--addFloatingCells about to call updateExistingFloatingCells with floatingCells', floatingCells);
+				const updatedFloatingCells = updateExistingFloatingCells(sheetDoc, floatingCells);
+				sheetDoc.floatingCells = updatedFloatingCells;
+				sheetDoc.metadata.lastUpdated = new Date();
+				console.log('resolvers--addFloatingCells about to save sheetDoc', sheetDoc);
+            return await sheetDoc.save();
+			} catch (err) {
+            log({ level: LOG.ERROR }, 'resolvers.Mutation.addFloatingCells Error adding floating cells:', err.message);
+            return err;
+         }
+		},
+
       // TODO should give user the option to delete the whole subsheet also
       /* This is to remove a cell's connection to a subsheet, while preserving the text in the cell from the subsheet */
       deleteSubsheetId: async (parent, args, context) => {
@@ -219,7 +264,7 @@ module.exports = db => ({
             // remove the reference to the parent from the subsheet
             const subsheetDoc = await SheetModel.findById(subsheetId);
             subsheetDoc.metadata.parentSheetId = null;
-				log({ level: LOG.DEBUG }, 'resolvers--Mutation--deleteSubsheetId removed parentId from subsheet with Id:', subsheetId, 'so its metadata looks like this:', subsheetDoc?.metadata);
+				log({ level: LOG.VERBOSE }, 'resolvers--Mutation--deleteSubsheetId removed parentId from subsheet with Id:', subsheetId, 'so its metadata looks like this:', subsheetDoc?.metadata);
             await subsheetDoc.save();
 
             // return the cell that has had the subsheet unlinked from it

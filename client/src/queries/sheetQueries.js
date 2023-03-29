@@ -98,6 +98,31 @@ const SHEET_QUERY = gql`
             }
             visible
          }
+			floatingCells {
+				number
+				position {
+					left
+					top
+					width
+					height
+					right
+					bottom
+				}
+				content {
+               text
+					formattedText {
+						blocks {
+							inlineStyleRanges {
+								offset
+								length
+								style
+							}
+							key
+							text
+						}
+					}
+				}
+			}
       }
    }
 `;

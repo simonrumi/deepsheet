@@ -5,6 +5,7 @@ import { LOG } from '../constants';
 import { completedSaveUpdates } from '../actions';
 import { triggeredFetchSheet } from '../actions/sheetActions';
 import { updatedCells, clearedAllCellKeys } from '../actions/cellActions';
+import { addedFloatingCells, updatedFloatingCells } from '../actions/floatingCellActions';
 import { clearedFocus } from '../actions/focusActions';
 import { clearedCellRange } from '../actions/cellRangeActions';
 import { updatedMetadata, clearMetadata } from '../actions/metadataActions';
@@ -27,9 +28,12 @@ import { createSheetsTreeFromArray } from '../helpers/sheetsHelpers';
 import { updateCellsInRange } from '../helpers/rangeToolHelpers';
 import { isSomething, arrayContainsSomething, ifThen } from '../helpers';
 import { getSaveableCellData, getCellFromStore } from '../helpers/cellHelpers';
+import { getSaveableFloatingCellData } from '../helpers/floatingCellHelpers';
+import { getFloatingCellFromStore } from '../helpers/floatingCellHelpers';
 import { getUserInfoFromCookie } from '../helpers/userHelpers';
 import {
    stateChangedCells,
+	stateAddedCells,
    stateSheetId,
    stateMetadataIsStale,
    saveableStateMetadata,
@@ -145,30 +149,80 @@ const saveTitleUpdate = async state => {
    }
 }
 
-const getUpdatedCells = R.curry((state, updatedCellCoordinates) => {
-   if (arrayContainsSomething(updatedCellCoordinates)) {
-      return R.map(({ row, column }) => {
-         const cellData = getCellFromStore({ row, column, state });
-         return getSaveableCellData(cellData);
-      })(updatedCellCoordinates);
+const getAddedFloatingCells =  R.curry((state, addedCellNumbers) => {
+	console.log('sheetServices--getAddedFloatingCells got addedCellNumbers', addedCellNumbers);
+	if (arrayContainsSomething(addedCellNumbers)) {
+      return R.map(({ number }) => {
+			console.log('sheetServices--getAddedFloatingCells got an added cell number', number);
+         const floatingCellData = getFloatingCellFromStore({ number, state });
+			console.log('sheetServices--getAddedFloatingCells got floatingCellData', floatingCellData);
+         return getSaveableFloatingCellData(floatingCellData);
+      })(addedCellNumbers);
    }
    return null;
 });
+const getAddedCells = state => R.pipe(
+	stateAddedCells, 
+	R.tap(data => console.log('sheetServices--getAddedCells got stateAddedCells', data)),
+	getAddedFloatingCells(state)
+)(state);
 
-const getChangedCells = state => R.pipe(stateChangedCells, getUpdatedCells(state))(state);
+const getUpdatedCells = R.curry((state, updatedCellCoordinates) => 
+   arrayContainsSomething(updatedCellCoordinates)
+		? R.reduce(
+			(accumulator, { row, column, number }) => isSomething(number) 
+				? R.pipe(
+					R.tap(data => console.log('sheetServices--getUpdatedCells got changed floating cell', data)),
+					getFloatingCellFromStore,
+					getSaveableFloatingCellData,
+					R.append(R.__, accumulator.changedFloatingCells),
+					R.assoc('changedFloatingCells', R.__, accumulator),
+					R.tap(data => console.log('sheetServices--getUpdatedCells after getting changedFloatingCells will return', data)),
+				)({ number, state })
+				: R.pipe(
+					R.tap(data => console.log('sheetServices--getUpdatedCells got changed cell', data)),
+					getCellFromStore,
+					getSaveableCellData,
+					R.append(R.__, accumulator.changedCells),
+					R.assoc('changedCells', R.__, accumulator),
+					R.tap(data => console.log('sheetServices--getUpdatedCells after getting changedCells will return', data)),
+				)({ row, column, state }),
+			{ changedCells: [], changedFloatingCells: [] },
+			updatedCellCoordinates
+      )
+   : { changedCells: [], changedFloatingCells: [] }
+);
+const getChangedCells = state => R.pipe(
+	stateChangedCells, 
+	R.tap(data => console.log('sheetServices--getChangedCells got stateChangedCells', data)),
+	getUpdatedCells(state),
+	R.tap(data => console.log('sheetServices--getChangedCells after getUpdatedCells got', data)),
+)(state);
 
 const saveCellUpdates = async state => {
-   const changedCells = getChangedCells(state);
+   const { changedCells, changedFloatingCells } = getChangedCells(state);
+	const addedCells = getAddedCells(state);
    const sheetId = stateSheetId(state);
-   if (changedCells) {
-      try {
-         await updatedCells({ sheetId, cells: changedCells }); // note the "await" here doesn't do much because it is just triggering the action, which completes immediately. That action doesn't wait for the db update to happen
-      } catch (err) {
-			log({ level: LOG.ERROR }, 'error updating cells in db');
-			log({ level: LOG.DEBUG }, 'error updating cells in db', err);
-         throw new Error('Error updating cells in db', err);
-      }
-   }
+	console.log('sheetServices--saveCellUpdates got changedCells', changedCells, 'addedCells', addedCells, 'sheetId', sheetId);
+	try {
+		// note the "await" here doesn't do much because it is just triggering the action, which completes immediately. That action doesn't wait for the db update to happen
+		console.log('sheetServices--saveCellUpdates got changedCells', changedCells, 'changedFloatingCells', changedFloatingCells, 'addedCells', addedCells);
+		if (arrayContainsSomething(changedCells)) {
+			await updatedCells({ sheetId, cells: changedCells });
+		}
+		if (arrayContainsSomething(changedFloatingCells)) {
+			await updatedFloatingCells({ sheetId, floatingCells: changedFloatingCells });
+		}
+		if (arrayContainsSomething(addedCells)) {
+			await addedFloatingCells({ sheetId, floatingCells: addedCells });
+		}
+		// NOTE that for regular cells adding & updating are both handled by updatedCells ...this might need to change
+		// whereas for floating cells, there is so far just the case for adding them TODO - will need to make the case for updating them 
+	} catch (err) {
+		log({ level: LOG.ERROR }, 'error updating/adding cells in db');
+		log({ level: LOG.DEBUG }, 'error updating/adding cells in db:', err);
+		throw new Error('Error updating/adding cells in db', err);
+	}
 };
 
 const getChangedMetadata = state => (stateMetadataIsStale(state) ? saveableStateMetadata(state) : null);
@@ -188,6 +242,7 @@ const saveMetadataUpdates = async state => {
 };
 
 export const saveAllUpdates = async state => {
+	console.log('sheetServices--saveAllUpdates started');
    // TODO we are calling these updates serially -- yeech!
    await saveMetadataUpdates(state);
    await saveCellUpdates(state);

@@ -69,7 +69,7 @@ const findOrCreateUser = async ({ userIdFromProvider, provider, token }) => {
 
 const createSession = async () => {
    try {
-      const startTime = log({ level: LOG.DEBUG }, 'userHelpers.createSession creating new SessionModel');
+      const startTime = log({ level: LOG.VERBOSE }, 'userHelpers.createSession creating new SessionModel');
       const newSession = await new SessionModel().save();
       log({ startTime, level: LOG.DEBUG }, 'userHelpers.createSession got newSession', newSession);
       return newSession;
@@ -81,23 +81,23 @@ const createSession = async () => {
 
 const refreshSession = async sessionId => {
    try {
-      const startTime = log({ printTime: true, level: LOG.DEBUG }, 'userHelpers.refreshSession starting findById for sessionId', sessionId);
+      const startTime = log({ printTime: true, level: LOG.VERBOSE }, 'userHelpers.refreshSession starting findById for sessionId', sessionId);
       const currentSession = await SessionModel.findById(sessionId);
       log({ startTime, level: LOG.DEBUG }, 'userHelpers.refreshSession got currentSession', currentSession);
       
       if (currentSession) {
          currentSession.lastAccessed = Date.now();
          
-         const startTime = log({ printTime: true, level: LOG.DEBUG }, 'userHelpers.refreshSession starting saving currentSession');
+         const startTime = log({ printTime: true, level: LOG.VERBOSE }, 'userHelpers.refreshSession starting saving currentSession');
          const refreshsedSession = await currentSession.save();
-         log({ startTime, level: LOG.DEBUG }, 'userHelpers.refreshSession saved currentSession');
+         log({ startTime, level: LOG.VERBOSE }, 'userHelpers.refreshSession saved currentSession');
          
          return refreshsedSession;
       }
-      log({ level: LOG.DEBUG }, 'userHelpers.refreshSession found no currentSession so returning null');
+      log({ level: LOG.VERBOSE }, 'userHelpers.refreshSession found no currentSession so returning null');
       return null;
    } catch (err) {
-      log({ level: LOG.DEBUG }, 'Error refreshing session:', err.message);
+      log({ level: LOG.VERBOSE }, 'Error refreshing session:', err.message);
       throw new Error('Error refreshing session: ' + err);
    }
 };
@@ -158,15 +158,15 @@ const getUserInfoFromReq = reqHeaders => {
 // graphql uses this to make sure it is ok to run queries
 const validateUserSession = async reqHeaders => {
    const { userId, sessionId } = getUserInfoFromReq(reqHeaders);
-   log({ level: LOG.DEBUG }, 'userHelpers.validateUserSession got userId', userId, 'sessionId', sessionId);
+   log({ level: LOG.VERBOSE }, 'userHelpers.validateUserSession got userId', userId, 'sessionId', sessionId);
    if (isNothing(userId) || isNothing(sessionId)) {
-      log({ level: LOG.DEBUG }, 'userHelpers.validateUserSession missing either userId or sessionId so returning false');
+      log({ level: LOG.VERBOSE }, 'userHelpers.validateUserSession missing either userId or sessionId so returning false');
       return false;
    }
    try {
-      const startTime1 = log({ level: LOG.DEBUG, printTime: true }, 'userHelpers.validateUserSession about to findById(userId)');
+      const startTime1 = log({ level: LOG.VERBOSE, printTime: true }, 'userHelpers.validateUserSession about to findById(userId)');
       const user = await UserModel.findById(userId);
-      log({ level: LOG.DEBUG, startTime: startTime1 }, 'userHelpers.validateUserSession got user');
+      log({ level: LOG.VERBOSE, startTime: startTime1 }, 'userHelpers.validateUserSession got user');
       // see if the session in the user obj matches the session from the context
       // note that we can't test with double equals like this
       // user.session !== sessionId
@@ -175,9 +175,9 @@ const validateUserSession = async reqHeaders => {
          log({ level: LOG.INFO }, 'session is not current, user is not authorized');
          return false;
       }
-      const startTime2 = log({ level: LOG.DEBUG, printTime: true }, 'userHelpers.validateUserSession about to refreshSession');
+      const startTime2 = log({ level: LOG.VERBOSE, printTime: true }, 'userHelpers.validateUserSession about to refreshSession');
       const refreshedSession = await refreshSession(user.session);
-      log({ level: LOG.DEBUG, startTime: startTime2 }, 'userHelpers.validateUserSession got refreshedSession');
+      log({ level: LOG.VERBOSE, startTime: startTime2 }, 'userHelpers.validateUserSession got refreshedSession');
       return isSomething(refreshedSession);
    } catch (err) {
       log({ level: LOG.ERROR }, 'error validating user session', err.message);

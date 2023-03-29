@@ -3,6 +3,7 @@ const { log } = require('./helpers/logger');
 const { LOG } = require('../constants');
 
 const handler = async (event, context) => {
+	log({ level: LOG.VERBOSE }, 'graphql--handler started');
 	log({ level: LOG.DEBUG }, 'graphql--handler got event', event, 'context', context);
    log({ level: LOG.SILLY }, 'lambda ENVIRONMENT VARIABLES\n' + JSON.stringify(process.env, null, 2));
 

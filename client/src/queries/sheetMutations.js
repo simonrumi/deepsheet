@@ -225,6 +225,30 @@ const SHEET_BY_USER_ID_MUTATION = gql`
             }
             visible
          }
+			floatingCells {
+				number
+				position {
+					top
+					left
+					width
+					height
+					right
+					bottom
+				}
+				content {
+					formattedText {
+						blocks {
+							inlineStyleRanges {
+								offset
+								length
+								style
+							}
+							key
+							text
+						}
+					}
+				}
+			}
       }
    }
 `;

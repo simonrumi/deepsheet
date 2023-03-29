@@ -6,21 +6,24 @@ import { POSTING_CREATE_SHEET, COMPLETED_CREATE_SHEET, SHEET_CREATION_FAILED } f
 import { POSTING_UPDATED_METADATA, COMPLETED_SAVE_METADATA, METADATA_UPDATE_FAILED } from '../actions/metadataTypes';
 import {
    POSTING_UPDATED_CELLS,
-   COMPLETED_SAVE_CELLS,
-   COMPLETED_SAVE_CELL,
-   CELLS_UPDATE_FAILED,
    POSTING_DELETE_SUBSHEET_ID,
    COMPLETED_DELETE_SUBSHEET_ID,
    DELETE_SUBSHEET_ID_FAILED,
 } from '../actions/cellTypes';
-import { updatedCells } from '../actions/cellActions';
+import {
+   POSTING_ADDED_FLOATING_CELLS,
+	POSTING_UPDATED_FLOATING_CELLS,
+} from '../actions/floatingCellTypes';
+import { updatedCells, completedSaveCells, completedSaveCell, updateCellsFailed } from '../actions/cellActions';
+import { completedSaveFloatingCell, updateFloatingCellsFailed, addFloatingCellsFailed } from '../actions/floatingCellActions';
 import { fetchSheets, saveAllUpdates } from '../services/sheetServices';
 import { updateMetadataMutation } from '../queries/metadataMutations';
-import { updateCellsMutation, deleteSubsheetIdMutation } from '../queries/cellMutations';
+import { updateCellsMutation, deleteSubsheetIdMutation, addFloatingCellsMutation, updateFloatingCellsMutation } from '../queries/cellMutations';
 import { createSheetMutation } from '../queries/sheetMutations';
 import { isSomething, arrayContainsSomething, ifThenElse } from '../helpers';
 import { getUserInfoFromCookie } from '../helpers/userHelpers';
 import { getSaveableCellData, cleanCell } from '../helpers/cellHelpers';
+import { createFloatingCellsMutationData } from '../helpers/floatingCellHelpers';
 import { createDefaultAxisSizing } from '../helpers/axisSizingHelpers';
 import { cellSubsheetIdSetter, cellTextSetter, dbSheetId, removeTypename } from '../helpers/dataStructureHelpers';
 import { DEFAULT_TOTAL_ROWS, DEFAULT_TOTAL_COLUMNS, DEFAULT_ROW_HEIGHT, DEFAULT_COLUMN_WIDTH } from '../constants';
@@ -97,6 +100,7 @@ const dbOperations = store => next => async action => {
             await fetchSheets(); // this will update the sheetsTree in the store, since there's a new sheet to add
          } catch (err) {
             log({ level: LOG.INFO }, 'did not successfully create the sheet in the db:', err);
+				// TODO make this and all other managedStore.store.dispatches into actions 
             managedStore.store.dispatch({
                type: SHEET_CREATION_FAILED,
                payload: { errorMessage: 'sheet was not created in the db'},
@@ -137,28 +141,52 @@ const dbOperations = store => next => async action => {
 					sheetId, 
                userId,
             });
-            managedStore.store.dispatch({
-               type: COMPLETED_SAVE_CELLS,
-               payload: {
-                  updatedCells: response,
-                  lastUpdated: Date.now(),
-               },
-            });
+				completedSaveCells({ updatedCells: response, lastUpdated: Date.now() });
             R.map(cell => {
-               managedStore.store.dispatch({
-                  type: COMPLETED_SAVE_CELL,
-                  payload: { ...cell, sheetId },
-               });
+					completedSaveCell({ ...cell, sheetId });
                return null; // no return value needed - putting here to stop a warning from showing in the console
             })(cells);
          } catch (err) {
-            log({ level: LOG.INFO }, 'dbOperations tried to update cells but failed', err);
-            managedStore.store.dispatch({
-               type: CELLS_UPDATE_FAILED,
-               payload: { errorMessage: 'cells were not updated in the db'}, // don't publish the exact error, err for security reasons
-            });
+            log({ level: LOG.ERROR }, 'dbOperations tried to update cells but failed', err);
+				updateCellsFailed();
          }
          break;
+
+		case POSTING_ADDED_FLOATING_CELLS:
+			next(action); // get this action to the reducer before we do the next steps, so the UI can display "waiting" state
+			try {
+				console.log('dbOperations--POSTING_ADDED_FLOATING_CELLS will send addFloatingCellsMutation this data', createFloatingCellsMutationData(action));
+            const response = await addFloatingCellsMutation(createFloatingCellsMutationData(action));
+				console.log('dbOperations--POSTING_ADDED_FLOATING_CELLS after addFloatingCellsMutation got response', response);
+				// note that this will update the cellDbUpdatesReducer which is handled in cellReducers.js not in floatingCellReducers.js 
+				completedSaveCells({ updatedCells: response, lastUpdated: Date.now() });
+				R.map(floatingCell => { // TODO update to R.forEach
+					completedSaveFloatingCell({ ...floatingCell, sheetId: action.payload?.sheetId });
+               return null; // no return value needed - putting here to stop a warning from showing in the console
+            })(action.payload?.floatingCells);
+			} catch(err) {
+				log({ level: LOG.ERROR }, 'dbOperations tried to add floating cells but failed', err);
+				addFloatingCellsFailed();
+			}
+			break;
+
+		case POSTING_UPDATED_FLOATING_CELLS:
+			next(action); // get this action to the reducer before we do the next steps, so the UI can display "waiting" state
+			try {
+				console.log('dbOperations--POSTING_UPDATED_FLOATING_CELLS will send addFloatingCellsMutation this data', createFloatingCellsMutationData(action));
+				const response = await updateFloatingCellsMutation(createFloatingCellsMutationData(action));
+				console.log('dbOperations--POSTING_UPDATED_FLOATING_CELLS after updateFloatingCellsMutation got response', response);
+				// note that this will update the cellDbUpdatesReducer which is handled in cellReducers.js not in floatingCellReducers.js 
+				completedSaveCells({ updatedCells: response, lastUpdated: Date.now() });
+				R.map(floatingCell => { // TODO update to R.forEach
+					completedSaveFloatingCell({ ...floatingCell, sheetId: action.payload?.sheetId });
+               return null; // no return value needed - putting here to stop a warning from showing in the console
+            })(action.payload?.floatingCells);
+			} catch(err) {
+				log({ level: LOG.ERROR }, 'dbOperations tried to update floating cells but failed', err);
+            updateFloatingCellsFailed(); // don't publish the exact error, err for security reasons
+			}
+			break;
 
       case POSTING_DELETE_SUBSHEET_ID:
          next(action); // get this action to the reducer before we do the next steps, so the UI can display "waiting" state

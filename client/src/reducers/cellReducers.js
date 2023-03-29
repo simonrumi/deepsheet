@@ -9,8 +9,8 @@ import {
    UPDATED_CELL_VISIBILITY,
    POSTING_UPDATED_CELLS,
    COMPLETED_SAVE_CELLS,
-   CELLS_UPDATE_FAILED,
-   HAS_CHANGED_CELL,
+   UPDATE_CELLS_FAILED,
+	HAS_CHANGED_CELL,
    COMPLETED_SAVE_CELL,
    HAS_ADDED_CELL,
    POSTING_DELETE_SUBSHEET_ID,
@@ -21,7 +21,15 @@ import {
    CLEARED_ALL_CELL_KEYS,
 	UPDATED_END_OF_ROW_CELL,
 } from '../actions/cellTypes';
-import { ADDED_FLOATING_CELL, UPDATED_FLOATING_CELL, DELETED_FLOATING_CELL } from '../actions/floatingCellTypes';
+import {
+   REPORT_NEW_FLOATING_CELL,
+   UPDATED_FLOATING_CELL,
+   DELETED_FLOATING_CELL,
+   POSTING_ADDED_FLOATING_CELLS,
+	POSTING_UPDATED_FLOATING_CELLS,
+	ADD_FLOATING_CELLS_FAILED,
+	UPDATE_FLOATING_CELLS_FAILED,
+} from '../actions/floatingCellTypes';
 import { FETCHED_SHEET } from '../actions/sheetTypes';
 import { COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
 import { CLEARED_ALL_ERROR_MESSAGES } from '../actions/types';
@@ -151,6 +159,8 @@ export const cellDbUpdatesReducer = (state = {}, action) => {
          };
 
       case POSTING_UPDATED_CELLS:
+		case POSTING_ADDED_FLOATING_CELLS:
+		case POSTING_UPDATED_FLOATING_CELLS:
          return {
             ...state,
             isCallingDb: true,
@@ -169,7 +179,10 @@ export const cellDbUpdatesReducer = (state = {}, action) => {
             changedCells: [],
          };
 
-      case CELLS_UPDATE_FAILED:
+      case UPDATE_CELLS_FAILED:
+		case ADD_FLOATING_CELLS_FAILED:
+		case UPDATE_FLOATING_CELLS_FAILED:
+			console.log('cellReducers--cellDbUpdatesReducer got a failure so will be adding this error message', action.payload);
          return {
             ...state,
             isCallingDb: false,
@@ -235,7 +248,7 @@ export const cellDbUpdatesReducer = (state = {}, action) => {
 				isStale: true,
 			};
 
-		case ADDED_FLOATING_CELL:
+		case REPORT_NEW_FLOATING_CELL:
 			if (isNothing(action?.payload) || isNothing(floatingCellNumber(action.payload))) {
 				return state;
 			}

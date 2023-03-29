@@ -6,6 +6,7 @@ const FilterModel = require('./FilterModel');
 const FreezeModel = require('./FreezeModel');
 const SizingModel = require('./SizingModel');
 const CellModel = require('./CellModel');
+const FloatingCellModel = require('./FloatingCellModel');
 
 const sheetSchema = new Schema(
    {
@@ -34,6 +35,7 @@ const sheetSchema = new Schema(
       },
       title: { type: String, requried: true, default: 'My Deep Deep Sheet' },
       cells: [CellModel],
+		floatingCells: [FloatingCellModel],
    },
    { collection: 'sheets' }
 );

@@ -23,12 +23,27 @@ const SheetType = gql`
 		formattedText: FormattedTextType
    }
 
+	type FloatingCellPositionType {
+		top: Int!
+		left: Int!
+		width: Int
+		height: Int
+		right: Int
+		bottom: Int
+	}
+
    type SheetCellType {
       row: Int!
       column: Int!
       content: CellContentType!
       visible: Boolean!
    }
+
+	type SheetFloatingCellType {
+		number: Int!
+		position: FloatingCellPositionType!
+		content: CellContentType!
+	}
 
    type SheetFilterType {
       index: Int!
@@ -79,6 +94,7 @@ const SheetType = gql`
       metadata: SheetMetadataType!
       title: String
       cells: [SheetCellType]
+		floatingCells: [SheetFloatingCellType]
    }
 
    extend type Query {

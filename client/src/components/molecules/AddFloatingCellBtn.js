@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import * as R from 'ramda';
 import managedStore from '../../store';
 import { createFloatingCellReducer } from '../../reducers/floatingCellReducers';
-import { addedFloatingCellKeys, addedFloatingCell, updatedFloatingCellStartingPosition } from '../../actions/floatingCellActions';
+import { addedFloatingCellKeys, addedFloatingCell, reportNewFloatingCellChange, updatedFloatingCellStartingPosition } from '../../actions/floatingCellActions';
 import { focusedCell } from '../../actions/focusActions';
 import { startedUndoableAction, completedUndoableAction } from '../../actions/undoActions';
 import { isSomething } from '../../helpers';
@@ -45,12 +45,11 @@ const AddFloatingCellBtn = ({ sheetId, floatingCellContainerRef }) => {
 	const handleAddFloatingCell = sheetId => {
 		startedUndoableAction({ undoableType: ADDED_FLOATING_CELL, timestamp: Date.now() });
 		const updatedFloatingCellPositioning = updateFloatingCellPositioning();
-		console.log('AddFloatingCellBtn--handleAddFloatingCell got updatedFloatingCellPositioning', updatedFloatingCellPositioning);
 		setNewStartingPosition(updatedFloatingCellPositioning);
 		const { floatingCellKey, floatingCell } = createFloatingCellReducer(sheetId, updatedFloatingCellPositioning);
-		console.log('AddFloatingCellBtn--handleAddFloatingCell got floatingCellKey', floatingCellKey, 'floatingCell', floatingCell);
 		addedFloatingCellKeys(floatingCellKey);
 		addedFloatingCell(floatingCell);
+		reportNewFloatingCellChange(floatingCell);
 		focusedCell(floatingCell);
 		completedUndoableAction({
 			undoableType: ADDED_FLOATING_CELL,

@@ -91,6 +91,9 @@ export const dbSheetId = R.view(dbSheetIdLens);
 const dbCellsLens = R.lensProp('cells');
 export const dbCells = R.view(dbCellsLens);
 
+const dbFloatingCellsLens = R.lensProp('floatingCells');
+export const dbFloatingCells = R.view(dbFloatingCellsLens);
+
 /*** get/set values from the db filter structure ***/
 const filterFilterExpressionLens = R.lensProp('filterExpression');
 export const filterFilterExpression = createGetterSetter(filterFilterExpressionLens);
@@ -103,6 +106,7 @@ export const filterRegex = createGetterSetter(filterRegexLens);
 
 const filterIndexLens = R.lensProp('index');
 export const filterIndex = createGetterSetter(filterIndexLens);
+
 
 /************************************************ STATE METADATA **********************************************/
 
@@ -310,13 +314,18 @@ export const stateFloatingCellPosition = R.view(stateFloatingCellPositionLens);
 const startingPositionLens = R.compose(stateFloatingCellPositionLens, R.lensProp('startingPosition'));
 export const stateFloatingCellStartingPosition = R.view(startingPositionLens);
 
-/* values for the cell itself */
+/* values for the floating cell itself */
 const floatingCellPositionLens = R.lensProp('position');
 export const floatingCellPosition = floatingCell => R.view(floatingCellPositionLens, floatingCell);
 export const floatingCellPositionSetter = R.curry((newPosition, floatingCell) => R.set(floatingCellPositionLens, newPosition, floatingCell));
 
 const floatingCellNumberLens = R.lensProp('number');
 export const floatingCellNumber = cell => R.view(floatingCellNumberLens, cell);
+export const floatingCellNumberSetter = R.curry((newNumber, floatingCell) => R.set(floatingCellNumberLens, newNumber, floatingCell));
+
+const floatingCellFormattedTextLens = R.lensPath(['content', 'formattedText']);
+export const floatingCellFormattedText = floatingCell => R.view(floatingCellFormattedTextLens, floatingCell);
+export const floatingCellFormattedTextSetter = R.curry((newFormattedText, floatingCell) => R.set(floatingCellFormattedTextLens, newFormattedText, floatingCell));
 
 /************************************************ STATE SHEET **********************************************/
 
