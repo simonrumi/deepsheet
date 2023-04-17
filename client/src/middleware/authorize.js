@@ -1,4 +1,4 @@
-import { POSTING_UPDATED_CELLS } from '../actions/cellTypes';
+import { POSTING_UPDATED_CELLS, POSTING_DELETED_CELLS } from '../actions/cellTypes';
 import { TRIGGERED_FETCH_SHEET } from '../actions/sheetTypes';
 import { POSTING_UPDATED_METADATA } from '../actions/metadataTypes';
 import { promptLogin } from '../actions/authActions';
@@ -12,6 +12,7 @@ import { saveToLocalStorage } from '../helpers/authHelpers';
 const authorize = store => next => async action => {
    switch (action.type) {
       case POSTING_UPDATED_CELLS:
+		case POSTING_DELETED_CELLS:
       case TRIGGERED_FETCH_SHEET:
       case POSTING_UPDATED_METADATA:
       case FETCHING_SHEETS:

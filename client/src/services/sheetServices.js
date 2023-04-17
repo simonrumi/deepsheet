@@ -4,8 +4,7 @@ import { log } from '../clientLogger';
 import { LOG } from '../constants';
 import { completedSaveUpdates } from '../actions';
 import { triggeredFetchSheet } from '../actions/sheetActions';
-import { updatedCells, clearedAllCellKeys } from '../actions/cellActions';
-import { addedFloatingCells, updatedFloatingCells } from '../actions/floatingCellActions';
+import { updatedCellsAction, deletedCellsAction, clearedAllCellKeys } from '../actions/cellActions';
 import { clearedFocus } from '../actions/focusActions';
 import { clearedCellRange } from '../actions/cellRangeActions';
 import { updatedMetadata, clearMetadata } from '../actions/metadataActions';
@@ -26,7 +25,7 @@ import { COMPLETED_TITLE_UPDATE, TITLE_UPDATE_FAILED } from '../actions/titleTyp
 import { clearCells, decodeText } from '../helpers/cellHelpers';
 import { createSheetsTreeFromArray } from '../helpers/sheetsHelpers';
 import { updateCellsInRange } from '../helpers/rangeToolHelpers';
-import { isSomething, arrayContainsSomething, ifThen } from '../helpers';
+import { isNothing, isSomething, arrayContainsSomething, ifThen } from '../helpers';
 import { getSaveableCellData, getCellFromStore } from '../helpers/cellHelpers';
 import { getSaveableFloatingCellData } from '../helpers/floatingCellHelpers';
 import { getFloatingCellFromStore } from '../helpers/floatingCellHelpers';
@@ -34,6 +33,7 @@ import { getUserInfoFromCookie } from '../helpers/userHelpers';
 import {
    stateChangedCells,
 	stateAddedCells,
+	stateDeletedCells,
    stateSheetId,
    stateMetadataIsStale,
    saveableStateMetadata,
@@ -149,75 +149,94 @@ const saveTitleUpdate = async state => {
    }
 }
 
-const getAddedFloatingCells =  R.curry((state, addedCellNumbers) => {
-	console.log('sheetServices--getAddedFloatingCells got addedCellNumbers', addedCellNumbers);
-	if (arrayContainsSomething(addedCellNumbers)) {
-      return R.map(({ number }) => {
-			console.log('sheetServices--getAddedFloatingCells got an added cell number', number);
-         const floatingCellData = getFloatingCellFromStore({ number, state });
-			console.log('sheetServices--getAddedFloatingCells got floatingCellData', floatingCellData);
-         return getSaveableFloatingCellData(floatingCellData);
-      })(addedCellNumbers);
-   }
-   return null;
-});
-const getAddedCells = state => R.pipe(
-	stateAddedCells, 
-	R.tap(data => console.log('sheetServices--getAddedCells got stateAddedCells', data)),
-	getAddedFloatingCells(state)
+const removeDeletedCells = R.curry((deletedCells, cellArr) => R.filter(
+	cell => isSomething(cell.number)
+		? R.pipe(
+			R.find(deletedCell => isSomething(deletedCell.number) && cell.number === deletedCell.number),
+			isNothing
+		)(deletedCells)
+		: R.pipe(
+			R.find(deletedCell => isSomething(deletedCell.row) && cell.row === deletedCell.row && cell.column === deletedCell.column),
+			isNothing
+		)(deletedCells),
+	cellArr
+));
+
+const categorizeDeletedCells = cellCoordinates => arrayContainsSomething(cellCoordinates)
+	? R.reduce(
+		(accumulator, { row, column, number }) => isSomething(number)
+			? R.pipe(
+				R.prop('floatingCells'),
+				R.append({ number }),
+				R.assoc('floatingCells', R.__, accumulator)
+			)(accumulator)
+			: R.pipe(
+				R.prop('regularCells'),
+				R.append({ row, column, }),
+				R.assoc('regularCells', R.__, accumulator)
+			)(accumulator),
+		{ regularCells: [], floatingCells: [] },
+		cellCoordinates
+	)
+	: { regularCells: [], floatingCells: [] };
+
+const getDeletedCells = state => R.pipe(
+	stateDeletedCells,
+	categorizeDeletedCells,
 )(state);
 
-const getUpdatedCells = R.curry((state, updatedCellCoordinates) => 
-   arrayContainsSomething(updatedCellCoordinates)
+const categorizeCells = R.curry((state, cellCoordinates) => 
+   arrayContainsSomething(cellCoordinates)
 		? R.reduce(
 			(accumulator, { row, column, number }) => isSomething(number) 
 				? R.pipe(
-					R.tap(data => console.log('sheetServices--getUpdatedCells got changed floating cell', data)),
 					getFloatingCellFromStore,
 					getSaveableFloatingCellData,
-					R.append(R.__, accumulator.changedFloatingCells),
-					R.assoc('changedFloatingCells', R.__, accumulator),
-					R.tap(data => console.log('sheetServices--getUpdatedCells after getting changedFloatingCells will return', data)),
+					R.append(R.__, accumulator.floatingCells),
+					R.assoc('floatingCells', R.__, accumulator),
 				)({ number, state })
 				: R.pipe(
-					R.tap(data => console.log('sheetServices--getUpdatedCells got changed cell', data)),
 					getCellFromStore,
 					getSaveableCellData,
-					R.append(R.__, accumulator.changedCells),
-					R.assoc('changedCells', R.__, accumulator),
-					R.tap(data => console.log('sheetServices--getUpdatedCells after getting changedCells will return', data)),
+					R.append(R.__, accumulator.regularCells),
+					R.assoc('regularCells', R.__, accumulator),
 				)({ row, column, state }),
-			{ changedCells: [], changedFloatingCells: [] },
-			updatedCellCoordinates
+			{ regularCells: [], floatingCells: [] },
+			cellCoordinates
       )
-   : { changedCells: [], changedFloatingCells: [] }
+   : { regularCells: [], floatingCells: [] }
 );
-const getChangedCells = state => R.pipe(
-	stateChangedCells, 
-	R.tap(data => console.log('sheetServices--getChangedCells got stateChangedCells', data)),
-	getUpdatedCells(state),
-	R.tap(data => console.log('sheetServices--getChangedCells after getUpdatedCells got', data)),
+
+const getAddedCells = state => R.pipe(
+	stateAddedCells,
+	categorizeCells(state)
+)(state);
+
+const getUpdatedCells = state => R.pipe(
+	stateChangedCells,
+	categorizeCells(state),
 )(state);
 
 const saveCellUpdates = async state => {
-   const { changedCells, changedFloatingCells } = getChangedCells(state);
-	const addedCells = getAddedCells(state);
+   const { regularCells: changedCells, floatingCells: changedFloatingCells } = getUpdatedCells(state);
+	const { regularCells: addedCells, floatingCells: addedFloatingCells } = getAddedCells(state);
+	const { regularCells: removedCells, floatingCells: removedFloatingCells } = getDeletedCells(state); 
+
+	const allUpdatedFloatingCells = R.pipe(R.concat, removeDeletedCells(removedFloatingCells))(
+      changedFloatingCells,
+      addedFloatingCells
+   );
+	const allUpdatedCells = R.pipe(R.concat, removeDeletedCells(removedCells))(changedCells, addedCells);
    const sheetId = stateSheetId(state);
-	console.log('sheetServices--saveCellUpdates got changedCells', changedCells, 'addedCells', addedCells, 'sheetId', sheetId);
 	try {
-		// note the "await" here doesn't do much because it is just triggering the action, which completes immediately. That action doesn't wait for the db update to happen
-		console.log('sheetServices--saveCellUpdates got changedCells', changedCells, 'changedFloatingCells', changedFloatingCells, 'addedCells', addedCells);
-		if (arrayContainsSomething(changedCells)) {
-			await updatedCells({ sheetId, cells: changedCells });
+		if (arrayContainsSomething(allUpdatedFloatingCells) || arrayContainsSomething(allUpdatedCells)) {
+			console.log('sheetServices--saveCellUpdates about to send updatedCellsAction');
+			updatedCellsAction({ sheetId, cells: allUpdatedCells, floatingCells: allUpdatedFloatingCells });
 		}
-		if (arrayContainsSomething(changedFloatingCells)) {
-			await updatedFloatingCells({ sheetId, floatingCells: changedFloatingCells });
+		if (arrayContainsSomething(removedFloatingCells) || arrayContainsSomething(removedCells)) {
+			console.log('sheetServices--saveCellUpdates about to send deletedCellsAction');
+			deletedCellsAction({ sheetId, cells: removedCells, floatingCells: removedFloatingCells });
 		}
-		if (arrayContainsSomething(addedCells)) {
-			await addedFloatingCells({ sheetId, floatingCells: addedCells });
-		}
-		// NOTE that for regular cells adding & updating are both handled by updatedCells ...this might need to change
-		// whereas for floating cells, there is so far just the case for adding them TODO - will need to make the case for updating them 
 	} catch (err) {
 		log({ level: LOG.ERROR }, 'error updating/adding cells in db');
 		log({ level: LOG.DEBUG }, 'error updating/adding cells in db:', err);

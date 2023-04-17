@@ -2,8 +2,6 @@ import * as R from 'ramda';
 import managedStore from '../store';
 import { isSomething } from '.';
 import { decodeFormattedText, getFormattedText, } from '../helpers/richTextHelpers';
-import { cleanCell } from '../helpers/cellHelpers';
-import { getUserInfoFromCookie } from '../helpers/userHelpers';
 import {
 	statePresent,
    floatingCellNumber,
@@ -68,9 +66,3 @@ export const populateFloatingCellsInStore = sheet => {
 		)(floatingCell)
 	)(floatingCells);
 }
-
-export const createFloatingCellsMutationData = action => ({
-	floatingCells: R.map(cell => cleanCell(cell))(action.payload?.floatingCells),
-	sheetId: action.payload?.floatingCellsSheetId || action.payload?.sheetId, 
-	userId: R.pipe(getUserInfoFromCookie, R.prop('userId'))(),
-});

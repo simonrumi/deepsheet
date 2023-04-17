@@ -1,17 +1,20 @@
 import * as R from 'ramda';
 import managedStore from '../store';
-import { isSomething, isNothing, } from '../helpers';
+import { isSomething, isNothing, arrayContainsSomething } from '../helpers';
 import { createUpdatedCellState, createCellKey } from '../helpers/cellHelpers';
+import { convertErrorToString } from '../helpers/authHelpers';
 import { dbCells, cellRow, cellColumn, floatingCellNumber } from '../helpers/dataStructureHelpers';
-import { addErrorMessage } from '../helpers/authHelpers';
 import {
    UPDATED_CELL,
    UPDATED_CELL_VISIBILITY,
    POSTING_UPDATED_CELLS,
+	POSTING_DELETED_CELLS,
    COMPLETED_SAVE_CELLS,
-   UPDATE_CELLS_FAILED,
-	HAS_CHANGED_CELL,
    COMPLETED_SAVE_CELL,
+	COMPLETED_DELETE_CELLS,
+   UPDATE_CELLS_FAILED,
+	DELETE_CELLS_FAILED,
+	HAS_CHANGED_CELL,
    HAS_ADDED_CELL,
    POSTING_DELETE_SUBSHEET_ID,
    COMPLETED_DELETE_SUBSHEET_ID,
@@ -25,14 +28,16 @@ import {
    REPORT_NEW_FLOATING_CELL,
    UPDATED_FLOATING_CELL,
    DELETED_FLOATING_CELL,
-   POSTING_ADDED_FLOATING_CELLS,
-	POSTING_UPDATED_FLOATING_CELLS,
-	ADD_FLOATING_CELLS_FAILED,
-	UPDATE_FLOATING_CELLS_FAILED,
 } from '../actions/floatingCellTypes';
 import { FETCHED_SHEET } from '../actions/sheetTypes';
 import { COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
 import { CLEARED_ALL_ERROR_MESSAGES } from '../actions/types';
+
+const addCellsErrorMessage = ({ err, errArr }) => isSomething(err)
+? arrayContainsSomething(errArr) 
+	? R.append(convertErrorToString(err), errArr) 
+	: [ convertErrorToString(err) ]
+: errArr;
 
 const processCellAction = R.curry((state, sheetId, action) => {
    switch (action.type) {
@@ -146,7 +151,10 @@ export const cellDbUpdatesReducer = (state = {}, action) => {
             ...state,
             isCallingDb: false,
             isStale: false,
-            errorMessage: null,
+				// TODO if we created a sheet but there were error messages from the previous sheet, we shouldn't just ignore them
+				// Fixing this will require storing a lot more stuff locally
+            errorMessages: null, 
+				deleteCellsErrorMessages: null,
             lastUpdated: Date.now(),
          };
 
@@ -155,17 +163,27 @@ export const cellDbUpdatesReducer = (state = {}, action) => {
             ...state,
             isCallingDb: false,
             isStale: false,
-            errorMessage: null,
+				// TODO if we loaded a sheet but there were error messages from the previous sheet, we shouldn't just ignore them
+				// Fixing this will require storing a lot more stuff locally
+            errorMessages: null,
+				deleteCellsErrorMessages: null,
          };
 
-      case POSTING_UPDATED_CELLS:
-		case POSTING_ADDED_FLOATING_CELLS:
-		case POSTING_UPDATED_FLOATING_CELLS:
+		case POSTING_UPDATED_CELLS:
          return {
             ...state,
             isCallingDb: true,
             isStale: true,
-            errorMessage: null,
+            errorMessages: null,
+            lastUpdated: isSomething(state.lastUpdated) ? state.lastUpdated : null,
+         };
+
+		case POSTING_DELETED_CELLS:
+			return {
+            ...state,
+            isCallingDb: true,
+            isStale: true,
+            deleteCellsErrorMessages: null,
             lastUpdated: isSomething(state.lastUpdated) ? state.lastUpdated : null,
          };
 
@@ -173,21 +191,40 @@ export const cellDbUpdatesReducer = (state = {}, action) => {
          return {
             ...state,
             isCallingDb: false,
-            isStale: false,
-            errorMessage: null,
-            lastUpdated: action.payload.lastUpdated,
+            isStale: arrayContainsSomething(state.deleteCellsErrorMessages), 
+            errorMessages: null,
+				lastUpdated: action.payload.lastUpdated,
             changedCells: [],
+				addedCells: []
          };
 
+		case COMPLETED_DELETE_CELLS:
+			return {
+				...state,
+				isCallingDb: false, 
+				isStale: arrayContainsSomething(state.errorMessages),
+				deleteCellsErrorMessages: null,
+				lastUpdated: action.payload.lastUpdated,
+            deletedCells: [],
+			}
+
       case UPDATE_CELLS_FAILED:
-		case ADD_FLOATING_CELLS_FAILED:
-		case UPDATE_FLOATING_CELLS_FAILED:
-			console.log('cellReducers--cellDbUpdatesReducer got a failure so will be adding this error message', action.payload);
+			console.log('cellReducers--cellDbUpdatesReducer--UPDATE_CELLS_FAILED will be adding this error message', action.payload);
          return {
             ...state,
             isCallingDb: false,
             isStale: true,
-            errorMessage: addErrorMessage({ err: action.payload, errArr: state.errorMessage }),
+            errorMessages: addCellsErrorMessage({ err: action.payload, errArr: state.errorMessages }),
+            lastUpdated: isSomething(state.lastUpdated) ? state.lastUpdated : null,
+         };
+
+		case DELETE_CELLS_FAILED:
+			console.log('cellReducers--cellDbUpdatesReducer--DELETE_CELLS_FAILED will be adding this error message', action.payload);
+         return {
+            ...state,
+            isCallingDb: false,
+            isStale: true,
+            deleteCellsErrorMessages: addCellsErrorMessage({ err: action.payload, errArr: state.deleteCellsErrorMessages }),
             lastUpdated: isSomething(state.lastUpdated) ? state.lastUpdated : null,
          };
 
@@ -270,14 +307,18 @@ export const cellDbUpdatesReducer = (state = {}, action) => {
 				changedCells: R.filter(changedCell => floatingCellNumber(changedCell) !== floatingCellNumber(action?.payload), state.changedCells || []),
 				deletedCells: isFloatingCellInArr({ floatingCell: action.payload, arr: currentAddedCellsArr })
 					? state.deletedCells || [] // the deleted cell was in the addedCells array, but has been removed from there. So no need to identify it as a deleted cell
-					: R.append(action.payload, state.deletedCells || []),
+					: R.pipe(
+						R.pick(['number']),
+						R.append(R.__, state.deletedCells || [])
+					)(action.payload),
 				isStale: true,
 			}
 
 		case CLEARED_ALL_ERROR_MESSAGES:
 			return { 
 				...state,
-				errorMessage: null,
+				errorMessages: null,
+				deleteCellsErrorMessages: null,
 			}
 
       default:

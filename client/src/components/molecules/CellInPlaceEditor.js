@@ -75,7 +75,7 @@ import {
 	CELL_EDITOR_LINE_HEIGHT,
 } from '../../constants';
 import { SYSTEM_CLIPBOARD_UNAVAILABLE_MSG, createdEditedCellMessage } from '../displayText';
-import DraggableModal from '../atoms/DraggableModal';
+import DraggableElement from '../atoms/DraggableElement';
 import { log } from '../../clientLogger';
 import CellEditorTools from './CellEditorTools';
 
@@ -143,11 +143,12 @@ const CellInPlaceEditor = ({ cellToEdit: cell, cellPositioning, cellHasFocus }) 
 	const generateMemoizedFns = useCallback(
 		() => {
 			const finalizeCellContent = cell => {
-				const latestFormattedText = R.pipe(cellFromStore, cellFormattedText)(cell);
+				const cellWithLatestFormattedText = cellFromStore(cell);
+				const latestFormattedText = cellFormattedText(cellWithLatestFormattedText);
 
 				if (!R.equals(stateOriginalFormattedText(managedStore.state), latestFormattedText)) {
 					if (isFloatingCell) {
-						updatedFloatingCell(cell);
+						updatedFloatingCell(cellWithLatestFormattedText);
 					}
 					if (isSomething(cellRow(cell))) {
 						// for a regular cell only
@@ -530,10 +531,10 @@ const CellInPlaceEditor = ({ cellToEdit: cell, cellPositioning, cellHasFocus }) 
 	);
 
    return (
-		<DraggableModal classes="absolute z-20 text-dark-dark-blue flex items-start" positioning={editorPositioning} showBorder={false} id={editorId}>
+		<DraggableElement classes="absolute z-20 text-dark-dark-blue flex items-start" positioning={editorPositioning} showBorder={false} id={editorId}>
 			<MoveIcon classes="bg-white mr-1 w-6" onMouseDownFn={clickedEditorHeader} onMouseUpFn={releasedEditorHeader} />
 			{renderTextForm()}
-		</DraggableModal>
+		</DraggableElement>
    );
 }
 

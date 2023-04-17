@@ -9,14 +9,15 @@ const UserModel = mongoose.model('user');
 require('./models/SessionModel');
 const { isSomething, isNothing, arrayContainsSomething } = require('./helpers');
 const { getAllSheetsForUser, createNewSheet, getLatestSheet } = require('./helpers/sheetHelpers');
-const { updateExistingFloatingCells } = require('./helpers/updateCellsHelpers');
 const { addSheetToUser } = require('./helpers/userHelpers');
 const {
    updateAndAddCells,
+	updateAndAddFloatingCells,
+	removeDeletedCells, 
+	removeDeletedFloatingCells,
    deleteSubsheetId,
    findCellByRowAndColumn,
    updateParentWithSubsheetTitle,
-	addNewFloatingCells,
 } = require('./helpers/updateCellsHelpers');
 const { AuthenticationError } = require('apollo-server-lambda');
 const { log } = require('./helpers/logger');
@@ -188,15 +189,19 @@ module.exports = db => ({
          }
       },
 
-      updateCells: async (parent, args, context) => {
-         const { sheetId, cells, userId } = args.input;
+		updateCells: async (parent, args, context) => {
+         const { sheetId, cells, floatingCells, userId } = args.input;
          try {
             const sheetDoc = await SheetModel.findById(sheetId);
             if (sheetDoc.users.owner != userId) {
                return new Error('User not authorized to update sheet');
             }
             const updatedCells = updateAndAddCells(sheetDoc, cells);
-            sheetDoc.cells = updatedCells;
+				sheetDoc.cells = updatedCells;
+
+				const updatedFloatingCells = updateAndAddFloatingCells(sheetDoc, floatingCells);
+				sheetDoc.floatingCells = updatedFloatingCells;
+
             sheetDoc.metadata.lastUpdated = new Date();
             return await sheetDoc.save();
          } catch (err) {
@@ -205,47 +210,27 @@ module.exports = db => ({
          }
       },
 
-		addFloatingCells: async (parent, args, context) => {
-			console.log('resolvers--addFloatingCells started with args', args);
-			const { sheetId, floatingCells, userId } = args.input;
+		// TODO test this
+		deleteCells: async (parent, args, context) => {
+			const { sheetId, cells = [], floatingCells = [], userId } = args.input;
+			console.log('resolvers--deleteCells got sheetId', sheetId, 'userId', userId, 'cells', cells, 'floatingCells', floatingCells)
 			try {
-				console.log('resolvers--addFloatingCells about to call findById with the sheetId');
 				const sheetDoc = await SheetModel.findById(sheetId);
-				console.log('resolvers--addFloatingCells got sheetDoc', sheetDoc);
             if (sheetDoc.users.owner != userId) {
                return new Error('User not authorized to update sheet');
             }
-				console.log('resolvers--addFloatingCells about to call addNewFloatingCells with floatingCells', floatingCells);
-				const addedFloatingCells = addNewFloatingCells(sheetDoc, floatingCells);
-				console.log('resolvers--addFloatingCells got addedFloatingCells', addedFloatingCells);
-            sheetDoc.floatingCells = addedFloatingCells;
-            sheetDoc.metadata.lastUpdated = new Date();
-            return await sheetDoc.save();
-			} catch (err) {
-            log({ level: LOG.ERROR }, 'resolvers.Mutation.addFloatingCells Error adding floating cells:', err.message);
-            return err;
-         }
-		},
+				const updatedCells = removeDeletedCells(sheetDoc, cells);
+				sheetDoc.cells = updatedCells;
 
-		updateFloatingCells: async (parent, args, context) => {
-			console.log('resolvers--updateFloatingCells started with args', args);
-			const { sheetId, floatingCells, userId } = args.input;
-			try {
-				const sheetDoc = await SheetModel.findById(sheetId);
-				console.log('resolvers--updateFloatingCells got sheetDoc', sheetDoc);
-            if (sheetDoc.users.owner != userId) {
-               return new Error('User not authorized to update sheet');
-            }
-				console.log('resolvers--addFloatingCells about to call updateExistingFloatingCells with floatingCells', floatingCells);
-				const updatedFloatingCells = updateExistingFloatingCells(sheetDoc, floatingCells);
+				const updatedFloatingCells = removeDeletedFloatingCells(sheetDoc, floatingCells);
 				sheetDoc.floatingCells = updatedFloatingCells;
+
 				sheetDoc.metadata.lastUpdated = new Date();
-				console.log('resolvers--addFloatingCells about to save sheetDoc', sheetDoc);
             return await sheetDoc.save();
 			} catch (err) {
-            log({ level: LOG.ERROR }, 'resolvers.Mutation.addFloatingCells Error adding floating cells:', err.message);
+				log({ level: LOG.ERROR }, 'resolvers.Mutation.deleteCells Error deleting cells:', err.message);
             return err;
-         }
+			}
 		},
 
       // TODO should give user the option to delete the whole subsheet also

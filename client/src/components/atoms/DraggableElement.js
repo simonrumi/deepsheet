@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { startedDrag, endedDrag } from '../../actions/dragActions';
 import { DRAGGABLE_MODAL } from '../../actions/dragTypes';
 
-const DraggableModal = ({
+const DraggableElement = ({
    dragData = {},
    children,
    classes = '',
@@ -25,6 +25,7 @@ const DraggableModal = ({
    const handleDragEnd = event => {
       setIsDragging(false);
       setCurrentPosition({ ...positioning, left: event.clientX, top: event.clientY });
+		console.log('DraggableElement--handleDragEnd got event.clientX', event.clientX, 'event.clientY', event.clientY, 'and currentPosition is now', currentPosition)
 		onDragEndFn(event)
       endedDrag();
    };
@@ -32,7 +33,10 @@ const DraggableModal = ({
    const allClasses = isDragging && showBorder ? 'border border-vibrant-blue ' + classes : classes;
 
 	useEffect(() => {
-		setCurrentPosition(positioning);
+		console.log('DraggableElement--useEffect is about to setCurrentPosition to positioning', positioning );
+		if (!currentPosition.left || !currentPosition.top) {
+			setCurrentPosition(positioning);
+		}
 		// putting this here so that on first render, the positioning prop affects where the element shows up.
 		// previously we didn't have useEffect and just did this at the top:
 		// const [currentPosition, setCurrentPosition] = useState({positioning});
@@ -53,4 +57,4 @@ const DraggableModal = ({
    );
 };
 
-export default DraggableModal;
+export default DraggableElement;

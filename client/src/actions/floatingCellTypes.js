@@ -1,10 +1,7 @@
 export const UPDATED_FLOATING_CELL = 'updated_floating_cell';
 export const ADDED_FLOATING_CELL = 'added_floating_cell';
 export const REPORT_NEW_FLOATING_CELL = 'report_new_floating_cell';
-export const POSTING_ADDED_FLOATING_CELLS = 'posting_added_floating_cells';
 export const POSTING_UPDATED_FLOATING_CELLS = 'posting_updated_floating_cells';
-export const ADD_FLOATING_CELLS_FAILED = 'add_floating_cells_failed';
-export const UPDATE_FLOATING_CELLS_FAILED = 'update_floating_cells_failed';
 export const ADDED_FLOATING_CELL_KEYS = 'added_floating_cell_keys';
 export const REMOVED_FLOATING_CELL_KEYS = 'removed_floating_cell_keys';
 export const CLEARED_ALL_FLOATING_CELL_KEYS = 'cleared_all_floating_cell_keys';

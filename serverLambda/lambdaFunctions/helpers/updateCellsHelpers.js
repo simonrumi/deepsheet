@@ -30,6 +30,17 @@ const updateAndAddCells = (sheetDoc, updatedCells) => {
          : null;
 };
 
+// TODO test this
+const removeDeletedCells = (sheetDoc, deletedCells) => R.pipe(
+	R.prop('cells'),
+	R.filter(
+		cell => R.pipe(
+			findCellByRowAndColumn,
+			isNothing
+		)(cell.row, cell.column, deletedCells)
+	)
+)(sheetDoc);
+
 // this has a very specific use in two reducers below
 const giveNewNumberToNextFloatingCell = accumulator => ({
 	...accumulator,
@@ -42,12 +53,52 @@ const giveNewNumberToNextFloatingCell = accumulator => ({
 	nextNumber: accumulator.nextNumber + 1,
 });
 
-/* 
+const findFloatingCellByNumber = R.curry((number, cellsArr) => {
+   return R.find(floatingCell => R.propEq('number', number, floatingCell))(cellsArr);
+});
+
+const updateAndAddFloatingCells  = (sheetDoc, updatedFloatingCells) => {
+	const updatedExistingFloatingCells = R.pipe(
+		R.prop,
+		R.map(floatingCell => {
+			const updatedFloatingCell = findFloatingCellByNumber(floatingCell.number, updatedFloatingCells);
+			return isSomething(updatedFloatingCell) ? updatedFloatingCell : floatingCell; 
+		})
+	)('floatingCells', sheetDoc);
+
+	const addedFloatingCells = R.filter(
+		floatingCell => R.pipe(
+			findFloatingCellByNumber, 
+			isNothing
+		)(floatingCell.number, updatedExistingFloatingCells)
+	)(updatedFloatingCells);
+
+	return arrayContainsSomething(updatedExistingFloatingCells)
+      ? arrayContainsSomething(addedFloatingCells)
+         ? R.concat(updatedExistingFloatingCells, addedFloatingCells)
+         : updatedExistingFloatingCells
+      : arrayContainsSomething(addedFloatingCells)
+         ? addedFloatingCells
+         : null;
+}
+
+// TODO test this
+const removeDeletedFloatingCells = (sheetDoc, deletedFloatingCells) => R.pipe(
+	R.prop('floatingCells'),
+	R.filter(
+		floatingCell => R.pipe(
+			findFloatingCellByNumber,
+			isNothing
+		)(floatingCell.number, deletedFloatingCells)
+	)
+)(sheetDoc);
+
+/* TODO need to stop using this -  use updateAndAddFloatingCells instead
  This will add all the provided floating cells, even if some of them have numbers that are the same as already existing cells.
  when that happens, we'll update the numbers for the added cells, either by finding "holes" in the current set of floating cell numbers,
  or, failiing that, adding numbers that are greater than any existing numbers
  */
-const addNewFloatingCells = (sheetDoc, addedFloatingCells) => {
+/* const addNewFloatingCells = (sheetDoc, addedFloatingCells) => {
 	console.log('updateCellsHelpers--addNewFloatingCells got addedFloatingCells', addedFloatingCells);
 	// go through all the floating cells and if the number already exists,
 	// make the new floating cell the next available number
@@ -107,10 +158,11 @@ const addNewFloatingCells = (sheetDoc, addedFloatingCells) => {
 			R.prop('updatedFloatingCells')
 		)(existingFloatingCells)
 	)(addedFloatingCells);
-}
+} */ // TIDY
 
-/* If we're asked to update any cells that don't exist already, we will add those as new cells by calling addNewFloatingCells (see above) */
-const updateExistingFloatingCells = (sheetDoc, updatedFloatingCells) => {
+/* TODO need to stop using this - use updateAndAddFloatingCells instead
+If we're asked to update any cells that don't exist already, we will add those as new cells by calling addNewFloatingCells (see above) */
+/* const updateExistingFloatingCells = (sheetDoc, updatedFloatingCells) => {
 	const { remainingUpdatedFloatingCells, allFloatingCells } = R.reduce(
 		(accumulator, existingFloatingCell) => {
 			console.log('updateCellHelpers--updateExistingFloatingCells reduce start with existingFloatingCell', existingFloatingCell, 'accumulator', accumulator)
@@ -136,7 +188,7 @@ const updateExistingFloatingCells = (sheetDoc, updatedFloatingCells) => {
 	}
 	console.log('updateCellHelpers--updateExistingFloatingCells will return allFloatingCells', allFloatingCells);
 	return allFloatingCells;
-}
+} */ // TIDY
 
 const deleteSubsheetId = ({ originalCells, row, column, formattedText }) =>
    R.map(cell => {
@@ -157,8 +209,9 @@ const updateParentWithSubsheetTitle = (parentSheet, subsheet) => R.map(
 module.exports = {
    findCellByRowAndColumn,
    updateAndAddCells,
-	addNewFloatingCells,
-	updateExistingFloatingCells,
+	updateAndAddFloatingCells,
+	removeDeletedCells,
+	removeDeletedFloatingCells,
    deleteSubsheetId,
    updateParentWithSubsheetTitle,
 };

@@ -8,7 +8,7 @@ import { focusedCell, clearedFocus, updatedFocusRef } from '../../actions/focusA
 import { runIfSomething } from '../../helpers';
 import { convertBlocksToJsx, getFormattedText, decodeFormattedText } from  '../../helpers/richTextHelpers';
 import { stateFloatingCell, floatingCellPosition, floatingCellPositionSetter, stateFocus, stateFocusCell, stateFocusAbortControl } from '../../helpers/dataStructureHelpers';
-import DraggableModal from '../atoms/DraggableModal';
+import DraggableElement from '../atoms/DraggableElement';
 import CellInPlaceEditor from '../molecules/CellInPlaceEditor';
 import MoveIcon from '../atoms/IconMove';
 import { log } from '../../clientLogger';
@@ -103,14 +103,14 @@ const FloatingCell = ({ floatingCellKey }) => {
 	}
 
    return (<>
-		<DraggableModal
+		<DraggableElement
 			classes="absolute"
 			positioning={floatingCellPositioning}
 			showBorder={false}
 			onDragEndFn={handleDragEnd}
 			id={floatingCellKey}>
 			{renderFloatingCell()}
-		</DraggableModal>
+		</DraggableElement>
 		{maybeRenderEditor()}
 	</>);
 }

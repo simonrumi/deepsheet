@@ -4,6 +4,7 @@ import {
    UPDATED_CELL,
    UPDATED_CELL_VISIBILITY,
    POSTING_UPDATED_CELLS,
+	POSTING_DELETED_CELLS,
    HAS_ADDED_CELL,
    HAS_CHANGED_CELL,
    POSTING_DELETE_SUBSHEET_ID,
@@ -15,7 +16,9 @@ import {
 	UPDATED_END_OF_ROW_CELL,
 	COMPLETED_SAVE_CELLS,
 	COMPLETED_SAVE_CELL,
-	UPDATE_CELLS_FAILED
+	COMPLETED_DELETE_CELLS,
+	UPDATE_CELLS_FAILED,
+	DELETE_CELLS_FAILED
 } from './cellTypes';
 import { ADDED_CELL_TO_RANGE, } from './cellRangeTypes';
 import { isNothing } from '../helpers';
@@ -40,8 +43,12 @@ export const updatedCellVisibility = cell => {
    });
 }
  
-export const updatedCells = async ({ sheetId, cells }) => {
-   managedStore.store.dispatch({ type: POSTING_UPDATED_CELLS, payload: { sheetId, cells } });
+export const updatedCellsAction = async ({ sheetId, cells, floatingCells }) => {
+   managedStore.store.dispatch({ type: POSTING_UPDATED_CELLS, payload: { sheetId, cells, floatingCells } });
+};
+
+export const deletedCellsAction = async ({ sheetId, cells, floatingCells }) => {
+   managedStore.store.dispatch({ type: POSTING_DELETED_CELLS, payload: { sheetId, cells, floatingCells } });
 };
 
 export const deleteSubsheetId = R.curry(async (row, column, formattedText, subsheetId, sheetId) => {
@@ -145,10 +152,24 @@ export const completedSaveCell = completedCell => {
    });
 }
 
+export const completedDeleteCells = response => {
+	console.log('cellActions--completedDeleteCells got response', response);
+	managedStore.store.dispatch({
+      type: COMPLETED_DELETE_CELLS,
+      payload: response,
+   });
+}
 
 export const updateCellsFailed = () => {
 	managedStore.store.dispatch({
 		type: UPDATE_CELLS_FAILED,
 		payload: { errorMessage: 'Could not save updates to cells'}, // don't publish the exact error, err for security reasons
+	});
+}
+
+export const deleteCellsFailed = () => {
+	managedStore.store.dispatch({
+		type: DELETE_CELLS_FAILED,
+		payload: { errorMessage: 'Could not save the deletion of cells'}, // don't publish the exact error, err for security reasons
 	});
 }

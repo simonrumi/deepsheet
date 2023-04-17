@@ -29,19 +29,6 @@ const SheetMutations = gql`
       content: CellContentInput
    }
 
-   input CellInput {
-      row: Int!
-      column: Int!
-      visible: Boolean!
-      content: CellContentInput
-   }
-
-   input UpdateCellsInput {
-      sheetId: ID!
-      cells: [CellInput]
-      userId: ID!
-   }
-
 	input PositionInput {
 		left: Int!
 		top: Int!
@@ -57,9 +44,17 @@ const SheetMutations = gql`
       content: CellContentInput
    }
 
-	input UpdateFloatingCellsInput {
+   input CellInput {
+      row: Int!
+      column: Int!
+      visible: Boolean!
+      content: CellContentInput
+   }
+
+   input UpdateCellsInput {
       sheetId: ID!
-      floatingCells: [FloatingCellInput]
+      cells: [CellInput]
+		floatingCells: [FloatingCellInput]
       userId: ID!
    }
 
@@ -111,8 +106,7 @@ const SheetMutations = gql`
       updateMetadata(input: UpdateMetadataInput): SheetMetadataType
       updateSheetLastAccessed(id: ID!, lastAccessed: String!): SheetType
       updateCells(input: UpdateCellsInput): SheetType
-		addFloatingCells(input: UpdateFloatingCellsInput): SheetType
-		updateFloatingCells(input: UpdateFloatingCellsInput): SheetType
+		deleteCells(input: UpdateCellsInput): SheetType
       deleteSubsheetId(input: UpdateSubsheetIdInput): SheetCellType
       deleteSheet(sheetId: ID!, userId: ID!): [SheetType]
       deleteSheets(ids: [ID], userId: ID!): [SheetType]
@@ -121,3 +115,19 @@ const SheetMutations = gql`
 `;
 
 module.exports = SheetMutations;
+
+
+/*
+TIDY - took this out
+
+	input UpdateFloatingCellsInput {
+      sheetId: ID!
+      floatingCells: [FloatingCellInput]
+      userId: ID!
+   }
+
+
+	addFloatingCells(input: UpdateFloatingCellsInput): SheetType
+	updateFloatingCells(input: UpdateFloatingCellsInput): SheetType
+
+*/

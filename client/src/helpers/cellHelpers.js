@@ -591,3 +591,8 @@ export const isCellEmpty = cell => {
 		cellPlainText => R.equals('', cellPlainText) || /^\s+$/.test(cellPlainText)
 	)(cell, false) // 2nd param is includeNewLineChars
 }
+
+export const clearDeleteCellErrorMessages = state => {
+	// TODO write this
+	return true;	
+}

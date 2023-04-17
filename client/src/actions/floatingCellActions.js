@@ -10,9 +10,6 @@ import {
 	DELETED_FLOATING_CELL,
 	ADDED_FLOATING_CELL,
 	REPORT_NEW_FLOATING_CELL,
-	POSTING_ADDED_FLOATING_CELLS,
-	ADD_FLOATING_CELLS_FAILED,
-	UPDATE_FLOATING_CELLS_FAILED,
 	COMPLETED_SAVE_FLOATING_CELL,
 } from './floatingCellTypes';
 import { isNothing } from '../helpers';
@@ -62,10 +59,6 @@ export const reportNewFloatingCellChange = floatingCell => {
    });
 }
 
-export const addedFloatingCells = async ({ sheetId, floatingCells }) => {
-   managedStore.store.dispatch({ type: POSTING_ADDED_FLOATING_CELLS, payload: { sheetId, floatingCells } });
-};
-
 export const completedSaveFloatingCell = completedFloatingCell => {
 	managedStore.store.dispatch({
 		type: COMPLETED_SAVE_FLOATING_CELL,
@@ -98,18 +91,4 @@ export const deletedFloatingCell = floatingCell => {
       type: DELETED_FLOATING_CELL,
       payload: floatingCell,
    });
-}
-
-export const updateFloatingCellsFailed = () => {
-	managedStore.store.dispatch({
-		type: UPDATE_FLOATING_CELLS_FAILED,
-		payload: { errorMessage: 'Could not save updates to floating cells' }, // don't publish the exact error, err for security reasons
-	});
-}
-
-export const addFloatingCellsFailed = () => {
-	managedStore.store.dispatch({
-		type: ADD_FLOATING_CELLS_FAILED,
-		payload: { errorMessage: 'Could not save new floating cells'}, // don't publish the exact error, err for security reasons
-	});
 }

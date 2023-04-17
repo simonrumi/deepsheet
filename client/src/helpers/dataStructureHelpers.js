@@ -286,11 +286,13 @@ export const cellIsStaleSetter = R.curry((value, cell) => R.set(cellIsStaleLens,
 const cellDbUpdatesLens = R.lensProp('cellDbUpdates');
 const stateCellDbUpdatesLens = R.compose(presentLens, cellDbUpdatesLens);
 export const stateCellDbUpdatesIsCallingDb = subObjectGetter(stateCellDbUpdatesLens, 'isCallingDb');
-export const stateCellDbUpdatesErrorMessage = subObjectGetter(stateCellDbUpdatesLens, 'errorMessage');
+export const stateCellDbErrorMessages = subObjectGetter(stateCellDbUpdatesLens, 'errorMessages');
+export const stateDeleteCellsDbErrorMessages = subObjectGetter(stateCellDbUpdatesLens, 'deleteCellsErrorMessages');
 export const stateCellDbUpdatesIsStale = subObjectGetter(stateCellDbUpdatesLens, 'isStale');
 export const stateCellDbUpdatesLastUpdated = subObjectGetter(stateCellDbUpdatesLens, 'lastUpdated');
 export const stateChangedCells = subObjectGetter(stateCellDbUpdatesLens, 'changedCells');
 export const stateAddedCells = subObjectGetter(stateCellDbUpdatesLens, 'addedCells');
+export const stateDeletedCells = subObjectGetter(stateCellDbUpdatesLens, 'deletedCells');
 
 /************************************************ STATE FLOATING CELLS **********************************************/
 const floatingCellKeysLens = R.lensProp('floatingCellKeys');
@@ -485,7 +487,8 @@ export const stateIsStale = state =>
 
 // return true if we have an issue with any state objects that tried to save to the db but got error messages
 export const stateHasErrorMessages = state =>
-   stateCellDbUpdatesErrorMessage(state) 
+	stateCellDbErrorMessages(state)
+	|| stateDeleteCellsDbErrorMessages(state)
    || stateTitleErrorMessage(state)
    || stateMetadataErrorMessage(state)
 	|| stateSheetErrorMessage(state)
@@ -493,7 +496,8 @@ export const stateHasErrorMessages = state =>
 
 export const stateErrorMessages = state => {
 	const allErrors = R.flatten([
-		stateCellDbUpdatesErrorMessage(state),
+		stateCellDbErrorMessages(state),
+		stateDeleteCellsDbErrorMessages(state),
 		stateTitleErrorMessage(state),
 		stateMetadataErrorMessage(state),
 		stateSheetErrorMessage(state),
