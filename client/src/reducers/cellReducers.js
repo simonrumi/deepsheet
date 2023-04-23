@@ -69,6 +69,7 @@ const processCellAction = R.curry((state, sheetId, action) => {
             ...R.dissoc('sheetId', action.payload),
             isStale: true,
             isCallingDb: true,
+				isCallingDbType: POSTING_DELETE_SUBSHEET_ID,
          };
 
       case COMPLETED_DELETE_SUBSHEET_ID:
@@ -142,6 +143,17 @@ const isCellInArr = ({ cell, arr }) => R.pipe(
 	isSomething
 )(arr);
 
+const addIsCallingDbType = ({ type, currentArr }) => {
+	const typeAlreadyExists = R.find(currentType => currentType === type, currentArr);
+	return typeAlreadyExists ? currentArr : R.append(type, currentArr);
+}
+
+const removeIsCallingDbType = ({ type, currentArr }) => {
+	console.log('cellReducers--removeIsCallingDbType got type', type, 'currentArr', currentArr);
+	const returnVal = R.filter(currentType => currentType !== type, currentArr);
+	console.log('cellReducers--removeIsCallingDbType will return', returnVal);
+} // TIDY
+
 export const cellDbUpdatesReducer = (state = {}, action) => {
 	const currentAddedCellsArr = state.addedCells || []; // using this value in a few places, so adding it here for convenience
 
@@ -150,7 +162,7 @@ export const cellDbUpdatesReducer = (state = {}, action) => {
          return {
             ...state,
             isCallingDb: false,
-            isStale: false,
+				isStale: false,
 				// TODO if we created a sheet but there were error messages from the previous sheet, we shouldn't just ignore them
 				// Fixing this will require storing a lot more stuff locally
             errorMessages: null, 
@@ -162,7 +174,7 @@ export const cellDbUpdatesReducer = (state = {}, action) => {
          return {
             ...state,
             isCallingDb: false,
-            isStale: false,
+				isStale: false,
 				// TODO if we loaded a sheet but there were error messages from the previous sheet, we shouldn't just ignore them
 				// Fixing this will require storing a lot more stuff locally
             errorMessages: null,
@@ -173,6 +185,7 @@ export const cellDbUpdatesReducer = (state = {}, action) => {
          return {
             ...state,
             isCallingDb: true,
+				isCallingDbType: addIsCallingDbType({ type: POSTING_UPDATED_CELLS, currentArr: state.isCallingDbType || [] }),
             isStale: true,
             errorMessages: null,
             lastUpdated: isSomething(state.lastUpdated) ? state.lastUpdated : null,
@@ -182,6 +195,7 @@ export const cellDbUpdatesReducer = (state = {}, action) => {
 			return {
             ...state,
             isCallingDb: true,
+				isCallingDbType: addIsCallingDbType({ type: POSTING_DELETED_CELLS, currentArr: state.isCallingDbType || [] }),
             isStale: true,
             deleteCellsErrorMessages: null,
             lastUpdated: isSomething(state.lastUpdated) ? state.lastUpdated : null,
@@ -191,6 +205,7 @@ export const cellDbUpdatesReducer = (state = {}, action) => {
          return {
             ...state,
             isCallingDb: false,
+				isCallingDbType: removeIsCallingDbType({ type: POSTING_UPDATED_CELLS, currentArr: state.isCallingDbType  || [] }),
             isStale: arrayContainsSomething(state.deleteCellsErrorMessages), 
             errorMessages: null,
 				lastUpdated: action.payload.lastUpdated,
@@ -202,6 +217,7 @@ export const cellDbUpdatesReducer = (state = {}, action) => {
 			return {
 				...state,
 				isCallingDb: false, 
+				isCallingDbType: removeIsCallingDbType({ type: POSTING_DELETED_CELLS, currentArr: state.isCallingDbType || [] }),
 				isStale: arrayContainsSomething(state.errorMessages),
 				deleteCellsErrorMessages: null,
 				lastUpdated: action.payload.lastUpdated,
@@ -213,6 +229,7 @@ export const cellDbUpdatesReducer = (state = {}, action) => {
          return {
             ...state,
             isCallingDb: false,
+				isCallingDbType: removeIsCallingDbType({ type: POSTING_UPDATED_CELLS, currentArr: state.isCallingDbType || [] }),
             isStale: true,
             errorMessages: addCellsErrorMessage({ err: action.payload, errArr: state.errorMessages }),
             lastUpdated: isSomething(state.lastUpdated) ? state.lastUpdated : null,
@@ -223,6 +240,7 @@ export const cellDbUpdatesReducer = (state = {}, action) => {
          return {
             ...state,
             isCallingDb: false,
+				isCallingDbType: removeIsCallingDbType({ type: POSTING_DELETED_CELLS, currentArr: state.isCallingDbType || [] }),
             isStale: true,
             deleteCellsErrorMessages: addCellsErrorMessage({ err: action.payload, errArr: state.deleteCellsErrorMessages }),
             lastUpdated: isSomething(state.lastUpdated) ? state.lastUpdated : null,

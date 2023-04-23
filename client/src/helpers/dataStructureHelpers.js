@@ -286,6 +286,7 @@ export const cellIsStaleSetter = R.curry((value, cell) => R.set(cellIsStaleLens,
 const cellDbUpdatesLens = R.lensProp('cellDbUpdates');
 const stateCellDbUpdatesLens = R.compose(presentLens, cellDbUpdatesLens);
 export const stateCellDbUpdatesIsCallingDb = subObjectGetter(stateCellDbUpdatesLens, 'isCallingDb');
+export const stateCellDbUpdatesIsCallingDbType = subObjectGetter(stateCellDbUpdatesLens, 'isCallingDbType');
 export const stateCellDbErrorMessages = subObjectGetter(stateCellDbUpdatesLens, 'errorMessages');
 export const stateDeleteCellsDbErrorMessages = subObjectGetter(stateCellDbUpdatesLens, 'deleteCellsErrorMessages');
 export const stateCellDbUpdatesIsStale = subObjectGetter(stateCellDbUpdatesLens, 'isStale');

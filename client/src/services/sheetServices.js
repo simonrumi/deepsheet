@@ -263,6 +263,12 @@ const saveMetadataUpdates = async state => {
 export const saveAllUpdates = async state => {
 	console.log('sheetServices--saveAllUpdates started');
    // TODO we are calling these updates serially -- yeech!
+	// TODO NEXT
+	// all these awaits are having no effect, because each function is just sending an action
+	// need to do something else to actually wait for the updates to finish
+	// OR maybe there;s no need to wait, and jsut have each process's error handling manage things
+	//...if that's the case, then see what the reducers do with COMPLETED_SAVE_UPDATES
+	// ...maybe it just needs to be renamed to ALL_SAVE_UPDATES_SENT
    await saveMetadataUpdates(state);
    await saveCellUpdates(state);
    await saveTitleUpdate(state);

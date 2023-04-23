@@ -15,7 +15,7 @@ import {
 	UPDATE_CELLS_FAILED,
 	DELETE_CELLS_FAILED,
 } from '../actions/cellTypes';
-import { updatedCellsAction, completedSaveCells, completedSaveCell, updateCellsFailed, deleteCellsFailed } from '../actions/cellActions';
+import { updatedCellsAction, completedSaveCells, completedSaveCell, completedDeleteCells, updateCellsFailed, deleteCellsFailed } from '../actions/cellActions';
 import { completedSaveFloatingCell, } from '../actions/floatingCellActions';
 import { fetchSheets, saveAllUpdates } from '../services/sheetServices';
 import { updateMetadataMutation } from '../queries/metadataMutations';
@@ -31,6 +31,7 @@ import {
    dbSheetId,
    removeTypename,
    stateCellDbUpdatesIsCallingDb,
+	stateCellDbUpdatesIsCallingDbType,
 } from '../helpers/dataStructureHelpers';
 import { DEFAULT_TOTAL_ROWS, DEFAULT_TOTAL_COLUMNS, DEFAULT_ROW_HEIGHT, DEFAULT_COLUMN_WIDTH } from '../constants';
 import { DEFAULT_TITLE_FOR_SUBSHEET_FROM_CELL_RANGE } from '../components/displayText';
@@ -87,6 +88,7 @@ const createNewSheet = async ({
 let cellDbUpdateListeners = [];
 
 const notifyCellDbUpdate = isCallingDb => {
+	console.log('dbOperations--notifyCellDbUpdate cellDbUpdateListeners is', cellDbUpdateListeners);
 	R.forEach(
 		listenerObj => {
 			listenerObj.callback(isCallingDb)
@@ -100,25 +102,23 @@ const addCellDbUpdateListener = callback => {
 	const id = cellDbUpdateListeners.length; // make the id for the listener the index that it will be given when pushed onto the array
 	const listenerObj = { callback, id }
 	cellDbUpdateListeners.push(listenerObj);
-	console.log('dbOperations--addCellDbUpdateListener added a callback to the cellDbUpdateListeners with the id', id);
 	return id;
 }
 
 // const removeCellDbUpdateListener = id => cellDbUpdateListeners = R.filter(listenerObj => id !== listenerObj.id, cellDbUpdateListeners); // TODO might not need this TIDY
 
-const maybeWaitForDbCall = callback => {
-	// TODO NEXT
-	// dbOperations doesn't get called until after sheetServices has sent the POSTING_UPDATED_CELLS action, so isCallingDb is already true
-	// that means that we are waiting for the updatedCells mutation to finish, even though we haven't started it
-	// so we probably need to know the type of call we're waiting for and then only wait if it is not the same as the call we're about to make
-	// ....perhaps this means that we should not be checking  stateCellDbUpdatesIsCallingDb(), but we should check that type instead
-	// ...OR instead of all that maybe we should be using the listener IDs to figure out specifically whether we're waiting for our own callback or not
-	if (stateCellDbUpdatesIsCallingDb(managedStore.state)) {
-		console.log('dbOperations--maybeWaitForDbCall will be adding a callback to the cellDbUpdateListeners');
+// if we find we are calling the db for a type other than the one given, it is not ok to start another call to the db, so this will return false
+const isCallingDbOkForType = type => R.reduce(
+	(accumulator, currentType) => currentType !== type ? R.reduced(false) : accumulator, 
+	true, // assume we're OK to call the db by default
+	stateCellDbUpdatesIsCallingDbType(managedStore.state) // gets the array of types of calls to the db
+);
+
+const maybeWaitForDbCall = ({ type, callback }) => {
+	if (stateCellDbUpdatesIsCallingDb(managedStore.state) && !isCallingDbOkForType(type)) {
 		addCellDbUpdateListener(isCallingDb => callback(isCallingDb));
 		return;
 	}
-	console.log('dbOperations--maybeWaitForDbCall did not need to wait, so is immediately running the callback');
 	callback(false); // ie isCallingDb = false in this circumstance
 }
 
@@ -177,34 +177,37 @@ const dbOperations = store => next => async action => {
       case POSTING_UPDATED_CELLS:
          next(action); // get this action to the reducer before we do the next steps, so the UI can display "waiting" state
 			console.log('dbOperations--POSTING_UPDATED_CELLS started');
-			maybeWaitForDbCall(async isCallingDb => {
-				console.log('dbOperations--POSTING_UPDATED_CELLS inside the callback');
-				try {
-					const { userId } = getUserInfoFromCookie();
-					const { cells, floatingCells, sheetId } = action.payload;
-					const cleanedCells = R.map(cell => cleanCell(cell))(cells);
-					const cleanedFloatingCells = R.map(floatingCell => cleanCell(floatingCell))(floatingCells);
-					const response = await updateCellsMutation({
-						cells: cleanedCells,
-						floatingCells: cleanedFloatingCells,
-						sheetId, 
-						userId,
-					});
+			maybeWaitForDbCall({
+				type: POSTING_UPDATED_CELLS, 
+				callback: async () => {
+					console.log('dbOperations--POSTING_UPDATED_CELLS inside the callback');
+					try {
+						const { userId } = getUserInfoFromCookie();
+						const { cells, floatingCells, sheetId } = action.payload;
+						const cleanedCells = R.map(cell => cleanCell(cell))(cells);
+						const cleanedFloatingCells = R.map(floatingCell => cleanCell(floatingCell))(floatingCells);
+						const response = await updateCellsMutation({
+							cells: cleanedCells,
+							floatingCells: cleanedFloatingCells,
+							sheetId, 
+							userId,
+						});
 
-					completedSaveCells({ updatedCells: response, lastUpdated: Date.now() }); // note that this will update the cellDbUpdatesReducer which is handled in cellReducers.js not in floatingCellReducers.js 
-					R.map(cell => {
-						completedSaveCell({ ...cell, sheetId });
-						return null; // no return value needed - putting here to stop a warning from showing in the console
-					})(cells);
+						completedSaveCells({ updatedCells: response, lastUpdated: Date.now() }); // note that this will update the cellDbUpdatesReducer which is handled in cellReducers.js not in floatingCellReducers.js 
+						R.map(cell => {
+							completedSaveCell({ ...cell, sheetId });
+							return null; // no return value needed - putting here to stop a warning from showing in the console
+						})(cells);
 
-					R.map(floatingCell => { 
-						completedSaveFloatingCell({ ...floatingCell, sheetId });
-						return null; // no return value needed - putting here to stop a warning from showing in the console
-					})(floatingCells);
+						R.map(floatingCell => { 
+							completedSaveFloatingCell({ ...floatingCell, sheetId });
+							return null; // no return value needed - putting here to stop a warning from showing in the console
+						})(floatingCells);
 
-				} catch (err) {
-					log({ level: LOG.ERROR }, 'dbOperations tried to update cells but failed', err);
-					updateCellsFailed();
+					} catch (err) {
+						log({ level: LOG.ERROR }, 'dbOperations tried to update cells but failed', err);
+						updateCellsFailed();
+					}
 				}
 			});
          break;
@@ -212,17 +215,20 @@ const dbOperations = store => next => async action => {
 		case POSTING_DELETED_CELLS:
 			next(action); // get this action to the reducer before we do the next steps, so the UI can display "waiting" state
 			console.log('dbOperations--POSTING_DELETED_CELLS started');
-			maybeWaitForDbCall(async isCallingDb => {
-				console.log('dbOperations--POSTING_DELETED_CELLS inside the callback');
-				try {
-					const { userId } = getUserInfoFromCookie();
-					const { cells = [], floatingCells = [], sheetId } = action.payload;
-					console.log('dbOperations--POSTING_DELETED_CELLS got sheetId', sheetId, 'cells', cells, 'floatingCells', floatingCells);
-					await deleteCellsMutation({ cells, floatingCells, sheetId, userId, });
-					completedSaveCells({ lastUpdated: Date.now() });
-				} catch(err) {
-					log({ level: LOG.ERROR }, 'dbOperations tried to delete cells but failed', err);
-					deleteCellsFailed();
+			maybeWaitForDbCall({
+				type: POSTING_DELETED_CELLS,
+				callback: async () => {
+					console.log('dbOperations--POSTING_DELETED_CELLS inside the callback');
+					try {
+						const { userId } = getUserInfoFromCookie();
+						const { cells = [], floatingCells = [], sheetId } = action.payload;
+						console.log('dbOperations--POSTING_DELETED_CELLS got sheetId', sheetId, 'cells', cells, 'floatingCells', floatingCells);
+						await deleteCellsMutation({ cells, floatingCells, sheetId, userId, });
+						completedDeleteCells({ lastUpdated: Date.now() });
+					} catch(err) {
+						log({ level: LOG.ERROR }, 'dbOperations tried to delete cells but failed', err);
+						deleteCellsFailed();
+					}
 				}
 			});
 			break;
