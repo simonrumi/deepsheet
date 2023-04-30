@@ -115,19 +115,3 @@ const SheetMutations = gql`
 `;
 
 module.exports = SheetMutations;
-
-
-/*
-TIDY - took this out
-
-	input UpdateFloatingCellsInput {
-      sheetId: ID!
-      floatingCells: [FloatingCellInput]
-      userId: ID!
-   }
-
-
-	addFloatingCells(input: UpdateFloatingCellsInput): SheetType
-	updateFloatingCells(input: UpdateFloatingCellsInput): SheetType
-
-*/

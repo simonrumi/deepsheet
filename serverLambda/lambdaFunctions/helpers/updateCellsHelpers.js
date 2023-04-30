@@ -30,7 +30,6 @@ const updateAndAddCells = R.curry((sheetDoc, updatedCells) => {
          : null;
 });
 
-// TODO test this
 const removeDeletedCells = (sheetDoc, deletedCells) => R.pipe(
 	R.prop('cells'),
 	R.filter(
@@ -70,7 +69,6 @@ const updateAndAddFloatingCells  = R.curry((sheetDoc, updatedFloatingCells) => {
          : null;
 });
 
-// TODO test this
 const removeDeletedFloatingCells = (sheetDoc, deletedFloatingCells) => R.pipe(
 	R.prop('floatingCells'),
 	R.filter(

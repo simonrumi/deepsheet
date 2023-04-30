@@ -25,7 +25,6 @@ const DraggableElement = ({
    const handleDragEnd = event => {
       setIsDragging(false);
       setCurrentPosition({ ...positioning, left: event.clientX, top: event.clientY });
-		console.log('DraggableElement--handleDragEnd got event.clientX', event.clientX, 'event.clientY', event.clientY, 'and currentPosition is now', currentPosition)
 		onDragEndFn(event)
       endedDrag();
    };
@@ -33,7 +32,6 @@ const DraggableElement = ({
    const allClasses = isDragging && showBorder ? 'border border-vibrant-blue ' + classes : classes;
 
 	useEffect(() => {
-		console.log('DraggableElement--useEffect is about to setCurrentPosition to positioning', positioning );
 		if (!currentPosition.left || !currentPosition.top) {
 			setCurrentPosition(positioning);
 		}
@@ -41,7 +39,7 @@ const DraggableElement = ({
 		// previously we didn't have useEffect and just did this at the top:
 		// const [currentPosition, setCurrentPosition] = useState({positioning});
 		// ...but then the positioning value was getting set after the render, so it had no effect
-	}, [currentPosition]); 
+	}, [currentPosition, positioning]); 
 
    return (
       <div

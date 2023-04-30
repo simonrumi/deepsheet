@@ -38,13 +38,9 @@ import {
 import { log } from '../../clientLogger';
 
 const handleDeleteFloatingCell = cell => R.pipe(
-	R.tap(data => console.log('CellEditorTools--handleDeleteFloatingCell started for cell', data)),
 	floatingCellNumber,
-	R.tap(data => console.log('CellEditorTools--handleDeleteFloatingCell got floatingCellNumber', data)),
 	createFloatingCellKey,
-	R.tap(data => console.log('CellEditorTools--handleDeleteFloatingCell createFloatingCellKey', data)),
 	removedFloatingCellKeys,
-	R.tap(data => console.log('CellEditorTools--handleDeleteFloatingCell after removedFloatingCellKeys, about to call deletedFloatingCell')),
 	() => deletedFloatingCell(cell),
 )(cell);
 
@@ -104,7 +100,6 @@ const CellEditorTools = ({ handleSubmit, handleCancel, handleStyling, handlePast
 		R.pipe(
 			R.assoc('width', editorRef?.current?.offsetWidth),
 			R.assoc('height', editorRef?.current?.offsetHeight),
-			R.tap(data => console.log('CellEditorTools--handleMouseUpOverTools about to setEditorPositioning to', data)),
 			setEditorPositioning
 		)(editorPositioning)
 

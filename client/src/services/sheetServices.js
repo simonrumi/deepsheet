@@ -230,11 +230,9 @@ const saveCellUpdates = async state => {
    const sheetId = stateSheetId(state);
 	try {
 		if (arrayContainsSomething(allUpdatedFloatingCells) || arrayContainsSomething(allUpdatedCells)) {
-			console.log('sheetServices--saveCellUpdates about to send updatedCellsAction');
 			updatedCellsAction({ sheetId, cells: allUpdatedCells, floatingCells: allUpdatedFloatingCells });
 		}
 		if (arrayContainsSomething(removedFloatingCells) || arrayContainsSomething(removedCells)) {
-			console.log('sheetServices--saveCellUpdates about to send deletedCellsAction');
 			deletedCellsAction({ sheetId, cells: removedCells, floatingCells: removedFloatingCells });
 		}
 	} catch (err) {
@@ -261,7 +259,6 @@ const saveMetadataUpdates = async state => {
 };
 
 export const saveAllUpdates = async state => {
-	console.log('sheetServices--saveAllUpdates started');
    await saveMetadataUpdates(state);
    await saveTitleUpdate(state);
 	saveCellUpdates(state); // finished when we get actions for success/failure of cell updates and/or floating cell updates - 4 possible actions

@@ -148,11 +148,7 @@ const addIsCallingDbType = ({ type, currentArr }) => {
 	return typeAlreadyExists ? currentArr : R.append(type, currentArr);
 }
 
-const removeIsCallingDbType = ({ type, currentArr }) => {
-	console.log('cellReducers--removeIsCallingDbType got type', type, 'currentArr', currentArr);
-	const returnVal = R.filter(currentType => currentType !== type, currentArr);
-	console.log('cellReducers--removeIsCallingDbType will return', returnVal);
-} // TIDY
+const removeIsCallingDbType = ({ type, currentArr }) => R.filter(currentType => currentType !== type, currentArr);
 
 export const cellDbUpdatesReducer = (state = {}, action) => {
 	const currentAddedCellsArr = state.addedCells || []; // using this value in a few places, so adding it here for convenience
@@ -225,7 +221,6 @@ export const cellDbUpdatesReducer = (state = {}, action) => {
 			}
 
       case UPDATE_CELLS_FAILED:
-			console.log('cellReducers--cellDbUpdatesReducer--UPDATE_CELLS_FAILED will be adding this error message', action.payload);
          return {
             ...state,
             isCallingDb: false,
@@ -236,7 +231,6 @@ export const cellDbUpdatesReducer = (state = {}, action) => {
          };
 
 		case DELETE_CELLS_FAILED:
-			console.log('cellReducers--cellDbUpdatesReducer--DELETE_CELLS_FAILED will be adding this error message', action.payload);
          return {
             ...state,
             isCallingDb: false,

@@ -138,7 +138,6 @@ export const updatedEndOfRowCell = isEndOfRowCell => {
 }
 
 export const completedSaveCells = response => {
-	console.log('cellActions--completedSaveCells got response', response);
 	managedStore.store.dispatch({
       type: COMPLETED_SAVE_CELLS,
       payload: response,
@@ -153,7 +152,6 @@ export const completedSaveCell = completedCell => {
 }
 
 export const completedDeleteCells = response => {
-	console.log('cellActions--completedDeleteCells got response', response);
 	managedStore.store.dispatch({
       type: COMPLETED_DELETE_CELLS,
       payload: response,

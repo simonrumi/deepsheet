@@ -56,7 +56,6 @@ const UPDATE_CELLS_MUTATION = gql`
 export const updateCellsMutation = async ({ sheetId, cells, floatingCells, userId }) => {
    const preppedCells = prepCellsForDb(cells);
 	const preppedFloatingCells = prepCellsForDb(floatingCells);
-	console.log('cellMutations--updateCellsMutation got sheetId', sheetId, 'userId', userId, 'cells', cells, 'preppedCells', preppedCells, 'floatingCells', floatingCells, 'preppedFloatingCells', preppedFloatingCells);
 	const result = await apolloClient.mutate({
       mutation: UPDATE_CELLS_MUTATION,
       variables: { sheetId, cells: preppedCells, floatingCells: preppedFloatingCells, userId },
@@ -116,7 +115,6 @@ const DELETE_CELLS_MUTATION = gql`
 `;
 
 export const deleteCellsMutation = async ({ sheetId, cells, floatingCells, userId }) => {
-	console.log('cellMutations--deleteCellsMutation got sheetId', sheetId, 'userId', userId, 'cells', cells, 'floatingCells', floatingCells);
 	const result = await apolloClient.mutate({
       mutation: DELETE_CELLS_MUTATION,
       variables: { sheetId, cells, floatingCells, userId },

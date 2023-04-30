@@ -18,7 +18,6 @@ import { LOG } from '../constants';
 import { log } from '../clientLogger'
 
 export const updatedFloatingCell = floatingCell => {
-	console.log('floatingCellActions--updatedFloatingCell got floatingCell', floatingCell );
 	
    if (isNothing(floatingCell) || R.not(R.has('content', floatingCell))) {
 		log({ level: LOG.WARN }, 'WARNING: updatedFloatingCell could not create an action. It received', floatingCell);
@@ -32,7 +31,6 @@ export const updatedFloatingCell = floatingCell => {
 };
 
 export const updatedFloatingCells = async ({ sheetId, floatingCells }) => {
-	console.log('floatingCellActions--updatedFloatingCells got sheetId', sheetId, 'floatingCells', floatingCells);
    managedStore.store.dispatch({ type: POSTING_UPDATED_FLOATING_CELLS, payload: { floatingCellsSheetId: sheetId, floatingCells } });
 };
 

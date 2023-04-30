@@ -88,7 +88,6 @@ const createNewSheet = async ({
 let cellDbUpdateListeners = [];
 
 const notifyCellDbUpdate = isCallingDb => {
-	console.log('dbOperations--notifyCellDbUpdate cellDbUpdateListeners is', cellDbUpdateListeners);
 	R.forEach(
 		listenerObj => {
 			listenerObj.callback(isCallingDb)
@@ -174,11 +173,10 @@ const dbOperations = store => next => async action => {
 
       case POSTING_UPDATED_CELLS:
          next(action); // get this action to the reducer before we do the next steps, so the UI can display "waiting" state
-			console.log('dbOperations--POSTING_UPDATED_CELLS started');
+			log({ level: LOG.VERBOSE }, 'dbOperations--POSTING_UPDATED_CELLS started');
 			maybeWaitForDbCall({
 				type: POSTING_UPDATED_CELLS, 
 				callback: async () => {
-					console.log('dbOperations--POSTING_UPDATED_CELLS inside the callback');
 					try {
 						const { userId } = getUserInfoFromCookie();
 						const { cells, floatingCells, sheetId } = action.payload;
@@ -212,15 +210,13 @@ const dbOperations = store => next => async action => {
 
 		case POSTING_DELETED_CELLS:
 			next(action); // get this action to the reducer before we do the next steps, so the UI can display "waiting" state
-			console.log('dbOperations--POSTING_DELETED_CELLS started');
+			log({ level: LOG.VERBOSE }, 'dbOperations--POSTING_DELETED_CELLS started');
 			maybeWaitForDbCall({
 				type: POSTING_DELETED_CELLS,
 				callback: async () => {
-					console.log('dbOperations--POSTING_DELETED_CELLS inside the callback');
 					try {
 						const { userId } = getUserInfoFromCookie();
 						const { cells = [], floatingCells = [], sheetId } = action.payload;
-						console.log('dbOperations--POSTING_DELETED_CELLS got sheetId', sheetId, 'cells', cells, 'floatingCells', floatingCells);
 						await deleteCellsMutation({ cells, floatingCells, sheetId, userId, });
 						completedDeleteCells({ lastUpdated: Date.now() });
 					} catch(err) {

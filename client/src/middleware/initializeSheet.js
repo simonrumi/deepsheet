@@ -45,7 +45,6 @@ const initializeCells = R.curry((store, sheet) => {
    } else {
 		log({ level: LOG.WARN }, 'initializeSheet--initializeCells got no cells data');
    }
-	console.log('initializeSheet--initializeCells got dbFloatingCells(sheet)', dbFloatingCells(sheet), 'sheet', sheet);
 	if (arrayContainsSomething(dbFloatingCells(sheet))) {
 		removeAllFloatingCellReducers();
 		clearedAllFloatingCellKeys();

@@ -210,10 +210,8 @@ module.exports = db => ({
          }
       },
 
-		// TODO test this
 		deleteCells: async (parent, args, context) => {
 			const { sheetId, cells = [], floatingCells = [], userId } = args.input;
-			console.log('resolvers--deleteCells got sheetId', sheetId, 'userId', userId, 'cells', cells, 'floatingCells', floatingCells)
 			try {
 				const sheetDoc = await SheetModel.findById(sheetId);
             if (sheetDoc.users.owner != userId) {

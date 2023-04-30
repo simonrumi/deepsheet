@@ -192,7 +192,6 @@ const getLatestSheet = async sheetIds => {
          .limit(1)
          .exec();
       log({ level: LOG.DEBUG, startTime }, 'sheetHelpers.getLatestSheet finished find query got latestSheet[0]', latestSheet[0]);
-      console.log('sheetHelpers.getLatestSheet finished find query got latestSheet[0]', latestSheet[0]);
 		return latestSheet[0];   
 
    } catch (err) {
