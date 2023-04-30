@@ -95,7 +95,7 @@ const notifyCellDbUpdate = isCallingDb => {
 		}, 
 		cellDbUpdateListeners
 	);
-	cellDbUpdateListeners = []; // having notified all the listeners once, we now remove them // TODO if this works, then we don't need the ID for each listener
+	cellDbUpdateListeners = []; // having notified all the listeners once, we now remove them
 }
 
 const addCellDbUpdateListener = callback => {
@@ -104,8 +104,6 @@ const addCellDbUpdateListener = callback => {
 	cellDbUpdateListeners.push(listenerObj);
 	return id;
 }
-
-// const removeCellDbUpdateListener = id => cellDbUpdateListeners = R.filter(listenerObj => id !== listenerObj.id, cellDbUpdateListeners); // TODO might not need this TIDY
 
 // if we find we are calling the db for a type other than the one given, it is not ok to start another call to the db, so this will return false
 const isCallingDbOkForType = type => R.reduce(

@@ -1,10 +1,9 @@
 import * as R from 'ramda';
-import managedStore from '../store';
 import { cellReducerCreator } from './cellReducers';
 import { isSomething } from '../helpers';
-import { createFloatingCellKey, FLOATING_CELL_KEY_PREFIX } from '../helpers/floatingCellHelpers';
+import { createFloatingCellKey, createFloatingCellNumber, } from '../helpers/floatingCellHelpers';
 import { createUpdatedCellState } from '../helpers/cellHelpers';
-import { stateFloatingCellKeys, dbFloatingCells, floatingCellNumber, dbSheetId } from '../helpers/dataStructureHelpers';
+import { dbFloatingCells, floatingCellNumber, dbSheetId } from '../helpers/dataStructureHelpers';
 import { 
 	ADDED_FLOATING_CELL,
 	UPDATED_FLOATING_CELL,
@@ -43,24 +42,8 @@ const isMatchingCell = ({ floatingCell, action }) => isFloatingCellAction({ acti
 const floatingCellReducerFactory = (floatingCell, sheetId) => 
 	(state = {}, action) => isMatchingCell({ floatingCell, action }) ? processFloatingCellAction(state, sheetId, action) : state;
 
-const cellNumberRegex = new RegExp(`${FLOATING_CELL_KEY_PREFIX}(\\d*)`);
-
-const getNextFloatingCellNumber = () => {
-	const highestFloatingCellNum = R.reduce(
-		(accumulator, floatingCellKey) => R.pipe(
-			R.match(cellNumberRegex),
-			R.prop(1),
-			parseInt,
-			floatingCellNum => floatingCellNum > accumulator ? floatingCellNum : accumulator
-		)(floatingCellKey),
-		-1, // initial value is lower than the lowest possible floating cell number
-		stateFloatingCellKeys(managedStore.state)
-	);
-	return highestFloatingCellNum + 1;
-}
-
 const createNewFloatingCell = floatingCellPositioning => {
-	const number = getNextFloatingCellNumber();
+	const number = createFloatingCellNumber();
 	const floatingCellKey = createFloatingCellKey(number);
 	const floatingCell = {
 		number,

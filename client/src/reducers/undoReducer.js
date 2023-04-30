@@ -566,7 +566,7 @@ const undoReducer = reducer => {
                past: [], 
                future: [],
 					actionHistory: initialState.actionHistory,
-            }
+            } // TODO put undo history into local storage
 
 			case SHOWED_UNDO_HISTORY:
 				return { 
