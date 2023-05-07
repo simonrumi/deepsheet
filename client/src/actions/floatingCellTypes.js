@@ -8,3 +8,4 @@ export const CLEARED_ALL_FLOATING_CELL_KEYS = 'cleared_all_floating_cell_keys';
 export const UPDATED_FLOATING_CELL_STARTING_POSITION = 'updated_floating_cell_starting_position';
 export const DELETED_FLOATING_CELL = 'deleted_floating_cell';
 export const COMPLETED_SAVE_FLOATING_CELL = 'completed_save_floating_cell';
+export const MOVED_FLOATING_CELL = 'moved_floating_cell';

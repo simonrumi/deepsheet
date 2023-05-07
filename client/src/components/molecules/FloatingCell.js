@@ -2,17 +2,27 @@ import React, { useRef } from 'react';
 import { useSelector } from 'react-redux';
 import * as R from 'ramda';
 import managedStore from '../../store';
+import { MOVED_FLOATING_CELL } from '../../actions/floatingCellTypes';
 import { hidePopups } from '../../actions';
 import { updatedFloatingCell } from '../../actions/floatingCellActions';
 import { focusedCell, clearedFocus, updatedFocusRef } from '../../actions/focusActions';
+import { startedUndoableAction, completedUndoableAction } from '../../actions/undoActions';
 import { runIfSomething } from '../../helpers';
 import { convertBlocksToJsx, getFormattedText, decodeFormattedText } from  '../../helpers/richTextHelpers';
-import { stateFloatingCell, floatingCellPosition, floatingCellPositionSetter, stateFocus, stateFocusCell, stateFocusAbortControl } from '../../helpers/dataStructureHelpers';
+import {
+   stateFloatingCell,
+   floatingCellPosition,
+   floatingCellPositionSetter,
+   stateFocus,
+   stateFocusCell,
+   stateFocusAbortControl,
+} from '../../helpers/dataStructureHelpers';
 import DraggableElement from '../atoms/DraggableElement';
 import CellInPlaceEditor from '../molecules/CellInPlaceEditor';
 import MoveIcon from '../atoms/IconMove';
+import { createMovedFloatingCellMessage } from '../displayText';
 import { log } from '../../clientLogger';
-import { LOG } from '../../constants';
+import { LOG, FLOATING_CELL } from '../../constants';
 
 const isFloatingCellFocused = ({ floatingCell, state }) => {
 	const currentlyFocused = stateFocus(state);
@@ -34,12 +44,23 @@ const getJsx = floatingCell => R.pipe(
 	)(floatingCell);
 
 const FloatingCell = ({ floatingCellKey }) => {
-	log({ level: LOG.DEBUG }, '***FloatingCell started for floatingCellKey', floatingCellKey);
-	const floatingCell = stateFloatingCell(managedStore.state, floatingCellKey);
+	const floatingCell = useSelector(state => stateFloatingCell(state, floatingCellKey)); // stateFloatingCell(managedStore.state, floatingCellKey); // TIDY comment 
 	const cellHasFocus = useSelector(state => isFloatingCellFocused({ floatingCell, state })); 
+	log({ level: LOG.DEBUG }, '\n***FloatingCell started for floatingCellKey', floatingCellKey, 'floatingCell', floatingCell, 'cellHasFocus',cellHasFocus);
+
 	const cellRef = useRef();
 
+	// TODO NEXT BUG - history has the move event, and floatingCellPositioning is getting updated to the correct value
+	// but the floating cell isn't being redrawn
+	// put logging into DraggableElement to see whether it is getting the updated positioning
+
 	const floatingCellPositioning = floatingCellPosition(floatingCell);
+	console.log('FloatingCell got floatingCellPositioning', floatingCellPositioning);
+
+	
+	const handleDragStart = event => {
+		startedUndoableAction({ undoableType: MOVED_FLOATING_CELL, timestamp: Date.now() });
+	}
 
 	const handleDragEnd = event => { 
 		R.pipe(
@@ -49,12 +70,22 @@ const FloatingCell = ({ floatingCellKey }) => {
 			updatedFloatingCell
 		)(floatingCellPositioning);
 
+		console.log('FloatingCell--handleDragEnd updatedFloatingCell with event.clientX', event.clientX, 'event.clientY', event.clientY);
+
 		if (cellHasFocus) {
 			const focusedCellPositioning = R.pipe(stateFocusCell, R.prop('positioning'))(managedStore.state);
+			console.log('FloatingCell--handleDragEnd got focusedCellPositioning', focusedCellPositioning, 'vs the original floatingCellPositioning', floatingCellPositioning);
+
 			if (!R.equals(floatingCellPositioning, focusedCellPositioning)) {
 				focusedCell(floatingCell);
 			}
 		}
+		
+		completedUndoableAction({
+			undoableType: MOVED_FLOATING_CELL,
+			message: createMovedFloatingCellMessage(floatingCell),
+			timestamp: Date.now(),
+		});
 	}
 
 	const handleFloatingCellClick = event => {
@@ -102,15 +133,21 @@ const FloatingCell = ({ floatingCellKey }) => {
 		);
 	}
 
-   return (<>
-		<DraggableElement
+	const renderDraggableFloatingCell = floatingCellPositioning => {
+		return <DraggableElement
 			classes="absolute"
 			positioning={floatingCellPositioning}
 			showBorder={false}
+			onDragStartFn={handleDragStart}
 			onDragEndFn={handleDragEnd}
+			elementType={FLOATING_CELL}
 			id={floatingCellKey}>
 			{renderFloatingCell()}
 		</DraggableElement>
+	}
+
+   return (<>
+		{renderDraggableFloatingCell(floatingCellPositioning)}
 		{maybeRenderEditor()}
 	</>);
 }

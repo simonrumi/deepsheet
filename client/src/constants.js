@@ -34,6 +34,7 @@ export const CELL_EDITOR_TOOLS_TOP_OFFSET = -1 * CELL_EDITOR_VERTICAL_MARGIN - 5
 export const FLOATING_CELL_TOP_OFFSET = 20; //pixels
 export const FLOATING_CELL_LEFT_OFFSET = 20; //pixels
 export const ADD_FLOATING_CELL_BTN_WIDTH = 50; // pixels - this is approximate, as it is changeable with screensize
+export const FLOATING_CELL = 'floating_cell'; // used to indicate the type of element to DraggableElement
 
 export const SORT_INCREASING = 'sort_increasing';
 export const SORT_DECREASING = 'sort_decreasing';
