@@ -141,7 +141,6 @@ const dbOperations = store => next => async action => {
             await fetchSheets(); // this will update the sheetsTree in the store, since there's a new sheet to add
          } catch (err) {
             log({ level: LOG.INFO }, 'did not successfully create the sheet in the db:', err);
-				// TODO make this and all other managedStore.store.dispatches into actions 
             managedStore.store.dispatch({
                type: SHEET_CREATION_FAILED,
                payload: { errorMessage: 'sheet was not created in the db'},

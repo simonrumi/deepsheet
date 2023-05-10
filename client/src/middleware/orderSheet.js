@@ -31,10 +31,6 @@ import { stateMetadataProp } from '../helpers/dataStructureHelpers';
 import { ROW_AXIS, COLUMN_AXIS, } from '../constants';
 import { updatedRowOrderMessage, updatedColumnOrderMessage } from '../components/displayText';
 
-// TODO BUG - sorting by dates is broken if there is anything in a cell which is not a date
-// should treat those cells like blanks and push to the end
-// BUG 2 sorting by text is broken also 
-
 const orderSheet = store => next => async action => {
    const clearMoveData = () => {
       store.dispatch({

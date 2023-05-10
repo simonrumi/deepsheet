@@ -45,9 +45,9 @@ const initializeCells = R.curry((store, sheet) => {
    } else {
 		log({ level: LOG.WARN }, 'initializeSheet--initializeCells got no cells data');
    }
+	removeAllFloatingCellReducers();
+	clearedAllFloatingCellKeys();
 	if (arrayContainsSomething(dbFloatingCells(sheet))) {
-		removeAllFloatingCellReducers();
-		clearedAllFloatingCellKeys();
 		fromDbCreateFloatingCellReducers(sheet);
 		populateFloatingCellsInStore(sheet);
 	}

@@ -44,19 +44,13 @@ const getJsx = floatingCell => R.pipe(
 	)(floatingCell);
 
 const FloatingCell = ({ floatingCellKey }) => {
-	const floatingCell = useSelector(state => stateFloatingCell(state, floatingCellKey)); // stateFloatingCell(managedStore.state, floatingCellKey); // TIDY comment 
+	const floatingCell = useSelector(state => stateFloatingCell(state, floatingCellKey));
 	const cellHasFocus = useSelector(state => isFloatingCellFocused({ floatingCell, state })); 
 	log({ level: LOG.DEBUG }, '\n***FloatingCell started for floatingCellKey', floatingCellKey, 'floatingCell', floatingCell, 'cellHasFocus',cellHasFocus);
 
 	const cellRef = useRef();
 
-	// TODO NEXT BUG - history has the move event, and floatingCellPositioning is getting updated to the correct value
-	// but the floating cell isn't being redrawn
-	// put logging into DraggableElement to see whether it is getting the updated positioning
-
 	const floatingCellPositioning = floatingCellPosition(floatingCell);
-	console.log('FloatingCell got floatingCellPositioning', floatingCellPositioning);
-
 	
 	const handleDragStart = event => {
 		startedUndoableAction({ undoableType: MOVED_FLOATING_CELL, timestamp: Date.now() });
@@ -70,11 +64,8 @@ const FloatingCell = ({ floatingCellKey }) => {
 			updatedFloatingCell
 		)(floatingCellPositioning);
 
-		console.log('FloatingCell--handleDragEnd updatedFloatingCell with event.clientX', event.clientX, 'event.clientY', event.clientY);
-
 		if (cellHasFocus) {
 			const focusedCellPositioning = R.pipe(stateFocusCell, R.prop('positioning'))(managedStore.state);
-			console.log('FloatingCell--handleDragEnd got focusedCellPositioning', focusedCellPositioning, 'vs the original floatingCellPositioning', floatingCellPositioning);
 
 			if (!R.equals(floatingCellPositioning, focusedCellPositioning)) {
 				focusedCell(floatingCell);
