@@ -13,6 +13,7 @@ module.exports = async () => {
    }
    try {
       const startTime = log({ level: LOG.VERBOSE, printTime: true }, 'dbConnector connecting to db');
+		console.log('dbConnector about to connect to db with mongoose.connect(keys.mongoURI, keys.options), where keys.mongoURI is', keys.mongoURI);
       await mongoose.connect(keys.mongoURI, keys.options);
       log({ level: LOG.VERBOSE, startTime, printTime: true }, 'connected to mongodb!');
       cachedDbConnection = mongoose.connection;

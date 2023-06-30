@@ -61,6 +61,8 @@ export const STYLE_TAGS = {
 	[UNDERLINE]: 'underline'
 }
 
+export const MAX_UNDO_STEPS = 20;
+
 // floating cell stuff
 export const DEFAULT_FLOATING_CELL_TEXT = 'new floating cell';
 

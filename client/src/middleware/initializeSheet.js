@@ -1,6 +1,6 @@
 import * as R from 'ramda';
 import { TRIGGERED_FETCH_SHEET, COMPLETED_CREATE_SHEET } from '../actions/sheetTypes';
-import { fetchSheet, fetchSheetByUserId } from '../services/sheetServices';
+import { fetchSheet, fetchSheetByUserId, fetchSheetHistory, fetchSheetHistoryByUserId } from '../services/sheetServices';
 import { fetchedSheet, fetchingSheet, fetchSheetError } from '../actions/sheetActions';
 import { cellsLoaded, clearedAllCellKeys } from '../actions/cellActions';
 import { clearedAllFloatingCellKeys } from '../actions/floatingCellActions';
@@ -18,6 +18,7 @@ import { removeAllCellReducers, clearCells } from '../helpers/cellHelpers';
 import { removeAllFloatingCellReducers } from '../helpers/floatingCellHelpers';
 import { getUserInfoFromCookie } from '../helpers/userHelpers';
 import {
+	dbSheet,
    dbCells,
 	dbFloatingCells,
    stateIsLoggedIn,
@@ -28,10 +29,11 @@ import {
 import { LOG } from '../constants'
 import { log } from '../clientLogger';
 
-
-const initializeCells = R.curry((store, sheet) => {
-   if (arrayContainsSomething(dbCells(sheet))) {
+const initializeCells = R.curry((store, sheetHistory) => {
+   if (arrayContainsSomething(dbCells(sheetHistory))) {
       initializeAxesVisibility();
+
+		console.log('initializeSheet--initializeCells will check stateCellKeys(store.getState())', stateCellKeys(store.getState()));
 
       if (arrayContainsSomething(stateCellKeys(store.getState()))) {
          removeAllCellReducers();
@@ -39,45 +41,62 @@ const initializeCells = R.curry((store, sheet) => {
          clearedAllCellKeys();
       }
 
+		const sheet = dbSheet(sheetHistory);
+		console.log('initializeSheet--initializeCells got sheet', sheet, 'about to createCellReducers');
       createCellReducers(sheet);
+		console.log('initializeSheet--initializeCells about to populateCellsInStore');
       populateCellsInStore(sheet);
+		console.log('initializeSheet--initializeCells about to applyFilters');
       applyFilters(sheet);
    } else {
 		log({ level: LOG.WARN }, 'initializeSheet--initializeCells got no cells data');
    }
+	console.log('initializeSheet--initializeCells about to removeAllFloatingCellReducers() & clearedAllFloatingCellKeys()');
 	removeAllFloatingCellReducers();
 	clearedAllFloatingCellKeys();
-	if (arrayContainsSomething(dbFloatingCells(sheet))) {
-		fromDbCreateFloatingCellReducers(sheet);
-		populateFloatingCellsInStore(sheet);
+	if (arrayContainsSomething(dbFloatingCells(sheetHistory))) {
+		console.log('initializeSheet--initializeCells about to fromDbCreateFloatingCellReducers()');
+		fromDbCreateFloatingCellReducers(sheetHistory);
+		console.log('initializeSheet--initializeCells about to populateFloatingCellsInStore()');
+		populateFloatingCellsInStore(sheetHistory);
 	}
-	clearedFocus();
+	// clearedFocus();// this line may be necessary but TIDY if not
 });
 
 const runFetchFunctionForId = async ({ sheetId, userId }) => {
    if (isNothing(userId)) {
       throw new Error('userId needed');
    }
-   return sheetId ? await fetchSheet(sheetId, userId) : await fetchSheetByUserId(userId);
+	return sheetId ? await fetchSheetHistory(sheetId, userId) : await fetchSheetHistoryByUserId(userId);
+   // return sheetId ? await fetchSheet(sheetId, userId) : await fetchSheetByUserId(userId); // TIDY
 };
 
 const fetchAndInitializeSheet = async ({ store, sheetId, userId }) => {
+	console.log('initializeSheet--fetchAndInitializeSheet got sheetId', sheetId, 'userId', userId);
    if (stateIsLoggedIn(store.getState()) === false) {
       fetchSheetError('Must log in before fetching a sheet');
       return {};
    }
    fetchingSheet({ sheetId, userId });
    try {
-      const sheet = await runFetchFunctionForId({ sheetId, userId });
-      if (isSomething(sheet)) {
-         R.pipe(fetchedSheet, store.dispatch)(sheet);
-         R.pipe(hidePopups, store.dispatch)();
-         initializeCells(store, sheet);
+		console.log('initializeSheet--fetchAndInitializeSheet about to call runFetchFunctionForId');
+      const sheetHistory = await runFetchFunctionForId({ sheetId, userId });
+		console.log('initializeSheet--fetchAndInitializeSheet got sheetHistory', sheetHistory, 'will call fetchedSheet next');
+      if (isSomething(sheetHistory)) {
+			fetchedSheet(sheetHistory);
+			console.log('initializeSheet--fetchAndInitializeSheet after calling fetchedSheet, about to call hidePopups');
+			hidePopups();
+			console.log('initializeSheet--fetchAndInitializeSheet after calling hidePopups, about to call initializeCells');
+         initializeCells(store, sheetHistory);
+			console.log('initializeSheet--fetchAndInitializeSheet after calling initializeCells, about to call cellsLoaded');
          cellsLoaded();
+			console.log('initializeSheet--fetchAndInitializeSheet after calling cellsLoaded, about to call updateCellsInRange');
 			updateCellsInRange(false); // false means we want to remove all the cells from the range
+			console.log('initializeSheet--fetchAndInitializeSheet after calling updateCellsInRange, about to call clearedCellRange');
 			clearedCellRange();
+			console.log('initializeSheet--fetchAndInitializeSheet after calling clearedCellRange');
       }
-      return sheet;
+      return sheetHistory;
    } catch (err) {
       fetchSheetError(err);
    }
@@ -91,6 +110,7 @@ const getSheet = async (store, sheetId) => {
 const initializeSheet = store => next => async action => {
    switch (action.type) {
       case TRIGGERED_FETCH_SHEET:
+			console.log('initializeSheet--TRIGGERED_FETCH_SHEET got action.payload', action.payload);
          const state = store.getState();
          if (
             stateIsLoggedIn(state) === false ||
@@ -100,15 +120,17 @@ const initializeSheet = store => next => async action => {
             return null;
          }
          try {
-            const sheetResult = await Promise.resolve(getSheet(store, action.payload));
-				log({ level: LOG.VERBOSE }, '*** initializeSheet got sheetResult', sheetResult);
-            if (isNothing(sheetResult)) {
-               fetchSheetError('No sheet found');
+				console.log('initializeSheet--TRIGGERED_FETCH_SHEET baout to call getSheet() which will trigger the async call to db');
+            const sheetHistoryResult = await Promise.resolve(getSheet(store, action.payload));
+				console.log('initializeSheet--TRIGGERED_FETCH_SHEET got sheetHistoryResult', sheetHistoryResult);
+				log({ level: LOG.VERBOSE }, '*** initializeSheet got sheetHistoryResult', sheetHistoryResult);
+            if (isNothing(sheetHistoryResult)) {
+               fetchSheetError('No sheet history found');
                return;
             }
          } catch (err) {
-				log({ level: LOG.ERROR }, 'error fetching sheet', err);
-            fetchSheetError('error fetching sheet: ' + err);
+				log({ level: LOG.ERROR }, 'error fetching sheet history', err);
+            fetchSheetError('error fetching sheet history: ' + err);
          }
          return next(action);
 

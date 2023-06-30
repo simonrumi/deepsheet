@@ -45,7 +45,7 @@ import { CLEARED_ALL_ERROR_MESSAGES } from '../actions/types';
 const metadataReducer = (state = {}, action) => {
    switch (action.type) {
       case FETCHED_SHEET:
-         return maybeHasPath(['payload', 'metadata'], action);
+         return maybeHasPath(['payload', 'present', 'metadata'], action);
 
       case COMPLETED_CREATE_SHEET:
          return R.pipe(

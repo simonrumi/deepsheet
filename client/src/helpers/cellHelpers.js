@@ -548,9 +548,12 @@ export const addKeysToBlocks = cell => R.pipe(
 )(cell);
 
 export const populateCellsInStore = sheet => {
+	console.log('cellHelpers--populateCellsInStore got sheet:', sheet);
    R.pipe(
       dbCells,
+		R.tap(data => console.log('cellHelpers--populateCellsInStore got dbCells', data)),
       R.map(cell => createCellKey(cell.row, cell.column)),
+		R.tap(data => console.log('cellHelpers--populateCellsInStore created cell keys and will add them:', data)),
       addedCellKeys
    )(sheet);
    R.forEach(cell => 
@@ -558,9 +561,11 @@ export const populateCellsInStore = sheet => {
 			getFormattedText,
 			decodeFormattedText,
 			cellFormattedTextSetter(R.__, cell),
+			R.tap(data => console.log('cellHelpers--populateCellsInStore will call updatedCell for this cell:', data)),
 			updatedCell
 		)(cell)
 	)(dbCells(sheet));
+	console.log('cellHelpers--populateCellsInStore will call reconcileTotalCells for sheet:', sheet);
 	reconcileTotalCells(sheet);
 }
 

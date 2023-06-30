@@ -15,12 +15,20 @@ import {
 	UPDATE_CELLS_FAILED,
 	DELETE_CELLS_FAILED,
 } from '../actions/cellTypes';
-import { updatedCellsAction, completedSaveCells, completedSaveCell, completedDeleteCells, updateCellsFailed, deleteCellsFailed } from '../actions/cellActions';
+import { POSTING_UPDATED_HISTORY, COMPLETED_SAVE_HISTORY, HISTORY_UPDATE_FAILED } from '../actions/undoTypes';
+import {
+   updatedCellsAction,
+   completedSaveCells,
+   completedSaveCell,
+   completedDeleteCells,
+   updateCellsFailed,
+   deleteCellsFailed,
+} from '../actions/cellActions';
 import { completedSaveFloatingCell, } from '../actions/floatingCellActions';
 import { fetchSheets, saveAllUpdates } from '../services/sheetServices';
 import { updateMetadataMutation } from '../queries/metadataMutations';
 import { updateCellsMutation, deleteSubsheetIdMutation, deleteCellsMutation, } from '../queries/cellMutations';
-import { createSheetMutation } from '../queries/sheetMutations';
+import { createSheetMutation, updateHistoryMutation } from '../queries/sheetMutations';
 import { isSomething, arrayContainsSomething, ifThenElse } from '../helpers';
 import { getUserInfoFromCookie } from '../helpers/userHelpers';
 import { getSaveableCellData, cleanCell } from '../helpers/cellHelpers';
@@ -248,6 +256,28 @@ const dbOperations = store => next => async action => {
             });
          }
          break;
+
+		case POSTING_UPDATED_HISTORY:
+			next(action); // get this action to the reducer before we do the next steps
+			try {
+				const { sheetId, changedHistory } = action.payload;
+				const cleanChangedHistory = removeTypename(changedHistory);
+				const data = await updateHistoryMutation({ newHistory: cleanChangedHistory, sheetId });
+				managedStore.store.dispatch({
+               type: COMPLETED_SAVE_HISTORY,
+               payload: {
+                  updatedHistory: data,
+                  lastUpdated: Date.now(),
+               },
+            });
+			} catch (err) {
+            log({ level: LOG.INFO }, 'Did not successfully update the history in the db:', err);
+            managedStore.store.dispatch({
+               type: HISTORY_UPDATE_FAILED,
+               payload: { errorMessage: 'history was not updated in the db' },
+            });
+         }
+			break;
 
 		case COMPLETED_CREATE_SHEET:
 		case FETCHED_SHEET:

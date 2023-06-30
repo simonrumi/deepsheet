@@ -8,6 +8,7 @@ import {
    FINISHED_EDITING,
 	SHOWED_UNDO_HISTORY,
 	HID_UNDO_HISTORY,
+	POSTING_UPDATED_HISTORY,
 } from './undoTypes';
 import { hideAllPopups } from './index';
 
@@ -44,3 +45,7 @@ export const showedUndoHistory = () => {
 export const hidUndoHistory = () => {
    managedStore.store.dispatch({ type: HID_UNDO_HISTORY });
 };
+
+export const updatedHistory = ({ sheetId, changedHistory }) => {
+	managedStore.store.dispatch({ type: POSTING_UPDATED_HISTORY, payload: { sheetId, changedHistory } });
+}

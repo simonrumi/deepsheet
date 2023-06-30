@@ -8,12 +8,14 @@ const {
    arrayContainsSomething,
    getCellFromCells,
 } = require('./index');
+const { addSheetToUser } = require('./userHelpers');
 const mongoose = require('mongoose');
 mongoose.Promise = global.Promise; // Per Stephen Grider: Mongoose's built in promise library is deprecated, replace it with ES2015 Promise
 const { DEFAULT_ROWS, DEFAULT_COLUMNS, DEFAULT_TITLE, LOG } = require('../../constants');
 const { log } = require('./logger');
 
 const SheetModel = mongoose.model('sheet');
+const HistoryModel = mongoose.model('history');
 
 // This is a copy of a function on the client side
 const getRandomKey = ({ remainingKeys = [], usedKeys = [] }) => {
@@ -171,6 +173,29 @@ const createNewSheet = ({
    };
 };
 
+const saveSheetHistory = async ({ user, defaultSheetHistory, }) => {
+	const newSheetHistory = await new HistoryModel(defaultSheetHistory).save();
+	await addSheetToUser({ user, sheetId: newSheetHistory.present._id });
+	return newSheetHistory;
+}
+
+const createNewSheetHistory = ({
+   rows = DEFAULT_ROWS,
+   columns = DEFAULT_COLUMNS,
+   title = DEFAULT_TITLE,
+   parentSheetId = null,
+   rowHeights = [],
+   columnWidths = [],
+   userId,
+   cellRange,
+	existingSheet,
+}) => {
+	const newSheet = isSomething(existingSheet)
+      ? existingSheet
+      : createNewSheet({ rows, columns, title, parentSheetId, rowHeights, columnWidths, userId, cellRange });
+	return {	past: [], present: newSheet, future: [], actionHistory: [] }
+}
+
 const getAllSheetsForUser = async userId => {
    try {
       const startTime = log({ level: LOG.VERBOSE, printTime: true }, 'sheetHelpers.getAllSheetsForUser starting find query for userId', userId);
@@ -186,18 +211,32 @@ const getAllSheetsForUser = async userId => {
 
 const getLatestSheet = async sheetIds => {
    try {
-      const startTime = log({ level: LOG.VERBOSE, printTime: true }, 'sheetHelpers.getLatestSheet starting find query for multiple sheetIds', sheetIds);
+      const startTime = log({ level: LOG.VERBOSE, printTime: true }, 'sheetHelpers--getLatestSheet starting find query for multiple sheetIds', sheetIds);
       const latestSheet = await SheetModel.find({ _id: { $in: sheetIds } })
          .sort({ 'metadata.lastAccessed': -1,  'metadata.lastUpdated': -1})
          .limit(1)
          .exec();
-      log({ level: LOG.DEBUG, startTime }, 'sheetHelpers.getLatestSheet finished find query got latestSheet[0]', latestSheet[0]);
+      log({ level: LOG.DEBUG, startTime }, 'sheetHelpers--getLatestSheet finished find query got latestSheet[0]', latestSheet[0]);
 		return latestSheet[0];   
 
    } catch (err) {
-      log({ level: LOG.ERROR }, 'sheetHelpers.getLatestSheet', err.message);
+      log({ level: LOG.ERROR }, 'sheetHelpers--getLatestSheet', err.message);
       return err;
    }
 }
 
-module.exports = { createNewSheet, getAllSheetsForUser, getLatestSheet };
+const getLatestSheetHistory = async sheetIds => {
+	try {
+		const startTime = log({ level: LOG.VERBOSE, printTime: true }, 'sheetHelpers--getLatestSheetHistory starting find query for multiple sheetIds', sheetIds);
+		const latestSheetHistory = await HistoryModel.find({ present: { _id: { $in: sheetIds } } })
+			.sort({ 'present.metadata.lastAccessed': -1,  'present.metadata.lastUpdated': -1})
+			.limit(1)
+			.exec();
+		log({ level: LOG.DEBUG, startTime }, 'sheetHelpers--getLatestSheetHistory finished find query got latestSheetHistory[0]', latestSheetHistory[0]);
+		return latestSheetHistory[0];  
+	} catch(err) {
+		log({ level: LOG.ERROR }, 'sheetHelpers--getLatestSheetHistory', err.message);
+	}
+}
+
+module.exports = { createNewSheet, createNewSheetHistory, saveSheetHistory, getAllSheetsForUser, getLatestSheet, getLatestSheetHistory };

@@ -21,6 +21,7 @@ import {
 } from '../actions/sheetsActions';
 import { postingUpdatedTitle, finishedEditingTitle } from '../actions/titleActions';
 import { updatedSheetsTree } from '../actions/sheetsActions';
+import { updatedHistory } from '../actions/undoActions';
 import { COMPLETED_TITLE_UPDATE, TITLE_UPDATE_FAILED } from '../actions/titleTypes';
 import { clearCells, decodeText } from '../helpers/cellHelpers';
 import { createSheetsTreeFromArray } from '../helpers/sheetsHelpers';
@@ -37,18 +38,27 @@ import {
    stateSheetId,
    stateMetadataIsStale,
    saveableStateMetadata,
+	saveableStateHistory,
    stateTitleIsStale,
    stateTitleText,
    stateSheets,
    stateFocusAbortControl,
+	stateHistoryIsStale,
 } from '../helpers/dataStructureHelpers';
 import { sheetQuery, sheetsQuery } from '../queries/sheetQueries';
-import { deleteSheetsMutation, deleteSheetMutation, sheetByUserIdMutation } from '../queries/sheetMutations';
+import {
+   deleteSheetsMutation,
+   deleteSheetMutation,
+   sheetByUserIdMutation,
+   sheetHistoryMutation,
+   sheetHistoryByUserIdMutation,
+} from '../queries/sheetMutations';
 import titleMutation from '../queries/titleMutation';
 import { editedTitleMessage } from '../components/displayText';
 
 // TODO return the response.data.thing for each query/mutation so the consumer doesn;t have to know that path
 
+// TODO SHEET_HISTORY when is fetchSheet called? don't we want to fetchSheetHistory instead?
 export const fetchSheet = async (sheetId, userId) => {
    const confirmedUserId = isSomething(userId) 
       ? userId 
@@ -74,6 +84,33 @@ export const fetchSheetByUserId = async userId => {
       throw new Error('error fetching sheet by user id: ' + err);
    }
 };
+
+export const fetchSheetHistory = async (sheetId, userId) => {
+   const confirmedUserId = isSomething(userId) 
+      ? userId 
+      : R.pipe(
+         getUserInfoFromCookie, 
+         R.prop('userId')
+      )();
+
+   try {
+      const sheetHistory = await sheetHistoryMutation(sheetId, confirmedUserId);
+      return sheetHistory;
+   } catch (err) {
+		log({ level: LOG.ERROR }, 'error fetching sheet history');
+		log({ level: LOG.DEBUG }, 'error fetching sheet history', err);
+   }
+};
+
+export const fetchSheetHistoryByUserId = async userId => {
+	try {
+		const sheetHistoryByUserId = await sheetHistoryByUserIdMutation(userId);
+		console.log('sheetServices--fetchSheetByUserId got sheetHistoryByUserId', sheetHistoryByUserId);
+      return sheetHistoryByUserId;
+   } catch (err) {
+      throw new Error('error fetching sheet history by user id: ' + err);
+   }
+}
 
 export const fetchSheets = async () => {
    const { userId } = getUserInfoFromCookie();
@@ -258,14 +295,36 @@ const saveMetadataUpdates = async state => {
    }
 };
 
+// TODO NEXT - write all the missing functions for saving the history
+
+const getChangedHistory = state => stateHistoryIsStale(state) ? saveableStateHistory(state) : null;
+
+const saveHistoryUpdates = state => {
+	const changedHistory = getChangedHistory(state);
+	if (changedHistory) {
+		try {
+			const sheetId = stateSheetId(state);
+			updatedHistory({ sheetId, changedHistory });
+		} catch (err) {
+			log({ level: LOG.ERROR }, 'error updating history in db');
+			log({ level: LOG.DEBUG }, 'error updating history in db', err);
+         throw new Error('Error updating history in db', err);
+      }
+	}
+}
+
 export const saveAllUpdates = async state => {
    await saveMetadataUpdates(state);
    await saveTitleUpdate(state);
 	saveCellUpdates(state); // finished when we get actions for success/failure of cell updates and/or floating cell updates - 4 possible actions
-   completedSaveUpdates(); // this just gets undoReducer to clear history. Want to put that into local storage instead...should really be waiting for all the above completed/failed actions
+	saveHistoryUpdates(state); // finished when we get actions for success/failure of history update
+   // TODO rethink:
+	// this just gets undoReducer to clear history. Want to put that into local storage instead...should really be waiting for all the above completed/failed actions
+	completedSaveUpdates(); 
 }
 
 export const loadSheet = R.curry(async (state, sheetId) => {
+	console.log('sheetServices--loadSheet got sheetId', sheetId);
    ifThen({
       ifCond: R.pipe(stateFocusAbortControl, isSomething),
       thenDo: () => stateFocusAbortControl(state).abort(),
@@ -278,5 +337,6 @@ export const loadSheet = R.curry(async (state, sheetId) => {
    clearedFocus(); // make sure no cells are focused
 	updateCellsInRange(false); // false means we want to remove all the cells from the range
 	clearedCellRange();
+	console.log('sheetServices--loadSheet got about to call triggeredFetchSheet with sheetId', sheetId);
    triggeredFetchSheet(sheetId); // then get the new sheet
 });

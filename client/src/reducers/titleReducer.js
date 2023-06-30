@@ -14,13 +14,14 @@ import { CLEARED_ALL_ERROR_MESSAGES } from '../actions/types';
 import { isSomething } from '../helpers';
 import { decodeText } from '../helpers/cellHelpers';
 import { addErrorMessage } from '../helpers/authHelpers';
+import { dbTitle } from '../helpers/dataStructureHelpers';
 
 const titleReducer = (state = {}, action) => {
    switch (action.type) {
       case FETCHED_SHEET:
          return {
-            text: decodeText(action.payload.title),
-            initialValue: action.payload.title,
+            text: decodeText(dbTitle(action.payload)),
+            initialValue: dbTitle(action.payload),
             isEditingTitle: false,
             isCallingDb: false,
             isStale: false,

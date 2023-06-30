@@ -20,8 +20,9 @@ export const fetchingSheet = ({ sheetId, userId }) => {
    managedStore.store.dispatch({ type: FETCHING_SHEET, payload: { sheetId, userId } });
 };
 
-export const fetchedSheet = sheet => {
-   managedStore.store.dispatch({ type: FETCHED_SHEET, payload: sheet });
+export const fetchedSheet = sheetHistory => {
+	console.log('sheetActions--fetchedSheet got sheetHistory', sheetHistory);
+   managedStore.store.dispatch({ type: FETCHED_SHEET, payload: sheetHistory });
 };
 
 export const fetchSheetError = err => {

@@ -2,13 +2,22 @@ const R = require('ramda');
 // note that we have to create the Models first, before requiring in code below that relies on them
 const mongoose = require('mongoose');
 mongoose.Promise = global.Promise; // Per Stephen Grider: Mongoose's built in promise library is deprecated, replace it with ES2015 Promise
+require('./models/HistoryModel');
+const HistoryModel = mongoose.model('history');
 require('./models/SheetModel');
 const SheetModel = mongoose.model('sheet');
 require('./models/UserModel');
 const UserModel = mongoose.model('user');
 require('./models/SessionModel');
 const { isSomething, isNothing, arrayContainsSomething } = require('./helpers');
-const { getAllSheetsForUser, createNewSheet, getLatestSheet } = require('./helpers/sheetHelpers');
+const {
+   getAllSheetsForUser,
+   createNewSheet,
+   createNewSheetHistory,
+   saveSheetHistory,
+   getLatestSheet,
+   getLatestSheetHistory,
+} = require('./helpers/sheetHelpers');
 const { addSheetToUser } = require('./helpers/userHelpers');
 const {
    updateAndAddCells,
@@ -27,12 +36,12 @@ module.exports = db => ({
    Query: {
       sheet: async (parent, args, context) => {
          try {
-            const startTime = log({ level: LOG.VERBOSE, printTime: true }, 'resolvers.Query.sheet starting findOne query for sheetId', args.sheetId, 'userId', args.userId);
+            const startTime = log({ level: LOG.VERBOSE, printTime: true }, 'resolvers--Query--sheet starting findOne query for sheetId', args.sheetId, 'userId', args.userId);
             const sheetResult = await SheetModel.findOne({ _id: args.sheetId, 'users.owner': args.userId });
-            log({ level: LOG.DEBUG, startTime }, 'resolvers.Query.sheet finished findOne query got sheetResult', sheetResult);
+            log({ level: LOG.DEBUG, startTime }, 'resolvers--Query--sheet finished findOne query got sheetResult', sheetResult);
             return sheetResult;
          } catch (err) {
-            log({ level: LOG.ERROR}, 'resolvers.Query.sheet error finding sheet:', err.message);
+            log({ level: LOG.ERROR}, 'resolvers--Query--sheet error finding sheet:', err.message);
             return err;
          }
       },
@@ -105,6 +114,90 @@ module.exports = db => ({
          }
       },
 
+		sheetHistory: async (parent, args, context) => {
+         try {
+				const startTime = log({ level: LOG.VERBOSE, printTime: true }, 'resolvers--Mutation--sheetHistory starting find query for sheetId', args.sheetId, 'userId', args.userId);
+            const historyResult = await HistoryModel.find({ present: { _id: args.sheetId }, 'users.owner': args.userId });
+
+				if (isNothing(historyResult)) {
+					const sheetResult = await SheetModel.findOne({ _id: args.sheetId, 'users.owner': args.userId });
+
+					if (isNothing(sheetResult)) {
+						log({ level: LOG.DEBUG, startTime }, 'resolvers--Mutation--sheetHistory was unsuccessfull finding a sheet history for sheetId ', args.sheetId);
+						console.log('resolvers--Mutation--sheetHistory no history found for sheet id', args.sheetId)
+						return new Error('no sheet history found for sheet id', args.sheetId);
+					}
+
+					const newSheetHistory = createNewSheetHistory({ existingSheet: sheetResult });
+					log({ level: LOG.DEBUG, startTime }, 'resolvers--Mutation--sheetHistory found a sheet without a history, so made a newSheetHistory', newSheetHistory);
+					return newSheetHistory;
+				}
+
+				log({ level: LOG.DEBUG, startTime }, 'resolvers--Mutation--sheetHistory finished findOne query got historyResult', historyResult);
+            return historyResult;
+			} catch(err) {
+				log({ level: LOG.ERROR}, 'resolvers--Mutation--sheetHistory error finding sheetHistory:', err.message);
+			}
+		},
+
+		sheetHistoryByUserId: async (parent, args, context) => {
+         try {
+				const startTime = log({ level: LOG.VERBOSE, printTime: true }, 'resolvers--Mutation--sheetHistoryByUserId starting findById query for userId', args.userId);
+            const user = await UserModel.findById(args.userId);
+            log({ level: LOG.VERBOSE, startTime }, 'resolvers--Mutation--sheetHistoryByUserId finished findbyId query.');
+            if (isNothing(user)) {
+               return new Error('no user found');
+            }
+				
+				if (isNothing(user.sheets) || !arrayContainsSomething(user.sheets)) {
+					console.log('resolvers--Mutation--sheetHistoryByUserId about to createNewSheetHistory with args', args);
+               const defaultSheetHistory = createNewSheetHistory(args);
+					return await saveSheetHistory({ user, defaultSheetHistory });
+            }
+
+				const latestSheetHistory = await getLatestSheetHistory(user.sheets);
+				console.log('resolvers--Mutation--sheetHistoryByUserId got latestSheetHistory ', latestSheetHistory);
+				if (isNothing(latestSheetHistory)) {
+					const existingSheet = await getLatestSheet(user.sheets);
+					const defaultSheetHistory = createNewSheetHistory({ ...args, existingSheet });
+               return await saveSheetHistory({ user, defaultSheetHistory });
+				}
+				return latestSheetHistory;
+			} catch (err) {
+            log({ level: LOG.ERROR }, 'resolvers--Mutation--sheetHistoryByUserId Error:', err.message);
+            return err;
+         }
+      },
+
+		/* TIDY - was in the middle of making this, but seems like Query--subsheetId above is just for getting the id, not the whole sheet, 
+		so that will work...no need to do a special history version of subsheetId query
+		 
+		subsheetId: async (parent, args, context) => {
+         if (parent.subsheetId) {
+            try {
+               log({ level: LOG.VERBOSE, printTime: true }, 'resolvers--Mutation--subsheetId starting find query for subsheetId', parent.subsheetId);
+               const subHistory = await HistoryModel.find({ present: { _id: parent.subsheetId } });
+
+					if (isNothing(subHistory)) {
+						const subsheet = await SheetModel.findById(parent.subsheetId);
+						if (isSomething(subsheet)) {
+							const defaultSheetHistory = createNewSheetHistory({ existingSheet: subsheet });
+               		return await saveSheetHistory({ user, defaultSheetHistory });
+							
+						}
+					}
+               log({ level: LOG.VERBOSE, startTime }, 'resolvers--Mutation--subsheetId finished findbyId query.');
+               if (isSomething(subsheet)) {
+                  return parent.subsheetId;
+               }
+            } catch (err) {
+               log({ level: LOG.ERROR}, 'resolvers--Mutation--subsheetId error finding subsheet:', err.message);
+               return err;
+            }
+         }
+         return null;
+      }, */
+
       sheetByUserId: async (parent, args, context) => {
          try {
             const startTime = log({ level: LOG.VERBOSE, printTime: true }, 'resolvers.Mutation.sheetByUserId starting findById query for userId', args.userId);
@@ -121,7 +214,7 @@ module.exports = db => ({
             }
             return await getLatestSheet(user.sheets);
          } catch (err) {
-            log({ level: LOG.ERROR }, 'resolvers.Mutation.sheetByUserId Error finding sheet by user id:', err.message);
+            log({ level: LOG.ERROR }, 'resolvers--Mutation--sheetByUserId Error finding sheet by user id:', err.message);
             return err;
          }
       },
@@ -139,7 +232,7 @@ module.exports = db => ({
             }
             return savedSheet;
          } catch (err) {
-            log({ level: LOG.ERROR }, 'resolvers.Mutation.changeTitle Error updating title:', err.message);
+            log({ level: LOG.ERROR }, 'resolvers--Mutation--changeTitle Error updating title:', err.message);
             return err;
          }
       },
@@ -172,7 +265,7 @@ module.exports = db => ({
             const savedSheet = await sheetDoc.save();
             return savedSheet.metadata;
          } catch (err) {
-            log({ level: LOG.ERROR }, 'resolvers.Mutation.updateMetadata Error updating metadata:', err.message);
+            log({ level: LOG.ERROR }, 'resolvers--Mutation--updateMetadata Error updating metadata:', err.message);
             return err;
          }
       },
@@ -184,7 +277,7 @@ module.exports = db => ({
             const savedSheet = await sheetDoc.save();
             return savedSheet;
          } catch (err) {
-            log({ level: LOG.ERROR }, 'resolvers.Mutation.updateSheetLastAccessed', err.message);
+            log({ level: LOG.ERROR }, 'resolvers--Mutation--updateSheetLastAccessed', err.message);
             return err;
          }
       },
@@ -205,7 +298,7 @@ module.exports = db => ({
             sheetDoc.metadata.lastUpdated = new Date();
             return await sheetDoc.save();
          } catch (err) {
-            log({ level: LOG.ERROR }, 'resolvers.Mutation.updateCells Error updating cells:', err.message);
+            log({ level: LOG.ERROR }, 'resolvers--Mutation--updateCells Error updating cells:', err.message);
             return err;
          }
       },
@@ -285,5 +378,47 @@ module.exports = db => ({
             return err;
          }
       },
+
+		updateHistory: async (parent, args, context) => {
+			try {
+				// args.input has all the history fields plus the sheet's id
+				const originalHistoryDoc = await HistoryModel.find({ present: { _id: args.sheetId } });
+
+				// put the past, future and actionHistory into the history
+				const newHistory = R.mergeAll([
+					originalHistoryDoc.toObject(), //toObject() gets rid of any weird props included from mongoose
+					R.pick(
+						[
+							'past',
+							'future',
+							'actionHistory',
+						],
+						args.input
+					),
+				]);
+
+				// if we were given a present, then update that also and update present.metadata.lastUpdated
+				const finalHistory = isSomething(args.input.present) 
+					? {
+						...newHistory,
+						present: {
+							...args.input.present,
+							metadata: {
+								...args.input.present.metadata,
+								lastUpdated: new Date() 
+							}
+						},
+
+					}
+					: newHistory;
+
+				const finalHistoryDoc = R.mergeLeft(finalHistory, originalHistoryDoc);
+            const savedHistory = await finalHistoryDoc.save();
+            return savedHistory;
+			} catch (err) {
+            log({ level: LOG.ERROR }, 'resolvers--Mutation--updateHistory Error updating history:', err.message);
+            return err;
+         }
+		},
    },
 });

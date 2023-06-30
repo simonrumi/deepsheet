@@ -76,8 +76,8 @@ export const removeAllFloatingCellReducers = () => R.pipe(
 	managedStore.store.replaceReducer
 )();
 
-export const populateFloatingCellsInStore = sheet => {
-	const floatingCells = dbFloatingCells(sheet);
+export const populateFloatingCellsInStore = sheetHistory => {
+	const floatingCells = dbFloatingCells(sheetHistory);
 	R.pipe(
 		R.map(floatingCell => createFloatingCellKey(floatingCellNumber(floatingCell))),
 		addedFloatingCellKeys

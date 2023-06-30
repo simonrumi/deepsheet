@@ -6,7 +6,8 @@ const { makeFacebookAuthCall } = require('./helpers/facebookAuthHelpers');
 const { log } = require('./helpers/logger');
 const { LOG } = require('../constants');
 
-	const handler = async (event, context) => {
+const handler = async (event, context) => {
+	console.log('auth--handler got process.env', process.env);
    await dbConnector();
 
    let stateCheck;

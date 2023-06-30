@@ -14,6 +14,16 @@ import { TRIGGERED_FETCH_SHEET, FETCHED_SHEET } from '../actions/sheetTypes';
 import { updatedSheetsTree, sheetsTreeCurrent } from '../actions/sheetsActions';
 import { replacedAllMetadata } from '../actions/metadataActions';
 import { updateSheetLastAccessed } from '../queries/sheetMutations';
+import { 
+	UNDO,
+	REDO,
+	COMPLETED_UNDOABLE_ACTION,
+	CANCELLED_UNDOABLE_ACTION,
+	FINISHED_EDITING,
+} from '../actions/undoTypes';
+import { COMPLETED_HIGHLIGHTING_RANGE } from '../actions/cellRangeTypes';
+import { FINISHED_EDITING_TITLE, TITLE_EDIT_CANCELLED } from '../actions/titleTypes';
+import { CLEARED_FOCUS } from '../actions/focusTypes';
 import { LOCAL_STORAGE_STATE_KEY, LOCAL_STORAGE_TIME_KEY, LOCAL_STORAGE_ACTION_KEY } from '../constants';
 
 const runCreateSheetsTree = store => {
@@ -46,6 +56,7 @@ const maybeUpdateFromLocalStorage = async state => {
          replacedAllMetadata(stateMetadata(storedState));
       }
       await saveAllUpdates(storedState);
+		console.log('postProcess--maybeUpdateFromLocalStorage just ran saveAllUpdates using what was in localStorage and will now clear localStorage');
       localStorage.clear();
    }
 }
@@ -93,6 +104,19 @@ const postProcess = store => next => async action => {
             }
          }, 0); // wait 1 tick to do this
          break;
+
+		case UNDO:
+		case REDO:
+		case COMPLETED_UNDOABLE_ACTION:
+		case CANCELLED_UNDOABLE_ACTION:
+		case FINISHED_EDITING:
+		case COMPLETED_HIGHLIGHTING_RANGE:
+		case CLEARED_FOCUS:
+		case FINISHED_EDITING_TITLE:
+		case TITLE_EDIT_CANCELLED:
+			console.log('postProcess will save managedStore.state to localStorage in 1 tick');
+			setTimeout(() => saveToLocalStorage(store.getState()), 0);
+			break;
 
       default:
    }

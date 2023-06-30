@@ -74,20 +74,20 @@ export const createFloatingCellReducer = (sheetId, floatingCellPositioning) => {
 	return { floatingCellKey, floatingCell };
 }
 
-export const fromDbCreateFloatingCellReducers = sheet => {
+export const fromDbCreateFloatingCellReducers = sheetHistory => {
 	const thunkifiedCreatorFunc = R.thunkify(
 		R.pipe(
 			dbFloatingCells,
 			R.reduce(
 				(accumulator, floatingCell) => {
-					const floatingCellReducer = floatingCellReducerFactory(floatingCell, dbSheetId(sheet));
+					const floatingCellReducer = floatingCellReducerFactory(floatingCell, dbSheetId(sheetHistory));
 					const floatingCellKey = createFloatingCellKey(floatingCellNumber(floatingCell));
 					return R.assoc(floatingCellKey, floatingCellReducer, accumulator);
 				},
 				{},
 			)
 		)
-	)(sheet);
+	)(sheetHistory);
 	cellReducerCreator(thunkifiedCreatorFunc);
 }
 

@@ -7,8 +7,12 @@ export const STARTED_EDITING = 'started_editing';
 export const FINISHED_EDITING = 'finished_editing';
 export const SHOWED_UNDO_HISTORY = 'showed_undo_history';
 export const HID_UNDO_HISTORY = 'hid_undo_history';
+export const POSTING_UPDATED_HISTORY = 'posting_updated_history';
+export const COMPLETED_SAVE_HISTORY = 'completed_save_history';
+export const HISTORY_UPDATE_FAILED = 'history_update_failed';
 
 // these are not for an action, but the name of the action type within the action history
 export const EDIT_CELL = 'edit_cell'; 
 export const EDIT_TITLE = 'edit_title';
 export const STARTING_STATE = 'starting_state';
+

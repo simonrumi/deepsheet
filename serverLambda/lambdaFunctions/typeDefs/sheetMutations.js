@@ -100,6 +100,51 @@ const SheetMutations = gql`
       cellRange: [CellInput]
    }
 
+	input ActionInput {
+		undoableType: String!
+		message: String!
+		timestamp: String!
+	}
+
+	input ActionHistoryInput {
+		pastActions: [ActionInput]
+		presentAction: ActionInput
+		futureActions: [ActionInput]
+	}
+
+	input UsersInput {
+		owner: ID!
+		collaborators: [ID]
+	}
+
+	input MetadataInput {
+      totalRows: Int
+      totalColumns: Int
+      parentSheetId: ID
+      rowFilters: [SheetFilterInput]
+      columnFilters: [SheetFilterInput]
+      frozenRows: [SheetFreezeInput]
+      frozenColumns: [SheetFreezeInput]
+      rowHeights: [SheetSizingInput]
+      columnWidths: [SheetSizingInput]
+   }
+
+	input SheetInput {
+		metadata: MetadataInput
+		users: UsersInput
+		title: String!
+		cells: [CellInput]
+		floatingCells: [FloatingCellInput]
+	}
+
+	input UpdateHistoryInput {
+		sheetId: ID!
+		past: [SheetInput]
+		present: SheetInput
+		future: [SheetInput]
+		actionHistory: ActionHistoryInput
+	}
+
    extend type Mutation {
       createSheet(input: NewSheetInput): SheetType
       changeTitle(id: ID!, title: String!): SheetType
@@ -111,6 +156,9 @@ const SheetMutations = gql`
       deleteSheet(sheetId: ID!, userId: ID!): [SheetType]
       deleteSheets(ids: [ID], userId: ID!): [SheetType]
       sheetByUserId(userId: ID!): SheetType
+		sheetHistory(userId: ID!, sheetId: ID!): HistoryType
+		sheetHistoryByUserId(userId: ID!): HistoryType
+		updateHistory(input: UpdateHistoryInput): HistoryType
    }
 `;
 

@@ -198,6 +198,17 @@ const createUser = async userDetails => {
    }
 };
 
+const addNewSheets = ({ existingSheets = [], newSheets = [] }) => R.reduce(
+		(accumulator, newSheetId) => {
+			const newSheetIdFoundInExistingSheets = R.find(existingSheetId => existingSheetId === newSheetId, existingSheets);
+			return isSomething(newSheetIdFoundInExistingSheets)
+				? accumulator
+				: R.append(newSheetId, accumulator);
+		},
+		existingSheets, // initial value
+		newSheets, // iterating over this
+	);
+
 const addSheetToUser = async ({ user, userId, sheetId }) => {
    if (isNothing(user) && isNothing(userId)) {
       throw new Error('must supply either a user or a userId when adding a sheet');
@@ -208,8 +219,7 @@ const addSheetToUser = async ({ user, userId, sheetId }) => {
          throw new Error('Error adding sheet to user: no user found');
       }
    }
-   const newSheets =
-      isSomething(user.sheets) && arrayContainsSomething(user.sheets) ? R.append(sheetId, user.sheets) : [sheetId];
+   const newSheets = addNewSheets({ existingSheets: user.sheets, newSheets: [sheetId] });
    try {
       const updatedUser = await UserModel.findOneAndUpdate(
          { _id: user._id },

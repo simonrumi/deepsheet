@@ -186,7 +186,9 @@ const Sheet = () => {
       ) {
          return <LoginModal />;
       }
+
       if (!sheetId) {
+			console.log('Sheet--maybeRenderLoginOrFetchSheet got no sheetId (from the store) so will call triggeredFetchSheet() if no error message...stateSheetErrorMessage is', stateSheetErrorMessage(managedStore.state))
          return R.ifElse(
             R.pipe(stateSheetErrorMessage, isNothing),
             () => triggeredFetchSheet(), // fetch the sheet if there is no sheetId and no sheet error message
@@ -231,6 +233,7 @@ const Sheet = () => {
    }
 
    const render = () => {
+		console.log('Sheet--render if sheetIsCallingDb then we will show the LoadingIcon, otherwise we display the sheet...it is:', sheetIsCallingDb)
       if (sheetIsCallingDb) {
          return (
             <div className="m-auto max-w-md">

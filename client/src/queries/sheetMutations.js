@@ -263,6 +263,975 @@ export const sheetByUserIdMutation = async userId => {
    return result.data.sheetByUserId;
 };
 
+const SHEET_HISTORY_MUTATION = gql`
+	mutation SheetHistoryMutation($userId: ID!, $sheetId: ID!) {
+		sheetHistory(userId: $userId, sheetId: $sheetId) {
+			actionHistory {
+				futureActions {
+					message
+					timestamp
+					undoableType
+				}
+				pastActions {
+					message
+					timestamp
+					undoableType
+				}
+				presentAction {
+					message
+					timestamp
+					undoableType
+				}
+			}
+			future {
+				cells {
+					column
+					content {
+						formattedText {
+							blocks {
+								inlineStyleRanges {
+									length
+									offset
+									style
+								}
+								key
+								text
+							}
+						}
+						subsheetId
+						text
+					}
+					row
+					visible
+				}
+				floatingCells {
+					content {
+						formattedText {
+							blocks {
+								inlineStyleRanges {
+									length
+									offset
+									style
+								}
+								key
+								text
+							}
+						}
+						subsheetId
+						text
+					}
+					number
+					position {
+						bottom
+						height
+						left
+						right
+						top
+						width
+					}
+				}
+				id
+				metadata {
+					columnFilters {
+						caseSensitive
+						filterExpression
+						hideBlanks
+						index
+						regex
+					}
+					columnWidths {
+						index
+						size
+					}
+					created
+					frozenColumns {
+						index
+						isFrozen
+					}
+					frozenRows {
+						index
+						isFrozen
+					}
+					lastAccessed
+					lastUpdated
+					parentSheetId
+					rowFilters {
+						caseSensitive
+						filterExpression
+						hideBlanks
+						index
+						regex
+					}
+					rowHeights {
+						index
+						size
+					}
+					totalColumns
+					totalRows
+				}
+				title
+				users {
+					collaborators {
+						collaborator
+						permissions
+					}
+					owner
+				}
+			}
+			past {
+				cells {
+					column
+					content {
+						formattedText {
+							blocks {
+							inlineStyleRanges {
+								length
+								offset
+								style
+							}
+							key
+							text
+							}
+						}
+						subsheetId
+						text
+					}
+					row
+					visible
+				}
+				floatingCells {
+					content {
+						formattedText {
+							blocks {
+							inlineStyleRanges {
+								length
+								offset
+								style
+							}
+							key
+							text
+							}
+						}
+						subsheetId
+						text
+					}
+					number
+					position {
+						bottom
+						height
+						left
+						right
+						top
+						width
+					}
+				}
+				id
+				metadata {
+					columnFilters {
+						caseSensitive
+						filterExpression
+						hideBlanks
+						index
+						regex
+					}
+					columnWidths {
+						index
+						size
+					}
+					created
+					frozenColumns {
+						index
+						isFrozen
+					}
+					frozenRows {
+						index
+						isFrozen
+					}
+					lastAccessed
+					lastUpdated
+					parentSheetId
+					rowFilters {
+						caseSensitive
+						filterExpression
+						hideBlanks
+						index
+						regex
+					}
+					rowHeights {
+						index
+						size
+					}
+					totalColumns
+					totalRows
+				}
+				title
+				users {
+					collaborators {
+						collaborator
+						permissions
+					}
+					owner
+				}
+			}
+			present {
+				cells {
+					column
+					content {
+						text
+						subsheetId
+						formattedText {
+							blocks {
+							inlineStyleRanges {
+								length
+								offset
+								style
+							}
+							key
+							text
+							}
+						}
+					}
+					row
+					visible
+				}
+				floatingCells {
+					content {
+						formattedText {
+							blocks {
+							inlineStyleRanges {
+								length
+								offset
+								style
+							}
+							key
+							text
+							}
+						}
+						subsheetId
+						text
+					}
+					number
+					position {
+						bottom
+						height
+						left
+						right
+						top
+						width
+					}
+				}
+				id
+				metadata {
+					columnFilters {
+						caseSensitive
+						filterExpression
+						hideBlanks
+						index
+						regex
+					}
+					columnWidths {
+						index
+						size
+					}
+					created
+					frozenColumns {
+						index
+						isFrozen
+					}
+					frozenRows {
+						index
+						isFrozen
+					}
+					lastAccessed
+					lastUpdated
+					parentSheetId
+					rowFilters {
+						caseSensitive
+						filterExpression
+						hideBlanks
+						index
+						regex
+					}
+					rowHeights {
+						index
+						size
+					}
+					totalColumns
+					totalRows
+				}
+				title
+				users {
+					collaborators {
+						collaborator
+						permissions
+					}
+					owner
+				}
+			}
+		}
+	}
+`;
+
+export const sheetHistoryMutation = async (sheetId, userId) => {
+	console.log('sheetMutations--sheetHistoryMutation got sheetId', sheetId, 'userId', userId);
+	const result = await apolloClient.mutate({
+      mutation: SHEET_HISTORY_MUTATION,
+      variables: { sheetId, userId },
+   });
+   return result.data.sheetHistory;
+}
+
+const UPDATE_HISTORY_MUTATION = gql`
+	mutation UpdateHistoryMutation(
+		$sheetId: ID! 
+		$past: [SheetInput]
+		$present: SheetInput
+		$future: [SheetInput]
+		$actionHistory: [ActionHistoryInput]
+	) {
+		updateHistory(
+			input: {
+				sheetId: $sheetId
+				past: $past
+				present: $present
+				future: $future
+				actionHistory: $actionHistory
+			}
+		) {
+			actionHistory {
+				futureActions {
+					message
+					timestamp
+					undoableType
+				}
+				pastActions {
+					message
+					timestamp
+					undoableType
+				}
+				presentAction {
+					message
+					timestamp
+					undoableType
+				}
+			}
+			future {
+				cells {
+					column
+					content {
+						formattedText {
+							blocks {
+								inlineStyleRanges {
+									length
+									offset
+									style
+								}
+								key
+								text
+							}
+						}
+						subsheetId
+						text
+					}
+					row
+					visible
+				}
+				floatingCells {
+					content {
+						formattedText {
+							blocks {
+								inlineStyleRanges {
+									length
+									offset
+									style
+								}
+								key
+								text
+							}
+						}
+						subsheetId
+						text
+					}
+					number
+					position {
+						bottom
+						height
+						left
+						right
+						top
+						width
+					}
+				}
+				id
+				metadata {
+					columnFilters {
+						caseSensitive
+						filterExpression
+						hideBlanks
+						index
+						regex
+					}
+					columnWidths {
+						index
+						size
+					}
+					created
+					frozenColumns {
+						index
+						isFrozen
+					}
+					frozenRows {
+						index
+						isFrozen
+					}
+					lastAccessed
+					lastUpdated
+					parentSheetId
+					rowFilters {
+						caseSensitive
+						filterExpression
+						hideBlanks
+						index
+						regex
+					}
+					rowHeights {
+						index
+						size
+					}
+					totalColumns
+					totalRows
+				}
+				title
+				users {
+					collaborators {
+						collaborator
+						permissions
+					}
+					owner
+				}
+			}
+			past {
+				cells {
+					column
+					content {
+						formattedText {
+							blocks {
+							inlineStyleRanges {
+								length
+								offset
+								style
+							}
+							key
+							text
+							}
+						}
+						subsheetId
+						text
+					}
+					row
+					visible
+				}
+				floatingCells {
+					content {
+						formattedText {
+							blocks {
+							inlineStyleRanges {
+								length
+								offset
+								style
+							}
+							key
+							text
+							}
+						}
+						subsheetId
+						text
+					}
+					number
+					position {
+						bottom
+						height
+						left
+						right
+						top
+						width
+					}
+				}
+				id
+				metadata {
+					columnFilters {
+						caseSensitive
+						filterExpression
+						hideBlanks
+						index
+						regex
+					}
+					columnWidths {
+						index
+						size
+					}
+					created
+					frozenColumns {
+						index
+						isFrozen
+					}
+					frozenRows {
+						index
+						isFrozen
+					}
+					lastAccessed
+					lastUpdated
+					parentSheetId
+					rowFilters {
+						caseSensitive
+						filterExpression
+						hideBlanks
+						index
+						regex
+					}
+					rowHeights {
+						index
+						size
+					}
+					totalColumns
+					totalRows
+				}
+				title
+				users {
+					collaborators {
+						collaborator
+						permissions
+					}
+					owner
+				}
+			}
+			present {
+				cells {
+					column
+					content {
+						text
+						subsheetId
+						formattedText {
+							blocks {
+							inlineStyleRanges {
+								length
+								offset
+								style
+							}
+							key
+							text
+							}
+						}
+					}
+					row
+					visible
+				}
+				floatingCells {
+					content {
+						formattedText {
+							blocks {
+							inlineStyleRanges {
+								length
+								offset
+								style
+							}
+							key
+							text
+							}
+						}
+						subsheetId
+						text
+					}
+					number
+					position {
+						bottom
+						height
+						left
+						right
+						top
+						width
+					}
+				}
+				id
+				metadata {
+					columnFilters {
+						caseSensitive
+						filterExpression
+						hideBlanks
+						index
+						regex
+					}
+					columnWidths {
+						index
+						size
+					}
+					created
+					frozenColumns {
+						index
+						isFrozen
+					}
+					frozenRows {
+						index
+						isFrozen
+					}
+					lastAccessed
+					lastUpdated
+					parentSheetId
+					rowFilters {
+						caseSensitive
+						filterExpression
+						hideBlanks
+						index
+						regex
+					}
+					rowHeights {
+						index
+						size
+					}
+					totalColumns
+					totalRows
+				}
+				title
+				users {
+					collaborators {
+						collaborator
+						permissions
+					}
+					owner
+				}
+			}
+		}
+	}
+`;
+
+export const updateHistoryMutation = async ({ sheetId, newHistory }) => {
+	const { past, present, future, actionHistory } = newHistory;
+	const result = await apolloClient.mutate({
+      mutation: UPDATE_HISTORY_MUTATION,
+      variables: { sheetId, past, present, future, actionHistory, },
+   });
+   return result.data.sheetHistory;
+}
+
+export const SHEET_HISTORY_BY_USER_ID_MUTATION = gql`
+   mutation SheetByUserIdMutation($userId: ID!) {
+		sheetHistoryByUserId(userId: $userId) {
+			actionHistory {
+				futureActions {
+					message
+					timestamp
+					undoableType
+				}
+				pastActions {
+					message
+					timestamp
+					undoableType
+				}
+				presentAction {
+					message
+					timestamp
+					undoableType
+				}
+			}
+			future {
+				cells {
+					column
+					content {
+						formattedText {
+							blocks {
+								inlineStyleRanges {
+									length
+									offset
+									style
+								}
+								key
+								text
+							}
+						}
+						subsheetId
+						text
+					}
+					row
+					visible
+				}
+				floatingCells {
+					content {
+						formattedText {
+							blocks {
+								inlineStyleRanges {
+									length
+									offset
+									style
+								}
+								key
+								text
+							}
+						}
+						subsheetId
+						text
+					}
+					number
+					position {
+						bottom
+						height
+						left
+						right
+						top
+						width
+					}
+				}
+				id
+				metadata {
+					columnFilters {
+						caseSensitive
+						filterExpression
+						hideBlanks
+						index
+						regex
+					}
+					columnWidths {
+						index
+						size
+					}
+					created
+					frozenColumns {
+						index
+						isFrozen
+					}
+					frozenRows {
+						index
+						isFrozen
+					}
+					lastAccessed
+					lastUpdated
+					parentSheetId
+					rowFilters {
+						caseSensitive
+						filterExpression
+						hideBlanks
+						index
+						regex
+					}
+					rowHeights {
+						index
+						size
+					}
+					totalColumns
+					totalRows
+				}
+				title
+				users {
+					collaborators {
+						collaborator
+						permissions
+					}
+					owner
+				}
+			}
+			past {
+				cells {
+					column
+					content {
+						formattedText {
+							blocks {
+							inlineStyleRanges {
+								length
+								offset
+								style
+							}
+							key
+							text
+							}
+						}
+						subsheetId
+						text
+					}
+					row
+					visible
+				}
+				floatingCells {
+					content {
+						formattedText {
+							blocks {
+							inlineStyleRanges {
+								length
+								offset
+								style
+							}
+							key
+							text
+							}
+						}
+						subsheetId
+						text
+					}
+					number
+					position {
+						bottom
+						height
+						left
+						right
+						top
+						width
+					}
+				}
+				id
+				metadata {
+					columnFilters {
+						caseSensitive
+						filterExpression
+						hideBlanks
+						index
+						regex
+					}
+					columnWidths {
+						index
+						size
+					}
+					created
+					frozenColumns {
+						index
+						isFrozen
+					}
+					frozenRows {
+						index
+						isFrozen
+					}
+					lastAccessed
+					lastUpdated
+					parentSheetId
+					rowFilters {
+						caseSensitive
+						filterExpression
+						hideBlanks
+						index
+						regex
+					}
+					rowHeights {
+						index
+						size
+					}
+					totalColumns
+					totalRows
+				}
+				title
+				users {
+					collaborators {
+						collaborator
+						permissions
+					}
+					owner
+				}
+			}
+			present {
+				cells {
+					column
+					content {
+						text
+						subsheetId
+						formattedText {
+							blocks {
+							inlineStyleRanges {
+								length
+								offset
+								style
+							}
+							key
+							text
+							}
+						}
+					}
+					row
+					visible
+				}
+				floatingCells {
+					content {
+						formattedText {
+							blocks {
+							inlineStyleRanges {
+								length
+								offset
+								style
+							}
+							key
+							text
+							}
+						}
+						subsheetId
+						text
+					}
+					number
+					position {
+						bottom
+						height
+						left
+						right
+						top
+						width
+					}
+				}
+				id
+				metadata {
+					columnFilters {
+						caseSensitive
+						filterExpression
+						hideBlanks
+						index
+						regex
+					}
+					columnWidths {
+						index
+						size
+					}
+					created
+					frozenColumns {
+						index
+						isFrozen
+					}
+					frozenRows {
+						index
+						isFrozen
+					}
+					lastAccessed
+					lastUpdated
+					parentSheetId
+					rowFilters {
+						caseSensitive
+						filterExpression
+						hideBlanks
+						index
+						regex
+					}
+					rowHeights {
+						index
+						size
+					}
+					totalColumns
+					totalRows
+				}
+				title
+				users {
+					collaborators {
+						collaborator
+						permissions
+					}
+					owner
+				}
+			}
+		}
+	}
+`;
+// note that we need to return cells.content.text as well as cells.content.formattedText
+// for backward compatibility
+
+export const sheetHistoryByUserIdMutation = async userId => {
+	const result = await apolloClient.mutate({
+      mutation: SHEET_HISTORY_BY_USER_ID_MUTATION,
+      variables: { userId },
+   });
+   return result.data.sheetHistoryByUserId;
+};
+
 const UPDATE_SHEET_LAST_ACCESSED = gql`
    mutation UpdateSheetLastAccessed($id: ID!, $lastAccessed: String!) {
       updateSheetLastAccessed(id: $id, lastAccessed: $lastAccessed) {

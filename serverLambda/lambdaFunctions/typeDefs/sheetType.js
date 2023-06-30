@@ -97,10 +97,31 @@ const SheetType = gql`
 		floatingCells: [SheetFloatingCellType]
    }
 
+	type ActionType {
+		undoableType: String!
+		message: String!
+		timestamp: String!
+	}
+
+	type ActionHistoryType {
+		pastActions: [ActionType]
+		presentAction: ActionType
+		futureActions: [ActionType]
+	}
+
+	type HistoryType {
+		past: [SheetType]
+		present: SheetType
+		future: [SheetType]
+		actionHistory: [ActionHistoryType]
+	}
+
    extend type Query {
       sheet(sheetId: ID!, userId: ID!): SheetType
       sheetByUserId(userId: ID!): SheetType
       sheets(userId: ID!): [SheetType]
+		sheetHistory(sheetId: ID!, userId: ID!): HistoryType
+		sheetHistoryByUserId(userId: ID!): HistoryType
 
       # subsheetId and text are part of the CellContentType above
       # these queries ask for no params, but they are called when the sheet is being built,

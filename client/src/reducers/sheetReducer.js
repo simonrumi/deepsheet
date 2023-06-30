@@ -14,19 +14,25 @@ import { isNothing, arrayContainsSomething } from '../helpers';
 import { addErrorMessage } from '../helpers/authHelpers';
 import { ALL_CELLS } from '../constants';
 
+// TODO SHEET_HISTORY NEXT
+// start by saving some history so we have something to load
+// need to load the history as well as the sheet
+// might be the undoReducer is the place to do that 
+
 const sheetReducer = (state = null, action) => {
    switch (action.type) {
       case TRIGGERED_FETCH_SHEET:
          if (isNothing(action.payload)) {
             return { ...state, errorMessage: null };
          }
-         return { ...state, sheetId: action.payload, errorMessage: null };
+         return { ...state, sheetId: action.payload || null, errorMessage: null };
 
       case FETCHING_SHEET:
-         const { userId } = action.payload;
+         const { userId, sheetId = null } = action.payload;
          return {
             ...state,
             userId,
+				sheetId,
             isCallingDb: true,
             errorMessage: null,
             cellsLoaded: false,
@@ -40,11 +46,12 @@ const sheetReducer = (state = null, action) => {
          };
 
       case FETCHED_SHEET:
+			console.log('sheetReducer--FETCHED_SHEET will set isCallingDb to false');
          return {
             ...state,
             isCallingDb: false,
             errorMessage: null,
-            sheetId: action.payload.id,
+            sheetId: R.path(['payload', 'present', 'id'], action),
          };
 
       case COMPLETED_CREATE_SHEET:
@@ -52,7 +59,7 @@ const sheetReducer = (state = null, action) => {
             ...state,
             isCallingDb: false,
             errorMessage: null,
-            sheetId: action.payload.sheet.id,
+            sheetId: action.payload.sheet.id, // TODO SHEET_HISTORY this will have to become something like R.path(['payload', 'sheetHistory', 'present', 'id'], action),
          };
 
       case FETCH_SHEET_ERROR:

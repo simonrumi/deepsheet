@@ -36,6 +36,8 @@ const pastLens = R.lensProp('past');
 export const statePast = R.view(pastLens);
 const futureLens = R.lensProp('future');
 export const stateFuture = R.view(futureLens);
+const actionHistoryLens = R.lensProp('actionHistory');
+export const stateActionHistory = R.view(actionHistoryLens);
 const originalValueLens = R.lensPath(['original', 'value']);
 export const stateOriginalValue = R.view(originalValueLens);
 const originaFormattedTextLens = R.lensPath(['original', 'formattedText']);
@@ -66,12 +68,14 @@ export const removeNamedKey = R.curry((key, data) => {
 export const removeTypename = data => removeNamedKey('__typename', data);
 
 /************************************************ DB **********************************************/
+const dbSheetLens = R.lensProp('present')
+export const dbSheet = R.view(dbSheetLens);
 
 /*** get/set values from the db metadata structure ***/
-const dbMetadataLens = R.lensProp('metadata');
+const dbMetadataLens = R.lensPath(['present', 'metadata']);
 export const dbMetadata = R.view(dbMetadataLens);
 
-// get/set values from the db structure, usage:
+// get/set values from the db metadata structure, usage:
 // dbTotalRows(dbObject) //returns value for totalRows
 // dbTotalRows(dbObject, 12) // sets 12 as the value for totalRows (if this is possible)
 export const dbTotalRows = subObjectGetterSetter(dbMetadataLens, 'totalRows');
@@ -83,16 +87,24 @@ export const dbRowHeights = subObjectGetterSetter(dbMetadataLens, 'rowHeights');
 export const dbColumnWidths = subObjectGetterSetter(dbMetadataLens, 'columnWidths');
 export const dbLastUpdated = subObjectGetterSetter(dbMetadataLens, 'lastUpdated');
 
-// get the sheet's id from db structure
-const dbSheetIdLens = R.lensProp('id');
-export const dbSheetId = R.view(dbSheetIdLens);
+// other values to get from the db structure
+export const dbTitle = dataObj => R.path(['present', 'title'], dataObj);
 
-/*** get/set values from the db cell structure ***/
-const dbCellsLens = R.lensProp('cells');
-export const dbCells = R.view(dbCellsLens);
+// conditional results below to handle legacy version of db structure
+export const dbSheetId = dataObj =>
+	R.hasPath(['present', 'id'], dataObj) 
+			? R.path(['present', 'id'], dataObj) 
+			: R.prop('id', dataObj);
 
-const dbFloatingCellsLens = R.lensProp('floatingCells');
-export const dbFloatingCells = R.view(dbFloatingCellsLens);
+export const dbCells = dataObj =>
+   R.hasPath(['present', 'cells'], dataObj) 
+		? R.path(['present', 'cells'], dataObj) 
+		: R.prop('cells', dataObj);
+
+export const dbFloatingCells = dataObj =>
+	R.hasPath(['present', 'floatingCells'], dataObj) 
+		? R.path(['present', 'floatingCells'], dataObj) 
+		: R.prop('floatingCells', dataObj);
 
 /*** get/set values from the db filter structure ***/
 const filterFilterExpressionLens = R.lensProp('filterExpression');
@@ -440,6 +452,13 @@ const presentActionLens = R.lensPath(['actionHistory', 'presentAction']);
 export const statePresentAction = R.view(presentActionLens);
 const futureActionsLens = R.lensPath(['actionHistory', 'futureActions']);
 export const stateFutureActions = R.view(futureActionsLens);
+export const saveableStateHistory = {
+	past: statePast,
+	future: stateFuture,
+	actionHistory: stateActionHistory
+}
+const historyIsStaleLens = R.lensProp('isStale');
+export const stateHistoryIsStale = R.view(historyIsStaleLens);
 
 /************************************************ STATE OTHER **********************************************/
 const titleLens = R.lensProp('title');
