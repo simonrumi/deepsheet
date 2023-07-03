@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const { Schema } = mongoose;
+import mongoose from 'mongoose';
+const { Schema, model } = mongoose;
 
 const actionSchema = new Schema({
 	undoableType: { type: String, required: true },
@@ -7,4 +7,4 @@ const actionSchema = new Schema({
 	timestamp: { type: Date, required: true },
 });
 
-mongoose.model('action', actionSchema);
+export default model('action', actionSchema);

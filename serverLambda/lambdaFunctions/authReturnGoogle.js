@@ -1,11 +1,11 @@
-const { google } = require('googleapis');
-const dbConnector = require('./dbConnector');
-const { standardAuthError } = require('./helpers/userHelpers');
-const { confirmStateCheck, prepareAuthResponse } = require('./helpers/authHelpers');
-const { getTokenFromGoogle, getGoogleUserId } = require('./helpers/googleAuthHelpers');
-const { log } = require('./helpers/logger');
-const { AUTH_PROVIDER_GOOGLE, LOG } = require('../constants');
-const keys = require('../config/keys');
+import { google } from 'googleapis';
+import dbConnector from './dbConnector';
+import { standardAuthError } from './helpers/userHelpers';
+import { confirmStateCheck, prepareAuthResponse } from './helpers/authHelpers';
+import { getTokenFromGoogle, getGoogleUserId } from './helpers/googleAuthHelpers';
+import { log } from './helpers/logger';
+import { AUTH_PROVIDER_GOOGLE, LOG } from '../constants';
+import keys from '../config/keys';
 
 const handler = async (event, context) => {
    // for some reason we need to call dbConnector() here, in order for the findUser() call (within prepareAuthResponse) to work
@@ -53,4 +53,4 @@ const handler = async (event, context) => {
    }
 }
 
-module.exports = { handler };
+export default handler;

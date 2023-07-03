@@ -1,7 +1,7 @@
-const axios = require('axios');
-const keys = require('../../config/keys');
-const { log } = require('../helpers/logger');
-const { LOG } = require('../../constants');
+import axios from 'axios';
+import keys from '../../config/keys';
+import { log } from '../helpers/logger';
+import { LOG } from '../../constants';
 
 const getFacebookToken = async code => {
    const fbAccessTokenEndpoint =
@@ -59,7 +59,7 @@ const getFbUserId = async accessToken => {
    return fbUserData?.data?.id;
 };
 
-module.exports = {
+export default {
    getFacebookToken,
    makeFacebookAuthCall,
    getFbUserId,

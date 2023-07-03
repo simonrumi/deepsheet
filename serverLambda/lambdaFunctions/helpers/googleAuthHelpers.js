@@ -1,6 +1,6 @@
-const { google } = require('googleapis');
-const axios = require('axios');
-const keys = require('../../config/keys');
+import { google } from 'googleapis';
+import axios from 'axios';
+import keys from '../../config/keys';
 
 const makeGoogleAuthCall = state => {
    const { googleClientID, googleClientSecret, googleAuthReturnURI } = keys;
@@ -35,7 +35,7 @@ const getGoogleUserId = async accessToken => {
    return googleUserData?.data?.id;
 }
  
-module.exports = {
+export default {
    makeGoogleAuthCall,
    getTokenFromGoogle,
    getGoogleUserId,

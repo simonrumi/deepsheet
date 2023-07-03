@@ -1,5 +1,5 @@
-const R = require('ramda');
-const { isSomething, isNothing, arrayContainsSomething } = require('./index');
+import R from 'ramda';
+import { isSomething, isNothing, arrayContainsSomething } from './index';
 
 const findCellByRowAndColumn = R.curry((row, column, cellsArr) => {
    return R.find(cell => R.propEq('row', row, cell) && R.propEq('column', column, cell))(cellsArr);
@@ -95,7 +95,7 @@ const updateParentWithSubsheetTitle = (parentSheet, subsheet) => R.map(
    parentSheet.cells
 );
 
-module.exports = {
+export default {
    findCellByRowAndColumn,
    updateAndAddCells,
 	updateAndAddFloatingCells,

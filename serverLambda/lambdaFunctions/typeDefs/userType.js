@@ -1,8 +1,8 @@
-const { gql } = require('apollo-server-lambda');
+// const { gql } = require('apollo-server-lambda');
 
 // this is out of date and not used ....can delete??
 
-const UserType = gql`
+const UserType = `#graphql
    type AccessType {
       token: String
       tokenProvider: String
@@ -27,4 +27,4 @@ const UserType = gql`
    }
 `;
 
-module.exports = UserType;
+export default UserType;

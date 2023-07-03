@@ -1,11 +1,11 @@
-const R = require('ramda');
-const { log } = require('./logger');
-const { LOG } = require('../../constants');
-const mongoose = require('mongoose');
+import R from 'ramda';
+import { log } from './logger';
+import { LOG } from '../../constants';
+import mongoose from 'mongoose';
 mongoose.Promise = global.Promise; // Per Stephen Grider: Mongoose's built in promise library is deprecated, replace it with ES2015 Promise
-const { arrayContainsSomething } = require('./index');
-const { findOrCreateUser, applyAuthSession, makeCookie } = require('./userHelpers');
-const keys = require('../../config/keys');
+import { arrayContainsSomething } from './index';
+import { findOrCreateUser, applyAuthSession, makeCookie } from './userHelpers';
+import keys from '../../config/keys';
 require('../models/StateCheckModel');
 const StateCheckModel = mongoose.model('stateCheck');
 

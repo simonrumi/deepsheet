@@ -1,4 +1,4 @@
-const R = require('ramda');
+import R from 'ramda';
 
 const isNothing = R.either(R.isNil, R.isEmpty);
 const isSomething = R.pipe(isNothing, R.not);
@@ -47,7 +47,7 @@ const reduceWithIndex = R.addIndex(R.reduce);
 const forLoopReduce = (fn, initialVal, length) =>
    reduceWithIndex((accumulator, value, index) => fn(accumulator, index), initialVal, makeArr(length));
 
-module.exports = {
+export default {
    isNothing,
    isSomething,
    arrayContainsSomething,

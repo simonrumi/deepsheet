@@ -1,6 +1,6 @@
-const { gql } = require('apollo-server-lambda');
+// const { gql } = require('apollo-server-lambda'); TIDY
 
-const SheetType = gql`
+const SheetType = `#graphql
 	type InlineStyleRangeType {
 		offset: Int
 		length: Int
@@ -132,4 +132,4 @@ const SheetType = gql`
    }
 `;
 
-module.exports = SheetType;
+export default SheetType;

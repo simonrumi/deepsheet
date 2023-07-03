@@ -1,10 +1,12 @@
-const dbConnector = require('./dbConnector');
-const { standardAuthError } = require('./helpers/userHelpers');
-const { createStateCheck } = require('./helpers/authHelpers');
-const { makeGoogleAuthCall } = require('./helpers/googleAuthHelpers');
-const { makeFacebookAuthCall } = require('./helpers/facebookAuthHelpers');
-const { log } = require('./helpers/logger');
-const { LOG } = require('../constants');
+import dbConnector from './dbConnector';
+import { standardAuthError } from './helpers/userHelpers';
+import { createStateCheck } from './helpers/authHelpers';
+import { makeGoogleAuthCall } from './helpers/googleAuthHelpers';
+import { makeFacebookAuthCall } from './helpers/facebookAuthHelpers';
+import { log } from './helpers/logger';
+import { LOG } from '../constants';
+
+console.log('auth.js got process.env', process.env);
 
 const handler = async (event, context) => {
 	console.log('auth--handler got process.env', process.env);
@@ -50,4 +52,4 @@ const handler = async (event, context) => {
    //return callback(null, response);
 }
 
-module.exports = { handler };
+export default handler;

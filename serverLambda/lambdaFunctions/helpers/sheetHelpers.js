@@ -1,4 +1,4 @@
-const R = require('ramda');
+import R from 'ramda';
 const {
    forLoopReduce,
    isNothing,
@@ -8,13 +8,16 @@ const {
    arrayContainsSomething,
    getCellFromCells,
 } = require('./index');
-const { addSheetToUser } = require('./userHelpers');
-const mongoose = require('mongoose');
+import { addSheetToUser } from './userHelpers';
+import mongoose from 'mongoose';
 mongoose.Promise = global.Promise; // Per Stephen Grider: Mongoose's built in promise library is deprecated, replace it with ES2015 Promise
-const { DEFAULT_ROWS, DEFAULT_COLUMNS, DEFAULT_TITLE, LOG } = require('../../constants');
-const { log } = require('./logger');
+import { DEFAULT_ROWS, DEFAULT_COLUMNS, DEFAULT_TITLE, LOG } from '../../constants';
+import { log } from './logger';
 
-const SheetModel = mongoose.model('sheet');
+// TODO maybe these should be like this
+// import SheetModel from '../models/SheetModel';
+// import HistoryModel from '../models/HistoryModel';
+const SheetModel = mongoose.model('sheet'); 
 const HistoryModel = mongoose.model('history');
 
 // This is a copy of a function on the client side

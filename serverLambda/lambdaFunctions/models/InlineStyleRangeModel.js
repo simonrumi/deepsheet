@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 mongoose.Promise = global.Promise; // Per Stephen Grider: Mongoose's built in promise library is deprecated, replace it with ES2015 Promise
-const { Schema } = mongoose;
+const { Schema, model } = mongoose;
 
 const inlineStyleRangeSchema = new Schema({
 	offset: { type: Number },
@@ -8,4 +8,4 @@ const inlineStyleRangeSchema = new Schema({
 	style: { type: String },
 });
 
-mongoose.model('inlineStyleRange', inlineStyleRangeSchema);
+export default model('inlineStyleRange', inlineStyleRangeSchema);

@@ -1,10 +1,11 @@
-const { ApolloServer } = require('apollo-server-lambda');
-const dbConnector = require('../dbConnector');
-const typeDefs = require('../typeDefs');
-const resolvers = require('../resolvers');
-const { validateUserSession, standardAuthError } = require('./userHelpers');
-const { log } = require('./logger');
-const { LOG } = require('../../constants');
+// const { ApolloServer } = require('apollo-server-lambda'); TIDY old version
+import { ApolloServer } from '@apollo/server';
+import dbConnector from '../dbConnector';
+import typeDefs from '../typeDefs';
+import resolvers from '../resolvers';
+import { validateUserSession, standardAuthError } from './userHelpers';
+import { log } from './logger';
+import { LOG } from '../../constants';
 
 let cachedServer = null;
 const createServer = async () => {
@@ -87,4 +88,4 @@ const withAuth = func => async (event, context) => {
    return await proxy.apply(this, [event, context]);
 };
 
-module.exports = { createServer, withAuth };
+export default { createServer, withAuth };

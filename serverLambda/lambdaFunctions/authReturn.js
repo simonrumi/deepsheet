@@ -1,11 +1,11 @@
 // this is just for Facbeook... probably should be called authReturnFacebook.js, but leaving as-is
 
-const dbConnector = require('./dbConnector');
-const { standardAuthError } = require('./helpers/userHelpers');
-const { getFacebookToken, getFbUserId } = require('./helpers/facebookAuthHelpers');
-const { confirmStateCheck, prepareAuthResponse } = require('./helpers/authHelpers');
-const { log } = require('./helpers/logger');
-const { AUTH_PROVIDER_FACEBOOK, LOG } = require('../constants');
+import dbConnector from './dbConnector';
+import { standardAuthError } from './helpers/userHelpers';
+import { getFacebookToken, getFbUserId } from './helpers/facebookAuthHelpers';
+import { confirmStateCheck, prepareAuthResponse } from './helpers/authHelpers';
+import { log } from './helpers/logger';
+import { AUTH_PROVIDER_FACEBOOK, LOG } from '../constants';
 
 const handler = async (event, context) => {
 	const startTime = log({ level: LOG.VERBOSE, printTime: true }, 'autReturn starting by getting db');
@@ -49,4 +49,4 @@ const handler = async (event, context) => {
    }
 }
 
-module.exports = { handler };
+export default handler;

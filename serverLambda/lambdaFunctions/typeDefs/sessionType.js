@@ -1,6 +1,6 @@
-const { gql } = require('apollo-server-lambda');
+// const { gql } = require('apollo-server-lambda');TIDY
 
-const SessionType = gql`
+const SessionType = `#graphql
    type SessionType {
       id: ID!
       lastAccessed: String
@@ -11,4 +11,4 @@ const SessionType = gql`
    }
 `;
 
-module.exports = SessionType;
+export default SessionType;

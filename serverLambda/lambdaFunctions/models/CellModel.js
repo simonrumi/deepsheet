@@ -1,7 +1,7 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 mongoose.Promise = global.Promise; // Per Stephen Grider: Mongoose's built in promise library is deprecated, replace it with ES2015 Promise
-const { Schema } = mongoose;
-const CellContentModel = require('./CellContentModel');
+const { Schema, model } = mongoose;
+import CellContentModel from './CellContentModel';
 
 const cellSchema = new Schema({
    row: { type: Number, required: true },
@@ -10,4 +10,4 @@ const cellSchema = new Schema({
    visible: { type: Boolean, required: true, default: true },
 });
 
-mongoose.model('cell', cellSchema);
+export default model('cell', cellSchema);

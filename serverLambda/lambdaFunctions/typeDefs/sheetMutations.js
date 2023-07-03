@@ -1,6 +1,6 @@
-const { gql } = require('apollo-server-lambda');
+// const { gql } = require('apollo-server-lambda');TIDY
 
-const SheetMutations = gql`
+const SheetMutations = `#graphql
 	input InlineStyleRangeInput {
 		offset: Int
 		length: Int
@@ -162,4 +162,4 @@ const SheetMutations = gql`
    }
 `;
 
-module.exports = SheetMutations;
+export default SheetMutations;

@@ -1,8 +1,8 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 mongoose.Promise = global.Promise; // Per Stephen Grider: Mongoose's built in promise library is deprecated, replace it with ES2015 Promise
-const { Schema } = mongoose;
-const CellContentModel = require('./CellContentModel');
-const FloatingCellPositionModel = require('./FloatingCellPositionModel');
+const { Schema, model } = mongoose;
+import CellContentModel from './CellContentModel';
+import FloatingCellPositionModel from './FloatingCellPositionModel';
 
 const floatingCellSchema = new Schema({
    number: { type: Number, required: true },
@@ -10,4 +10,4 @@ const floatingCellSchema = new Schema({
 	position: { type: FloatingCellPositionModel, required: true }
 });
 
-mongoose.model('floatingCell', floatingCellSchema);
+export default model('floatingCell', floatingCellSchema);

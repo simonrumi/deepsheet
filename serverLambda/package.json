@@ -4,11 +4,14 @@
    "description": "The folder for lambda functions for Deepsheet",
    "author": "Simon Amarasingham",
    "license": "ISC",
+	"type": "module",
    "dependencies": {
+      "@apollo/server": "^4.7.5",
+      "@as-integrations/aws-lambda": "^2.0.1",
       "apollo-server-lambda": "^3.6.3",
       "axios": "^0.26.0",
       "googleapis": "^100.0.0",
-      "graphql": "^16.3.0",
+      "graphql": "^16.7.1",
       "mongodb": "^4.4.0",
       "mongoose": "^6.4.6",
       "ramda": "^0.28.0"

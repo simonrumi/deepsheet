@@ -1,15 +1,12 @@
-const R = require('ramda');
-const { isSomething, isNothing, arrayContainsSomething } = require('.');
-const { log } = require('./logger');
-const { LOG } = require('../../constants');
-const keys = require('../../config//keys');
-
-const mongoose = require('mongoose');
+import R from 'ramda';
+import { isSomething, isNothing, arrayContainsSomething } from '.';
+import { log } from './logger';
+import { LOG } from '../../constants';
+import keys from '../../config//keys';
+import mongoose from 'mongoose';
 mongoose.Promise = global.Promise; // Per Stephen Grider: Mongoose's built in promise library is deprecated, replace it with ES2015 Promise
-require('../models/UserModel');
-const UserModel = mongoose.model('user');
-require('../models/SessionModel');
-const SessionModel = mongoose.model('session');
+import UserModel from '../models/UserModel';
+import SessionModel from '../models/SessionModel'
 
 const makeCookie = (userId, sessionId) => {
    if (isNothing(userId) || isNothing(sessionId)) {
@@ -232,7 +229,7 @@ const addSheetToUser = async ({ user, userId, sheetId }) => {
    }
 };
 
-module.exports = {
+export default {
    makeCookie,
    standardAuthError,
    applyAuthSession,

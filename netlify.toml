@@ -10,3 +10,7 @@
 [dev]
   publish = "client/public" # The path to your static content folder
   framework = "create-react-app"
+
+  # got these 2 lines from https://answers.netlify.com/t/netlify-dev-could-not-connect-to-locahost-3000/51785/25
+  functionsPort = 3001 # this needs to be different from the port the react app is running on 
+  targetPort = 3000 # must be the same as the port the react app is running 

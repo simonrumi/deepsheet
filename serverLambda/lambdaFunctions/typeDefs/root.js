@@ -1,6 +1,7 @@
-const { gql } = require('apollo-server-lambda');
+// const { gql } = require('apollo-server-lambda');// old version TIDY
 
-const Root = gql`
+// const Root = gql` // old version TIDY
+const Root = `#graphql
    type Query {
       root: String
    }
@@ -10,4 +11,4 @@ const Root = gql`
    }
 `;
 
-module.exports = Root;
+export default Root;

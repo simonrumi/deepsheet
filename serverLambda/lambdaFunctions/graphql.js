@@ -1,6 +1,7 @@
-const { createServer, withAuth } = require('./helpers/graphqlHelpers');
-const { log } = require('./helpers/logger');
-const { LOG } = require('../constants');
+import { createServer, withAuth } from './helpers/graphqlHelpers';
+import { startServerAndCreateLambdaHandler, handlers } from '@as-integrations/aws-lambda';
+import { log } from './helpers/logger';
+import { LOG } from '../constants';
 
 const handler = async (event, context) => {
 	log({ level: LOG.VERBOSE }, 'graphql--handler started');
@@ -8,6 +9,9 @@ const handler = async (event, context) => {
    log({ level: LOG.SILLY }, 'lambda ENVIRONMENT VARIABLES\n' + JSON.stringify(process.env, null, 2));
 
    const server = await createServer();
+
+	/* OLD VERSION ...hopefully TIDY all this away ***
+
    const graphqlHandler = server.createHandler();
 
 	// the following is to do with @vendia/serverless-express which is used by apollo-server-lambda 
@@ -22,9 +26,27 @@ const handler = async (event, context) => {
 		return await graphqlHandler(event, context);
 	} catch (err) {
 		log({ level: LOG.ERROR }, 'graphql--handler got error calling the graphqlHandler', err);
+	} 
+	*/
+
+	try {
+		console.log('graphql.js--handler about to startServerAndCreateLambdaHandler');
+		// see https://www.apollographql.com/docs/apollo-server/deployment/lambda/
+		const graphqlHandler = startServerAndCreateLambdaHandler(
+			server,
+			handlers.createAPIGatewayProxyEventV2RequestHandler(),
+		);
+		console.log('graphql.js--handler created graphqlHandler', graphqlHandler);
+		return await graphqlHandler(event, context);
+	} catch (err) {
+		log({ level: LOG.ERROR }, 'graphql--handler got error calling the graphqlHandler', err);
 	}
 }
 
-module.exports = {
+const graphQLWithAuth = async (event, context) => await withAuth(handler)(event, context);
+
+export default graphQLWithAuth;
+
+/* module.exports = {
    handler: async (event, context) => await withAuth(handler)(event, context),
-};
+}; */ // TIDY

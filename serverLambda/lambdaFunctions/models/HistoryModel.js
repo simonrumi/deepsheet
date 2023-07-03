@@ -1,7 +1,7 @@
-const mongoose = require('mongoose');
-const { Schema } = mongoose;
-const SheetModel = require('./SheetModel');
-const ActionHistoryModel = require('./ActionHistoryModel');
+import mongoose from 'mongoose';
+const { Schema, model } = mongoose;
+import SheetModel from './SheetModel';
+import ActionHistoryModel from './ActionHistoryModel';
 
 const historySchema = new Schema({
    past: [SheetModel],
@@ -10,4 +10,4 @@ const historySchema = new Schema({
    actionHistory: [ActionHistoryModel],
 });
 
-mongoose.model('history', historySchema);
+export default model('history', historySchema);

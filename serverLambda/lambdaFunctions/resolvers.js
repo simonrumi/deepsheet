@@ -1,6 +1,6 @@
-const R = require('ramda');
+import R from 'ramda';
 // note that we have to create the Models first, before requiring in code below that relies on them
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 mongoose.Promise = global.Promise; // Per Stephen Grider: Mongoose's built in promise library is deprecated, replace it with ES2015 Promise
 require('./models/HistoryModel');
 const HistoryModel = mongoose.model('history');
@@ -9,7 +9,7 @@ const SheetModel = mongoose.model('sheet');
 require('./models/UserModel');
 const UserModel = mongoose.model('user');
 require('./models/SessionModel');
-const { isSomething, isNothing, arrayContainsSomething } = require('./helpers');
+import { isSomething, isNothing, arrayContainsSomething } from './helpers';
 const {
    getAllSheetsForUser,
    createNewSheet,
@@ -18,7 +18,7 @@ const {
    getLatestSheet,
    getLatestSheetHistory,
 } = require('./helpers/sheetHelpers');
-const { addSheetToUser } = require('./helpers/userHelpers');
+import { addSheetToUser } from './helpers/userHelpers';
 const {
    updateAndAddCells,
 	updateAndAddFloatingCells,
@@ -28,11 +28,12 @@ const {
    findCellByRowAndColumn,
    updateParentWithSubsheetTitle,
 } = require('./helpers/updateCellsHelpers');
-const { AuthenticationError } = require('apollo-server-lambda');
-const { log } = require('./helpers/logger');
-const { LOG } = require('../constants');
+// const { AuthenticationError } = require('apollo-server-lambda'); // TIDY old version
+import { AuthenticationError } from '@apollo/server';
+import { log } from './helpers/logger';
+import { LOG } from '../constants';
 
-module.exports = db => ({
+const resolvers = db => ({
    Query: {
       sheet: async (parent, args, context) => {
          try {
@@ -422,3 +423,5 @@ module.exports = db => ({
 		},
    },
 });
+
+export default resolvers;

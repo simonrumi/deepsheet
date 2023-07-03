@@ -1,12 +1,12 @@
-const R = require('ramda');
-const mongoose = require('mongoose');
+import R from 'ramda';
+import mongoose from 'mongoose';
 mongoose.Promise = global.Promise; // Per Stephen Grider: Mongoose's built in promise library is deprecated, replace it with ES2015 Promise
-const { Schema } = mongoose;
-const FilterModel = require('./FilterModel');
-const FreezeModel = require('./FreezeModel');
-const SizingModel = require('./SizingModel');
-const CellModel = require('./CellModel');
-const FloatingCellModel = require('./FloatingCellModel');
+const { Schema, model } = mongoose;
+import FilterModel from './FilterModel';
+import FreezeModel from './FreezeModel';
+import SizingModel from './SizingModel';
+import CellModel from './CellModel';
+import FloatingCellModel from './FloatingCellModel';
 
 const sheetSchema = new Schema(
    {
@@ -57,4 +57,4 @@ sheetSchema.statics.getSummaryCellContent = async function (id) {
    return data?.title;
 };
 
-mongoose.model('sheet', sheetSchema);
+export default model('sheet', sheetSchema);

@@ -1,12 +1,12 @@
-const keys = require('../config/keys');
-const { log } = require('./helpers/logger');
-const { LOG } = require('../constants');
-const mongoose = require('mongoose');
+import keys from '../config/keys';
+import { log } from './helpers/logger';
+import { LOG } from '../constants';
+import mongoose from 'mongoose';
 mongoose.Promise = global.Promise; // Per Stephen Grider: Mongoose's built in promise library is deprecated, replace it with ES2015 Promise
 
 let cachedDbConnection = null;
 const connectedTypes = [1, 2]; // 1 == connected, 2 == connecting
-module.exports = async () => {
+const dbConnector = async () => {
    if (cachedDbConnection && connectedTypes.includes(cachedDbConnection.readyState)) {
       log({ level: LOG.VERBOSE }, 'dbConnector returning cachedDbConnection');
       return cachedDbConnection;
@@ -22,3 +22,5 @@ module.exports = async () => {
       log({ level: LOG.VERBOSE }, 'Error connecting to mongodb:', err.message);
    }
 };
+
+export default dbConnector;
