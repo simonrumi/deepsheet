@@ -8,7 +8,7 @@ import { log } from './logger';
 import { LOG } from '../../constants';
 
 let cachedServer = null;
-const createServer = async () => {
+export const createServer = async () => {
    if (cachedServer) {
       log({ level: LOG.INFO }, 'graphqlHelpers.createServer returning a cachedServer');
       return cachedServer;
@@ -54,7 +54,8 @@ const createServer = async () => {
  */
 const AUTH_ON = false; // needs to be on in production!
 
-const withAuth = func => async (event, context) => {
+// export const withAuth = func => async (event, context) => { // TIDY
+export const withAuth = func => async function(event, context) { // the user of function() here is so that we have a value for this, used is prox.apply() below
    const authMiddleware = {
       apply: async (targetFn, thisArg, args) => {
          if (!AUTH_ON) {
@@ -85,7 +86,5 @@ const withAuth = func => async (event, context) => {
       },
    };
    const proxy = new Proxy(func, authMiddleware);
-   return await proxy.apply(this, [event, context]);
+   return await proxy.apply(this, [event, context]); // TODO FIX: "Top-level "this" will be replaced with undefined since this file is an ECMAScript module"
 };
-
-export default { createServer, withAuth };

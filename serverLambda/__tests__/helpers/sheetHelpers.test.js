@@ -5,7 +5,7 @@ const sinon = require('sinon');
 const mongoose = require('mongoose');
 require('../../models/SheetModel');
 const { createNewSheet, getAllSheets } = require('../../helpers/sheetHelpers');
-const { DEFAULT_ROWS, DEFAULT_COLUMNS, DEFAULT_TITLE, DEFAULT_SUMMARY_CELL } = require('../../../constants');
+const { DEFAULT_ROWS, DEFAULT_COLUMNS, DEFAULT_TITLE, DEFAULT_SUMMARY_CELL } = require('../../constants');
 
 const getSpecificCellFromSheet = ({ sheet, row, column }) =>
    R.reduce(

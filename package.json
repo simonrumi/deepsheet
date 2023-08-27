@@ -12,7 +12,8 @@
       "postinstall": "cd serverLambda && npm install && cd ../client && npm install",
       "prebuild": "npm run tailwind:css",
       "build": "cd client && npm run build",
-      "dev": "npm run build && netlify dev"
+      "dev": "npm run build && netlify dev",
+		"netlifydev": "netlify dev"
    },
    "dependencies": {
       "autoprefixer": "^10.4.2",

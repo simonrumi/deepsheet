@@ -1,15 +1,12 @@
-import R from 'ramda';
+import * as R from 'ramda';
 import { log } from './logger';
 import { LOG } from '../../constants';
-import mongoose from 'mongoose';
-mongoose.Promise = global.Promise; // Per Stephen Grider: Mongoose's built in promise library is deprecated, replace it with ES2015 Promise
 import { arrayContainsSomething } from './index';
 import { findOrCreateUser, applyAuthSession, makeCookie } from './userHelpers';
 import keys from '../../config/keys';
-require('../models/StateCheckModel');
-const StateCheckModel = mongoose.model('stateCheck');
+import StateCheckModel from '../models/StateCheckModel';
 
-const prepareAuthResponse = async (userIdFromProvider, provider, token) => {
+export const prepareAuthResponse = async (userIdFromProvider, provider, token) => {
    const user = await findOrCreateUser({ userIdFromProvider, provider, token });
    const session = await applyAuthSession(user);
    const cookie = makeCookie(user._id, session._id);
@@ -28,10 +25,13 @@ const prepareAuthResponse = async (userIdFromProvider, provider, token) => {
 const partRandomString = () => Math.random().toString(20).substring(2); // this seems to be about 14 - 16 chars long
 const makeStateCheckValue = () => R.concat(partRandomString(), partRandomString()); // this should be close to 30 chars
 
-const createStateCheck = async () => {
+export const createStateCheck = async () => {
    try {
+		const startTime = log({ printTime: true, level: LOG.INFO }, 'authHelpers--createStateCheck started'); // TIDY remove this
       const newStateCheck = new StateCheckModel({ stateCheckValue: makeStateCheckValue() });
+		console.log('authHelpers--createStateCheck created newStateCheck', newStateCheck);
       await newStateCheck.save();
+		log({ startTime, level: LOG.INFO }, 'authHelpers--createStateCheck finished saving newStateCheck', newStateCheck); // TIDY remove this
       return newStateCheck;
    } catch (err) {
       log({ level: LOG.ERROR }, 'error making stateCheck:', err.message);
@@ -39,7 +39,7 @@ const createStateCheck = async () => {
    }
 };
 
-const confirmStateCheck = async stateCheckValue => {
+export const confirmStateCheck = async stateCheckValue => {
    const stateCheck = await StateCheckModel.find({ stateCheckValue });
    if (!arrayContainsSomething(stateCheck)) {
       return false;
@@ -51,5 +51,3 @@ const confirmStateCheck = async stateCheckValue => {
    }
    return true;
 }
-
-module.exports = { prepareAuthResponse, confirmStateCheck, createStateCheck };

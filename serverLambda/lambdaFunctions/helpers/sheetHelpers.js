@@ -1,4 +1,4 @@
-import R from 'ramda';
+import * as R from 'ramda';
 const {
    forLoopReduce,
    isNothing,
@@ -134,7 +134,7 @@ const createBlankCells = ({ totalColumns, totalRows }) => forLoopReduce(
    totalRows
 );
 
-const createNewSheet = ({
+export const createNewSheet = ({
    rows = DEFAULT_ROWS,
    columns = DEFAULT_COLUMNS,
    title = DEFAULT_TITLE,
@@ -170,19 +170,16 @@ const createNewSheet = ({
          columnWidths
       },
       cells,
-      users: {
-         owner: userId,
-      },
    };
 };
 
-const saveSheetHistory = async ({ user, defaultSheetHistory, }) => {
+export const saveSheetHistory = async ({ user, defaultSheetHistory, }) => {
 	const newSheetHistory = await new HistoryModel(defaultSheetHistory).save();
 	await addSheetToUser({ user, sheetId: newSheetHistory.present._id });
 	return newSheetHistory;
 }
 
-const createNewSheetHistory = ({
+export const createNewSheetHistory = ({
    rows = DEFAULT_ROWS,
    columns = DEFAULT_COLUMNS,
    title = DEFAULT_TITLE,
@@ -199,7 +196,7 @@ const createNewSheetHistory = ({
 	return {	past: [], present: newSheet, future: [], actionHistory: [] }
 }
 
-const getAllSheetsForUser = async userId => {
+export const getAllSheetsForUser = async userId => {
    try {
       const startTime = log({ level: LOG.VERBOSE, printTime: true }, 'sheetHelpers.getAllSheetsForUser starting find query for userId', userId);
       const allSheets = await SheetModel.find({ 'users.owner': userId });
@@ -212,7 +209,7 @@ const getAllSheetsForUser = async userId => {
    }
 };
 
-const getLatestSheet = async sheetIds => {
+export const getLatestSheet = async sheetIds => {
    try {
       const startTime = log({ level: LOG.VERBOSE, printTime: true }, 'sheetHelpers--getLatestSheet starting find query for multiple sheetIds', sheetIds);
       const latestSheet = await SheetModel.find({ _id: { $in: sheetIds } })
@@ -228,7 +225,7 @@ const getLatestSheet = async sheetIds => {
    }
 }
 
-const getLatestSheetHistory = async sheetIds => {
+export const getLatestSheetHistory = async sheetIds => {
 	try {
 		const startTime = log({ level: LOG.VERBOSE, printTime: true }, 'sheetHelpers--getLatestSheetHistory starting find query for multiple sheetIds', sheetIds);
 		const latestSheetHistory = await HistoryModel.find({ present: { _id: { $in: sheetIds } } })
@@ -241,5 +238,3 @@ const getLatestSheetHistory = async sheetIds => {
 		log({ level: LOG.ERROR }, 'sheetHelpers--getLatestSheetHistory', err.message);
 	}
 }
-
-module.exports = { createNewSheet, createNewSheetHistory, saveSheetHistory, getAllSheetsForUser, getLatestSheet, getLatestSheetHistory };

@@ -1,10 +1,10 @@
-const DEFAULT_ROWS = 6;
-const DEFAULT_COLUMNS = 6;
-const DEFAULT_TITLE = 'This is my sheet';
-const AUTH_PROVIDER_FACEBOOK = 1;
-const AUTH_PROVIDER_GOOGLE = 2;
+export const DEFAULT_ROWS = 6;
+export const DEFAULT_COLUMNS = 6;
+export const DEFAULT_TITLE = 'This is my sheet';
+export const AUTH_PROVIDER_FACEBOOK = 1;
+export const AUTH_PROVIDER_GOOGLE = 2;
 // logging levels
-const LOG = {
+export const LOG = {
    ERROR: 0,
    WARN: 1,
    INFO: 2,
@@ -12,13 +12,4 @@ const LOG = {
    VERBOSE: 4,
    DEBUG: 5,
    SILLY: 6,
-}
-
-module.exports = {
-   DEFAULT_ROWS,
-   DEFAULT_COLUMNS,
-   DEFAULT_TITLE,
-   AUTH_PROVIDER_GOOGLE,
-   AUTH_PROVIDER_FACEBOOK,
-   LOG
 }

@@ -1,6 +1,6 @@
 export const GRAPHQL_URL = '/.netlify/functions/graphql';
 export const FACEBOOK_AUTH_URL = '/.netlify/functions/auth?provider=facebook';
-export const GOOGLE_AUTH_URL = '/.netlify/functions/auth?provider=google';
+export const GOOGLE_AUTH_URL = '/.netlify/functions/auth?provider=google'; // TIDY might not need this with the new google login button
 
 export const INVISIBLE_PIXEL = '/img/FFFFFF-0.png'; // not used so far, but keeping just in case
 

@@ -1,9 +1,9 @@
 import axios from 'axios';
 import keys from '../../config/keys';
-import { log } from '../helpers/logger';
+import { log } from './logger';
 import { LOG } from '../../constants';
 
-const getFacebookToken = async code => {
+export const getFacebookToken = async code => {
    const fbAccessTokenEndpoint =
       'https://graph.facebook.com/v8.0/oauth/access_token?' +
       `client_id=${keys.facebookClientID}` +
@@ -19,8 +19,8 @@ const getFacebookToken = async code => {
    }
 };
 
-const makeFacebookAuthCall = async state => {
-   const endpoint =
+export const makeFacebookAuthCall = async state => {
+   const redirectUrl =
       'https://www.facebook.com/v8.0/dialog/oauth?' +
       `client_id=${keys.facebookClientID}` +
       `&redirect_uri=${keys.authReturnURI}` +
@@ -44,23 +44,10 @@ const makeFacebookAuthCall = async state => {
    that the resource requested has been temporarily moved to the URL given by the Location header.
    ...It is therefore recommended to set the 302 code only as a response for GET or HEAD methods" 
    */
-   return {
-      statusCode: 302,
-      headers: {
-         Location: endpoint,
-      },
-      // not having a body causes a warning to be thrown, saying we should have a body,
-      // but we're redirecting, so we have no use for a body...and in fact the redirect breaks if we do
-   };
+	return { statusCode: 302, redirectUrl }
 };
 
-const getFbUserId = async accessToken => {
+export const getFbUserId = async accessToken => {
    const fbUserData = await axios.get(`https://graph.facebook.com/me?fields=id&access_token=${accessToken}`);
    return fbUserData?.data?.id;
-};
-
-export default {
-   getFacebookToken,
-   makeFacebookAuthCall,
-   getFbUserId,
 };

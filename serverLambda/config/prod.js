@@ -1,4 +1,4 @@
-console.log('config/prod.js got process.env', process.env);
+// TIDY - remoove this file
 module.exports = {
    mongoURI: process.env.MONGO_URI,
    options: { dbName: process.env.DB_NAME, useNewUrlParser: true, useUnifiedTopology: true },

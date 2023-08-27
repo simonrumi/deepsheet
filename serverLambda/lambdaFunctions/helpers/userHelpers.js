@@ -1,14 +1,13 @@
-import R from 'ramda';
-import { isSomething, isNothing, arrayContainsSomething } from '.';
+import * as R from 'ramda';
+import { isSomething, isNothing, arrayContainsSomething } from './index';
 import { log } from './logger';
 import { LOG } from '../../constants';
-import keys from '../../config//keys';
 import mongoose from 'mongoose';
 mongoose.Promise = global.Promise; // Per Stephen Grider: Mongoose's built in promise library is deprecated, replace it with ES2015 Promise
 import UserModel from '../models/UserModel';
 import SessionModel from '../models/SessionModel'
 
-const makeCookie = (userId, sessionId) => {
+export const makeCookie = (userId, sessionId) => {
    if (isNothing(userId) || isNothing(sessionId)) {
       throw new Error('must have a userId and sessionId to make a cookie');
    }
@@ -18,12 +17,21 @@ const makeCookie = (userId, sessionId) => {
 };
 
 // Note that we have gone back and forth on using 401 Unauthorized vs 302 redirect below. 401 seems more appropriate, and now working, so keeping this as of 1/24/22
-const standardAuthError = {
+/* original version - TIDY:
+export const standardAuthError = {
    statusCode: 401,
    body: JSON.stringify({
       error: 'authentication failed...bummer',
    }),
 };
+ */
+
+export const standardAuthError = new Response(
+	JSON.stringify({
+      error: 'authentication failed...bummer',
+   }),
+   { status: 401 }
+);
 
 // Possible alternative to 401 above:
 // when authorization fails, we redirect to the main uri without a cookie, so that the login prompt will show
@@ -37,7 +45,7 @@ const standardAuthError = {
    }),
 }; */
 
-const findUser = async ({ userIdFromProvider, provider }) => {
+export const findUser = async ({ userIdFromProvider, provider }) => {
    if (isSomething(userIdFromProvider)) {
       try {
          const existingUser = await UserModel.findOne({
@@ -55,7 +63,7 @@ const findUser = async ({ userIdFromProvider, provider }) => {
    return null;
 };
 
-const findOrCreateUser = async ({ userIdFromProvider, provider, token }) => {
+export const findOrCreateUser = async ({ userIdFromProvider, provider, token }) => {
    const existingUser = await findUser({ userIdFromProvider, provider });
    if (isSomething(existingUser)) {
       return existingUser;
@@ -119,7 +127,7 @@ const getSession = async user => {
    }
 };
 
-const applyAuthSession = async user => {
+export const applyAuthSession = async user => {
    // note: should be guaranteed to have a user and an accessToken at this point
    const session = await getSession(user);
    user.session = session._id;
@@ -153,7 +161,7 @@ const getUserInfoFromReq = reqHeaders => {
 };
 
 // graphql uses this to make sure it is ok to run queries
-const validateUserSession = async reqHeaders => {
+export const validateUserSession = async reqHeaders => {
    const { userId, sessionId } = getUserInfoFromReq(reqHeaders);
    log({ level: LOG.VERBOSE }, 'userHelpers.validateUserSession got userId', userId, 'sessionId', sessionId);
    if (isNothing(userId) || isNothing(sessionId)) {
@@ -206,7 +214,7 @@ const addNewSheets = ({ existingSheets = [], newSheets = [] }) => R.reduce(
 		newSheets, // iterating over this
 	);
 
-const addSheetToUser = async ({ user, userId, sheetId }) => {
+export const addSheetToUser = async ({ user, userId, sheetId }) => {
    if (isNothing(user) && isNothing(userId)) {
       throw new Error('must supply either a user or a userId when adding a sheet');
    }
@@ -227,14 +235,4 @@ const addSheetToUser = async ({ user, userId, sheetId }) => {
    } catch (err) {
       throw new Error('error adding sheet to user', err);
    }
-};
-
-export default {
-   makeCookie,
-   standardAuthError,
-   applyAuthSession,
-   validateUserSession,
-   findOrCreateUser,
-   findUser,
-   addSheetToUser,
 };

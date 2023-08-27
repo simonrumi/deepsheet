@@ -1,16 +1,18 @@
 [functions]
   # this is where "Netlify can find your function sources, including background functions. 
   # Netlify will access this directory during every deploy, zipping and deploying each supported code file as a function"
-  directory = "serverLambda/lambdaFunctions/"
+  directory = "serverLambda/lambdaFunctions"
+  node_bundler = "esbuild"
 
 [build]
   command = "npm run build"  # this gets run in production to do the build
   publish = "client/build" # directory where deploy-ready HTML files etc are. THis value can be set in the UI also, but this entry will override it 
+  # base = "serverLambda" #could try this to see whether it helps to set the base as the server side directory. need to change publish entry to accomodate this
 
 [dev]
   publish = "client/public" # The path to your static content folder
   framework = "create-react-app"
 
   # got these 2 lines from https://answers.netlify.com/t/netlify-dev-could-not-connect-to-locahost-3000/51785/25
-  functionsPort = 3001 # this needs to be different from the port the react app is running on 
+  # functionsPort = 3001 # this needs to be different from the port the react app is running on 
   targetPort = 3000 # must be the same as the port the react app is running 

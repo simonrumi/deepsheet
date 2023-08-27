@@ -1,25 +1,29 @@
-import R from 'ramda';
+import * as R from 'ramda';
 // note that we have to create the Models first, before requiring in code below that relies on them
 import mongoose from 'mongoose';
 mongoose.Promise = global.Promise; // Per Stephen Grider: Mongoose's built in promise library is deprecated, replace it with ES2015 Promise
-require('./models/HistoryModel');
-const HistoryModel = mongoose.model('history');
-require('./models/SheetModel');
-const SheetModel = mongoose.model('sheet');
-require('./models/UserModel');
-const UserModel = mongoose.model('user');
-require('./models/SessionModel');
+/* require('./models/HistoryModel');
+const HistoryModel = mongoose.model('history'); */ // TIDY
+import HistoryModel from './models/HistoryModel';
+/* require('./models/SheetModel');
+const SheetModel = mongoose.model('sheet'); TIDY */
+import SheetModel from './models/SheetModel';
+/* require('./models/UserModel');
+const UserModel = mongoose.model('user'); TIDY */
+import UserModel from './models/UserModel';
+/* require('../models/SessionModel'); TIDY */
+
 import { isSomething, isNothing, arrayContainsSomething } from './helpers';
-const {
+import {
    getAllSheetsForUser,
    createNewSheet,
    createNewSheetHistory,
    saveSheetHistory,
    getLatestSheet,
    getLatestSheetHistory,
-} = require('./helpers/sheetHelpers');
+} from './helpers/sheetHelpers';
 import { addSheetToUser } from './helpers/userHelpers';
-const {
+import {
    updateAndAddCells,
 	updateAndAddFloatingCells,
 	removeDeletedCells, 
@@ -27,9 +31,9 @@ const {
    deleteSubsheetId,
    findCellByRowAndColumn,
    updateParentWithSubsheetTitle,
-} = require('./helpers/updateCellsHelpers');
+} from './helpers/updateCellsHelpers';
 // const { AuthenticationError } = require('apollo-server-lambda'); // TIDY old version
-import { AuthenticationError } from '@apollo/server';
+import { GraphQLError } from 'graphql';
 import { log } from './helpers/logger';
 import { LOG } from '../constants';
 
@@ -358,7 +362,10 @@ const resolvers = db => ({
          try {
             const sheetToDelete = SheetModel.findById(args.sheetId);
             if (sheetToDelete.users.owner !== args.userId) {
-               return new AuthenticationError('sheets can only be deleted by their owner');
+               throw new GraphQLError(
+						'sheets can only be deleted by their owner', 
+						{ extensions: { code: 'FORBIDDEN' } }
+					);
             }
             await SheetModel.deleteOne({ _id: args.sheetId });
             return getAllSheetsForUser(args.userId);

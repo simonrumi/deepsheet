@@ -1,4 +1,4 @@
-import R from 'ramda';
+import * as R from 'ramda';
 import keys from '../../config/keys';
 
 export function log({ printTime, startTime, level }, message) {

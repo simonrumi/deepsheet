@@ -4,7 +4,7 @@
    "description": "The folder for lambda functions for Deepsheet",
    "author": "Simon Amarasingham",
    "license": "ISC",
-	"type": "module",
+   "type": "module",
    "dependencies": {
       "@apollo/server": "^4.7.5",
       "@as-integrations/aws-lambda": "^2.0.1",
@@ -13,11 +13,12 @@
       "googleapis": "^100.0.0",
       "graphql": "^16.7.1",
       "mongodb": "^4.4.0",
-      "mongoose": "^6.4.6",
+      "mongoose": "^6.11.4",
       "ramda": "^0.28.0"
    },
    "scripts": {
-      "test": "mocha ./lambdaFunctions/__tests__/**/*test.js"
+      "test": "mocha ./__tests__/**/*test.js",
+      "postinstall": "npm --prefix ./helpers/*.js i && npm --prefix ./models/*.js i && npm --prefix ./typeDefs/*.js i"
    },
    "devDependencies": {
       "chai": "^4.3.6",

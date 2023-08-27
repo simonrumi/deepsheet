@@ -1,11 +1,11 @@
-import R from 'ramda';
+import * as R from 'ramda';
 import { isSomething, isNothing, arrayContainsSomething } from './index';
 
-const findCellByRowAndColumn = R.curry((row, column, cellsArr) => {
+export const findCellByRowAndColumn = R.curry((row, column, cellsArr) => {
    return R.find(cell => R.propEq('row', row, cell) && R.propEq('column', column, cell))(cellsArr);
 });
 
-const updateAndAddCells = R.curry((sheetDoc, updatedCells) => {
+export const updateAndAddCells = R.curry((sheetDoc, updatedCells) => {
 	const updatedExistingRegularCells = R.pipe(
 		R.prop('cells'),
 		R.map(cell => {
@@ -30,7 +30,7 @@ const updateAndAddCells = R.curry((sheetDoc, updatedCells) => {
          : null;
 });
 
-const removeDeletedCells = (sheetDoc, deletedCells) => R.pipe(
+export const removeDeletedCells = (sheetDoc, deletedCells) => R.pipe(
 	R.prop('cells'),
 	R.filter(
 		cell => R.pipe(
@@ -40,11 +40,11 @@ const removeDeletedCells = (sheetDoc, deletedCells) => R.pipe(
 	)
 )(sheetDoc);
 
-const findFloatingCellByNumber = R.curry((number, cellsArr) => {
+export const findFloatingCellByNumber = R.curry((number, cellsArr) => {
    return R.find(floatingCell => R.propEq('number', number, floatingCell))(cellsArr);
 });
 
-const updateAndAddFloatingCells  = R.curry((sheetDoc, updatedFloatingCells) => {
+export const updateAndAddFloatingCells  = R.curry((sheetDoc, updatedFloatingCells) => {
 	const updatedExistingFloatingCells = R.pipe(
 		R.prop,
 		R.map(floatingCell => {
@@ -69,7 +69,7 @@ const updateAndAddFloatingCells  = R.curry((sheetDoc, updatedFloatingCells) => {
          : null;
 });
 
-const removeDeletedFloatingCells = (sheetDoc, deletedFloatingCells) => R.pipe(
+export const removeDeletedFloatingCells = (sheetDoc, deletedFloatingCells) => R.pipe(
 	R.prop('floatingCells'),
 	R.filter(
 		floatingCell => R.pipe(
@@ -79,7 +79,7 @@ const removeDeletedFloatingCells = (sheetDoc, deletedFloatingCells) => R.pipe(
 	)
 )(sheetDoc);
 
-const deleteSubsheetId = ({ originalCells, row, column, formattedText }) =>
+export const deleteSubsheetId = ({ originalCells, row, column, formattedText }) =>
    R.map(cell => {
       if (cell.row === row && cell.column === column) {
          const newContent = { ...cell.content, subsheetId: null, formattedText };
@@ -88,19 +88,9 @@ const deleteSubsheetId = ({ originalCells, row, column, formattedText }) =>
       return cell;
    })(originalCells);
 
-const updateParentWithSubsheetTitle = (parentSheet, subsheet) => R.map(
+export const updateParentWithSubsheetTitle = (parentSheet, subsheet) => R.map(
    parentCell => JSON.stringify(parentCell.content.subsheetId) === JSON.stringify(subsheet._id)
       ? { ...parentCell, content: { ...parentCell.content, text: subsheet.title } }
       : parentCell,
    parentSheet.cells
 );
-
-export default {
-   findCellByRowAndColumn,
-   updateAndAddCells,
-	updateAndAddFloatingCells,
-	removeDeletedCells,
-	removeDeletedFloatingCells,
-   deleteSubsheetId,
-   updateParentWithSubsheetTitle,
-};
